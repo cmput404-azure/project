@@ -14,10 +14,10 @@ MIT License
 
 ## Copyright
 
-Khyl Nad
-Quin Nguyen
-Kyle Quach
-Crystal Zhang
-Cinguinique Erquette
+Khyl Nad <br />
+Quin Nguyen <br />
+Kyle Quach <br />
+Crystal Zhang <br />
+Cinguinique Erquette <br />
 Nathan Wu
 
