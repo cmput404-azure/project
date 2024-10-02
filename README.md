@@ -23,17 +23,17 @@ Nathan Wu
 
 ## Structure
 ### Frontend
-- 'src' folder contains the source code for the frontend
-    - 'public' folder contains the static files (logo, static assets, etc.)
-    - 'components' folder contains the React components
-        - 'ComponentName' folder contains the React component
-            - 'ComponentName.tsx' contains the React component
-            - 'ComponentName.module.scss' contains the CSS for the React component
-    - 'lib' folder that comtains non-React code
-        - 'libName' folder of a library of helper functions
-            - 'libName.ts' file of helper function
-    - 'App.tsx' contains the main React component
-    - 'index.tsx'  entry point for the React app
-    - 'App.module.scss' contains the CSS for the React app
-    - 'index.css' contains the global CSS
-    - '.env' contains the environment variables (not included in the repo, make one locally)
+- `src` folder contains the source code for the frontend
+    - `public` folder contains the static files (logo, static assets, etc.)
+    - `components` folder contains the React components
+        - `ComponentName` folder contains the React component
+            - `ComponentName.tsx` contains the React component
+            - `ComponentName.module.scss` contains the CSS for the React component
+    - `lib` folder that comtains non-React code
+        - `libName` folder of a library of helper functions
+            - `libName.ts` file of helper function
+    - `App.tsx` contains the main React component
+    - `index.tsx`  entry point for the React app
+    - `App.module.scss` contains the CSS for the React app
+    - `index.css` contains the global CSS
+    - `.env` contains the environment variables (not included in the repo, make one locally)
