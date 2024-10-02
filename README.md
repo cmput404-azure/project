@@ -40,11 +40,22 @@ Nathan Wu
 
 ## Setup
 Since the backend and frontend are separated in a monorepo, both need to be setup differently.
+You must `cd` into each directory separately. Two terminals are required to run both servers, unless you are using something like `tmux`.
 
 ### Frontend
-Instructions here...
+1. `cd` into the frontend directory
+2. Run `npm i` to install the dependencies
+3. Create a `.env` file in the root directory of the frontend directory
+- The `.env` file should contain the following variables:
+    ```
+    REACT_APP_SOMETHING = 'something'
+    ```
+4. Run `npm start` to start the development server
+
+
 ### Backend
-Instructions here...
+1. `cd` into the backend directory
+2. 
 
 ## Deployment
 The common deployment method is that both the frontend and backend require its own `Procfile` for a separate Heroku dyno, they cannot be run on the same dyno.
