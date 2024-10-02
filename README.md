@@ -39,7 +39,7 @@ Nathan Wu
     - `index.css` contains the global CSS
     - `.env` contains the environment variables (not included in the repo, make one locally)
     - `package.json` contains the dependencies and scripts
-        - 'package-lock.json` contains the dependencies and scripts
+        - `package-lock.json` contains the dependencies and scripts
         - `bun.lockb` binary lockfile for Bun (if using Bun over npm)
     - `tsconfig.json` contains the TypeScript configuration
 
