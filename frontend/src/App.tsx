@@ -2,7 +2,9 @@ import React from 'react';
 import logo from './logo.svg';
 import styles from './App.module.scss';
 
-function App() {
+
+
+export default function App() {
   return (
     <div className={styles.App}>
       Social distribution
@@ -10,4 +12,3 @@ function App() {
   );
 }
 
-export default App;
