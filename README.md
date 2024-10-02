@@ -37,3 +37,19 @@ Nathan Wu
     - `App.module.scss` contains the CSS for the React app
     - `index.css` contains the global CSS
     - `.env` contains the environment variables (not included in the repo, make one locally)
+
+## Setup
+Since the backend and frontend are separated in a monorepo, both need to be setup differently.
+
+### Frontend
+Instructions here...
+### Backend
+Instructions here...
+
+## Deployment
+The common deployment method is that both the frontend and backend require its own `Procfile` for a separate Heroku dyno, they cannot be run on the same dyno.
+
+### Frontend
+Instructions here...
+### Backend
+Instructions here...
