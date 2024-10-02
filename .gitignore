@@ -164,7 +164,6 @@ heroku/
 heroku/LICENSE
 heroku-linux-x64.tar.gz
 node_modules/
-*.json
 
 # js
 
