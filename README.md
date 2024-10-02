@@ -47,10 +47,10 @@ You must `cd` into each directory separately. Two terminals are required to run 
 1. `cd` into the frontend directory
 2. Run `npm i` to install the dependencies
 3. Create a `.env` file in the root directory of the frontend directory
-- The `.env` file should contain the following variables:
-    ```
-    REACT_APP_SOMETHING = 'something'
-    ```
+    - The `.env` file should contain the following variables:
+        ```
+            REACT_APP_SOMETHING = 'something'
+        ```
 4. Run `npm start` to start the development server
 
 
