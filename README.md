@@ -38,6 +38,13 @@ Nathan Wu
     - `App.module.scss` contains the CSS for the React app
     - `index.css` contains the global CSS
     - `.env` contains the environment variables (not included in the repo, make one locally)
+    - `package.json` contains the dependencies and scripts
+        - 'package-lock.json` contains the dependencies and scripts
+        - `bun.lockb` binary lockfile for Bun (if using Bun over npm)
+    - `tsconfig.json` contains the TypeScript configuration
+
+### Backend
+Write doc here...
 
 ## Setup
 Since the backend and frontend are separated in a monorepo, both need to be setup differently.
