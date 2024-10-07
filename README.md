@@ -100,6 +100,9 @@ You must `cd` into each directory separately. Two terminals are required to run 
 
 The common deployment method is that both the frontend and backend require its own `Procfile` for a separate Heroku dyno, they cannot be run on the same dyno.
 
+*NOTE WE ARE SUPPOSE TO BUILD REACT AS STATIC THEN RUN ONLY ONE DYNO.*
+** TA CONFIRMED WE CANNOT RUN TWO SERVERS **
+
 ### Frontend
 
 Instructions here...
