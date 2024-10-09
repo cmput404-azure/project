@@ -1,0 +1,43 @@
+.listImg{
+    width:100px;
+    height:100px;
+    object-fit:cover;
+    object-position:30% 0;
+    border-radius:50%;
+    margin-right:20px;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 500px; // adjust based on container size
+    padding: 10px; // for spacing
+}
+
+.text {
+    flex-grow: 1; // allows this section to take up space between the image and button
+    text-align:left;
+}
+
+h1{
+    margin: 0;
+    font-weight: bold;
+}
+
+p {
+    margin: 0;
+}
+
+button {
+    border: none;
+    padding: 6px 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+button:hover {
+    background-color: #ccc; // button hover effect
+}
