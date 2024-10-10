@@ -1,17 +1,6 @@
+import { formatCount } from '../../util/formatting/formatCount';
 import styles from './MiniPostCard.module.scss';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-
-function formatCount(count:number): string {
-    if (count < 1000) {
-      return count.toString();
-    } else if (count >= 1000 && count < 1000000) {
-      return (count / 1000).toFixed(1) + 'K'; // For thousands
-    } else if (count >= 1000000) {
-      return (count / 1000000).toFixed(1) + 'M'; // For millions
-    }
-
-    return '';
-  }
 
 function MiniPostCard() {
     // Example values
