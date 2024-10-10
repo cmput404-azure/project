@@ -1,0 +1,28 @@
+html {
+    font-size: 100% /*16px*/
+}
+
+@media (max-width: 600px) {
+    html {
+        font-size: 120%; 
+    }
+}
+
+@media (min-width: 600px) {
+    html {
+        font-size: 130%; 
+    }
+}
+
+@media (min-width: 900px) {
+    html {
+        font-size: 135%; 
+    }
+}
+
+@media (min-width: 1200px) {
+    html {
+        font-size: 140%; 
+    }
+}
+       
