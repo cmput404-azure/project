@@ -31,7 +31,7 @@ Nathan Wu
     - `ComponentName` folder contains the React component
       - `ComponentName.tsx` contains the React component
       - `ComponentName.module.scss` contains the CSS for the React component
-  - `lib` folder that comtains non-React code
+  - `util` folder that comtains non-React code
     - `libName` folder of a library of helper functions
       - `libName.ts` file of helper function
   - `App.tsx` contains the main React component
