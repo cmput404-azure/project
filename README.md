@@ -93,14 +93,15 @@ You must `cd` into each directory separately. Two terminals are required to run 
    - Run `source venv/bin/activate` to activate the virtual environment
      - if you are using VSCode you can automatically activate the venv every time by setting the interpreter to the venv python interpreter.
 3. Run `pip install -r requirements.txt` to install the dependencies
-4. Run `python manage.py migrate` to migrate the database
-5. Run `python manage.py runserver` to start the development server
+4. run `python manage.py makemigrations` to make the database migrations
+5. Run `python manage.py migrate` to migrate the changes to the database
+6. Run `python manage.py runserver` to start the development server
 
 ## Deployment
 
 The common deployment method is that both the frontend and backend require its own `Procfile` for a separate Heroku dyno, they cannot be run on the same dyno.
 
-*NOTE WE ARE SUPPOSE TO BUILD REACT AS STATIC THEN RUN ONLY ONE DYNO.*
+_NOTE WE ARE SUPPOSE TO BUILD REACT AS STATIC THEN RUN ONLY ONE DYNO._
 ** TA CONFIRMED WE CANNOT RUN TWO SERVERS **
 
 ### Frontend
