@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import styles from './NavigationBar.module.css';
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
-import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
-import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
-import Person2OutlinedIcon from '@mui/icons-material/Person2Outlined';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import styles from './NavigationBar.module.scss';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 interface NavigationBarProps {
   onClick: (item: string) => void;
@@ -15,17 +11,17 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ onClick, isLoggedIn }) =>
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 600);
 
   const commonNavigationItems = [
-    { icon: <HomeOutlinedIcon />, label: 'Home' },
+    { icon: <i className="fa-solid fa-house"/>, label: 'Home' },
   ];
 
   const loggedInNavigationItems = [
-    { icon: <FavoriteBorderOutlinedIcon />, label: 'Likes' },
-    { icon: <ChatOutlinedIcon />, label: 'Messages' },
+    { icon: <i className="fa-solid fa-heart"/>, label: 'Likes' },
+    { icon: <i className="fa-solid fa-comment-dots"/>, label: 'Messages' },
   ];
 
   const bottomNavigationItems = [
-    { icon: <Person2OutlinedIcon />, label: 'Profile' },
-    { icon: <SettingsOutlinedIcon />, label: 'Settings' },
+    { icon: <i className="fas fa-user"/>, label: 'Profile' },
+    { icon: <i className="fas fa-gear"/>, label: 'Settings' },
   ];
 
   useEffect(() => {
