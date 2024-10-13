@@ -5,3 +5,4 @@ Pillow==10.4.0
 sqlparse==0.5.1
 typing_extensions==4.12.2
 djangorestframework==3.12.4
+django-cors-headers==4.5.0
