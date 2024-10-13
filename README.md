@@ -48,8 +48,11 @@ Nathan Wu
 
 - `server` directory is the base directory for the django project
 - `azureDSN` directory is the django app containing the files for the entire backend
+   - `serializers` folder contains serializer class for each model
+      - `model_serializer.py` contains the serializer class
+   - `utils`: folder contains the general-purpose functions or helpers that can be reused across the entire project
 
-  - to make database migrations locally, cd into the `backend` directory and run,
+- to make database migrations locally, cd into the `backend` directory and run,
 
     > `python3 manage.py makemigrations azureDSN`
 
