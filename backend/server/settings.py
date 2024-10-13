@@ -141,3 +141,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Media files (e.g. Users' Profile Pictures)
+MEDIA_URL = '/media/' # this is the public URL for accessing media
+MEDIA_ROOT = BASE_DIR / 'azureDNS' / 'media' # directory where media files will go
