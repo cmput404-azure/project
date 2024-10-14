@@ -16,8 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path("azureDSN/", include("azureDSN.urls")),
     path('admin/', admin.site.urls),
 ]
+
+# To serve media files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# This should make it possible to access media files via URLs like http://127.0.0.1:8000/azureDNS/media/profile_pictures/<filename>.jpg

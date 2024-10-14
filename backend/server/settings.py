@@ -153,3 +153,7 @@ REST_FRAMEWORK = {
         'rest_framework.permission.AllowAny'
     ]
 }
+
+# Media files (e.g. Users' Profile Pictures)
+MEDIA_URL = '/media/' # this is the public URL for accessing media
+MEDIA_ROOT = BASE_DIR / 'azureDNS' / 'media' # directory where media files will go
