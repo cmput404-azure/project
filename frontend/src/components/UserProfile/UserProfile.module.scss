@@ -1,11 +1,12 @@
-/* General container for positioning */
 .userProfileContainer {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   padding: 20px;
-  background-color: #f5f5f5;
+  background-color: #535353;
+  border-radius: 10px;
+  position: relative; /* allows absolute positioning of the profile link */
 }
 
 .profileHeaderContainer {
@@ -15,21 +16,21 @@
   flex-direction: row;
   gap: 20px;
   padding: 20px;
-  background-color: #f5f5f5;
   width: 100%;
+  position: relative; /* ensures child elements can be positioned relative to this container */
 }
 
 .profilePic {
   height: 150px;
   width: 150px;
   border-radius: 50%;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 
 .userInfoContainer {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: start;
 }
 
 .userInfo {
@@ -49,6 +50,7 @@
 .userName {
   display: flex;
   justify-content: start;
+  color: #fff;
   align-items: center;
   width: 100%;
   font-weight: bold;
@@ -61,7 +63,7 @@
   align-items: center;
   width: 100%;
   font-size: 1.1rem;
-  color: #555;
+  color: #929292;
 }
 
 .buttonContainer {
@@ -73,8 +75,8 @@
 }
 
 .followButton {
-  padding: 5px 20px;
-  height: 40px; /* Define a fixed height for the follow button */
+  padding: 7px 30px;
+  height: 30px;
   border-radius: 5px;
   border: none;
   background-color: #787878;
@@ -94,9 +96,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 40px; /* Same height and width to make it circular */
+  width: 40px;
   height: 40px;
-  border-radius: 50%; /* makes it a circle */
+  border-radius: 50%;
   background-color: #787878;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
   color: white;
@@ -112,22 +114,52 @@
 }
 
 .githubButton img {
-  width: 50%; /* adjust to cahnge the size of the GitHub logo */
+  width: 50%;
   height: 80%;
-  object-fit: contain; /* makes sure the image fits inside the button */
+  object-fit: contain;
   border-radius: 50%;
 }
 
 .userStats {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
   margin-top: 20px;
   font-size: 1.1rem;
-  color: #555;
+  color: #fff;
+  gap: 40px;
+
+  span {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+  }
+}
+
+.count {
+  font-weight: bold;
+}
+
+.userProfileLink {
+  position: absolute;
+  top: 20px; /* Aligns the button at the top */
+  right: 20px; /* Aligns the button on the right side */
 }
 
 .bioContainer {
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: start;
   font-size: 1.1rem;
-  color: #555;
+  color: #fff;
+  width: 100%;
+  p {
+    margin-left: 30px;
+  }
 }
 
 .horizontalLine {
