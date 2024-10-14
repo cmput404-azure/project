@@ -1,5 +1,4 @@
 import styles from "./UserProfile.module.scss";
-import GitHubIcon from "@mui/icons-material/GitHub";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 
 export default function UserProfile() {
