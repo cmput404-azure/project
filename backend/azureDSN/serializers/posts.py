@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import Post
+from ..models import Post
+from .author import AuthorSerializer
+from .comment import CommentSerializer
+from .like import LikeSerializer
 
 class PostSerializer(serializers.ModelSerializer):
     author = AuthorSerializer() 
