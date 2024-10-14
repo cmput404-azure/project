@@ -1,11 +1,11 @@
 from rest_framework import serializers
 from ..models import Post
-from .author import AuthorSerializer
-from .comment import CommentSerializer
-from .like import LikeSerializer
+from .user_serializer import UserSerializer
+from .comment_serializer import CommentSerializer
+from .like_serializer import LikeSerializer
 
 class PostSerializer(serializers.ModelSerializer):
-    author = AuthorSerializer() 
+    author = UserSerializer() 
     comments = CommentSerializer(many=True) 
     likes = LikeSerializer(many=True) 
 
