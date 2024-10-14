@@ -6,6 +6,7 @@
   padding: 20px;
   background-color: #535353;
   border-radius: 10px;
+  width: 80%;
   position: relative; /* allows absolute positioning of the profile link */
 }
 
@@ -145,8 +146,8 @@
 
 .userProfileLink {
   position: absolute;
-  top: 20px; /* Aligns the button at the top */
-  right: 20px; /* Aligns the button on the right side */
+  top: 20px;
+  right: 20px;
 }
 
 .bioContainer {
@@ -163,15 +164,31 @@
 }
 
 .horizontalLine {
-  width: 100%;
-  height: 1px;
-  background-color: #ccc;
+  width: 80%;
+  height: 0.5px;
+  background-color: #989898;
   margin-top: 20px;
 }
 
 .userPosts {
   margin-top: 20px;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  width: 100%;
+}
+
+.postGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns for the grid */
+  gap: 20px;
+  width: 100%;
+}
+
+.card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }

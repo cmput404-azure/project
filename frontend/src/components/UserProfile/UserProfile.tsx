@@ -1,5 +1,6 @@
 import styles from "./UserProfile.module.scss";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import MiniPostCard from "../MiniPostCard/MiniPostCard";
 
 export default function UserProfile() {
   return (
@@ -52,7 +53,14 @@ export default function UserProfile() {
       </section>
       <hr className={styles.horizontalLine} />
       <section className={styles.userPosts}>
-        <p>Posts</p>
+        <div className={styles.postGrid}>
+          <MiniPostCard />
+          <MiniPostCard />
+          <MiniPostCard />
+          <MiniPostCard />
+          <MiniPostCard />
+          <MiniPostCard />
+        </div>
       </section>
     </div>
   );
