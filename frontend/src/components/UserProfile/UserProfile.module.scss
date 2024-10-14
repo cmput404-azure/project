@@ -1,0 +1,145 @@
+/* General container for positioning */
+.userProfileContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+.profileHeaderContainer {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  flex-direction: row;
+  gap: 20px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  width: 100%;
+}
+
+.profilePic {
+  height: 150px;
+  width: 150px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+}
+
+.userInfoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 30px;
+}
+
+.userNameContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+}
+
+.userName {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  width: 100%;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.userHandle {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  width: 100%;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.buttonContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.followButton {
+  padding: 5px 20px;
+  height: 40px; /* Define a fixed height for the follow button */
+  border-radius: 5px;
+  border: none;
+  background-color: #787878;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  color: #cccccc;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.followButton:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.githubButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px; /* Same height and width to make it circular */
+  height: 40px;
+  border-radius: 50%; /* makes it a circle */
+  background-color: #787878;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  color: white;
+  text-decoration: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.githubButton:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.githubButton img {
+  width: 50%; /* adjust to cahnge the size of the GitHub logo */
+  height: 80%;
+  object-fit: contain; /* makes sure the image fits inside the button */
+  border-radius: 50%;
+}
+
+.userStats {
+  margin-top: 20px;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.bioContainer {
+  margin-top: 20px;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.horizontalLine {
+  width: 100%;
+  height: 1px;
+  background-color: #ccc;
+  margin-top: 20px;
+}
+
+.userPosts {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
