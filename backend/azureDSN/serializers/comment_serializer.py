@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from ..models import Comment
-from .author import AuthorSerializer
+from .user_serializer import UserSerializer
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = AuthorSerializer()
+    author = UserSerializer()
 
     class Meta:
         model = Comment

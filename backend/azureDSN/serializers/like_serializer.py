@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from ..models import Like
-from .author import AuthorSerializer
+from  .user_serializer import UserSerializer
 
 class LikeSerializer(serializers.ModelSerializer):
-    author = AuthorSerializer()
+    author = UserSerializer()
 
     class Meta:
         model = Like
