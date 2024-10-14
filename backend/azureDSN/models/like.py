@@ -1,7 +1,6 @@
 from datetime import datetime
 import uuid
 from django.db import models
-from .user import User
 from .post import Post
 
 class Like(models.Model):

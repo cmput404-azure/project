@@ -7,5 +7,6 @@ from .post import Post
 from .comment import Comment
 from .like import Like
 from .follow import Follow
+from .follow_request import FollowRequest
 from .inbox import Inbox
 from .inbox_item import InboxItem
