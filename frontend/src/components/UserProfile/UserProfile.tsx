@@ -52,7 +52,6 @@ export default function UserProfile() {
       </section>
       <hr className={styles.horizontalLine} />
       <section className={styles.userPosts}>
-        <div className={styles.postGrid}>
           <MiniPostCard 
             profilePic="../images/yellowduck.png"
             userName="Mr. Ducky"
@@ -107,7 +106,6 @@ export default function UserProfile() {
             likeCount={1523382}
             saveCount={250}
             commentCount={10000}/>
-        </div>
       </section>
     </div>
   );
