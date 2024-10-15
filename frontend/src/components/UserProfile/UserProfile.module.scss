@@ -1,142 +1,142 @@
 .userProfileContainer {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  flex-direction: column;
-  padding: 20px;
   background-color: rgba(83, 83, 83, 0.9);
   border-radius: 10px;
-  width: 80%;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 25px;
   position: relative; /* allows absolute positioning of the profile link */
 }
 
 .profileHeaderContainer {
-  display: flex;
-  justify-content: start;
   align-items: center;
+  display: flex;
   flex-direction: row;
   gap: 20px;
+  justify-content: start;
   padding: 20px;
-  width: 100%;
   position: relative; /* ensures child elements can be positioned relative to this container */
+  width: 100%;
 }
 
 .profilePic {
-  height: 150px;
-  width: 150px;
   border-radius: 50%;
+  height: 150px;
   margin-bottom: 5px;
+  width: 150px;
 }
 
 .userInfoContainer {
+  align-items: start;
   display: flex;
   flex-direction: column;
-  align-items: start;
 }
 
 .userInfo {
+  align-items: center;
   display: flex;
   flex-direction: row;
-  align-items: center;
   gap: 30px;
 }
 
 .userNameContainer {
+  align-items: center;
   display: flex;
   flex-direction: column;
   justify-content: start;
-  align-items: center;
 }
 
 .userName {
-  display: flex;
-  justify-content: start;
-  color: #fff;
   align-items: center;
-  width: 100%;
-  font-weight: bold;
+  color: #fff;
+  display: flex;
   font-size: 1.5rem;
+  font-weight: bold;
+  justify-content: start;
+  width: 100%;
 }
 
 .userHandle {
-  display: flex;
-  justify-content: start;
   align-items: center;
-  width: 100%;
-  font-size: 1.1rem;
   color: #929292;
+  display: flex;
+  font-size: 1.1rem;
+  justify-content: start;
+  width: 100%;
 }
 
 .buttonContainer {
+  align-items: center;
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: center;
   gap: 20px;
+  justify-content: center;
 }
 
 .followButton {
-  padding: 7px 30px;
-  height: 30px;
-  border-radius: 5px;
-  border: none;
   background-color: #787878;
+  border: none;
+  border-radius: 5px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
   color: #cccccc;
-  font-weight: bold;
   cursor: pointer;
+  font-weight: bold;
+  height: 30px;
+  padding: 7px 30px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .followButton:hover {
-  transform: scale(1.1);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
 }
 
 .githubButton {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
   background-color: #787878;
+  border-radius: 50%;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-  color: white;
-  text-decoration: none;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: white;
   cursor: pointer;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 40px;
 }
 
 .githubButton:hover {
-  transform: scale(1.1);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
 }
 
 .githubButton img {
-  width: 50%;
+  border-radius: 50%;
   height: 80%;
   object-fit: contain;
-  border-radius: 50%;
+  width: 50%;
 }
 
 .userStats {
+  align-items: center;
+  color: #fff;
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
   font-size: 1.1rem;
-  color: #fff;
   gap: 40px;
+  justify-content: center;
+  margin-top: 20px;
 
   span {
+    align-items: center;
     display: flex;
     flex-direction: row;
-    justify-content: center;
-    align-items: center;
     gap: 5px;
+    justify-content: center;
   }
 }
 
@@ -146,17 +146,17 @@
 
 .userProfileLink {
   position: absolute;
-  top: 20px;
   right: 20px;
+  top: 20px;
 }
 
 .bioContainer {
+  align-items: start;
+  color: #fff;
   display: flex;
   flex-direction: column;
-  align-items: start;
-  justify-content: start;
   font-size: 1.1rem;
-  color: #fff;
+  justify-content: start;
   width: 100%;
   p {
     margin-left: 30px;
@@ -164,25 +164,27 @@
 }
 
 .horizontalLine {
-  width: 80%;
-  height: 0.5px;
   background-color: #989898;
+  height: 0.5px;
   margin-top: 20px;
+  width: 80%;
 }
 
 .userPosts {
-  margin-top: 20px;
+  align-items: flex-start;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
+  flex-flow: row wrap;
+  height: 100%;
+  justify-content: flex-start;
+  margin-top: 20px;
+  width: 100%
 }
 
 .postGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 columns for the grid */
-  gap: 20px;
+  align-items: flex-start;
+  display: flex;
+  flex-direction: row wrap;
+  justify-content: flex-start;
   width: 100%;
 }
 

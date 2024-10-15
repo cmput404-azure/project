@@ -1,9 +1,11 @@
 .card {
-    width: 500px;
-    border-radius: 10px;
+    border-radius: 5px;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin: 20px auto;
+    flex: 1 1 32%;
+    min-width: 200px;
+    max-width: 500px;
+    margin: 1rem;
 }
 
 .cardHeader {
@@ -48,7 +50,7 @@
     margin-top: 10px;
     max-height: 300px;
     overflow: hidden;
-    border-radius: 20px;
+    border-radius: 5px;
 }
 
 .postImage {
@@ -96,4 +98,17 @@
     color: #333;
     font-weight: 500;
 }
-  
+
+@media screen and (max-width: 768px) {
+    .card{
+        max-width: 300px;
+    }
+    
+}
+
+@media screen and (max-width: 1300px) {
+    .card{
+        max-width: 400px;
+    }
+    
+}
