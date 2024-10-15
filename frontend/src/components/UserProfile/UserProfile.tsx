@@ -1,5 +1,5 @@
-import styles from "./UserProfile.module.scss";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
+import styles from "./UserProfile.module.scss";
 
 export default function UserProfile() {
   return (

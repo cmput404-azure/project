@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import styles from './NavigationBar.module.scss';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+
+import React, { useEffect, useState } from 'react';
+
+import styles from './NavigationBar.module.scss';
 
 interface NavigationBarProps {
   onClick: (item: string) => void;
