@@ -2,19 +2,35 @@ import styles from './PostCard.module.scss';
 import { formatCount } from '../../util/formatting/formatCount';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-function PostCard() {
-    // Example values
-    const likeCount = 1523382;
-    const saveCount = 250;
-    const commentCount = 10000;
+interface PostCardProps {
+    profilePic: string,
+    userName: string,
+    postTime: string,
+    postContent: string,
+    postImage?: string, // optional
+    likeCount: number,
+    saveCount: number,
+    commentCount: number
+}
+
+function PostCard({
+    profilePic,
+    userName,
+    postTime,
+    postContent,
+    postImage,
+    likeCount,
+    saveCount,
+    commentCount
+}: PostCardProps) {
 
   return (
     <div className={styles.card}>
         <div className={styles.grid}>
-            <img className={styles.profilePic} src="../images/yellowduck.png" alt="Profile" />
+            <img className={styles.profilePic} src={profilePic} alt={`${userName}'s profile`} />
             <div className={styles.headerText}>
-                <span className={styles.userName}>Mr. Ducky</span>
-                <span className={styles.postTime}>11:11 PM</span>
+                <span className={styles.userName}>{userName}</span>
+                <span className={styles.postTime}>{postTime}</span>
             </div>
             <i className="fas fa-ellipsis-h"></i>
             <div className={styles.cardFooter}>
@@ -37,10 +53,14 @@ function PostCard() {
                 </div>
             </div>
             <div className={styles.cardContent}>
-                <div className={styles.postText}>Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs and the team for supporting my career. My supervisor, @dawgster has been supportive throughout my career, thanks for all your help and advice.</div>
-                <div className={styles.imgContainer}>
-                    <img className={styles.postImage} src="../images/ducklings.jpg" alt="Ducklings" />
-                </div>
+                <div className={styles.postText}>{postContent}</div>
+                {postImage ? (
+                    <div className={styles.imgContainer}>
+                    <img className={styles.postImage} src={postImage} alt="Post image content" />
+                    </div>
+                ) : (
+                    <div className={styles.imgPlaceholder}></div> /* Placeholder for layout consistency */
+                )}
             </div>
         </div>
 
