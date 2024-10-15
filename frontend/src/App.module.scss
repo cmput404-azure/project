@@ -1,5 +1,13 @@
 .App {
-  text-align: center;
+  display: flex;
+  flex-flow: row nowrap;
+  background-color: rgba(5, 5, 5, 0.596);
+}
+
+.content{
+  flex: 1;
+  padding: 1rem;
+  width: 100%;
 }
 
 .App-logo {
@@ -26,13 +34,4 @@
 
 .App-link {
   color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
