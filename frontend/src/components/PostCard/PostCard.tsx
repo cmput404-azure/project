@@ -32,7 +32,9 @@ function PostCard({
                 <span className={styles.userName}>{userName}</span>
                 <span className={styles.postTime}>{postTime}</span>
             </div>
-            <i className="fas fa-ellipsis-h"></i>
+            <div className={styles.icon}>
+                <i className="fas fa-ellipsis-h"></i>
+            </div>
             <div className={styles.cardFooter}>
                 <div className={styles.essentials}>
                     <div className={styles.icon}>
@@ -56,7 +58,7 @@ function PostCard({
                 <div className={styles.postText}>{postContent}</div>
                 {postImage ? (
                     <div className={styles.imgContainer}>
-                    <img className={styles.postImage} src={postImage} alt="Post image content" />
+                    <img className={styles.postImage} src={postImage} alt="Post content" />
                     </div>
                 ) : (
                     <div className={styles.imgPlaceholder}></div> /* Placeholder for layout consistency */
