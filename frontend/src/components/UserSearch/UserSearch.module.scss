@@ -1,0 +1,26 @@
+.searchContainer{
+    background-color:#aeaeae;
+    display: flex;
+    align-items: center;
+    width:200px;
+    padding:10px;
+    border-radius:16px;
+}
+
+.componentWidth{
+    width:400px;
+    display:flex;
+    flex-direction: column; /* Stack elements vertically */
+    align-items:center;
+}
+
+.searchInput {
+    border: none;
+    outline: none;
+    background: none;
+    font-size: 12px;
+    width: 100%; /* Optional: make it responsive */
+    color: inherit; /* Inherit text color */
+  }
+
+ 
