@@ -1,0 +1,59 @@
+.toggleContainer {
+    display: inline-flex;
+    width: 40px;
+    height: 20px;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    background-color: #444;
+}
+
+.toggleInput {
+    display: none;
+}
+
+.toggleLabel {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.iconContainer {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.icon {
+    flex: 1;
+    color: white;
+    font-size: 10px;
+    transition: background-color 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+.globe {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+}
+
+.users {
+    background-color: transparent;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.toggleInput:checked+.toggleLabel .globe {
+    background-color: transparent;
+}
+
+.toggleInput:checked+.toggleLabel .users {
+    background-color: rgba(255, 255, 255, 0.3);
+}
