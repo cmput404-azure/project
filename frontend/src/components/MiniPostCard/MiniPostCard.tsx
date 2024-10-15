@@ -2,31 +2,51 @@ import { formatCount } from '../../util/formatting/formatCount';
 import styles from './MiniPostCard.module.scss';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-function MiniPostCard() {
-    // Example values
-    const likeCount = 1523382;
-    const saveCount = 250;
-    const commentCount = 10000;
+interface MiniPostCardProps {
+    profilePic: string;
+    userName: string;
+    postTime: string;
+    postContent: string;
+    postImage?: string;
+    likeCount: number;
+    saveCount: number;
+    commentCount: number;
+}
+
+function MiniPostCard({
+    profilePic,
+    userName,
+    postTime,
+    postContent,
+    postImage,
+    likeCount,
+    saveCount,
+    commentCount
+}: MiniPostCardProps) {
 
   return (
     <div className={styles.card}>
         <div className={styles.cardHeader}>
             <div className={styles.profileSection}>
-            <img className={styles.profilePic} src="../images/yellowduck.png" alt="Profile" />
+            <img className={styles.profilePic} src={profilePic} alt={`${userName}'s profile`} />
             <div className={styles.userInfo}>
-                <span className={styles.userName}>Mr. Ducky</span>
-                <span className={styles.postTime}>11:11 PM</span>
+                <span className={styles.userName}>{userName}</span>
+                <span className={styles.postTime}>{postTime}</span>
             </div>
             </div>
             <i className="fas fa-ellipsis-h"></i>
         </div>
 
-        <div className={styles.cardImage}>
-            <img className={styles.postImage} src="../images/ducklings.jpg" alt="Ducklings" />
-        </div>
-
+        { postImage ? (
+            <div className={styles.cardImage}>
+                <img className={styles.postImage} src={postImage} alt="Mini post content" />
+            </div>
+        ) : (
+            <div className={styles.imgPlaceholder}></div>
+        )}
+        
         <div className={styles.cardSummary}>
-            Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs and the team for supporting my career. My supervisor, @dawgster has been supportive throughout my career, thanks for all your help and advice.
+            {postContent}
         </div>
 
         <div className={styles.cardFooter}>

@@ -52,15 +52,60 @@ export default function UserProfile() {
       </section>
       <hr className={styles.horizontalLine} />
       <section className={styles.userPosts}>
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
+          <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+          <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+            <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+            <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+            <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+            <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
       </section>
     </div>
   );
