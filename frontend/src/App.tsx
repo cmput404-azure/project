@@ -1,11 +1,9 @@
-
-import { BrowserRouter, Route, RouterProvider, Routes, createBrowserRouter, useNavigate } from "react-router-dom";
+import { Route, Routes, useNavigate } from "react-router-dom";
 
 import ErrorPage from "./error-page";
 import NavigationBar from "./components/NavigationBar/NavigationBar";
 import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
-
 import styles from './App.module.scss';
 
 export default function App() {
