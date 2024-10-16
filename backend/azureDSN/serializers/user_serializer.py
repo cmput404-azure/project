@@ -4,4 +4,9 @@ from ..models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'host', 'displayName', 'page', 'github', 'profileImage')
+
+        # TODO: need to rename user_id to id in the table
+        fields = ['user_id', 'display_name', 'host', 'github', 'profile_image']
+        extra_kwargs = {
+            'user_id': {'read_only': True}  
+        }
