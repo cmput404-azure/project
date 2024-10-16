@@ -1,5 +1,5 @@
-import styles from "./UserProfile.module.scss";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
+import styles from "./UserProfile.module.scss";
 
 export default function UserProfile() {
   return (
@@ -52,14 +52,60 @@ export default function UserProfile() {
       </section>
       <hr className={styles.horizontalLine} />
       <section className={styles.userPosts}>
-        <div className={styles.postGrid}>
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-          <MiniPostCard />
-        </div>
+          <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+          <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+            <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+            <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+            <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
+            <MiniPostCard 
+            profilePic="../images/yellowduck.png"
+            userName="Mr. Ducky"
+            postTime="11:11 PM"
+            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+            postImage="../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}/>
       </section>
     </div>
   );

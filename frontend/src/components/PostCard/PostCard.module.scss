@@ -14,10 +14,16 @@
     gap: 15px;
 }
 
+.imgPlaceholder {
+    width: 100%;
+    height: 200px;
+}
+
 .profilePic {
     height: 50px;
     width: 50px;
     border-radius: 50%;
+    object-fit: cover;
 }
 
 .headerText {
@@ -58,6 +64,7 @@
   
 .icon i {
     display: inline-block;
+    cursor: pointer;
 }
 
 .cardFooter span {
