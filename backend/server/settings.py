@@ -150,7 +150,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 # Django Rest Framework
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES':[
-        'rest_framework.permission.AllowAny'
+        'rest_framework.permissions.AllowAny'
     ]
 }
 
