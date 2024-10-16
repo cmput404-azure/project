@@ -1,0 +1,79 @@
+.author-post {
+    border-radius: 8px;
+    padding: 12px 30px; /* Increased horizontal padding (left and right), vertical stays the same */
+    width: 100%;
+    max-width: 300px;
+    background-color: #777777; /* Gray background for the entire box */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slight shadow */
+  }
+  
+  .post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px; /* Smaller gap between sections */
+  }
+  
+  .author-info {
+    display: flex;
+    align-items: center;
+  }
+  
+  .author-avatar {
+    width: 64px; /* Bigger avatar */
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+  }
+  
+  .author-info div {
+    display: flex;
+    flex-direction: column; /* Ensures the name and username stack vertically */
+    justify-content: flex-start; /* Aligns text to the left */
+  }
+  
+  .author-info h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: left;
+    color: white; /* Author's name is white */
+  }
+  
+  .author-info p {
+    margin: 0;
+    color: #bbbbbb; /* Lighter gray for the username */
+    font-size: 14px;
+    text-align: left;
+  }
+  
+  /* Smaller add button */
+  .add-button {
+    background-color: transparent;
+    border: none;
+    font-size: 16px; /* Smaller font size for the button */
+    cursor: pointer;
+  }
+  
+  .add-button span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 24px; /* Smaller button */
+    height: 24px;
+    border-radius: 50%;
+    background-color: #a0a0a0;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  /* Post content section */
+  .post-content {
+    font-size: 14px;
+    color: #ffffff;
+    margin-top: 8px; /* Reduced margin */
+    text-align: left;
+  }
+  
