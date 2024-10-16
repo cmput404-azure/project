@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path("azureDSN/", include("azureDSN.urls")),
+    path("", include("azureDSN.urls")),
     path('admin/', admin.site.urls),
 ]
 
