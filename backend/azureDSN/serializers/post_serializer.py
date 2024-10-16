@@ -24,3 +24,26 @@ class PostSerializer(serializers.ModelSerializer):
             'published',
             'visibility'
         )
+
+    def create(self, validated_data):
+        author_data = validated_data.pop('author')
+        author = UserSerializer.create(UserSerializer(), validated_data=author_data)
+        post = Post.objects.create(author=author, **validated_data)
+        return post
+    
+    def update(self, post, validated_data):
+        author_data = validated_data.pop('author')
+        author = UserSerializer.create(UserSerializer(), validated_data=author_data)
+        post.author = author
+        post.title = validated_data.get('title', post.title)
+        post.description = validated_data.get('description', post.description)
+        post.contentType = validated_data.get('contentType', post.contentType)
+        post.content = validated_data.get('content', post.content)
+        post.published = validated_data.get('published', post.published)
+        post.visibility = validated_data.get('visibility', post.visibility)
+        post.save()
+        return post
+    
+    def delete(self, post):
+        post.delete()
+        return post
