@@ -6,9 +6,9 @@ from .viewFolder.views_follower import get_followers, add_follower
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
 urlpatterns = [
     # path("/api/authors/<uuid:user_id>/inbox/", InboxView.as_view(), name="inbox")
-    path('service/api/authors/<uuid:user_id>/followers/', get_followers, name='followers'),
-    path('service/api/authors/<user_id>/followers/<follower_id>/add/', add_follower, name='add_follower'),
-
-    # path('/api/authors/{user_id}/followers/{follower_id}', 
-    # path('follow/<int:pk>/', FollowDetailView.as_view(), name='follow-detail'),
+    path("", index, name="index"),
+    # path("api/posts/{POST_FQID}/", PostView.as_view(), name="post"),
+    path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="authors"),
+    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
+    # path("api/authors/", AuthorsView.as_view(), name="authors"),
 ]
