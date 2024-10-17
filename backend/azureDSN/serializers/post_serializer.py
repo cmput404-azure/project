@@ -1,26 +1,28 @@
 from rest_framework import serializers
 from ..models import Post
 from .user_serializer import UserSerializer
-from .comment_serializer import CommentSerializer
-from .like_serializer import LikeSerializer
+# from .comment_serializer import CommentSerializer
+# from .like_serializer import LikeSerializer
 
 class PostSerializer(serializers.ModelSerializer):
-    author = UserSerializer() 
-    comments = CommentSerializer(many=True) 
-    likes = LikeSerializer(many=True) 
-
+    author = UserSerializer(source='user') 
+    # comments = CommentSerializer(many=True) 
+    # likes = LikeSerializer(many=True)
+    id = serializers.UUIDField(source='uuid')
+    contentType = serializers.CharField(source='content_type')
+    published = serializers.DateTimeField(source='created_at')
+    
     class Meta:
         model = Post
         fields = (
             'type',
             'title',
             'id',
-            'description',
             'contentType',
             'content',
             'author',
-            'comments',
-            'likes',
+            # 'comments',
+            # 'likes',
             'published',
             'visibility'
         )
