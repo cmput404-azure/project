@@ -1,0 +1,32 @@
+.homePage {
+    display: flex;
+    height: 100vh; /* Full viewport height */
+    width: 100%;
+  }
+  
+  .navSection {
+    flex: 1; /* Adjusts based on available space */
+    max-width: 150px; /* Side nav bar width */
+    background-color: #343434;
+    border-right: 1px solid #ddd;
+  }
+  
+  .postSection {
+    flex: 2; /* Middle section wider than the nav */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: #fff;
+
+  align-items: center; /* Horizontal alignment */
+  }
+  
+  .authorSection {
+    flex: 1; /* Last section */
+    max-width: 350px;
+    padding: 20px;
+    background-color: #343434;
+    border-left: 1px solid #ddd;
+  }
+  
