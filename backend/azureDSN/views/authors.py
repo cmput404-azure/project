@@ -13,3 +13,18 @@ class AuthorsView(APIView):
         print(author.display_name)
         serializer = UserSerializer(author)
         return Response(serializer.data, status=200)
+    
+    def put(self, request, author_serial=None):
+        """
+        PUT [local]: update a particular author's profile
+        """
+
+        print("Received request data:", request.data)
+        author = get_object_or_404(User, uuid=author_serial)
+        serializer = UserSerializer(author, data=request.data) # Send the whole JSON object everytime so partial won't be True
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+
+        return Response(serializer.errors, status=400)
