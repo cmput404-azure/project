@@ -22,11 +22,11 @@ class InboxView(APIView):
     '''
     When user want to check their inbox, we fetch all objects relating to that user_id
     '''
-    def get(self, request, uuid):
-        user_obj = get_object_or_404(User, uuid=uuid)
+    def get(self, request, author_serial):
+        user_obj = get_object_or_404(User, uuid=author_serial)
         inbox_obj = get_object_or_404(Inbox, user=user_obj)
         # Get the latest inbox items
-        inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-created_at")
+        inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-id")
     
         serializer = InboxItemSerializer(inbox_items_obj, many=True, context={"request": request})
         # author is return in format of her/his url
@@ -34,7 +34,7 @@ class InboxView(APIView):
         data = {
                 'type': 'inbox',
                 'items': serializer.data,
-                'author': f"{uri}/api/authors/{uuid}"
+                'author': f"{uri}api/authors/{author_serial}"
         }
         return Response(data)
     
@@ -46,8 +46,8 @@ class InboxView(APIView):
     When sending/updating follow requests, body is a follow object
     All these POST object must have a "type" field
     '''
-    def post(self, request, uuid):
-        user_obj = get_object_or_404(User, uuid=uuid)
+    def post(self, request, author_serial):
+        user_obj = get_object_or_404(User, uuid=author_serial)
         payload = request.data
        
         if "type" not in payload:

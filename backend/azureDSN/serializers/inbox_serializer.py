@@ -22,7 +22,7 @@ class InboxSerializer(serializers.ModelSerializer):
 
     # This should return the user id in format of their url
     def get_user_id_in_url(self, obj):
-        return create_url_from_uuid(obj=obj, request=self.context["request"], source="inbox") 
+        return create_url_from_uuid(obj=obj, request=self.context["request"], type="inbox") 
 
     # Order the items in descending order of id because we are trying to get the latest inbox item 
     def get_items(self, obj):

@@ -17,5 +17,5 @@ class FollowRequestSerializer(serializers.ModelSerializer):
         return UserSerializer(obj.object, context=self.context).data
 
     def get_summary(self, obj):
-        requester_name = obj.actor["display_name"]
+        requester_name = obj.actor["displayName"]
         return f"{requester_name} wants to follow {obj.object.display_name}"
