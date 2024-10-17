@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from django.http import HttpResponse
 from ..models import User, Post
 from ..serializers import UserSerializer, PostSerializer
+from rest_framework.response import Response
 
 class PostView(APIView):
     def get(self, request, post_fqid=None):
@@ -41,7 +42,7 @@ class AuthorPostView(APIView):
             return HttpResponse("Post does not exist.", status=404)
         
         serializer = PostSerializer(post)
-        return HttpResponse(serializer.data, status=200)
+        return Response(serializer.data, status=200)
 
     def put(self, request, post_fqid):
         """
