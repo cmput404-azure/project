@@ -3,13 +3,14 @@ from .views import *
 from django.contrib import admin
 from django.urls import path, re_path
 from django.conf import settings
-
+from django.views.generic import TemplateView
 from azureDSN.views import index
 
 # urlpatterns contains all of the routes that this application supports routing for.
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
 urlpatterns = [
-    re_path(r"^(?P<path>.*)$", index, {"document_root": settings.REACT_APP_BUILD_PATH}),
+    # re_path(r"^(?P<path>.*)$", index, {"document_root": settings.REACT_APP_BUILD_PATH}),
+    path('', TemplateView.as_view(template_name='index.html')),
   
     # path("/api/authors/<uuid:user_id>/inbox/", InboxView.as_view(), name="inbox")
     # path("", index, name="index"),
