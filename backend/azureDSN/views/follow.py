@@ -16,11 +16,9 @@ from urllib.parse import quote
 
 class FollowView(APIView):
  
+    @api_view(['GET'])
     def get_followers(request, user_id):
-        if request.method !="GET":
-            return Response(status=405, data="Can only do GET")
-        print("here")
-        followers = Follow.objects.filter(local_followee_id=user_id)  # Adjust this line based on your Follow model
+        followers = Follow.objects.filter(local_followee_id=user_id) 
         serializer = FollowSerializer(followers, many=True)
         return Response(serializer.data)
 
@@ -50,9 +48,9 @@ class FollowView(APIView):
             follower_local = True
 
         follow_data = {
-            "local_followee": user if follower_local else None,
+            "local_followee": user_id if follower_local else None,
             "remote_followee": None,
-            "local_follower": follower if follower_local else None,
+            "local_follower": follower_id if follower_local else None,
             "remote_follower": None if follower_local else follower.host,
         }
 
