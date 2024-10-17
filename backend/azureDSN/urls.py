@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path, re_path
 from django.conf import settings
 
-from azureDSN.views import serve_react
+from azureDSN.views import index
 
 # urlpatterns contains all of the routes that this application supports routing for.
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
