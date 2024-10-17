@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse 
 from ..models import Post, Like
-from ..serializers.like_serializer import LikeSerializer, LikesSerializer
+from ..serializers import LikeSerializer
 from rest_framework.response import Response
 
 @api_view(['POST'])
