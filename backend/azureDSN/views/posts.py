@@ -29,15 +29,15 @@ class AuthorPostView(APIView):
             - friends-only posts: must be authenticated
         """
 
-        author = get_object_or_404(User, user_id=author_serial)
-        post = get_object_or_404(Post, user_id=author, post_id=post_serial)
+        author = get_object_or_404(User, uuid=author_serial)
+        post = get_object_or_404(Post, user=author, uuid=post_serial)
 
         # Check permissions
-        if post.visibility == Post.visibility[1] and not request.user.is_authenticated:
+        if post.visibility == 2 and not request.user.is_authenticated:  # FRIENDS
             return HttpResponse("Friend's only posts must be authenticated to view.", status=403)
-        if post.visibility == Post.visibility[2] and not request.user.is_authenticated:
+        if post.visibility == 3 and not request.user.is_authenticated:  # UNLISTED
             return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
-        if post.visibility == Post.visibility[3]:
+        if post.visibility == 4:  # DELETED
             return HttpResponse("Post does not exist.", status=404)
         
         serializer = PostSerializer(post)
