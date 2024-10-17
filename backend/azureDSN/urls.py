@@ -10,7 +10,7 @@ from azureDSN.views import serve_react
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
 urlpatterns = [
     re_path(r"^(?P<path>.*)$", index, {"document_root": settings.REACT_APP_BUILD_PATH}),
-    
+  
     # path("/api/authors/<uuid:user_id>/inbox/", InboxView.as_view(), name="inbox")
     # path("", index, name="index"),
     # path("api/posts/{POST_FQID}/", PostView.as_view(), name="post"),
