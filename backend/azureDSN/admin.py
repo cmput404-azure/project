@@ -9,3 +9,4 @@ admin.site.register(Comment)
 admin.site.register(FollowRequest)
 admin.site.register(Inbox)
 admin.site.register(InboxItem)
+
