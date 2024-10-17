@@ -138,7 +138,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+# make sure this is pointed to backend not front end
+STATIC_URL = 'azureDSN/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -157,3 +158,5 @@ REST_FRAMEWORK = {
 # Media files (e.g. Users' Profile Pictures)
 MEDIA_URL = '/media/' # this is the public URL for accessing media
 MEDIA_ROOT = BASE_DIR / 'azureDNS' / 'media' # directory where media files will go
+
+REACT_APP_BUILD_PATH = "../frontend/build"

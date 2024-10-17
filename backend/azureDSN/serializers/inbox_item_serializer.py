@@ -2,7 +2,10 @@ from rest_framework import serializers
 from rest_framework.serializers import *
 
 from ..models import *
-from serializers import *
+from .post_serializer import PostSerializer
+from .comment_serializer import CommentSerializer
+from .like_serializer import LikeSerializer
+from .follow_request_serializer import FollowRequestSerializer
 
 
 class InboxItemSerializer(serializers.ModelSerializer):
@@ -11,19 +14,15 @@ class InboxItemSerializer(serializers.ModelSerializer):
         fields = "__all__"
     
     def to_representation(self, obj):
-        if isinstance(obj.content_object, Follow):
-            # Create Follow obj 
-            pass
+        if isinstance(obj.content_object, FollowRequest):
+            return FollowRequestSerializer(instance=obj.content_obj, context=self.context).data
         elif isinstance(obj.content_object, Post):
-            # Create Post obj 
-            pass
+            return PostSerializer(instance=obj.content_obj, context=self.context).data
         elif isinstance(obj.content_object, Comment):
-            # Create Comment obj 
-            pass
+            return CommentSerializer(instance=obj.content_obj, context=self.context).data
         elif isinstance(obj.content_object, Like):
-            # Create Like obj 
-            pass
-        elif obj.json_data is not None:
-            return obj.json_data
+            return LikeSerializer(instance=obj.content_obj, context=self.context).data
+        elif obj.unused_payload is not None:
+            return obj.unused_payload
     
     
