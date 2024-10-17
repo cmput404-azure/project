@@ -12,30 +12,22 @@ class SingleLikeView(APIView):
 
         if (like_serial):
             """
+            URL: ://service/api/authors/{AUTHOR_SERIAL}/liked/{LIKE_SERIAL}
             GET [local, remote] a single like
+            Returns: like object
             """
-
+            print(type(author_serial)) # returns <class 'uuid.UUID'>
             author = get_object_or_404(User, uuid=author_serial)
-            print(author)
-            author_json = { # the fields must exactly be in the same order with the one saved in DB otherwise it won't work
-                "type": "author",
-                "id": str(author.uuid),
-                "host": author.host,
-                "displayName": author.display_name,
-                "github": author.github,
-                "page": author.page
-                # "profileImage": author.profile_image,
-            }
 
-            print(author_json)
-
-            like = get_object_or_404(Like, user=author_json, uuid=like_serial)
-            print(like)
+            like = get_object_or_404(Like, user__id = str(author.uuid), uuid=like_serial)
         
         else:
             """
+            URL: ://service/api/liked/{LIKE_FQID}
             GET [local] a single like
+            Returns: like object
             """
+            # Not yet tested, not sure how to handle FQID yet
             try:
                 like_id = like_fqid.split('/')[-1]
             except IndexError:
@@ -46,9 +38,54 @@ class SingleLikeView(APIView):
             like = get_object_or_404(Like, uuid=like_id)
 
         serialized_like = LikeSerializer(like).data
-        print(serialized_like)
         return Response(serialized_like, status=200)
     
+class AuthorLikesView(APIView):
+    """
+    Handle retrieval of Likes by an Author.
+    """
+    def get(self, request, author_serial=None, author_fqid=None):
+        if (author_serial):
+            """
+            URL: ://service/api/authors/{AUTHOR_SERIAL}/liked
+            GET [local, remote] a list of likes by AUTHOR_SERIAL
+            Returns: likes object
+            """
+            print(type(author_serial)) # returns <class 'uuid.UUID'>
+            author = get_object_or_404(User, uuid=author_serial)
+            likes = Like.objects.filter(user__id=str(author_serial))
+
+        else:
+            """
+            URL: ://service/api/authors/{AUTHOR_FQID}/liked
+            GET [local] a list of likes by AUTHOR_FQID
+            Returns: likes object
+            """
+            print("using fqid")
+            author = get_object_or_404(User, uuid=author_fqid.split('/')[-1])
+            likes = Like.objects.filter(user__id=str(author.uuid))
+
+        serialized_likes = LikeSerializer(likes, many=True).data
+        response = {
+            "type": "likes",
+            "id": f"the like id FQID?",
+            "page": f"the FQID of the page (object) that is liked?",
+            "page_number": 1,
+            "size": 50,
+            "count": len(serialized_likes),
+            "src": serialized_likes[:5],  # Limit to first 5 likes
+        }
+
+        # to-do: convert the published field into ISO 8601 timestamp
+        return Response(response, status=200)
+
+
+class LikesList(APIView):
+    """
+    Handle retrieval of Likes on a Post or a Comment.
+    """
+    def get(self, request, author_serial=None, post_serial=None, post_fqid=None, comment_serial=None):
+        pass
 
 
 # @api_view(['POST'])

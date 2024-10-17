@@ -17,7 +17,9 @@ urlpatterns = [
     # Likes API
     # path("api/authors/<uuid:author_serial>/inbox/", likes.send_like, name="send_like"),
     # path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", likes.get_likes_by_serial, name="get_likes_serial"),
-
+    
+    path("api/authors/<uuid:author_serial>/liked/", AuthorLikesView.as_view(), name="author_likes_by_serial"),
+    # path("api/authors/<str:author_fqid>/liked/", AuthorLikesView.as_view(), name="author_likes_by_fqid"),
 
     path("api/liked/<uuid:like_fqid>/", SingleLikeView.as_view(), name="get_like_by_fqid"),
     path("api/authors/<uuid:author_serial>/liked/<uuid:like_serial>/", SingleLikeView.as_view(), name="get_like_by_serial"),

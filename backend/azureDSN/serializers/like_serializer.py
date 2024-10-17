@@ -8,8 +8,8 @@ from .user_serializer import UserSerializer
 class LikeSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField(source='user')
     published = serializers.DateTimeField(source='created_at')
-    id = serializers.UUIDField(source='uuid')
-    object = PostSerializer(source='post')
+    id = serializers.SerializerMethodField(source='uuid')
+    object = serializers.SerializerMethodField(source='post') # Right now, have not implemented Likes for a Comment object yet
 
     class Meta:
         model = Like
@@ -23,8 +23,22 @@ class LikeSerializer(serializers.ModelSerializer):
             "host": user_data.get("host"),
             "displayName": user_data.get("displayName"),
             "github": user_data.get("github"),
+            "page": user_data.get("page"),
             # "profileImage": user_data.get("profileImage"),
         }
+    
+    def get_id(self, obj):
+        user_data = obj.user
+
+        host = user_data.get('host', '')
+        user_uuid = user_data.get('id', '')
+
+        return f"{host}api/authors/{user_uuid}/liked/{obj.uuid}"
+    
+    def get_object(self, obj): # only works for Post object
+        """Construct the FQID for the liked object."""
+        post = obj.post
+        return f"{post.user.host}api/authors/{post.user.uuid}/posts/{post.uuid}"
 
     def create(self, validated_data):
         """Create new Like object"""
