@@ -5,6 +5,7 @@ from django.http import HttpResponse, JsonResponse
 from ..models import Post, Like, User
 from ..serializers import LikeSerializer
 from rest_framework.response import Response
+from uuid import UUID
 
 class LikeView(APIView):
     def get(self, request, like_fqid=None, author_serial=None, like_serial=None):
@@ -15,10 +16,7 @@ class LikeView(APIView):
             GET [local, remote] a single like
             Returns: like object
             """
-            print(type(author_serial)) # returns <class 'uuid.UUID'>
-            author = get_object_or_404(User, uuid=author_serial)
-
-            like = get_object_or_404(Like, user__id = str(author.uuid), uuid=like_serial)
+            like = get_object_or_404(Like, user__id = str(author_serial), uuid=like_serial)
         
         else:
             """
@@ -26,15 +24,15 @@ class LikeView(APIView):
             GET [local] a single like
             Returns: like object
             """
-            # Not yet tested, not sure how to handle FQID yet
             try:
-                like_id = like_fqid.split('/')[-1]
-            except IndexError:
+                like_serial = like_fqid.split('/')[-1]
+                UUID(like_serial)
+            except (IndexError, ValueError):
                 return Response(
-                    {"detail": "Invalid like FQID."}, status=400
+                    {"detail": "Invalid Like FQID."}, status=400
                 )
             
-            like = get_object_or_404(Like, uuid=like_id)
+            like = get_object_or_404(Like, uuid=like_serial)
 
         serialized_like = LikeSerializer(like).data
 
@@ -52,7 +50,7 @@ class LikeView(APIView):
         Payload: like object
         """
         data = request.data
-        # unfinished
+        # unfinished -- Quin will handle Inbox
 
     
 class AuthorLikesView(APIView):
@@ -66,8 +64,6 @@ class AuthorLikesView(APIView):
             GET [local, remote] a list of likes by AUTHOR_SERIAL
             Returns: likes object
             """
-            print(type(author_serial)) # returns <class 'uuid.UUID'> returns <class 'str'>
-            author = get_object_or_404(User, uuid=author_serial)
             likes = Like.objects.filter(user__id=str(author_serial))
 
         else:
@@ -76,22 +72,31 @@ class AuthorLikesView(APIView):
             GET [local] a list of likes by AUTHOR_FQID
             Returns: likes object
             """
-            print("using fqid")
-            author = get_object_or_404(User, uuid=author_fqid.split('/')[-1])
+            try:
+                author_serial = author_fqid.split('/')[-1]
+                UUID(author_serial)
+            except (IndexError, ValueError):
+                return Response(
+                    {"detail": "Invalid Author FQID."}, status=400
+                )
+            
+            author = get_object_or_404(User, uuid=author_serial)
             likes = Like.objects.filter(user__id=str(author.uuid))
 
         serialized_likes = LikeSerializer(likes, many=True).data
+
+        uri = request.build_absolute_uri("/")
+
         response = {
             "type": "likes",
-            "id": f"the FQID of the object that is liked + /likes",
-            "page": f"the FQID of the page (object) that is liked? -- can be the same with the Liked object FQID",
-            "page_number": 1,
-            "size": 50,
+            "id": uri + f"api/authors/{author_serial}/likes/",
+            "page": uri + f"api/authors/{author_serial}/likes/", # might need to implement this page to view all user likes
+            "page_number": 1, # not sure what pagenum is for
+            "size": 50, # don't really know what this is
             "count": len(serialized_likes),
             "src": serialized_likes[:5],  # Limit to first 5 likes
         }
 
-        # to-do: convert the published field into ISO 8601 timestamp
         return Response(response, status=200)
 
 
