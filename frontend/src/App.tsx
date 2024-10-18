@@ -16,7 +16,7 @@ export default function App() {
         <div className={styles.content}>
           <Routes>
             <Route path="/" element={<HomePage/>} />
-            <Route path="/home" element={<Root />} />
+            <Route path="/home" element={<HomePage/>} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/settings" element={<Root />} />
             <Route path="*" element={<ErrorPage />} />
