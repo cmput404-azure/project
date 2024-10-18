@@ -68,3 +68,30 @@
         transition: transform 0.3s ease;
     }
 }
+
+.Modal {
+    /* Styles for the modal overlay */
+    position: fixed;
+    /* Ensure the modal is fixed in the viewport */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ModalContent {
+    width: 400px;
+    height:600px;
+    margin: auto;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.closeModalButton{
+    float:right;
+}

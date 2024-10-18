@@ -18,13 +18,17 @@ urlpatterns = [
     # path("", index, name="index"),
     # path("api/posts/{POST_FQID}/", PostView.as_view(), name="post"),
     path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="authors"),
-    
+    path("api/authors/all/", AuthorsCompleteView.as_view(), name="authors"),
+
     # Posts API
     path("api/posts/<uuid:post_fqid>/", PostView.as_view(), name="post"),
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
-  
+
+    # Follow API
+
     path('api/authors/<uuid:user_id>/followers/', FollowGetView.as_view(), name='followers'),
     path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowChangeView.as_view(), name='followers_handler'),  
+    path('api/authors/<uuid:user_id>/following/', FollowingView.as_view(), name='following'),  
 
     # Likes API
     # path("api/authors/<uuid:author_serial>/inbox/", likes.send_like, name="send_like"),
