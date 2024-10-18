@@ -11,23 +11,14 @@ import logo from '../../images/dog_icon.png'
 const HomePage = () => {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Adjust based on your authentication logic
 
-    const handleNavClick = (item: string) => {
-      console.log(`${item} clicked`);
-      // Handle navigation actions here
-    };
     const handleAddClick = () => {
         console.log('Add button clicked');
     };
   return (
     <div className={styles.homePage}>
-      {/* First Section: Navigation Sidebar */}
-      <div className={styles.navSection}>
-            <NavigationBar onClick={handleNavClick} isLoggedIn={isLoggedIn} />
-      </div>
-
-      {/* Second Section: PostBar and Post Card */}
+      {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar userImage= {logo} onAddClick={handleAddClick} />
+        <PostBar userImage= {logo}  />
         <PostCard
           profilePic="https://via.placeholder.com/50"
           userName="John Doe"
@@ -50,7 +41,7 @@ const HomePage = () => {
         />
       </div>
 
-      {/* Third Section: Author Post */}
+      {/* Second Section: Author Post */}
       <div className={styles.authorSection}>
       <AuthorPost authorImage= {logo}  authorName = "Kyle Quach" userName="tmquach.meomeo" postText= "The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut." onAddClick={handleAddClick} />
       </div>
