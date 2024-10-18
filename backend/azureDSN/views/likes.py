@@ -2,10 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse 
-from ..models import Post, Like, User
+from ..models import Post, Like, User, Comment
 from ..serializers import LikeSerializer
 from rest_framework.response import Response
 from uuid import UUID
+from urllib.parse import urlparse, unquote
 
 class LikeView(APIView):
     def get(self, request, like_fqid=None, author_serial=None, like_serial=None):
@@ -16,7 +17,8 @@ class LikeView(APIView):
             GET [local, remote] a single like
             Returns: like object
             """
-            like = get_object_or_404(Like, user__id = str(author_serial), uuid=like_serial)
+            author = get_object_or_404(User, uuid=author_serial)
+            like = get_object_or_404(Like, user__id = str(author.uuid), uuid=like_serial)
         
         else:
             """
@@ -64,7 +66,9 @@ class AuthorLikesView(APIView):
             GET [local, remote] a list of likes by AUTHOR_SERIAL
             Returns: likes object
             """
-            likes = Like.objects.filter(user__id=str(author_serial))
+            author = get_object_or_404(User, uuid=author_serial)
+            likes = Like.objects.filter(user__id=str(author.uuid)).order_by('-created_at')[:5] # Limit to latest 5 likes
+            count = Like.objects.filter(user__id=str(author.uuid)).count()
 
         else:
             """
@@ -81,7 +85,8 @@ class AuthorLikesView(APIView):
                 )
             
             author = get_object_or_404(User, uuid=author_serial)
-            likes = Like.objects.filter(user__id=str(author.uuid))
+            likes = Like.objects.filter(user__id=str(author.uuid)).order_by('-created_at')[:5]
+            count = Like.objects.filter(user__id=str(author.uuid)).count()
 
         serialized_likes = LikeSerializer(likes, many=True).data
 
@@ -93,8 +98,8 @@ class AuthorLikesView(APIView):
             "page": uri + f"api/authors/{author_serial}/likes/", # might need to implement this page to view all user likes
             "page_number": 1, # not sure what pagenum is for
             "size": 50, # don't really know what this is
-            "count": len(serialized_likes),
-            "src": serialized_likes[:5],  # Limit to first 5 likes
+            "count": count,
+            "src": serialized_likes,
         }
 
         return Response(response, status=200)
@@ -105,58 +110,83 @@ class LikesView(APIView):
     Handle retrieval of Likes on a Post or a Comment.
     """
     def get(self, request, author_serial=None, post_serial=None, post_fqid=None, comment_serial=None):
-        if (author_serial and post_serial):
+        if (comment_serial and author_serial and post_serial):
+            """
+            URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments/{COMMENT_SERIAL}/likes
+            GET [local, remote] a list of likes from other authors on AUTHOR_SERIAL's post POST_SERIAL comment COMMENT_SERIAL
+            Return: likes object
+            """
+            type = "commented"
             post = get_object_or_404(Post, uuid=post_serial)
+            author = get_object_or_404(User, uuid=author_serial)
+            comment = get_object_or_404(Comment, comment_id=comment_serial)
+
+            # Liking a comment functionality not handled right now...
+        
+        elif (author_serial and post_serial):
+            """
+            URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/likes
+            GET [local, remote] a list of likes from other authors on AUTHOR_SERIAL's post POST_SERIAL
+            Return: likes object
+            """
+            type = "posts"
+            post = get_object_or_404(Post, uuid=post_serial)
+            # author = get_object_or_404(User, uuid=author_serial)
 
             likes = Like.objects.filter(post=post).order_by('-created_at')[:5]
-            count = Like.objects.filter(post_id=post).count()
+            count = Like.objects.filter(post=post).count()
 
-            likes = LikeSerializer(likes, many=True).data
+        elif (post_fqid):
+            """
+            URL: ://service/api/posts/{POST_FQID}/likes
+            GET [local] a list of likes from other authors on AUTHOR_SERIAL's post POST_SERIAL
+            Return: likes object
+            """
+            type = "posts"
+            try:
+                # Parse and decode the URL to handle percent-encoding
+                parsed_url = urlparse(post_fqid)
+                path = unquote(parsed_url.path)
 
-            # Temporary
-            response_data = {
-                "type": "likes",
-                "id": f"TBD",
-                "page": f"TBD",
-                "page_number": 1,
-                "size": 50,
-                "count": count,
-                "src": likes  # List of likes
-            }
+                # Example: "/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/"
+                path_parts = path.strip('/').split('/')
 
-            return Response(response_data, status=200)
+                # Validate the path structure
+                if len(path_parts) < 4 or path_parts[-2] != 'posts':
+                    raise ValueError("Invalid FQID structure")
+
+                # Extract AUTHOR_SERIAL and POST_SERIAL
+                author_serial = path_parts[-4]
+                post_serial = path_parts[-1]
+
+                # Validate that both are UUIDs
+                UUID(author_serial)
+                UUID(post_serial)
+
+            except (IndexError, ValueError):
+                return Response(
+                    {"detail": "Invalid FQID."}, status=400
+                )
+            
+            post = get_object_or_404(Post, uuid=post_serial)
+            author = get_object_or_404(User, uuid=author_serial)
+            likes = Like.objects.filter(post=post).order_by('-created_at')[:5]
+            count = Like.objects.filter(post=post).count()
+            
 
 
-# @api_view(['GET'])
-# def get_likes_by_serial(request, author_serial=None, post_serial=None):
-#     """
-#     GET [local, remote]:
-#     a list of likes from other authors on AUTHOR_SERIAL's post POST_SERIAL
-#     """
-#     post = get_object_or_404(Post, uuid=post_serial)
+        likes = LikeSerializer(likes, many=True).data
 
-#     likes = Like.objects.filter(post=post).order_by('-created_at')[:5]
-#     count = Like.objects.filter(post_id=post).count() # total likes count
+        uri = request.build_absolute_uri("/")
 
-#     likes = LikeSerializer(likes, many=True).data
+        response_data = {
+            "type": "likes",
+            "id": uri + f"api/authors/{author_serial}/{type}/{post_serial}/likes/",
+            "page": uri + f"api/authors/{author_serial}/{type}/{post_serial}",
+            "page_number": 1,
+            "size": 50,
+            "count": count,
+            "src": likes
+        }
 
-#     # Temporary
-#     response_data = {
-#         "type": "likes",
-#         "id": f"http://ournodenamehere/api/authors/{author_serial}/posts/{post_serial}/likes",
-#         "page": f"http://ournodenamehere/authors/{author_serial}/posts/{post_serial}/likes",
-#         "page_number": 1,
-#         "size": 50,
-#         "count": count,
-#         "src": likes  # List of likes
-#     }
-
-#     return Response(response_data, status=200)
-
-#     # # Serialize the response using LikesSerializer
-#     # likes_response = LikesSerializer(data=likes_data)
-
-#     # if likes_response.is_valid():
-#     #     return HttpResponse(likes_response.data, status=200)
-    
-#     # return HttpResponse(likes_response.errors, status=400)
+        return Response(response_data, status=200)
