@@ -27,8 +27,14 @@ SECRET_KEY = 'django-insecure-d)u%dgq_2j6c2x47&zel_b^t51-u^@dp6f5%&rfc$st&fm3xit
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
+CORS_ALLOW_ALL_ORIGINS = False  
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',  
+    'http://ui19:3000'
+]
 
 # Application definition
 
@@ -146,7 +152,6 @@ STATIC_URL = 'azureDSN/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ORIGIN_ALLOW_ALL = True
 
 # Django Rest Framework
 REST_FRAMEWORK = {

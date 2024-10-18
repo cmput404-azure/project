@@ -1,7 +1,23 @@
+import { useState } from "react";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import styles from "./UserProfile.module.scss";
+import axios from 'axios';
 
 export default function UserProfile() {
+  const [followers, setFollowers] = useState(0);
+
+  const fetchFollowers = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/`, {
+      });
+  
+      const data = response.data;  // This will throw if the response isn’t valid JSON
+      console.log(data);
+    } catch (error) {
+      console.error('Fetch error:', error);
+    }
+  };
+  
   return (
     <div className={styles.userProfileContainer}>
       <section className={styles.profileHeaderContainer}>
@@ -30,7 +46,7 @@ export default function UserProfile() {
             <span>
               <p className={styles.count}>100</p> <p>posts</p>
             </span>
-            <span>
+            <span onClick={fetchFollowers} style={{ cursor: 'pointer' }}>
               <p className={styles.count}>100</p> <p>followers</p>
             </span>
             <span>

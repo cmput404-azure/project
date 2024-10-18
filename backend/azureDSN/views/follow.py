@@ -39,7 +39,7 @@ def fetch_remote_follower_data(remote_url):
         return None
         
 class FollowGetView(APIView): 
-    def get(request, user_id):
+    def get(self, request, user_id):
         # Get the followers list from Follow model
         followers = Follow.objects.filter(local_followee_id=user_id) 
         followerSerializer = FollowSerializer(followers, many=True)
@@ -73,7 +73,7 @@ class FollowChangeView(APIView):
 
     def get(self, request, user_id, follower_url):
         """Handle GET request to check if the user is a follower."""
-        return self.get_followers(request, user_id)
+        return self.check_follower(request, user_id)
 
     def put(self, request, user_id, follower_url):
         """Handle PUT request to add a follower."""
