@@ -101,16 +101,13 @@ You must `cd` into each directory separately. Two terminals are required to run 
 6. Run `python manage.py runserver` to start the development server
 
 ## Deployment
+Note: The lock files in the root directory should be up to date before deploying
+  - The lock files should NOT be used for development, only for deployment
 
-The common deployment method is that both the frontend and backend require its own `Procfile` for a separate Heroku dyno, they cannot be run on the same dyno.
+### Setup
+1. Make sure the lock files in the root directory are up to date
+  - If they are not, copy the lock files from the frontend and backend directories into the root directory 
 
-_NOTE WE ARE SUPPOSE TO BUILD REACT AS STATIC THEN RUN ONLY ONE DYNO._
-** TA CONFIRMED WE CANNOT RUN TWO SERVERS **
-
-### Frontend
-
-Instructions here...
-
-### Backend
-
-Instructions here...
+### Finalize
+1. Merge into prod
+2. Merge prod into deployment (it should auto deploy)
