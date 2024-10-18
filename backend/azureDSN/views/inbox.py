@@ -99,7 +99,6 @@ class InboxView(APIView):
         # Validate the follow request object sent with the payload
         follow_obj = FollowRequest.objects.create(object=user_object, actor=payload["actor"])
         serializer = FollowRequestSerializer(follow_obj, data=payload, context={"request": request})
-
         if serializer.is_valid():
             '''
             Here when receive the follow request from other user, we add to our local user's inbox

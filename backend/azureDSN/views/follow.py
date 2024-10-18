@@ -13,7 +13,7 @@ from ..models import User
 from urllib.parse import quote, unquote, urlparse
 
 def fetch_remote_follower_data(remote_url):
-    """Fetch remote follower data using HTTP GET."""
+    """Fetch remote follower data """
     try:
         # Parse the remote URL to get the host and path
         parsed_url = urlparse(remote_url)
@@ -38,8 +38,19 @@ def fetch_remote_follower_data(remote_url):
         print(f"Error fetching remote follower {remote_url}: {str(e)}")
         return None
         
-class FollowingView(APIView):
+class FollowCustomView(APIView):
+    """
+    Returns the the local users that a local user is following
+    """
     def get(self, request, user_id):
+        action = request.query_params.get('action')
+
+        if action =='following':
+            return self.get_following(user_id)
+        elif action == 'friends':
+            return self.get_friends(user_id)
+    
+    def get_following(self, user_id):
         followers = Follow.objects.filter(local_follower_id = user_id)
         userList = []
         for follower in followers:
@@ -56,8 +67,51 @@ class FollowingView(APIView):
                 }
         return Response(response_data)
     
-class FollowGetView(APIView): 
-    def get(self, request, user_id):
+    def get_friends(self, user_id):
+        # get ids that user_id follows
+        followees = Follow.objects.filter(local_followee_id = user_id)
+        mutual_followers = Follow.objects.filter(
+                local_followee__in=followees,  # Followees the user follows
+                local_follower_id=user_id      # Users who follow the current user
+            )
+        friends = User.objects.filter(id__in=mutual_followers.values_list('local_follower', flat=True))
+        response_data = UserSerializer(friends, many=True)
+        return Response(response_data)
+    
+    def get_friends(self, user_id):
+        followers = Follow.objects.filter(local_follower_id = user_id)
+        userList = []
+        for follower in followers:
+            try:
+                user = User.objects.get(uuid=follower.local_followee_id)
+                userList.append(user)
+            except User.DoesNotExist:
+                raise Http404(f"Local follower with ID {follower.local_follower_id} not found.")
+        
+        serializer = UserSerializer(userList, many=True)
+        response_data = {
+                "type": "followers",
+                "followers": serializer.data,
+                }
+        return Response(response_data)
+    
+class FollowView(APIView):        
+    http_method_names = ['get', 'put', 'delete'] 
+
+    def get(self, request, user_id, follower_url=None):
+        """Handle multiple GET operations based on the presence of query params or follower_url."""
+
+        # Check if the user_id and follower_url should perform the "check follower" logic
+        if follower_url:
+            return self.check_follower(request, user_id, follower_url)
+
+        # If no follower_url is provided, handle another GET operation
+        return self.get_followers(request, user_id)
+    
+    def get_followers(self, request, user_id):
+        """
+        Get all the followers of a local user
+        """
         # Get the followers list from Follow model
         followers = Follow.objects.filter(local_followee_id=user_id) 
         followerSerializer = FollowSerializer(followers, many=True)
@@ -75,7 +129,6 @@ class FollowGetView(APIView):
                 except User.DoesNotExist:
                     raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
 
-
         # Using the remote_follower_id and local_follower_id, use the GET user endpoint
         serializer = UserSerializer(combined_followers, many=True)
 
@@ -83,21 +136,14 @@ class FollowGetView(APIView):
         "type": "followers",
         "followers": serializer.data,
         }
-        return Response(response_data)
-    
-class FollowChangeView(APIView):        
-    http_method_names = ['get', 'put', 'delete']  # Allow only these methods
-
-    def get(self, request, user_id, follower_url):
-        """Handle GET request to check if the user is a follower."""
-        return self.check_follower(request, user_id, follower_url)
+        return Response(response_data, status=200)
 
     def put(self, request, user_id, follower_url):
-        """Handle PUT request to add a follower."""
+        """Adds follower to the user"""
         return self.add_follower(request, user_id, follower_url)
 
     def delete(self, request, user_id, follower_url):
-        """Handle DELETE request to remove a follower."""
+        """Removes follower from user"""
         return self.remove_follower(request, user_id, follower_url)
 
     def remove_follower(self, request, user_id, follower_url):
@@ -112,9 +158,8 @@ class FollowChangeView(APIView):
             follower = Follow.objects.filter(local_followee_id = user_id, local_follower_id=follower_id)
         
         follower.delete()
-        return Response({"message": "Follower removed successfully"}, status=204)
+        return Response({"message": "Follower removed successfully"}, status=200)
 
-    
     def add_follower(self,request, user_id, follower_url):  
         decoded_url = unquote(follower_url)
         parts = decoded_url.strip("/").split("/")

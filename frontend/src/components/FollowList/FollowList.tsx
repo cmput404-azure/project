@@ -58,6 +58,9 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
     if (isFollowerList === false) {
       try {
         const response = await axios.get(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/following/`, {
+          params:{
+            action:'following'
+          }
         });
 
         const data = response.data;
@@ -82,8 +85,6 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
       }}
     >
       <button onClick={onClose} style={{ float: 'right' }}>Close</button>
-      <h2>Followers</h2>
-
       {loading ? (
         <p>Loading...</p>
       ) : error ? (
