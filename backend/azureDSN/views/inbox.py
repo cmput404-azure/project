@@ -13,12 +13,7 @@ from ..utils import *
 a POST request occurs if someone like, comment, share post or send follow request to our local user
 a GET request occurs when a local user wants to check her/his inbox
 '''
-class InboxView(APIView):
-    methods = ["get", "post"]
-    query = InboxItem.objects.all()
-    serializer = InboxItemSerializer
-    
-    
+class InboxView(APIView): 
     '''
     When user want to check their inbox, we fetch all objects relating to that user_id
     '''
@@ -32,11 +27,77 @@ class InboxView(APIView):
         # author is return in format of her/his url
         uri = request.build_absolute_uri("/")
         data = {
-                'type': 'inbox',
+                'user': f"{uri}api/authors/{author_serial}",
                 'items': serializer.data,
-                'author': f"{uri}api/authors/{author_serial}"
+                'type': 'inbox',
         }
-        return Response(data)
+        return Response(data, status=status.HTTP_200_OK)
+    
+    '''
+    The idea is that on receiving the inbox item, we map it to either post, like, comment or follow_request
+    We find that object stored in our inbox that delete it
+    When delete a post, body is a post obj
+    When reject/accept a follow request, body is a follow request object
+    if payload is empty = no body, we clear the inbox
+    '''
+    def delete(self, request, author_serial):
+        user_obj = get_object_or_404(User, uuid=author_serial)
+        payload = request.data
+        
+        if not payload:
+            # Delete the whole inbox
+            inbox_obj = get_object_or_404(Inbox, user=user_obj)
+            inbox_obj.items.clear()
+            return Response(status=status.HTTP_200_OK)
+        
+        if "type" not in payload:
+            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if payload["type"].lower() == "post":
+            return self.delete_post(user_obj, payload, request)
+        elif payload["type"].lower() == "follow":
+            return self.delete_follow_request(user_obj, payload, request)
+    
+    '''
+    The deleted post is definitely a local post
+    payload is a post object
+    id is in format: http://{server}/api/authors/{user_id}/posts/{post_id}
+    '''
+    def delete_post(self, user_object, payload, request):
+        parsed_url = urlparse(payload["id"]) 
+        post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+        # Validate the post object sent with the payload
+        post_obj = Post.objects.get(post_id=post_id)
+        serializer = PostSerializer(post_obj, data=payload, context={"request": request})
+
+        if serializer.is_valid():
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            delete_inbox_item(inbox_obj, post_obj)
+            return Response(InboxSerializer(inbox_obj, context={"request": request}).data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    
+    '''
+    The deleted follow request can be from remote/local users
+    '''
+    def delete_follow_request(self, user_object, payload, request):
+        # Validate the follow request object sent with the payload
+        follow_obj = FollowRequest.objects.create(object=user_object, actor=payload["actor"])
+        serializer = FollowRequestSerializer(follow_obj, data=payload, context={"request": request})
+
+        if serializer.is_valid():
+            '''
+            Here when receive the follow request from other user, we add to our local user's inbox
+            We also add that follow request to our database 
+            '''
+            follow_instance = serializer.save()
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            delete_inbox_item(inbox_obj, follow_instance)
+            return Response(InboxSerializer(inbox_obj, context={"request": request}).data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     
     '''
     The idea is that on receiving the inbox item, we map it to either post, like, comment or follow_request
@@ -168,3 +229,11 @@ def create_inbox_item(inbox, content=None, json_data=None):
     else:
         inbox_item_object = InboxItem.objects.create(remote_payload=json_data)
     inbox.items.add(inbox_item_object)
+    
+    
+    
+def delete_inbox_item(inbox, inbox_item_obj):
+    for item in inbox.items.all():
+        # content_object is the actual object (FollowRequest or Post)
+        if item.content_object == inbox_item_obj:
+            inbox.items.remove(item)
