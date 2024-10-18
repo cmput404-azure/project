@@ -104,10 +104,10 @@ You must `cd` into each directory separately. Two terminals are required to run 
 Note: The lock files in the root directory should be up to date before deploying
   - The lock files should NOT be used for development, only for deployment
 
-## Setup
+### Setup
 1. Make sure the lock files in the root directory are up to date
   - If they are not, copy the lock files from the frontend and backend directories into the root directory 
 
-## Finalize
+### Finalize
 1. Merge into prod
 2. Merge prod into deployment (it should auto deploy)
