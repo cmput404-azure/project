@@ -10,7 +10,7 @@ from azureDSN.views import index
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
 urlpatterns = [
     # re_path(r"^(?P<path>.*)$", index, {"document_root": settings.REACT_APP_BUILD_PATH}),
-      path('', TemplateView.as_view(template_name='index.html')),
+    path('', TemplateView.as_view(template_name='index.html')),
   
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
