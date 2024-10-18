@@ -20,11 +20,6 @@ const HomePage = () => {
     };
   return (
     <div className={styles.homePage}>
-      {/* First Section: Navigation Sidebar */}
-      <div className={styles.navSection}>
-            <NavigationBar onClick={handleNavClick} isLoggedIn={isLoggedIn} />
-      </div>
-
       {/* Second Section: PostBar and Post Card */}
       <div className={styles.postSection}>
         <PostBar userImage= {logo} onAddClick={handleAddClick} />
