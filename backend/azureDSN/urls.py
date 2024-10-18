@@ -20,6 +20,7 @@ urlpatterns = [
     # path("api/posts/{POST_FQID}/", PostView.as_view(), name="post"),
     path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="authors"),
     
+    # ======================================
     # Posts API
     path("api/posts/<uuid:post_fqid>/", PostView.as_view(), name="post"),
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
