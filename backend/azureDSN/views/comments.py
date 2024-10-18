@@ -10,26 +10,46 @@ from ..models import *
 from ..utils import *
 
 '''
-URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments
-GET [local, remote]: the comments on the post
+Handle retrieval of all the comments in a post
+Both case return a comments object which is a list of comment object
 '''
-class GeneralCommentView(APIView):
-    def get(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id=post_serial, author__id=author_serial)
-        comments = Comment.objects.filter(post=post)
-        serializer = CommentSerializer(comments, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class MultipleCommentsView(APIView):
+    def get(self, request, author_serial=None, post_serial=None, post_fqid=None):
+        if (author_serial):
+            '''
+            URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments
+            GET [local, remote]: the comments on the post
+            '''
+            post_id = post_serial
+            author_id = author_serial
+            post_obj = get_object_or_404(Post, uuid=post_id)
+        else:
+            '''
+            URL: ://service/api/posts/{POST_FQID}/comments
+            vd:POST_FQID: http://nodebbbb/api/authors/222/posts/249
+            GET [local, remote]: the comments on the post (that our server knows about)    
+            '''
+            post_id = post_fqid.split('/')[-1]
+            post_obj = get_object_or_404(Post, uuid=post_id)
+            author_id = post_obj.user.uuid
+            
+        comments = Comment.objects.filter(post=post_obj)
+        serialized_comments = CommentSerializer(comments, many=True).data
+        uri = request.build_absolute_uri("/")
+        
+        response = {
+            "type": "comments",
+            "page": f"{uri}api/authors/{author_id}/posts/{post_id}",
+            "id": f"{uri}api/authors/{author_id}/posts/{post_id}/comments",
+            "page_number": 1,
+            "size": 10,
+            "count": len(serialized_comments),
+            "src": serialized_comments[:10],  # Limit to first 10 comments
+        }
+        
+        return Response(response, status.HTTP_200_OK)
 
-'''
-URL: ://service/api/posts/{POST_FQID}/comments
-GET [local, remote]: the comments on the post (that our server knows about)    
-'''
-class LocalCommentView(APIView):
-    def get(self, request, post_fqid):
-        post = get_object_or_404(Post, id=post_fqid)
-        comments = Comment.objects.filter(post=post)
-        serializer = CommentSerializer(comments, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 '''
