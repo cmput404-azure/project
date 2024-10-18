@@ -3,11 +3,11 @@ from .post_serializer import PostSerializer
 from rest_framework import serializers
 from ..models import Like, Post
 from .user_serializer import UserSerializer
-
+from django.utils.timezone import make_aware
 
 class LikeSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField(source='user')
-    published = serializers.DateTimeField(source='created_at')
+    published = serializers.SerializerMethodField(source='created_at')
     id = serializers.SerializerMethodField(source='uuid')
     object = serializers.SerializerMethodField(source='post') # Right now, have not implemented Likes for a Comment object yet
 
@@ -30,15 +30,23 @@ class LikeSerializer(serializers.ModelSerializer):
     def get_id(self, obj):
         user_data = obj.user
 
-        host = user_data.get('host', '')
+        # host = user_data.get('host', '')
         user_uuid = user_data.get('id', '')
 
-        return f"{host}api/authors/{user_uuid}/liked/{obj.uuid}"
+        # return f"{host}api/authors/{user_uuid}/liked/{obj.uuid}"
+        return f"api/authors/{user_uuid}/liked/{obj.uuid}"
     
-    def get_object(self, obj): # only works for Post object
+    def get_object(self, obj): # currently only works for Post object
         """Construct the FQID for the liked object."""
         post = obj.post
-        return f"{post.user.host}api/authors/{post.user.uuid}/posts/{post.uuid}"
+        # return f"{post.user.host}api/authors/{post.user.uuid}/posts/{post.uuid}"
+        return f"api/authors/{post.user.uuid}/posts/{post.uuid}"
+    
+    def get_published(self, obj):
+        dt = obj.created_at
+        if not dt.tzinfo:
+            dt = make_aware(dt)  # Add timezone info if missing
+        return dt.isoformat()
 
     def create(self, validated_data):
         """Create new Like object"""

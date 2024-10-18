@@ -6,10 +6,9 @@ from ..models import Post, Like, User
 from ..serializers import LikeSerializer
 from rest_framework.response import Response
 
-class SingleLikeView(APIView):
-    """Handle retrieval of a single like."""
+class LikeView(APIView):
     def get(self, request, like_fqid=None, author_serial=None, like_serial=None):
-
+        """Handle retrieval of a single like."""
         if (like_serial):
             """
             URL: ://service/api/authors/{AUTHOR_SERIAL}/liked/{LIKE_SERIAL}
@@ -38,7 +37,23 @@ class SingleLikeView(APIView):
             like = get_object_or_404(Like, uuid=like_id)
 
         serialized_like = LikeSerializer(like).data
+
+        # Modify serialized data with absolute URIs
+        uri = request.build_absolute_uri("/")
+        serialized_like['id'] = uri + serialized_like['id']
+        serialized_like['object'] = uri + serialized_like['object']
+
         return Response(serialized_like, status=200)
+    
+    def post(self, request, author_serial=None):
+        """
+        URL: ://service/api/authors/{AUTHOR_SERIAL}/inbox
+        POST [remote]: send a like object to AUTHOR_SERIAL
+        Payload: like object
+        """
+        data = request.data
+        # unfinished
+
     
 class AuthorLikesView(APIView):
     """
@@ -51,7 +66,7 @@ class AuthorLikesView(APIView):
             GET [local, remote] a list of likes by AUTHOR_SERIAL
             Returns: likes object
             """
-            print(type(author_serial)) # returns <class 'uuid.UUID'>
+            print(type(author_serial)) # returns <class 'uuid.UUID'> returns <class 'str'>
             author = get_object_or_404(User, uuid=author_serial)
             likes = Like.objects.filter(user__id=str(author_serial))
 
@@ -68,8 +83,8 @@ class AuthorLikesView(APIView):
         serialized_likes = LikeSerializer(likes, many=True).data
         response = {
             "type": "likes",
-            "id": f"the like id FQID?",
-            "page": f"the FQID of the page (object) that is liked?",
+            "id": f"the FQID of the object that is liked + /likes",
+            "page": f"the FQID of the page (object) that is liked? -- can be the same with the Liked object FQID",
             "page_number": 1,
             "size": 50,
             "count": len(serialized_likes),
@@ -80,20 +95,32 @@ class AuthorLikesView(APIView):
         return Response(response, status=200)
 
 
-class LikesList(APIView):
+class LikesView(APIView):
     """
     Handle retrieval of Likes on a Post or a Comment.
     """
     def get(self, request, author_serial=None, post_serial=None, post_fqid=None, comment_serial=None):
-        pass
+        if (author_serial and post_serial):
+            post = get_object_or_404(Post, uuid=post_serial)
 
+            likes = Like.objects.filter(post=post).order_by('-created_at')[:5]
+            count = Like.objects.filter(post_id=post).count()
 
-# @api_view(['POST'])
-# def send_like(request, author_serial=None):
-#     """
-#     POST [remote]: send a like object to AUTHOR_SERIAL
-#     """
-#     pass
+            likes = LikeSerializer(likes, many=True).data
+
+            # Temporary
+            response_data = {
+                "type": "likes",
+                "id": f"TBD",
+                "page": f"TBD",
+                "page_number": 1,
+                "size": 50,
+                "count": count,
+                "src": likes  # List of likes
+            }
+
+            return Response(response_data, status=200)
+
 
 # @api_view(['GET'])
 # def get_likes_by_serial(request, author_serial=None, post_serial=None):
