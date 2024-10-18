@@ -1,24 +1,23 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import styles from './PostBar.module.scss';
-
-
+import React, { useState } from "react";
+import axios from "axios";
+import styles from "./PostBar.module.scss";
 
 const UNKNOWN_USER_ID = "http://nodebbbb/api/authors/unknown";
 const UNKNOWN_USER_NAME = "Unknown User";
 
-
-
 interface PostBarProps {
   userImage: string;
+  showButtonBar?: boolean;
 }
-type IconType = 'public' | 'friends' | 'link';
+type IconType = "public" | "friends" | "link";
 
-const PostBar: React.FC<PostBarProps> = ({ userImage }) => {
-  const [activeIcon, setActiveIcon] = useState<IconType>('public');
-  const [postContent, setPostContent] = useState('');
+const PostBar: React.FC<PostBarProps> = ({ userImage, showButtonBar }) => {
+  const [activeIcon, setActiveIcon] = useState<IconType>("public");
+  const [postContent, setPostContent] = useState("");
   // To update the postContent
-  const handlePostContentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePostContentChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setPostContent(event.target.value);
   };
   // To update the activeIcon
@@ -69,63 +68,78 @@ const PostBar: React.FC<PostBarProps> = ({ userImage }) => {
     };
     try {
       // Send a POST request to the backend
-      const response = await axios.post('http://your-backend-url.com/posts', newPost);
-      console.log('Post successfully created:', response.data);
+      const response = await axios.post(
+        "http://your-backend-url.com/posts",
+        newPost
+      );
+      console.log("Post successfully created:", response.data);
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error("Error creating post:", error);
     }
   };
-  const handlePostClick = async () => {}
+  const handlePostClick = async () => {};
   return (
     <div className={styles.container}>
-      <section className={styles['post-bar']}>
-        <img src={userImage} alt="User" className={styles['user-image']} />
-        <div className={styles['vertical-divider']}></div>
+      <section className={styles["post-bar"]}>
+        <img src={userImage} alt="User" className={styles["user-image"]} />
+        <div className={styles["vertical-divider"]}></div>
         <input
           type="text"
           placeholder="Type Something"
-          className={styles['post-input']}
+          className={styles["post-input"]}
           value={postContent}
           onChange={handlePostContentChange}
         />
-        <button className={styles['add-button']} onClick={() => console.log('Add button clicked')}>
+        <button
+          className={styles["add-button"]}
+          onClick={() => console.log("Add button clicked")}
+        >
           <span>+</span>
         </button>
       </section>
-      <section className={styles['button-bar']}>
-        <div className={styles['icon-bar']}>
-          <div
-            className={`${styles['icon-section']} ${activeIcon === 'public' ? styles.active : ''}`}
-            onClick={() => handleIconClick('public')}
-          >
-            <i className={`${styles.icon} ${styles['public-icon']}`}></i>
+      {showButtonBar && (
+        <section className={styles["button-bar"]}>
+          <div className={styles["icon-bar"]}>
+            <div
+              className={`${styles["icon-section"]} ${
+                activeIcon === "public" ? styles.active : ""
+              }`}
+              onClick={() => handleIconClick("public")}
+            >
+              <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+            </div>
+            <div className={styles["vertical-divider"]}></div>
+            <div
+              className={`${styles["icon-section"]} ${
+                activeIcon === "friends" ? styles.active : ""
+              }`}
+              onClick={() => handleIconClick("friends")}
+            >
+              <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
+            </div>
+            <div className={styles["vertical-divider"]}></div>
+            <div
+              className={`${styles["icon-section"]} ${
+                activeIcon === "link" ? styles.active : ""
+              }`}
+              onClick={() => handleIconClick("link")}
+            >
+              <i className={`${styles.icon} ${styles["link-icon"]}`}></i>
+            </div>
           </div>
-          <div className={styles['vertical-divider']}></div>
-          <div
-            className={`${styles['icon-section']} ${activeIcon === 'friends' ? styles.active : ''}`}
-            onClick={() => handleIconClick('friends')}
+          <button
+            className={styles["post-button"]}
+            onClick={handleCombinedClick}
           >
-            <i className={`${styles.icon} ${styles['friend-icon']}`}></i>
-          </div>
-          <div className={styles['vertical-divider']}></div>
-          <div
-            className={`${styles['icon-section']} ${activeIcon === 'link' ? styles.active : ''}`}
-            onClick={() => handleIconClick('link')}
-          >
-            <i className={`${styles.icon} ${styles['link-icon']}`}></i>
-          </div>
-        </div>
-        <button className={styles['post-button']} onClick={handleCombinedClick}>
-          Post
-        </button>
-      </section>
+            Post
+          </button>
+        </section>
+      )}
     </div>
   );
 };
 
 export default PostBar;
-
-
 
 // import React from 'react';
 // import logo from './images/dog_icon.png';
@@ -146,7 +160,6 @@ export default PostBar;
 //       <PostBar userImage= {logo} onAddClick={handleAddClick} />
 //       <AuthorPost authorImage= {logo}  authorName = "Kyle Quach" userName="tmquach.meomeo" postText= "The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut." onAddClick={handleAddClick} />
 //     </div>
-
 
 //   );
 // }

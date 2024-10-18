@@ -1,0 +1,98 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  border: none;
+  outline: none;
+  margin-top: 70px;
+  margin-bottom: 20px;
+}
+
+.post {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  align-self: end;
+  margin-bottom: -20px;
+}
+
+.comments {
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(123, 123, 123, 0.8); // slightly transparent
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.commentsHeader {
+  padding-bottom: 7px;
+  color: #ffffff;
+  border-bottom: 1px solid #ffffff;
+}
+
+.commentsSection {
+  flex-grow: 1;
+  overflow-y: auto; /* allows for more comments to load by adding a scrolling effect */
+  padding-bottom: 100px;
+}
+
+.comment {
+  display: flex;
+  flex-direction: center;
+  padding: 8px 0;
+}
+
+.userImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.commentContent {
+  display: flex;
+  flex-direction: column;
+  padding-top: 7px;
+}
+
+.authorTime {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.commentAuthor {
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.timePosted {
+  font-size: 0.8rem;
+  color: #d0d0d0;
+}
+
+.commentText {
+  color: #d0d0d0;
+}
+
+.commentBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 70px;
+  width: 100%;
+}
