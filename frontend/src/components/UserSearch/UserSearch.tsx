@@ -9,7 +9,7 @@ export default function UserSearch() {
                 <i className="fa-solid fa-magnifying-glass"></i>
                 <input className={styles.searchInput} type="text" placeholder="Search..." />
                 </div>
-            <ListItem isRequest={false} isPost={false} isLike={false} isFollowerList={false}></ListItem>
+            {/* <ListItem isRequest={false} isPost={false} isLike={false} isFollowerList={false} displayName='B'></ListItem> */}
         </div>
     )
 }

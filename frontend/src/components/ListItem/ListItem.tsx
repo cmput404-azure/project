@@ -1,3 +1,4 @@
+import axios from 'axios';
 import styles from './ListItem.module.scss';
 
 interface ListItemProps {
@@ -5,15 +6,39 @@ interface ListItemProps {
     isPost: boolean;
     isLike: boolean;
     isFollowerList: boolean;
-}
+    follower: {
+        displayName: string;          // Make sure this matches your follower object structure
+        github: string;
+        host: string;
+        id: string; // use the host and id to get the foreign fqid
+        page: string;
+        type:string;
+    };}
 
 export default function ListItem({
     isRequest,
     isPost,
     isLike,
     isFollowerList,
+    follower
 }: ListItemProps) {
-    let additionalText = "";
+    const unFollow = async () => {
+        const encodedHost = encodeURIComponent(follower.host);
+        const encodedId = encodeURIComponent(follower.id);
+
+        const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
+
+        try {
+            const response = await axios.delete(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/${encodedUrl}/`, {
+            });
+  
+            const data = response.data;
+            console.log(data);
+ 
+        } catch (error) {
+            console.error('Fetch error:', error);  
+        }
+    };    let additionalText = "";
 
     if (isFollowerList) {
         additionalText = "accepted your follow request";
@@ -30,13 +55,13 @@ export default function ListItem({
             <div className={styles.container}>
                 <img className={styles.listImg} src='../images/Shiba-pfp.jpg' alt='pfp' />
                 <div className={styles.text}>
-                    <h1>Garfield
+                    <h1>{follower.displayName}
                     <span className={styles.additionalText}>{additionalText}</span>
                     </h1>
-                    <p>@Garfield890</p>
+                    <p>@{follower.displayName}</p>
                 </div>
 
-                {isFollowerList ? <button>Unfollow</button> : null}
+                {isFollowerList ? <button onClick={unFollow}>Unfollow</button> : null}
                 {isRequest ? <span><button>Accept</button> <button>Decline</button></span> : null}
                 {isPost ? <img className={styles.listImgPost} src='../images/Shiba-pfp.jpg' alt='pfp' /> : null}
             </div>

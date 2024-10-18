@@ -1,23 +1,23 @@
 import { useState } from "react";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import styles from "./UserProfile.module.scss";
-import axios from 'axios';
+import FollowList from "../FollowList/FollowList";
 
 export default function UserProfile() {
-  const [followers, setFollowers] = useState(0);
 
-  const fetchFollowers = async () => {
-    try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/`, {
-      });
-  
-      const data = response.data;  // This will throw if the response isn’t valid JSON
-      console.log(data);
-    } catch (error) {
-      console.error('Fetch error:', error);
-    }
+  // FollowerList
+  const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
+  const [showFollowerList, setShowFollowerList] = useState(true);
+
+  const openFollowers = () => {
+    setShowFollowerList(true);
+    setIsFollowerListModalOpen(true);
   };
-  
+
+  const openFollowing = () => {
+    setShowFollowerList(false);
+    setIsFollowerListModalOpen(true);
+  };
   return (
     <div className={styles.userProfileContainer}>
       <section className={styles.profileHeaderContainer}>
@@ -46,12 +46,22 @@ export default function UserProfile() {
             <span>
               <p className={styles.count}>100</p> <p>posts</p>
             </span>
-            <span onClick={fetchFollowers} style={{ cursor: 'pointer' }}>
+            <span onClick={openFollowers} style={{ cursor: 'pointer' }}>
               <p className={styles.count}>100</p> <p>followers</p>
             </span>
-            <span>
+            <FollowList
+              isOpen={isFollowerListModalOpen}
+              onClose={() => setIsFollowerListModalOpen(false)}
+              isFollowerList={showFollowerList}
+            />
+            <span onClick={openFollowing} style={{ cursor: 'pointer' }}>
               <p className={styles.count}>100</p> <p>following</p>
             </span>
+            <FollowList
+              isOpen={isFollowerListModalOpen}
+              onClose={() => setIsFollowerListModalOpen(false)}
+              isFollowerList={showFollowerList}
+            />
           </section>
         </section>
 
@@ -68,60 +78,60 @@ export default function UserProfile() {
       </section>
       <hr className={styles.horizontalLine} />
       <section className={styles.userPosts}>
-          <MiniPostCard 
-            profilePic="../images/yellowduck.png"
-            userName="Mr. Ducky"
-            postTime="11:11 PM"
-            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-            postImage="../images/ducklings.jpg"
-            likeCount={1523382}
-            saveCount={250}
-            commentCount={10000}/>
-          <MiniPostCard 
-            profilePic="../images/yellowduck.png"
-            userName="Mr. Ducky"
-            postTime="11:11 PM"
-            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-            postImage="../images/ducklings.jpg"
-            likeCount={1523382}
-            saveCount={250}
-            commentCount={10000}/>
-            <MiniPostCard 
-            profilePic="../images/yellowduck.png"
-            userName="Mr. Ducky"
-            postTime="11:11 PM"
-            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-            postImage="../images/ducklings.jpg"
-            likeCount={1523382}
-            saveCount={250}
-            commentCount={10000}/>
-            <MiniPostCard 
-            profilePic="../images/yellowduck.png"
-            userName="Mr. Ducky"
-            postTime="11:11 PM"
-            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-            postImage="../images/ducklings.jpg"
-            likeCount={1523382}
-            saveCount={250}
-            commentCount={10000}/>
-            <MiniPostCard 
-            profilePic="../images/yellowduck.png"
-            userName="Mr. Ducky"
-            postTime="11:11 PM"
-            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-            postImage="../images/ducklings.jpg"
-            likeCount={1523382}
-            saveCount={250}
-            commentCount={10000}/>
-            <MiniPostCard 
-            profilePic="../images/yellowduck.png"
-            userName="Mr. Ducky"
-            postTime="11:11 PM"
-            postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-            postImage="../images/ducklings.jpg"
-            likeCount={1523382}
-            saveCount={250}
-            commentCount={10000}/>
+        <MiniPostCard
+          profilePic="../images/yellowduck.png"
+          userName="Mr. Ducky"
+          postTime="11:11 PM"
+          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+          postImage="../images/ducklings.jpg"
+          likeCount={1523382}
+          saveCount={250}
+          commentCount={10000} />
+        <MiniPostCard
+          profilePic="../images/yellowduck.png"
+          userName="Mr. Ducky"
+          postTime="11:11 PM"
+          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+          postImage="../images/ducklings.jpg"
+          likeCount={1523382}
+          saveCount={250}
+          commentCount={10000} />
+        <MiniPostCard
+          profilePic="../images/yellowduck.png"
+          userName="Mr. Ducky"
+          postTime="11:11 PM"
+          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+          postImage="../images/ducklings.jpg"
+          likeCount={1523382}
+          saveCount={250}
+          commentCount={10000} />
+        <MiniPostCard
+          profilePic="../images/yellowduck.png"
+          userName="Mr. Ducky"
+          postTime="11:11 PM"
+          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+          postImage="../images/ducklings.jpg"
+          likeCount={1523382}
+          saveCount={250}
+          commentCount={10000} />
+        <MiniPostCard
+          profilePic="../images/yellowduck.png"
+          userName="Mr. Ducky"
+          postTime="11:11 PM"
+          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+          postImage="../images/ducklings.jpg"
+          likeCount={1523382}
+          saveCount={250}
+          commentCount={10000} />
+        <MiniPostCard
+          profilePic="../images/yellowduck.png"
+          userName="Mr. Ducky"
+          postTime="11:11 PM"
+          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
+          postImage="../images/ducklings.jpg"
+          likeCount={1523382}
+          saveCount={250}
+          commentCount={10000} />
       </section>
     </div>
   );
