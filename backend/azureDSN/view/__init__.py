@@ -1,1 +1,0 @@
-from .inbox_view import InboxView

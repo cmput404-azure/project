@@ -1,0 +1,7 @@
+build:
+  languages:
+    python:
+      PIP_REQUIREMENTS: backend/requirements.txt
+
+    nodejs:
+      NPM_PACKAGE_JSON: frontend/package.json
