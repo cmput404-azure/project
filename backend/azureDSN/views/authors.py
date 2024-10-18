@@ -28,3 +28,9 @@ class AuthorsView(APIView):
             return Response(serializer.data, status=200)
 
         return Response(serializer.errors, status=400)
+    
+class AuthorsCompleteView(APIView):
+    def get(self,request):
+        authors = User.objects.all()
+        serializer = UserSerializer(authors, many=True)
+        return Response(serializer.data)

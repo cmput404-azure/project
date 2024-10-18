@@ -6,7 +6,8 @@ interface ListItemProps {
     isPost: boolean;
     isLike: boolean;
     isFollowerList: boolean;
-    follower: {
+    isUserList:boolean;
+    user: {
         displayName: string;          // Make sure this matches your follower object structure
         github: string;
         host: string;
@@ -20,11 +21,12 @@ export default function ListItem({
     isPost,
     isLike,
     isFollowerList,
-    follower
+    isUserList,
+    user
 }: ListItemProps) {
     const unFollow = async () => {
-        const encodedHost = encodeURIComponent(follower.host);
-        const encodedId = encodeURIComponent(follower.id);
+        const encodedHost = encodeURIComponent(user.host);
+        const encodedId = encodeURIComponent(user.id);
 
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
 
@@ -38,7 +40,28 @@ export default function ListItem({
         } catch (error) {
             console.error('Fetch error:', error);  
         }
-    };    let additionalText = "";
+    };   
+
+    const follow = async () => {
+        const encodedHost = encodeURIComponent(user.host);
+        const encodedId = encodeURIComponent(user.id);
+
+        const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
+
+        try {
+            const response = await axios.put(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/${encodedUrl}/`, {
+            });
+  
+            const data = response.data;
+            console.log(data);
+ 
+        } catch (error) {
+            console.error('Fetch error:', error);  
+        }
+    };   
+
+    
+    let additionalText = "";
 
     if (isFollowerList) {
         additionalText = "accepted your follow request";
@@ -55,13 +78,15 @@ export default function ListItem({
             <div className={styles.container}>
                 <img className={styles.listImg} src='../images/Shiba-pfp.jpg' alt='pfp' />
                 <div className={styles.text}>
-                    <h1>{follower.displayName}
+                    <h1>{user.displayName}
                     <span className={styles.additionalText}>{additionalText}</span>
                     </h1>
-                    <p>@{follower.displayName}</p>
+                    <p>@{user.displayName}</p>
                 </div>
 
                 {isFollowerList ? <button onClick={unFollow}>Unfollow</button> : null}
+                {isUserList ? <button onClick={follow}>Follow</button> : null}
+
                 {isRequest ? <span><button>Accept</button> <button>Decline</button></span> : null}
                 {isPost ? <img className={styles.listImgPost} src='../images/Shiba-pfp.jpg' alt='pfp' /> : null}
             </div>
