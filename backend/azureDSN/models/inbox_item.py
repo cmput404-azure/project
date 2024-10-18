@@ -12,10 +12,11 @@ Date: 12/10/2024
 class InboxItem(models.Model):
     '''
     content_type is a reference to a model instance whose id is object_id and actual object is content_object
-    unused_payload is the JSON data sent with the request yet don't match any models and theirs attribute
+    remote_payload is the JSON data sent with the request yet don't match any models, this usually causes by the object
+    being sent belongs to a remote user ~ not in our database
     '''
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     object_id = models.UUIDField(null=True, blank=True)
     content_object = GenericForeignKey("content_type", "object_id")
-    unused_payload = models.JSONField(null=True, blank=True)
+    remote_payload = models.JSONField(null=True, blank=True)
     
