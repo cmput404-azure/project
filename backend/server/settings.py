@@ -147,7 +147,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Where collectstatic will 
 
 # Include React build static files
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, '../frontend/build/static'),
+    os.path.abspath(os.path.join(BASE_DIR, '../../frontend/build/static')),
 ]
 
 # Default primary key field type
