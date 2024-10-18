@@ -38,12 +38,29 @@ def fetch_remote_follower_data(remote_url):
         print(f"Error fetching remote follower {remote_url}: {str(e)}")
         return None
         
+class FollowingView(APIView):
+    def get(self, request, user_id):
+        followers = Follow.objects.filter(local_follower_id = user_id)
+        userList = []
+        for follower in followers:
+            try:
+                user = User.objects.get(uuid=follower.local_followee_id)
+                userList.append(user)
+            except User.DoesNotExist:
+                raise Http404(f"Local follower with ID {follower.local_follower_id} not found.")
+        
+        serializer = UserSerializer(userList, many=True)
+        response_data = {
+                "type": "followers",
+                "followers": serializer.data,
+                }
+        return Response(response_data)
+    
 class FollowGetView(APIView): 
-    def get(request, user_id):
+    def get(self, request, user_id):
         # Get the followers list from Follow model
         followers = Follow.objects.filter(local_followee_id=user_id) 
         followerSerializer = FollowSerializer(followers, many=True)
-        print(followerSerializer.data)
         combined_followers = []
 
         for follower in followers:
@@ -56,7 +73,7 @@ class FollowGetView(APIView):
                     user = User.objects.get(uuid=follower.local_follower_id)
                     combined_followers.append(user)
                 except User.DoesNotExist:
-                    raise Http404(f"Local follower with ID {follower.local_follower_id} not found.")
+                    raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
 
 
         # Using the remote_follower_id and local_follower_id, use the GET user endpoint
@@ -73,7 +90,7 @@ class FollowChangeView(APIView):
 
     def get(self, request, user_id, follower_url):
         """Handle GET request to check if the user is a follower."""
-        return self.get_followers(request, user_id)
+        return self.check_follower(request, user_id, follower_url)
 
     def put(self, request, user_id, follower_url):
         """Handle PUT request to add a follower."""
