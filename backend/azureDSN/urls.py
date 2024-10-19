@@ -7,16 +7,11 @@ from django.conf import settings
 from django.views.generic import TemplateView
 from azureDSN.views import index
 
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView # for api docs
-
 # urlpatterns contains all of the routes that this application supports routing for.
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
 urlpatterns = [
     # re_path(r"^(?P<path>.*)$", index, {"document_root": settings.REACT_APP_BUILD_PATH}),
     path('', TemplateView.as_view(template_name='index.html')),
-
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),  # Generates the OpenAPI schema
-    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
   
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),

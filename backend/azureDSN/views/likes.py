@@ -15,11 +15,11 @@ class LikeView(APIView):
             description="Retrieve a specific Like object by `like_fqid` or a combination of `like_serial` and `author_serial`. Returns a 404 if not found.",
             parameters=[
                 OpenApiParameter(
-                    name='like_serial',  # Specify the name of the parameter
-                    description='UUID of the Like to retrieve',  # Description
-                    type=str,  # Type of the parameter
+                    name='like_serial',
+                    description='UUID of the Like to retrieve',
+                    type=str,
                     required=False,
-                    location=OpenApiParameter.PATH  # Specify the location
+                    location=OpenApiParameter.PATH 
                 ),
                 OpenApiParameter(
                     name='author_serial',
