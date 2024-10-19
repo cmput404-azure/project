@@ -52,7 +52,7 @@ const HomePage = () => {
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar userImage={logo} />
+        <PostBar userImage={logo} showButtonBar = {true}/>
         <PostCard
           profilePic="https://via.placeholder.com/50"
           userName="John Doe"
