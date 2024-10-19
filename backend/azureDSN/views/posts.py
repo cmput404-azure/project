@@ -4,6 +4,8 @@ from django.http import HttpResponse
 from ..models import User, Post
 from ..serializers import UserSerializer, PostSerializer
 from rest_framework.response import Response
+import uuid
+from datetime import datetime
 
 class AuthorPostView(APIView):
     """
@@ -125,4 +127,43 @@ class PostCreation(APIView):
         return Response(PostSerializer(posts, many=True).data, status=200)       
     
     def post(self, request, author_serial):
-        pass
+        """
+        POST [local] create a new post but generate a new ID
+            - Authenticated locally as author
+        """
+        user_obj = get_object_or_404(User, uuid=author_serial)
+        
+        # Check if user of request is the author of the post
+        # if request.user != author:
+        #     return HttpResponse("You are not the author of this post.", status=403)
+
+        '''this is the format
+        
+        post_data =    {
+                "type": "post",
+                "title": "A Test Post Title",
+                "description": "This is a test post.",
+                "contentType": "text/plain",
+                "content": "This is the content of the post.",
+                "author": {
+                    "id": "5f577ee2-0ccc-49a4-b3cc-47a8aeb265df",
+                    "displayName": "Bob",
+                    "host": "http://localhost:8000",
+                    "github": "http://github.com/bob",
+                    "page": "http://bob.com",
+                    "profile_image": "http://localhost:8000/media/profile_images/bob.png"
+                },
+                "published": "2015-03-09T13:07:04+00:00",
+                "visibility": 1
+            }
+            
+        '''
+        
+        author = UserSerializer(user_obj).data
+        
+
+        serializer = PostSerializer(data=post_data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
