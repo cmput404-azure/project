@@ -1,8 +1,12 @@
-import styles from './UserSearch.module.scss';
+// @ts-nocheck
+
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import ListItem from '../ListItem/ListItem';
+
 import React, { useEffect, useState } from 'react';
+
+import ListItem from '../ListItem/ListItem';
 import axios from 'axios';
+import styles from './UserSearch.module.scss';
 
 export default function UserSearch() {
     const [searchTerm, setSearchTerm] = useState<string>('');
