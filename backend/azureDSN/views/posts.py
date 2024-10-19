@@ -56,12 +56,17 @@ class AuthorPostView(APIView):
         PUT [local] update a post
             - local posts: must be authenticated locally as the author
         """
-        #TODO: Logic for the PUT request
-
-
-        return HttpResponse({
-            "message": f"Updating {post_fqid}"
-        })
+        post = get_object_or_404(Post, uuid=post_fqid)
+        
+        # check if user of request is author of post
+        if (request.user != post.user):
+            return HttpResponse("You are not the author of this post.", status=403)
+        
+        serializer = PostSerializer(post, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
     
     def delete(self, request, post_fqid):
         """
