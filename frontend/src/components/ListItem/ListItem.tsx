@@ -8,7 +8,7 @@ interface ListItemProps {
     isFollowerList: boolean;
     isUserList:boolean;
     user: {
-        displayName: string;          // Make sure this matches your follower object structure
+        displayName: string;          
         github: string;
         host: string;
         id: string; // use the host and id to get the foreign fqid

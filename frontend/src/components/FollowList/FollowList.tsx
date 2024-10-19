@@ -5,7 +5,7 @@ import ListItem from '../ListItem/ListItem';
 import styles from './FollowList.module.scss';
 
 interface Follower {
-  displayName: string;          
+  displayName: string;
   github: string;
   host: string;
   id: string; // use the host and id to get the foreign fqid
@@ -58,8 +58,8 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
     if (isFollowerList === false) {
       try {
         const response = await axios.get(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/following/`, {
-          params:{
-            action:'following'
+          params: {
+            action: 'following'
           }
         });
 
@@ -91,9 +91,29 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
         <p>{error}</p>
       ) : (
         <ul className={styles.ul}>
-          {followers.map((follower, index) => (
-            <ListItem key={index} isRequest={false} isPost={false} isLike={false} isFollowerList={true} isUserList = {false}user={follower}></ListItem>
-          ))}
+          {followers.map((follower, index) =>
+            isFollowerList ? (
+              <ListItem
+                key={index}
+                isRequest={false}
+                isPost={false}
+                isLike={false}
+                isFollowerList={false}
+                isUserList={false}
+                user={follower}
+              />
+            ) : (
+              <ListItem
+                key={index}
+                isRequest={false}
+                isPost={false}
+                isLike={false}
+                isFollowerList={true}
+                isUserList={false}
+                user={follower}
+              />
+            )
+          )}
         </ul>
       )}
     </Modal>

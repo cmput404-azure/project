@@ -13,7 +13,9 @@ from ..models import User
 from urllib.parse import quote, unquote, urlparse
 
 def fetch_remote_follower_data(remote_url):
-    """Fetch remote follower data """
+    """
+    Fetches remote follower data by sending a get request using the remote_url
+    """
     try:
         # Parse the remote URL to get the host and path
         parsed_url = urlparse(remote_url)
@@ -39,10 +41,13 @@ def fetch_remote_follower_data(remote_url):
         return None
         
 class FollowCustomView(APIView):
-    """
-    Returns the the local users that a local user is following
-    """
+
     def get(self, request, user_id):
+        """
+            Based on query parameters following or friends, will direct to either get the 
+            users that current user is following or get the list of friends
+            Both actions will return User objects
+        """
         action = request.query_params.get('action')
 
         if action =='following':
@@ -51,6 +56,10 @@ class FollowCustomView(APIView):
             return self.get_friends(user_id)
     
     def get_following(self, user_id):
+        """
+        Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/following/?action=following
+        """
+        # Get all the users where user is the follower
         followers = Follow.objects.filter(local_follower_id = user_id)
         userList = []
         for follower in followers:
@@ -68,38 +77,34 @@ class FollowCustomView(APIView):
         return Response(response_data)
     
     def get_friends(self, user_id):
+        """
+        Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/following/?action=following
+        """
         # get ids that user_id follows
-        followees = Follow.objects.filter(local_followee_id = user_id)
+        followee_ids = Follow.objects.filter(local_follower_id=user_id).values_list('local_followee_id', flat=True)
+
+        # This was written by ChatGPT with the prompt: how to find mutual followers in the database
         mutual_followers = Follow.objects.filter(
-                local_followee__in=followees,  # Followees the user follows
-                local_follower_id=user_id      # Users who follow the current user
-            )
-        friends = User.objects.filter(id__in=mutual_followers.values_list('local_follower', flat=True))
-        response_data = UserSerializer(friends, many=True)
-        return Response(response_data)
+            local_followee_id=user_id,  # Users following the current user
+            local_follower_id__in=followee_ids  # Users whom the current user follows
+        )
+
+        # Get the list of friend ids
+        friend_ids = mutual_followers.values_list('local_follower_id', flat=True)
+        print(friend_ids)
+        friends = User.objects.filter(uuid__in=friend_ids)
+
+        serializer = UserSerializer(friends, many=True)
+        return Response(serializer.data)
     
-    def get_friends(self, user_id):
-        followers = Follow.objects.filter(local_follower_id = user_id)
-        userList = []
-        for follower in followers:
-            try:
-                user = User.objects.get(uuid=follower.local_followee_id)
-                userList.append(user)
-            except User.DoesNotExist:
-                raise Http404(f"Local follower with ID {follower.local_follower_id} not found.")
-        
-        serializer = UserSerializer(userList, many=True)
-        response_data = {
-                "type": "followers",
-                "followers": serializer.data,
-                }
-        return Response(response_data)
     
 class FollowView(APIView):        
     http_method_names = ['get', 'put', 'delete'] 
 
     def get(self, request, user_id, follower_url=None):
-        """Handle multiple GET operations based on the presence of query params or follower_url."""
+        """
+        Directs get request to either check for a follow relationship or to get list of all followers 
+        """
 
         # Check if the user_id and follower_url should perform the "check follower" logic
         if follower_url:
@@ -111,10 +116,11 @@ class FollowView(APIView):
     def get_followers(self, request, user_id):
         """
         Get all the followers of a local user
+        Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/
+
         """
         # Get the followers list from Follow model
         followers = Follow.objects.filter(local_followee_id=user_id) 
-        followerSerializer = FollowSerializer(followers, many=True)
         combined_followers = []
 
         for follower in followers:
@@ -147,6 +153,10 @@ class FollowView(APIView):
         return self.remove_follower(request, user_id, follower_url)
 
     def remove_follower(self, request, user_id, follower_url):
+        """
+        Deletes the follow entry so that user is no longer following follower
+        """
+
         # remote follower
         follower = Follow.objects.filter(local_followee_id = user_id, remote_follower=follower_url)
 
@@ -157,26 +167,45 @@ class FollowView(APIView):
             follower_id = parts[-1]
             follower = Follow.objects.filter(local_followee_id = user_id, local_follower_id=follower_id)
         
+        # Verifies that follower exists
+        if not follower:
+            return Response({"error": "Follower not found"}, status=404)
+    
         follower.delete()
         return Response({"message": "Follower removed successfully"}, status=200)
 
     def add_follower(self,request, user_id, follower_url):  
+
+        # Get the necessary information from follower_url
         decoded_url = unquote(follower_url)
         parts = decoded_url.strip("/").split("/")
-        follower_host = f"{parts[0]}//{parts[2]}"  # Extract scheme and host (e.g., http://127.0.0.1:8000)
+        follower_host = f"{parts[0]}//{parts[2]}"  
         follower_id = parts[-1]
+
         try:
-            user = User.objects.get(uuid=user_id)
-           
+            user = User.objects.get(uuid=user_id) # Make sure the user exists
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
         
-
+        # TODO: Replace with node name after
         follower_local = False
         if follower_host.find('127.0.0.1')!=-1:
             follower_local = True
+
+        # Check if this follow relationship already exists
+        existing_follow = Follow.objects.filter(
+            local_followee=user if follower_local else None,
+            remote_followee=None,
+            local_follower=follower_id if follower_local else None,
+            remote_follower=None if follower_local else decoded_url
+        ).exists()
+
+        if existing_follow:
+            return Response({"message": "Already following"}, status=400)
+        
+        # Insert data as normal if the relationship doesn't already exist
 
         follow_data = {
             "local_followee": user_id,
@@ -192,6 +221,11 @@ class FollowView(APIView):
             return Response(serializer.errors, status=400)
 
     def check_follower(self,request, user_id, follower_url):
+        """
+        Checks if the second id is a follower of the first id
+        Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/http%3A%2F%2F127.0.0.1%3A8000%2Fapi%2Fauthors%2F337f58f8-5811-4213-8311-1c7dc8e6038d/
+        
+        """
         # remote follower
         follower = Follow.objects.filter(local_followee_id = user_id, remote_follower=follower_url)
 
@@ -201,7 +235,6 @@ class FollowView(APIView):
             parts = decoded_url.strip("/").split("/")
             follower_id = parts[-1]
             follower = Follow.objects.filter(local_followee_id = user_id, local_follower_id=follower_id)
-        
 
         if not follower:  # neither local nor remote
             return Response(status=404)
