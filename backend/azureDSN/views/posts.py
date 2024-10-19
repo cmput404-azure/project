@@ -120,7 +120,7 @@ class PostCreation(APIView):
             posts = posts.all()
         # if user is authenticated as friend of author
         else:
-            posts = posts.filter(visibility__in=[1, 2])
+            posts = posts.filter(visibility=[1, 2])
         
         return Response(PostSerializer(posts, many=True).data, status=200)       
     
