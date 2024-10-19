@@ -5,5 +5,5 @@ from .follow import FollowView, FollowCustomView
 from .inbox import InboxView
 from .follow import FollowGetView, FollowChangeView
 from .likes import SingleLikeView, AuthorLikesView
-from .comments import MultipleCommentsView
+from .comments import MultipleCommentsView, SingleCommentView
 from .likes import LikeView, AuthorLikesView, LikesView
