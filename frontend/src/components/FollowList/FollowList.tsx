@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+
+import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
 import axios from 'axios';
-import ListItem from '../ListItem/ListItem';
 import styles from './FollowList.module.scss';
 
 interface Follower {
@@ -20,6 +21,10 @@ interface FollowerListProps {
   isFollowerList: boolean; // true --> followerlist, false --> followingList
 }
 
+
+interface FollowerResponse {
+  followers: Follower[];
+}
 
 Modal.setAppElement('#root');
 
@@ -41,7 +46,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFollowers = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/`, {
+      const response = await axios.get<FollowerResponse>(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/`, {
       });
 
       const data = response.data;
