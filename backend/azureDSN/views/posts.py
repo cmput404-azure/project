@@ -8,16 +8,34 @@ from rest_framework.response import Response
 class AuthorPostView(APIView):
     """
     URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
+    URL ://service/api/authors/{AUTHOR_SERIAL}/posts/
     """
-    def get(self, request, author_serial, post_serial):
+    def get(self, request, author_serial=None, post_serial=None):
         """
         GET [local, remote] get the public post whose serial is POST_SERIAL
             - friends-only posts: must be authenticated
+            
+        GET [local, remote] get the recent posts from author AUTHOR_SERIAL (paginated)
+            - Not authenticated: only public posts.
+            - Authenticated locally as author: all posts.
+            - Authenticated locally as friend of author: public + friends-only posts.
+            - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
         """
 
-        author = get_object_or_404(User, uuid=author_serial)
-        post = get_object_or_404(Post, user=author, uuid=post_serial)
+        # if both author and post serials are provided
+        if (author_serial and post_serial):
+            pass
+            
+        #  if only author serial is provided
+        elif (author_serial):
+            # pagination
+            pass
 
+        else:
+            return HttpResponse("Need to specify at least an author ID", status=400)
+
+
+    def checkPermissions(request, post):
         # Check permissions
         if post.visibility == 2 and not request.user.is_authenticated:  # FRIENDS
             return HttpResponse("Friend's only posts must be authenticated to view.", status=403)
@@ -87,37 +105,4 @@ class PostView(APIView):
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
         else:
-            return HttpResponse("No post ID specified in fqid", status=400)
-        
-class PostCreation(APIView):
-    """
-    URL ://service/api/authors/{AUTHOR_SERIAL}/posts/
-    """
-    def get (self, request, auth_serial=None):
-        """
-        GET [local, remote] get the recent posts from author AUTHOR_SERIAL (paginated)
-        - Not authenticated: only public posts.
-            - Authenticated locally as author: all posts.
-            - Authenticated locally as friend of author: public + friends-only posts.
-            - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
-        """
-        return HttpResponse("GET method not allowed for this route.", status=405)
-        
-    def post(self, request, auth_serial=None):
-        """
-        POST [local] create a new post but generate a new ID
-            - Authenticated locally as author
-        """
-        if (not request.user.is_authenticated):
-            return HttpResponse("You must be authenticated to create a post.", status=403)
-
-        # get author if exists
-        author = get_object_or_404(User, uuid=auth_serial)
-        
-        # create post
-        serializer = PostSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=author)
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
-        
+            return HttpResponse("No post ID specified", status=400)
