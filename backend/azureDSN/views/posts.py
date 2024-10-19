@@ -16,19 +16,18 @@ class PostView(APIView):
             post = get_object_or_404(Post, uuid=post_fqid)
 
             # check the visibility of the post
-            # visibility ["PUBLIC","FRIENDS","UNLISTED","DELETED"]
-            if post.visibility == "FRIENDS":
+            if post.visibility == 2: # FRIENDS
                 return HttpResponse("Friend's only posts must be authenticated to view.", status=403)
-            if post.visibility == "UNLISTED":
+            if post.visibility == 3: # UNLISTED
                 return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
-            if post.visibility == "DELETED": 
+            if post.visibility == 4: # DELETED
                 return HttpResponse("Post does not exist.", status=404)
             
-            # post is public if aboce conditions are not met
+            # post is public if aboVe conditions are not met
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
         else:
-            return HttpResponse("No post ID spqcified in fqid", status=400)
+            return HttpResponse("No post ID specified in fqid", status=400)
     
     
 class AuthorPostView(APIView):
