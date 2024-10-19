@@ -13,16 +13,26 @@ class AuthorsPagination(PageNumberPagination):
 class AuthorsView(APIView):
     pagination_provider  = AuthorsPagination
 
-    def get(self, request, author_serial=None):
+    def get(self, request, author_serial=None, author_fqid=None):
         """
         GET [local, remote] get the public authors
         """
         if(author_serial):
             # if uuid provided
+            print(author_serial)
             author = get_object_or_404(User, uuid=author_serial)
+            
             serializer = UserSerializer(author)
             return Response(serializer.data, status=200)
-        
+        elif(author_fqid):
+            # if fqid provided
+            print(author_fqid)
+
+            # TODO: In future need to send request to remote server to get author
+            author = get_object_or_404(User, fqid=author_fqid)
+
+            serializer = UserSerializer(author)
+            return Response(serializer.data, status=200)
         else:
             # Default behavior to return all authors
             authors = User.objects.all()

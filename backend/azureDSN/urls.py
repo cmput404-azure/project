@@ -15,9 +15,10 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='index.html')),
     
     # Authors API
-    path("api/authors/", AuthorsView.as_view(), name="authors_list"),
     path("api/authors/all/", AuthorsCompleteView.as_view(), name="authors_all"),
     path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="author"),
+    path("api/authors/<path:author_fqid>/", AuthorsView.as_view(), name="author"),
+    path("api/authors/", AuthorsView.as_view(), name="authors_list"),
 
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
