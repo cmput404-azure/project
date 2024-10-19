@@ -77,8 +77,7 @@ export default function ListItem({
     };   
 
     const declineFollower = async()=>{
-       
-        // TODO:Delete from inbox after
+        deleteFollowRequest();
 
     }
 
@@ -95,6 +94,28 @@ export default function ListItem({
         const data = response.data;
 
         // TODO:Delete from inbox after
+       await deleteFollowRequest();
+       
+    }
+
+    const deleteFollowRequest = async()=>{
+        // TODO:Delete from inbox after
+        const userResponse = await axios.get(`http://127.0.0.1:8000/api/authors/${tmpUserId}/`);
+        const userInfo = userResponse.data;
+
+        const deletefollowRequest = {
+            type: "follow",
+            summary: `${user.displayName} wants to follow ${userInfo.displayName}`,
+            actor: {
+                type: "author",
+                id: `${user.id}`,
+                host: `${user.host}`,
+                displayName: `${user.displayName}`, 
+                github: `${user.github}`,
+                page:`${user.page}`
+            },
+        }
+        const deleteResponse = await axios.put(`http://127.0.0.1:8000/api/authors/${tmpUserId}/inbox/`,deletefollowRequest)
 
     }
 
