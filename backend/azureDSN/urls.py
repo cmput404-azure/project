@@ -13,6 +13,11 @@ urlpatterns = [
     # Front end injection
     path('', TemplateView.as_view(template_name='index.html')),
     
+    # Follow API
+    path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  
+    path('api/authors/<uuid:user_id>/followers/', FollowerView.as_view(), name='followers_handler'),  
+    path('api/authors/<uuid:user_id>/following/', FollowCustomView.as_view(), name='following'),  
+
     # Authors API
     path("api/authors/all/", AuthorsCompleteView.as_view(), name="authors_all"),
     path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="author"),
@@ -22,11 +27,7 @@ urlpatterns = [
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
     
-    # Follow API
-    path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  
-    path('api/authors/<uuid:user_id>/followers/', FollowView.as_view(), name='followers_handler'),  
-    path('api/authors/<uuid:user_id>/following/', FollowCustomView.as_view(), name='following'),  
-
+   
     # Posts API
     path("api/posts/<uuid:post_fqid>/", PostView.as_view(), name="post"),
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
