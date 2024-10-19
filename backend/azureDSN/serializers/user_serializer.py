@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
+        # TODO: MIGHT NEED TO ADD IMAGE LATER
         fields = ('type', 'id', 'host', 'displayName', 'github', 'page') # image not included
 
     def create(self, validated_data):
