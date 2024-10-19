@@ -11,7 +11,7 @@ class FollowRequestSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = FollowRequest
-        fields = ["type", "summary", "actor", "object"]
+        fields = ["id", "type", "summary", "actor", "object"]
 
     def get_user(self, obj):
         return UserSerializer(obj.object, context=self.context).data

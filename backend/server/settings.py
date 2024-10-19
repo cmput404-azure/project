@@ -27,8 +27,14 @@ SECRET_KEY = 'django-insecure-d)u%dgq_2j6c2x47&zel_b^t51-u^@dp6f5%&rfc$st&fm3xit
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["azuredsn-889a4fb9b2bb.herokuapp.com", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ['*']
 
+CORS_ALLOW_ALL_ORIGINS = False  
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',  
+    'http://ui19:3000'
+]
 
 # Application definition
 
@@ -155,7 +161,6 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ORIGIN_ALLOW_ALL = True
 
 # Django Rest Framework
 REST_FRAMEWORK = {
@@ -167,6 +172,6 @@ REST_FRAMEWORK = {
 
 # Media files (e.g. Users' Profile Pictures)
 MEDIA_URL = '/media/' # this is the public URL for accessing media
-MEDIA_ROOT = BASE_DIR / 'azureDNS' / 'media' # directory where media files will go
+MEDIA_ROOT = BASE_DIR / 'azureDSN' / 'media' # directory where media files will go
 
 REACT_APP_BUILD_PATH = "../frontend/build"

@@ -1,17 +1,18 @@
-.searchContainer{
-    background-color:#aeaeae;
+.componentWidth {
+    width: 400px;
     display: flex;
-    align-items: center;
-    width:200px;
-    padding:10px;
-    border-radius:16px;
+    flex-direction: column;
+    align-items: center; /* Center children horizontally */
 }
 
-.componentWidth{
-    width:400px;
-    display:flex;
-    flex-direction: column; /* Stack elements vertically */
-    align-items:center;
+.searchContainer {
+    background-color: #aeaeae;
+    display: flex;
+    align-items: center;
+    width: 200px; /* Set the desired width for the search container */
+    padding: 10px;
+    border-radius: 16px;
+    justify-content: center; 
 }
 
 .searchInput {
@@ -19,8 +20,9 @@
     outline: none;
     background: none;
     font-size: 12px;
-    width: 100%; /* Optional: make it responsive */
-    color: inherit; /* Inherit text color */
-  }
+    width: 100%;
+}
 
- 
+ul{
+    width:100%;
+}
