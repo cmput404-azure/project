@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import *
+from .views.posts import * # raises warning for PostCreation if not imported
 from django.contrib import admin
 from django.urls import path, re_path
 from django.conf import settings
@@ -12,6 +13,9 @@ from azureDSN.views import index
 urlpatterns = [
     # Front end injection
     path('', TemplateView.as_view(template_name='index.html')),
+    
+    # needs to be ahead of "path("api/authors/<path:author_fqid>/", AuthorsView.as_view(), name="author"),"
+    path("api/authors/<uuid:author_serial>/posts/", PostCreation.as_view(), name="create_post"),
     
     # Authors API
     path("api/authors/all/", AuthorsCompleteView.as_view(), name="authors_all"),
@@ -28,9 +32,9 @@ urlpatterns = [
     path('api/authors/<uuid:user_id>/following/', FollowCustomView.as_view(), name='following'),  
 
     # Posts API
-    path("api/posts/<uuid:post_fqid>/", PostView.as_view(), name="post"),
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
-    
+    path("api/posts/<uuid:post_fqid>/", PostView.as_view(), name="post"),
+
     # Comments API
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments", MultipleCommentsView.as_view(), name="multiple_comment_view_by_postid"),
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comment/<str:comment_fqid>", SingleCommentView.as_view(), name="single_comment_view_by_fqid"),

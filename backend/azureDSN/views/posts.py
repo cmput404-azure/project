@@ -4,7 +4,6 @@ from django.http import HttpResponse
 from ..models import User, Post
 from ..serializers import UserSerializer, PostSerializer
 from rest_framework.response import Response
-from django.core.paginator import Paginator
 
 class AuthorPostView(APIView):
     """
@@ -26,33 +25,15 @@ class AuthorPostView(APIView):
         # TODO: remote node handling
 
         # If both author and post serials are provided
-        if author_serial and post_serial:
-            post = get_object_or_404(Post, uuid=post_serial)
-            permission_check = self.checkPermissions(request, post)
-            if isinstance(permission_check, Response):  # If permission check returns an error response
-                return permission_check
-            
-            serializer = PostSerializer(post)
-            return Response(serializer.data, status=200)
+        if (author_serial and post_serial):
+            pass
             
         # If only author serial is provided
-        elif author_serial:
-            # TODO: pagination
+        elif (author_serial):
             pass
 
         else:
             return HttpResponse("Need to specify at least an author ID", status=400)
-
-    def checkPermissions(self, request, post):
-        # Check permissions
-        if post.visibility == 2 and not request.user.is_authenticated:  # FRIENDS
-            return HttpResponse("Friend's only posts must be authenticated to view.", status=403)
-        if post.visibility == 3 and not request.user.is_authenticated:  # UNLISTED
-            return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
-        if post.visibility == 4:  # DELETED
-            return HttpResponse("Post does not exist.", status=404)
-        
-        return None  # return None if permissions are valid
 
     def put(self, request, post_fqid):
         """
@@ -112,3 +93,36 @@ class PostView(APIView):
             return Response(serializer.data, status=200)
         else:
             return HttpResponse("No post ID specified", status=400)
+        
+class PostCreation(APIView):
+    
+    def get(self, request, author_serial=None):
+        """
+        GET [local, remote] get the recent posts from author AUTHOR_SERIAL (paginated)
+            - Not authenticated: only public posts.
+            - Authenticated locally as author: all posts.
+            - Authenticated locally as friend of author: public + friends-only posts.
+            - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
+            
+        URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/
+        """
+        # Ensure the author exists
+        author = get_object_or_404(User, uuid=author_serial)
+
+        # Retrieve all posts by the author
+        posts = Post.objects.filter(user=author)
+
+        #if user is not authenticated
+        if not request.user.is_authenticated:
+            posts = posts.filter(visibility=1)
+        #if user is authenticated as author
+        elif request.user == author:
+            posts = posts.all()
+        #if user is authenticated as friend of author
+        else:
+            posts = posts.filter(visibility__in=[1, 2])
+        
+        return Response(PostSerializer(posts, many=True).data, status=200)       
+    
+    def post(self, request, author_serial):
+        pass
