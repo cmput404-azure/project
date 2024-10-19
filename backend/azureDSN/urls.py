@@ -11,7 +11,6 @@ from azureDSN.views import index
 # urlpatterns contains all of the routes that this application supports routing for.
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
 urlpatterns = [
-    # re_path(r"^(?P<path>.*)$", index, {"document_root": settings.REACT_APP_BUILD_PATH}),
     path('', TemplateView.as_view(template_name='index.html')),
   
     # Inbox API
@@ -55,11 +54,10 @@ urlpatterns = [
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comment/<str:comment_fqid>", SingleCommentView.as_view(), name="single_comment_view_by_fqid"),
 
     
-    path("api/posts/<str:post_fqid>/comments", AuthorLikesView.as_view(), name="author_likes_by_fqid")
+    path("api/posts/<str:post_fqid>/comments", AuthorLikesView.as_view(), name="author_likes_by_fqid"),
 
     # Getting Likes that belong to a Post or Comment (TBD)
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", LikesView.as_view(), name="get_likes_by_serial"),
-    path("api/posts/<path:post_fqid>/likes/", LikesView.as_view(), name="get_likes_by_fqid"),
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/<uuid:comments_serial>/likes", LikesView.as_view(), name="get_comment_likes"),
 ]
 
