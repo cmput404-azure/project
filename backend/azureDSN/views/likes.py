@@ -84,30 +84,55 @@ class LikeView(APIView):
         serialized_like['object'] = uri + serialized_like['object']
 
         return Response(serialized_like, status=status.HTTP_200_OK) # for consistency with drf-spectacular
-    
-    # @extend_schema(
-    #     summary="Create a Like",
-    #     description="Create a new Like for a Post by sending a Like object in the request body.",
-    #     request=LikeSerializer,
-    #     responses={
-    #         status.HTTP_201_CREATED: 'Like created successfully',
-    #         status.HTTP_400_BAD_REQUEST: 'Invalid data provided',
-    #     }
-    # )
-    # def post(self, request, author_serial=None):
-    #     """
-    #     URL: ://service/api/authors/{AUTHOR_SERIAL}/inbox
-    #     POST [remote]: send a like object to AUTHOR_SERIAL
-    #     Payload: like object
-    #     """
-    #     data = request.data
-    #     # unfinished -- Quin will handle Inbox
 
     
 class AuthorLikesView(APIView):
-    """
-    Handle retrieval of Likes by an Author.
-    """
+    @extend_schema(
+            summary="Retrieve Likes by an Author.",
+            description="Retrieve the latest 5 Like objects by `author_serial` or `author_fqid`.",
+            parameters=[
+                OpenApiParameter(
+                    name='author_serial',
+                    description='UUID of the Author whose Likes we want to retrieve',
+                    type=str,
+                    required=False,
+                    location=OpenApiParameter.PATH
+                ),
+                OpenApiParameter(
+                    name='author_fqid',
+                    description='FQID of the Author whose Likes we want to retrieve',
+                    type=str,
+                    required=False,
+                    location=OpenApiParameter.PATH 
+                ),
+            ],
+            responses={
+                status.HTTP_200_OK: OpenApiResponse(
+                    description="A response containing a list of likes.",
+                    response={
+                        "type": "object",
+                        "properties": {
+                            "type": {"type": "string", "example": "likes"},
+                            "id": {"type": "string", "example": "https://service/api/authors/author-uuid/likes/"},
+                            "page": {"type": "string", "example": "https://service/api/authors/author-uuid/likes/"},
+                            "page_number": {"type": "integer", "example": 1},
+                            "size": {"type": "integer", "example": 50},
+                            "count": {"type": "integer", "example": 3},
+                            "src": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Like"  # Reference to LikeSerializer schema
+                                }
+                            }
+                        }
+                    }
+                ),
+                status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                    description='Invalid Author UUID or FQID'
+                )
+            },
+            tags=['Likes & Liked API']
+    )
     def get(self, request, author_serial=None, author_fqid=None):
         if (author_serial):
             """
@@ -155,9 +180,65 @@ class AuthorLikesView(APIView):
 
 
 class LikesView(APIView):
-    """
-    Handle retrieval of Likes on a Post or a Comment.
-    """
+    @extend_schema(
+            summary="Retrieve Likes of a Post or Comment (TBD).",
+            description="Retrieve multiple Like objects of a Post by `post_fqid` or a combination of `author_serial` or `post_serial`.",
+            parameters=[
+                OpenApiParameter(
+                    name='author_serial',
+                    description='UUID of the Author whose Likes we want to retrieve',
+                    type=str,
+                    required=False,
+                    location=OpenApiParameter.PATH
+                ),
+                OpenApiParameter(
+                    name='post_fqid',
+                    description='FQID of the Post whose Likes we want to retrieve',
+                    type=str,
+                    required=False,
+                    location=OpenApiParameter.PATH 
+                ),
+                OpenApiParameter(
+                    name='post_serial',
+                    description='UUID of the Post whose Likes we want to retrieve',
+                    type=str,
+                    required=False,
+                    location=OpenApiParameter.PATH 
+                ),
+                OpenApiParameter(
+                    name='comment_serial',
+                    description='UUID of the Comment whose Likes we want to retrieve',
+                    type=str,
+                    required=False,
+                    location=OpenApiParameter.PATH 
+                ),
+            ],
+            responses={
+                status.HTTP_200_OK: OpenApiResponse(
+                    description="A response containing a list of likes.",
+                    response={
+                        "type": "object",
+                        "properties": {
+                            "type": {"type": "string", "example": "likes"},
+                            "id": {"type": "string", "example": "https://service/api/authors/author-uuid/posts/post-uuid/likes"},
+                            "page": {"type": "string", "example": "https://service/api/authors/author-uuid/posts/post-uuid"},
+                            "page_number": {"type": "integer", "example": 1},
+                            "size": {"type": "integer", "example": 50},
+                            "count": {"type": "integer", "example": 3},
+                            "src": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Like"  # Reference to LikeSerializer schema
+                                }
+                            }
+                        }
+                    }
+                ),
+                status.HTTP_404_NOT_FOUND: OpenApiResponse(description='Either Post, Author, or Comment not found.'),
+                status.HTTP_400_BAD_REQUEST: OpenApiResponse(description='Invalid Post FQID.'),
+            },
+            tags=['Likes & Liked API']
+    )
     def get(self, request, author_serial=None, post_serial=None, post_fqid=None, comment_serial=None):
         if (comment_serial and author_serial and post_serial):
             """
