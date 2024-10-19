@@ -47,10 +47,10 @@ class LikeSerializer(serializers.ModelSerializer):
         object_url = validated_data['object'] # the Post object URL
         post_id = object_url.split('/')[-1] # Post 'id' is always the last part of the URL
 
-        post = Post.objects.get(id=post_id)
+        post = Post.objects.get(uuid=post_id)
         like = Like.objects.create(
             user=author_data,
-            post_id=post,
+            post=post,
             **validated_data
         )
 
