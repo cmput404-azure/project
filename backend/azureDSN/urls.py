@@ -29,9 +29,10 @@ urlpatterns = [
 
     # Follow API
 
-    path('api/authors/<uuid:user_id>/followers/', FollowGetView.as_view(), name='followers'),
-    path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowChangeView.as_view(), name='followers_handler'),  
-    path('api/authors/<uuid:user_id>/following/', FollowingView.as_view(), name='following'),  
+    path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  
+    path('api/authors/<uuid:user_id>/followers/', FollowView.as_view(), name='followers_handler'),  
+
+    path('api/authors/<uuid:user_id>/following/', FollowCustomView.as_view(), name='following'),  
 
     # ======================================
     # Likes API
