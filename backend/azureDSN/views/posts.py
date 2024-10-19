@@ -106,19 +106,19 @@ class PostCreation(APIView):
             
         URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/
         """
-        # Ensure the author exists
+        # make sure the author exists
         author = get_object_or_404(User, uuid=author_serial)
 
-        # Retrieve all posts by the author
+        # retrieve all posts by the author
         posts = Post.objects.filter(user=author)
 
-        #if user is not authenticated
+        # if user is not authenticated
         if not request.user.is_authenticated:
             posts = posts.filter(visibility=1)
-        #if user is authenticated as author
-        elif request.user == author:
+        # if user is authenticated locally as author
+        elif request.user == author and request.user.is_authenticated:
             posts = posts.all()
-        #if user is authenticated as friend of author
+        # if user is authenticated as friend of author
         else:
             posts = posts.filter(visibility__in=[1, 2])
         
