@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views.comments import SingleCommentView
+from .views.comments import SingleCommentView, MultipleCommentsView
 from .views import *
 from django.contrib import admin
 from django.urls import path, re_path
