@@ -4,38 +4,46 @@ from django.http import HttpResponse
 from ..models import User, Post
 from ..serializers import UserSerializer, PostSerializer
 from rest_framework.response import Response
+from django.core.paginator import Paginator
 
 class AuthorPostView(APIView):
     """
     URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
-    URL ://service/api/authors/{AUTHOR_SERIAL}/posts/
+    URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/
     """
+    
     def get(self, request, author_serial=None, post_serial=None):
         """
         GET [local, remote] get the public post whose serial is POST_SERIAL
             - friends-only posts: must be authenticated
             
-        GET [local, remote] get the recent posts from author AUTHOR_SERIAL (paginated)
+        GET [local, remote] get the recent posts from author AUTHOR_SERIAL (paginated)
             - Not authenticated: only public posts.
             - Authenticated locally as author: all posts.
             - Authenticated locally as friend of author: public + friends-only posts.
             - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
         """
+        # TODO: remote node handling
 
-        # if both author and post serials are provided
-        if (author_serial and post_serial):
-            pass
+        # If both author and post serials are provided
+        if author_serial and post_serial:
+            post = get_object_or_404(Post, uuid=post_serial)
+            permission_check = self.checkPermissions(request, post)
+            if isinstance(permission_check, Response):  # If permission check returns an error response
+                return permission_check
             
-        #  if only author serial is provided
-        elif (author_serial):
-            # pagination
+            serializer = PostSerializer(post)
+            return Response(serializer.data, status=200)
+            
+        # If only author serial is provided
+        elif author_serial:
+            # TODO: pagination
             pass
 
         else:
             return HttpResponse("Need to specify at least an author ID", status=400)
 
-
-    def checkPermissions(request, post):
+    def checkPermissions(self, request, post):
         # Check permissions
         if post.visibility == 2 and not request.user.is_authenticated:  # FRIENDS
             return HttpResponse("Friend's only posts must be authenticated to view.", status=403)
@@ -44,8 +52,7 @@ class AuthorPostView(APIView):
         if post.visibility == 4:  # DELETED
             return HttpResponse("Post does not exist.", status=404)
         
-        serializer = PostSerializer(post)
-        return Response(serializer.data, status=200)
+        return None  # return None if permissions are valid
 
     def put(self, request, post_fqid):
         """
@@ -54,8 +61,8 @@ class AuthorPostView(APIView):
         """
         post = get_object_or_404(Post, uuid=post_fqid)
         
-        # check if user of request is author of post
-        if (request.user != post.user):
+        # Check if user of request is the author of the post
+        if request.user != post.user:
             return HttpResponse("You are not the author of this post.", status=403)
         
         serializer = PostSerializer(post, data=request.data)
@@ -66,17 +73,17 @@ class AuthorPostView(APIView):
     
     def delete(self, request, post_fqid):
         """
-        DELETE [local] remove a
+        DELETE [local] remove a post
             - local posts: must be authenticated locally as the author
         """
         post = get_object_or_404(Post, uuid=post_fqid)
         
-        # check if user of request is author of post
-        if (request.user != post.user):
+        # Check if user of request is the author of the post
+        if request.user != post.user:
             return HttpResponse("You are not the author of this post.", status=403)
         
-        Post.objects.filter(uuid=post.uuid).delete()
-        return HttpResponse({
+        post.delete()
+        return Response({
             "message": f"Deleted {post_fqid}"
         }, status=200)
 
@@ -89,19 +96,18 @@ class PostView(APIView):
         GET [local] get the public post whose URL is POST_FQID
             - friends-only posts: must be authenticated
         """
-
         if post_fqid:
             post = get_object_or_404(Post, uuid=post_fqid)
 
-            # check the visibility of the post
-            if post.visibility == 2 and not request.user.is_authenticated: # FRIENDS
+            # Check the visibility of the post
+            if post.visibility == 2 and not request.user.is_authenticated:  # FRIENDS
                 return HttpResponse("Friend's only posts must be authenticated to view.", status=403)
-            if post.visibility == 3 and not request.user.is_authenticated: # UNLISTED
+            if post.visibility == 3 and not request.user.is_authenticated:  # UNLISTED
                 return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
-            if post.visibility == 4: # DELETED
+            if post.visibility == 4:  # DELETED
                 return HttpResponse("Post does not exist.", status=404)
             
-            # post is public if aboVe conditions are not met
+            # Post is public if above conditions are not met
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
         else:
