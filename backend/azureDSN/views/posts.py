@@ -11,14 +11,14 @@ class PostView(APIView):
         GET [local] get the public post whose URL is POST_FQID
             - friends-only posts: must be authenticated
         """
-        # TODO: AUTHENTICATION
+
         if post_fqid:
             post = get_object_or_404(Post, uuid=post_fqid)
 
             # check the visibility of the post
-            if post.visibility == 2: # FRIENDS
+            if post.visibility == 2 and not request.user.is_authenticated: # FRIENDS
                 return HttpResponse("Friend's only posts must be authenticated to view.", status=403)
-            if post.visibility == 3: # UNLISTED
+            if post.visibility == 3 and not request.user.is_authenticated: # UNLISTED
                 return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
             if post.visibility == 4: # DELETED
                 return HttpResponse("Post does not exist.", status=404)
