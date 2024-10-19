@@ -11,16 +11,24 @@ class PostView(APIView):
         GET [local] get the public post whose URL is POST_FQID
             - friends-only posts: must be authenticated
         """
-
+        # TODO: AUTHENTICATION
         if post_fqid:
-            #TODO: Logic for the GET request
-            return HttpResponse({
-                "message": f"Fetching {post_fqid}"
-            })
+            post = get_object_or_404(Post, uuid=post_fqid)
+
+            # check the visibility of the post
+            # visibility ["PUBLIC","FRIENDS","UNLISTED","DELETED"]
+            if post.visibility == "FRIENDS":
+                return HttpResponse("Friend's only posts must be authenticated to view.", status=403)
+            if post.visibility == "UNLISTED":
+                return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
+            if post.visibility == "DELETED": 
+                return HttpResponse("Post does not exist.", status=404)
+            
+            # post is public if aboce conditions are not met
+            serializer = PostSerializer(post)
+            return Response(serializer.data, status=200)
         else:
-            return HttpResponse({
-                "message": "No id specified"
-            })
+            return HttpResponse("No post ID spqcified in fqid", status=400)
     
     
 class AuthorPostView(APIView):
@@ -66,3 +74,20 @@ class AuthorPostView(APIView):
         return HttpResponse({
             "message": f"Deleted {post_fqid}"
         })
+        
+class PostCreation(APIView):
+    def get (self, request):
+        """
+        GET [local, remote] get the recent posts from author AUTHOR_SERIAL (paginated)
+        - Not authenticated: only public posts.
+            - Authenticated locally as author: all posts.
+            - Authenticated locally as friend of author: public + friends-only posts.
+            - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
+        """
+        
+        
+    def post(self, request):
+        """
+        POST [local] create a new post but generate a new ID
+            - Authenticated locally as author
+        """
