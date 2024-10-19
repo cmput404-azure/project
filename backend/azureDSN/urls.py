@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .views.comments import SingleCommentView
 from .views import *
 from django.contrib import admin
 from django.urls import path, re_path
@@ -45,6 +46,16 @@ urlpatterns = [
     # Getting Likes that belong to an Author
     path("api/authors/<uuid:author_serial>/liked/", AuthorLikesView.as_view(), name="author_likes_by_serial"),
     path("api/authors/<path:author_fqid>/liked/", AuthorLikesView.as_view(), name="author_likes_by_fqid"),
+
+    # path("api/liked/<uuid:like_fqid>/", SingleLikeView.as_view(), name="get_like_by_fqid"),
+    # path("api/authors/<uuid:author_serial>/liked/<uuid:like_serial>/", SingleLikeView.as_view(), name="get_like_by_serial")
+    
+    # Comments API
+    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments", MultipleCommentsView.as_view(), name="multiple_comment_view_by_postid"),
+    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comment/<str:comment_fqid>", SingleCommentView.as_view(), name="single_comment_view_by_fqid"),
+
+    
+    path("api/posts/<str:post_fqid>/comments", AuthorLikesView.as_view(), name="author_likes_by_fqid")
 
     # Getting Likes that belong to a Post or Comment (TBD)
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", LikesView.as_view(), name="get_likes_by_serial"),
