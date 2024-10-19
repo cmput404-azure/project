@@ -40,7 +40,8 @@ class LikeView(APIView):
                 status.HTTP_200_OK: OpenApiResponse(response=LikeSerializer, description='Like retrieved successfully'),
                 status.HTTP_404_NOT_FOUND: OpenApiResponse(description='Like or Author not found.'),
                 status.HTTP_400_BAD_REQUEST: OpenApiResponse(description='Invalid Like FQID or Like Serial or Author Serial'),
-            }
+            },
+            tags=['Likes & Liked API']
     )
     def get(self, request, like_fqid=None, author_serial=None, like_serial=None):
         """Handle retrieval of a single like."""
