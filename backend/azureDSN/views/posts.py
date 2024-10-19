@@ -73,11 +73,16 @@ class AuthorPostView(APIView):
         DELETE [local] remove a
             - local posts: must be authenticated locally as the author
         """
-        #TODO: Logic for the DELETE request
-
+        post = get_object_or_404(Post, uuid=post_fqid)
+        
+        # check if user of request is author of post
+        if (request.user != post.user):
+            return HttpResponse("You are not the author of this post.", status=403)
+        
+        Post.objects.filter(uuid=post.uuid).delete()
         return HttpResponse({
             "message": f"Deleted {post_fqid}"
-        })
+        }, status=200)
         
 class PostCreation(APIView):
     def get (self, request):
