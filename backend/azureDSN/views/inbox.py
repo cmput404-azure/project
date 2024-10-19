@@ -194,7 +194,7 @@ class InboxView(APIView):
                                              created_at=payload["published"], 
                                              post=post_obj,
                                              comment=payload["comment"],
-                                             ContentType=payload["ContentType"])
+                                             contentType=payload["contentType"])
         serializer = CommentSerializer(comment_obj, data=payload, context={"request": request})
 
         if serializer.is_valid():
