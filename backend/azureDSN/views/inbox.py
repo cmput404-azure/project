@@ -183,17 +183,23 @@ class InboxView(APIView):
     
     
     '''
-    add comment to database first then make a request to inbox
     payload is a comment object
     id is http://{server}/api/authors/{user_id}/commented/{comment_id}
     Not tested yet
     '''
     def create_comment(self, user_object, payload, request):
-        # Validate comment object
-        serializer = CommentSerializer(data=payload, context={"request": request})
+        parsed_url = urlparse(payload["post"]) 
+        post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+        post_obj = Post.objects.get(uuid=post_id)
+        comment_obj = Comment.objects.create(user=payload["author"], 
+                                             created_at=payload["published"], 
+                                             post=post_obj,
+                                             comment=payload["comment"],
+                                             ContentType=payload["ContentType"])
+        serializer = CommentSerializer(comment_obj, data=payload, context={"request": request})
 
         if serializer.is_valid():
-            comment_instance = serializer.create(serializer.validated_data)
+            comment_instance = serializer.save()
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, comment_instance)
             return Response({"message": "Notice post's owner about your comment successfully"}, status=status.HTTP_200_OK)
@@ -202,19 +208,23 @@ class InboxView(APIView):
     
     
     '''
-    add like to database first then make a request to inbox
     payload is a like object
     id is in format: http://{server}/api/authors/{user_id}/liked/{like_id}
-    This doesnt work for now cause I dont know how to get Like object 
     '''
     def create_like(self, user_object, payload, request):
-        serializer = LikeSerializer(data=payload, context={"request": request})
+        parsed_url = urlparse(payload["object"]) 
+        post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+        post_obj = Post.objects.get(uuid=post_id)
+        like_obj = Like.objects.create(user=payload["author"], 
+                                       created_at=payload["published"], 
+                                       post=post_obj)
+        serializer = LikeSerializer(like_obj, data=payload, context={"request": request})
 
         if serializer.is_valid():
             like_instance =serializer.save()
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, like_instance)
-            return Response(InboxSerializer(inbox_obj, context={"request": request}).data, status=status.HTTP_200_OK)
+            return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
     
