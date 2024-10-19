@@ -203,7 +203,7 @@ class FollowView(APIView):
         ).exists()
 
         if existing_follow:
-            return Response({"message": "Already following"}, status=400)
+            return Response({"message": "Already following"}, status=200)
         
         # Insert data as normal if the relationship doesn't already exist
 

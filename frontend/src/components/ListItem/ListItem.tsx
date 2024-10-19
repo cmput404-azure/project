@@ -89,7 +89,7 @@ export default function ListItem({
 
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
         // Add actor as follower
-         const response = await axios.put(`http://127.0.0.1:8000/api/authors/${tmpUserId}/followers/${encodedUrl}/`, {
+        const response = await axios.put(`http://127.0.0.1:8000/api/authors/${tmpUserId}/followers/${encodedUrl}/`, {
         });
 
         const data = response.data;
