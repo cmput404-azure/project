@@ -3,14 +3,14 @@ from rest_framework.serializers import *
 from ..models import Comment, Post
 
 class CommentSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField()
+    post_id = serializers.UUIDField()
     published = serializers.DateTimeField(source="created_at", required=False)
     author = serializers.JSONField(source="user")
     post = SerializerMethodField("get_post_FQID")
     
     class Meta:
         model = Comment
-        fields = ['type', 'author', 'comment', 'contentType','published','id','post']
+        fields = ['type', 'author', 'comment', 'contentType','published','post_id','post']
     
     # This method gets the custom uuid value and maps it to'id'
     def get_id(self, obj):
@@ -20,7 +20,7 @@ class CommentSerializer(serializers.ModelSerializer):
     # The returned id field is the value stored in the uuid
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['id'] = self.get_id(instance)
+        representation['post_id'] = self.get_id(instance)
         return representation
 
     # Convert post object into a FQID of post object

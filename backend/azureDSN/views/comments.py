@@ -45,8 +45,7 @@ class MultipleCommentsView(APIView):
             "size": 10,
             "count": len(serialized_comments),
             "src": serialized_comments[:10],  # Limit to first 10 comments
-        }
-        
+        }        
         return Response(response, status.HTTP_200_OK)
 
 
@@ -82,7 +81,6 @@ class SingleCommentView(APIView):
                 return Response(
                     {"detail": "Invalid comment FQID."}, status=400
                 )
-
             comment = get_object_or_404(Comment, uuid=comment_id)
 
         # Serialize the comment object.

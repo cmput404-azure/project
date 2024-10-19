@@ -37,8 +37,10 @@ urlpatterns = [
     # path("api/authors/<uuid:author_serial>/liked/<uuid:like_serial>/", SingleLikeView.as_view(), name="get_like_by_serial")
     
     # Comments API
-    MultipleCommentsView
-    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments", MultipleCommentsView.as_view(), name="author_likes_by_fqid")
+    # MultipleCommentsView
+    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments", MultipleCommentsView.as_view(), name="author_likes_by_fqid"),
+
+    
     path("api/posts/<str:post_fqid>/comments", AuthorLikesView.as_view(), name="author_likes_by_fqid")
 ]
 
