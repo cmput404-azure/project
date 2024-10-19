@@ -61,6 +61,8 @@ class SingleCommentView(APIView):
     def get(self, request, comment_fqid=None, author_serial=None, post_serial=None, comment_serial=None):
         """
         URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
+        http%3A%2F%2Fexample-node-2%2Fauthors%2F5f57808f-0bc9-4b3d-bdd1-bb07c976d12d
+
         GET [local, remote] a single comment.
         Returns: comment object.
         """
@@ -76,7 +78,14 @@ class SingleCommentView(APIView):
         else:
             # Case: Retrieve comment using comment FQID.
             try:
-                comment_id = comment_fqid.split('/')[-1]
+                #TODO This is temporary. This and all other FQID functions should handle FQIDS properly
+                #By decoding the percent encoding and sending an http request to the corresponding node.
+                #the FQID should be assumed to be a valid url.
+                split = comment_fqid.split('/')
+                if len(split) > 1:
+                    comment_id = split[-1]
+                else:
+                    comment_id = comment_fqid
             except IndexError:
                 return Response(
                     {"detail": "Invalid comment FQID."}, status=400
@@ -88,37 +97,3 @@ class SingleCommentView(APIView):
         return Response(serialized_comment, status=200)
     
     
-
-# class SingleLikeView(APIView):
-#     """Handle retrieval of a single like."""
-#     def get(self, request, like_fqid=None, author_serial=None, like_serial=None):
-
-#         if (like_serial):
-#             """
-#             URL: ://service/api/authors/{AUTHOR_SERIAL}/liked/{LIKE_SERIAL}
-#             GET [local, remote] a single like
-#             Returns: like object
-#             """
-#             print(type(author_serial)) # returns <class 'uuid.UUID'>
-#             author = get_object_or_404(User, uuid=author_serial)
-
-#             like = get_object_or_404(Like, user__id = str(author.uuid), uuid=like_serial)
-        
-#         else:
-#             """
-#             URL: ://service/api/liked/{LIKE_FQID}
-#             GET [local] a single like
-#             Returns: like object
-#             """
-#             # Not yet tested, not sure how to handle FQID yet
-#             try:
-#                 like_id = like_fqid.split('/')[-1]
-#             except IndexError:
-#                 return Response(
-#                     {"detail": "Invalid like FQID."}, status=400
-#                 )
-            
-#             like = get_object_or_404(Like, uuid=like_id)
-
-#         serialized_like = LikeSerializer(like).data
-#         return Response(serialized_like, status=200)
