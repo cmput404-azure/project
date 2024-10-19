@@ -93,7 +93,7 @@ You must `cd` into each directory separately. Two terminals are required to run 
 1. `cd` into the backend directory
 2. Create a virtual environment
    - Run `python3 -m venv .venv` to create a virtual environment
-   - Run `source venv/bin/activate` to activate the virtual environment
+   - Run `source .venv/bin/activate` to activate the virtual environment
      - if you are using VSCode you can automatically activate the venv every time by setting the interpreter to the venv python interpreter.
 3. Run `pip install -r requirements.txt` to install the dependencies
 4. run `python manage.py makemigrations` to make the database migrations
