@@ -4,6 +4,7 @@ from ..models import User, Post, Comment, Like
 from ..serializers import PostSerializer, UserSerializer, CreatePostSerializer
 from rest_framework.response import Response
 from rest_framework import status
+from django.http import HttpResponse
 
 
 class AuthorPostView(APIView):
@@ -29,7 +30,42 @@ class AuthorPostView(APIView):
 
         # If both author and post serials are provided
         if (author_serial and post_serial):
-            pass
+            # Retrieve the author
+            author = get_object_or_404(User, uuid=author_serial)
+            
+            # Retrieve the post
+            post = get_object_or_404(Post, uuid=post_serial, user=author)
+
+            # Check visibility for permission logic:
+            if post.visibility == 1:  # PUBLIC
+                # Public posts are visible to everyone
+                serializer = PostSerializer(post)
+                return Response(serializer.data, status=200)
+
+            elif post.visibility == 2:  # FRIENDS
+                # Friends-only posts require authentication
+                if not request.user.is_authenticated:
+                    return HttpResponse("Friends-only posts must be authenticated to view.", status=403)
+                # Check if the request user is the author or a friend of the author
+                if request.user != author and request.user not in author.friends.all():
+                    return HttpResponse("You do not have permission to view this friend's post.", status=403)
+                
+                # If permission is granted, serialize and return the post
+                serializer = PostSerializer(post)
+                return Response(serializer.data, status=200)
+
+            elif post.visibility == 3:  # UNLISTED
+                # Unlisted posts require authentication
+                if not request.user.is_authenticated:
+                    return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
+                
+                # If authenticated, return the post
+                serializer = PostSerializer(post)
+                return Response(serializer.data, status=200)
+
+            elif post.visibility == 4:  # DELETED
+                # Deleted posts should return a 404 error
+                return HttpResponse("This post does not exist.", status=404)
             
         # If only author serial is provided
         elif (author_serial):
