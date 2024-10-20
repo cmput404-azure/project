@@ -1,10 +1,11 @@
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import React, { useEffect, useState } from 'react';
-import UserSearch from '../UserSearch/UserSearch';
-import NotificationList from '../NotificationList/NotificationList';
-import styles from './NavigationBar.module.scss';
+
 import Modal from 'react-modal';
+import NotificationList from '../NotificationList/NotificationList';
+import UserSearch from '../UserSearch/UserSearch';
+import styles from './NavigationBar.module.scss';
 
 interface NavigationBarProps {
   onClick: (item: string) => void;
@@ -24,19 +25,19 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ onClick, isLoggedIn }) =>
   }
 
   const commonNavigationItems = [
-    { icon: <i className="fa-solid fa-house" />, label: 'Home' },
-    { icon: <i className="fa-solid fa-magnifying-glass" />, label: 'Search' },
-    { icon: <i className="fa-regular fa-bell" />, label: 'Notifications' }
+    { icon: <i className="fa-solid fa-house" />, label: 'home' },
+    { icon: <i className="fa-solid fa-magnifying-glass" />, label: 'search' },
+    { icon: <i className="fa-regular fa-bell" />, label: 'notifications' }
   ];
 
   const loggedInNavigationItems = [
-    { icon: <i className="fa-solid fa-heart" />, label: 'Likes' },
-    { icon: <i className="fa-solid fa-comment-dots" />, label: 'Messages' },
+    { icon: <i className="fa-solid fa-heart" />, label: 'likes' },
+    { icon: <i className="fa-solid fa-comment-dots" />, label: 'messages' },
   ];
 
   const bottomNavigationItems = [
-    { icon: <i className="fas fa-user" />, label: 'Profile' },
-    { icon: <i className="fas fa-gear" />, label: 'Settings' },
+    { icon: <i className="fas fa-user" />, label: 'profile' },
+    { icon: <i className="fas fa-gear" />, label: 'settings' },
   ];
 
   useEffect(() => {
