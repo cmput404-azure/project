@@ -22,7 +22,6 @@ class UserSerializer(serializers.ModelSerializer):
             return f"{settings.MEDIA_URL}{obj.profile_image}"
         return None
 
-
     def create(self, validated_data):
         return User.objects.create(**validated_data)
 
