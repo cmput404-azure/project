@@ -179,7 +179,6 @@ export default function UserProfile() {
         {authorPosts.map((post) => (
           <MiniPostCard
             key={post.id}
-            profilePic="../../images/yellowduck.png"
             author={post.author.displayName}
             title={post.title}
             time={post.published}
