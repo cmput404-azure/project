@@ -64,39 +64,6 @@ const HomePage = () => {
           commentCount={67}
           onCommentButtonClick={() => handleCommentButtonClick()}
         />
-        <PostCard
-          profilePic="https://via.placeholder.com/50"
-          userName="John Doe"
-          postTime="2h ago"
-          postContent="This is a sample post."
-          postImage="https://via.placeholder.com/300"
-          likeCount={123}
-          saveCount={45}
-          commentCount={67}
-          onCommentButtonClick={() => handleCommentButtonClick()}
-        />
-        <PostCard
-          profilePic="https://via.placeholder.com/50"
-          userName="John Doe"
-          postTime="2h ago"
-          postContent="This is a sample post."
-          postImage="https://via.placeholder.com/300"
-          likeCount={123}
-          saveCount={45}
-          commentCount={67}
-          onCommentButtonClick={() => handleCommentButtonClick()}
-        />
-        <PostCard
-          profilePic="https://via.placeholder.com/50"
-          userName="John Doe"
-          postTime="2h ago"
-          postContent="This is a sample post."
-          postImage="https://via.placeholder.com/300"
-          likeCount={123}
-          saveCount={45}
-          commentCount={67}
-          onCommentButtonClick={() => handleCommentButtonClick()}
-        />
 
       </div>
 
@@ -104,62 +71,6 @@ const HomePage = () => {
       <div className={styles.authorSection}>
         <h2 className={styles.recommendedTitle} >Recommended Author</h2>
         <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                        <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
           authorImage={logo}
           authorName="Kyle Quach"
           userName="tmquach.meomeo"
