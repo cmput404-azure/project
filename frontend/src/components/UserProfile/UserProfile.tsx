@@ -35,6 +35,10 @@ export default function UserProfile() {
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
 
+  axios.defaults.withCredentials = true;
+  axios.defaults.xsrfCookieName = "csrftoken";
+  axios.defaults.xsrfHeaderName = "x-csrftoken";
+
   // fetch the author data from the API when the component mounts
   useEffect(() => {
     const fetchAuthorData = async () => {
