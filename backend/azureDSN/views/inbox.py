@@ -45,11 +45,24 @@ class InboxView(APIView):
         }
     )
     def get(self, request, author_serial):
+        action = request.query_params.get('action', None)
+
         user_obj = get_object_or_404(User, uuid=author_serial)
         inbox_obj = get_object_or_404(Inbox, user=user_obj)
-        # Get the latest inbox items
-        inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-id")
-    
+        
+        if action == 'posts':
+        # Assuming that `content_object` refers to a Post model, and that it has a 'visibility' field
+        # This will only fetch inbox items of type 'post' and visibility 2 or 3
+            post_content_type = ContentType.objects.get(model="post")
+            inbox_items_obj = InboxItem.objects.filter(
+                                                        inbox=inbox_obj,
+                                                        content_type=post_content_type,
+                                                        object_id__in=Post.objects.filter(visibility__in=[2, 3]).values_list('uuid', flat=True)
+                                                    ).order_by("-id")
+        else:
+            # Get the latest inbox items
+            inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-id")
+        
         serializer = InboxItemSerializer(inbox_items_obj, many=True, context={"request": request})
         # author is return in format of her/his url
         uri = request.build_absolute_uri("/")
@@ -311,13 +324,13 @@ class InboxView(APIView):
 This create an inbox item referenced to one of the four model except from case where a post make by a remote user
 sending to local nodes, then treat it as a JSON data because we don't want to store/have it in our database
 '''
-def create_inbox_item(inbox, content=None, json_data=None):
+def create_inbox_item(inbox, content=None, remote_payload=None):
     if content:
         content_type = ContentType.objects.get_for_model(content)
         id = getattr(content, 'uuid', getattr(content, 'id', None))
         inbox_item_object = InboxItem.objects.create(content_type=content_type, object_id=id, content_object=content)
     else:
-        inbox_item_object = InboxItem.objects.create(remote_payload=json_data)
+        inbox_item_object = InboxItem.objects.create(remote_payload=remote_payload)
     inbox.items.add(inbox_item_object)
     
     
