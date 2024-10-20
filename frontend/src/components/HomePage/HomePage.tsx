@@ -16,8 +16,35 @@ Modal.setAppElement("#root");
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Adjust based on your authentication logic
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+
+
+  // Fetch public posts
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        // Fetch public posts
+        const publicRes = await fetch("http://localhost:8000/api/stream/");
+        const publicPosts = await publicRes.json();
+
+        console.log(publicPosts);
+
+        setPosts(publicPosts);
+      } catch (err) {
+        console.log(err)
+        setError("Failed to fetch posts. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+  
 
 
   const handleAddClick = () => {
@@ -55,10 +82,15 @@ const HomePage = () => {
 
 
 
+
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
   setActiveFilterPost(icon);
   }
+
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+
 
   return (
     <div className={styles.homePage}>
@@ -84,113 +116,27 @@ const HomePage = () => {
               <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
             </div>
           </div>  
-        <PostCard
-          profilePic="https://via.placeholder.com/50"
-          userName="John Doe"
-          postTime="2h ago"
-          postContent="This is a sample post."
-          postImage="https://via.placeholder.com/300"
-          likeCount={123}
-          saveCount={45}
-          commentCount={67}
-          onCommentButtonClick={() => handleCommentButtonClick()}
-        />
-        <PostCard
-          profilePic="https://via.placeholder.com/50"
-          userName="John Doe"
-          postTime="2h ago"
-          postContent="This is a sample post."
-          postImage="https://via.placeholder.com/300"
-          likeCount={123}
-          saveCount={45}
-          commentCount={67}
-          onCommentButtonClick={() => handleCommentButtonClick()}
-        />
-        <PostCard
-          profilePic="https://via.placeholder.com/50"
-          userName="John Doe"
-          postTime="2h ago"
-          postContent="This is a sample post."
-          postImage="https://via.placeholder.com/300"
-          likeCount={123}
-          saveCount={45}
-          commentCount={67}
-          onCommentButtonClick={() => handleCommentButtonClick()}
-        />
-        <PostCard
-          profilePic="https://via.placeholder.com/50"
-          userName="John Doe"
-          postTime="2h ago"
-          postContent="This is a sample post."
-          postImage="https://via.placeholder.com/300"
-          likeCount={123}
-          saveCount={45}
-          commentCount={67}
-          onCommentButtonClick={() => handleCommentButtonClick()}
-        />
 
+        {posts.map((post) => (
+          <PostCard
+            key={post.id}
+            profilePic="https://via.placeholder.com/50"
+            userName={post.author.displayName}
+            postTime={new Date(post.published).toLocaleString()}
+            postContent={post.content}
+            postImage={post.has_image ? post.image : ""}
+            likeCount={post.likes.length}
+            saveCount={0}
+            commentCount={post.comments.length}
+            onCommentButtonClick={handleCommentButtonClick}
+          />
+        ))}
       </div>
 
       {/* Second Section: Author Post */}
       <div className={styles.authorSection}>
         <h2 className={styles.recommendedTitle} >Recommended Author</h2>
         <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                        <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-                <AuthorPost
           authorImage={logo}
           authorName="Kyle Quach"
           userName="tmquach.meomeo"

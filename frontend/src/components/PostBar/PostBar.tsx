@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import axios from "axios";
 import styles from "./PostBar.module.scss";
+import { getVisibilityNumber, VisibilityChoices } from "../../models/modelTypes";
+import {Author, Post, Inbox} from "../../models/models"
 
-const UNKNOWN_USER_ID = "http://nodebbbb/api/authors/unknown";
-const UNKNOWN_USER_NAME = "Unknown User";
+const USER_ID = "82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0";
 
 interface PostBarProps {
   userImage: string;
   showButtonBar?: boolean;
 }
-type IconType = "public" | "friends" | "link";
+type IconType = "public" | "friends" | "unlisted";
 
 const PostBar: React.FC<PostBarProps> = ({
   userImage,
@@ -38,63 +39,78 @@ const PostBar: React.FC<PostBarProps> = ({
   const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
     setContent(event.target.value);
 
-
-
-
-  const handleCombinedClick = () => {
-    handleInboxClick();
-    handlePostClick();
-  };
-  const handleInboxClick = async () => {
-    const newPost = {
-      type: "post",
-      title: "New Post Title", // For simplicity, using a constant title
-      id: `${UNKNOWN_USER_ID}/posts/${Date.now()}`, // Creating a unique ID for the post
-      description: "A brief description of the post", // Using a placeholder description
-      contentType: "text/plain",
-      content: title,
-      author: {
-        type: "author",
-        id: UNKNOWN_USER_ID,
-        host: "http://nodebbbb/api/",
-        displayName: UNKNOWN_USER_NAME,
-        page: `${UNKNOWN_USER_ID}`,
-        github: "http://github.com/unknownuser",
-        profileImage: userImage,
-      },
-      comments: {
-        type: "comments",
-        id: `${UNKNOWN_USER_ID}/posts/${Date.now()}/comments`,
-        page: `${UNKNOWN_USER_ID}/posts/${Date.now()}/comments`,
-        page_number: 1,
-        size: 5,
-        count: 0,
-        src: [],
-      },
-      likes: {
-        type: "likes",
-        id: `${UNKNOWN_USER_ID}/posts/${Date.now()}/likes`,
-        page: `${UNKNOWN_USER_ID}/posts/${Date.now()}/likes`,
-        page_number: 1,
-        size: 50,
-        count: 0,
-        src: [],
-      },
-      published: new Date().toISOString(),
-      visibility: activeIcon.toUpperCase(),
-    };
+  const handleCombinedClick = async () => {
     try {
-      // Send a POST request to the backend
-      const response = await axios.post(
-        "http://your-backend-url.com/posts",
+      // First request: Create a new post
+      const visibilityNumber = getVisibilityNumber(activeIcon.toUpperCase() as VisibilityChoices);
+
+      const newPost = {
+        type: "post",
+        title: title,
+        description: description,
+        contentType: "text/plain",
+        content: content,
+        published: new Date().toISOString(),
+        visibility: visibilityNumber,
+      };
+  
+      const postResponse = await axios.post<Post>(
+        `http://127.0.0.1:8000/api/authors/${USER_ID}/posts/`,
         newPost
       );
-      console.log("Post successfully created:", response.data);
+      console.log("Post successfully created:", postResponse.data);
+  
+      // Second request: Get the followers
+      const followersResponse = await axios.get<{ type: string, followers: Author[] }>(
+        `http://127.0.0.1:8000/api/authors/${USER_ID}/followers/`,
+      );
+      const followers = followersResponse.data["followers"];
+      console.log("Followers retrieved:", followers);
+
+      
+      // Third request: Get the friends
+      const friendsResponse = await axios.get<Author[]>(
+        `http://127.0.0.1:8000/api/authors/${USER_ID}/following/?action=friends`,
+      );
+      const friends = friendsResponse.data;
+      console.log("Friends retrieved:", friends);
+
+      if (visibilityNumber == 1 || visibilityNumber == 3) {
+        // If public or unlisted, send to friends and followers
+        for (const follower of followers) {
+          const inboxUrl = `http://127.0.0.1:8000/api/authors/${follower.id}/inbox/`;
+          try {
+            const inboxResponse = await axios.post<{message: string}>(inboxUrl, postResponse.data);
+            console.log(inboxResponse.data);
+          } catch (error) {
+            console.error(`Error sending post to inbox of ${follower.id}:`, error);
+          }
+        }
+        console.log("All posts sent to followers' inboxes.");
+      }
+      // Friends receive inbox on all type of post
+      for (const friend of friends) {
+        const inboxUrl = `http://127.0.0.1:8000/api/authors/${friend.id}/inbox/`;
+        try {
+          const inboxResponse = await axios.post<{message: string}>(inboxUrl, postResponse.data);
+          console.log(inboxResponse.data);
+        } catch (error) {
+          console.error(`Error sending post to friend's inbox of ${friend.id}:`, error);
+        }
+      }
+      console.log("All posts sent to followers/friends' inboxes.");
+
+      // Closse the input modal and reset input fields
+      setShowDetail(false)
+      setTitle("")
+      setDescription("")
+      setContent("")
+      
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error("Error in combined request flow:", error);
     }
   };
-  const handlePostClick = async () => {};
+  
   return (
     <div className={styles.container}>
       <section className={styles["post-bar"]}>
@@ -160,9 +176,9 @@ const PostBar: React.FC<PostBarProps> = ({
             </div>
             <div
               className={`${styles["icon-section"]} ${
-                activeIcon === "link" ? styles.active : ""
+                activeIcon === "unlisted" ? styles.active : ""
               }`}
-              onClick={() => handleIconClick("link")}
+              onClick={() => handleIconClick("unlisted")}
             >
               <i className={`${styles.icon} ${styles["link-icon"]}`}></i>
             </div>

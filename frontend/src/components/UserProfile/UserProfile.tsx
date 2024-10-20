@@ -1,13 +1,98 @@
-import { useState } from "react";
-import MiniPostCard from "../MiniPostCard/MiniPostCard";
-import styles from "./UserProfile.module.scss";
 import FollowList from "../FollowList/FollowList";
+import GitHubIcon from '@mui/icons-material/GitHub';
+import { IconButton } from "@mui/material";
+import MiniPostCard from "../MiniPostCard/MiniPostCard";
+import axios from "axios";
+import { checkAuth } from "../../util/auth/checkauth";
+import styles from "./UserProfile.module.scss";
+import { useEffect } from "react";
+import { useState } from "react";
+
+interface AuthorPost {
+  type: string;
+  title: string;
+  id: string;
+  contentType: string;
+  content: string;
+  author: {
+    type: string;
+    id: string;
+    host: string;
+    displayName: string;
+    github: string;
+    page: string;
+    profileImage: string;
+  };
+  comments: any[];
+  likes: any[];
+  published: string;
+  visibility: number;
+}
 
 export default function UserProfile() {
-
+  const [authorData, setAuthorData] = useState(null);
+  const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
+
+  axios.defaults.withCredentials = true;
+  axios.defaults.xsrfCookieName = "csrftoken";
+  axios.defaults.xsrfHeaderName = "x-csrftoken";
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await checkAuth();
+        setUser({
+          username: data.username,
+          uuid: data.uuid,
+        });
+      } 
+      catch (error) {
+        console.error("Error checking auth", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+
+  // fetch the author data from the API when the component mounts
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchAuthorData = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/authors/${user.uuid}/`
+        );
+        console.log(response.data); 
+        setAuthorData(response.data); 
+      } catch (error) {
+        console.error("Error fetching the author data", error);
+      }
+    };
+
+    const fetchAuthorPosts = async () => {
+      try {
+        const response = await axios.get<AuthorPost[]>(
+          `http://localhost:8000/api/authors/${user.uuid}/posts/`
+        );
+        console.log(response.data); 
+        setAuthorPosts(response.data); 
+      } catch (error) {
+        console.error("Error fetching the author posts", error);
+      }
+    };
+
+    fetchAuthorData();
+    fetchAuthorPosts();
+  }, [user]);
+
+  // fetch the authors posts from the API when the component mounts
 
   const openFollowers = () => {
     setShowFollowerList(true);
@@ -18,35 +103,43 @@ export default function UserProfile() {
     setShowFollowerList(false);
     setIsFollowerListModalOpen(true);
   };
+
+  if (!authorData) {
+    return <div>Loading...</div>; // Display a loading message until data is fetched
+  }
+
   return (
     <div className={styles.userProfileContainer}>
       <section className={styles.profileHeaderContainer}>
         <img
           className={styles.profilePic}
-          src="../images/yellowduck.png"
-          alt="Profile"
+          src={`https://ui-avatars.com/api/?background=random&name=${authorData.displayName}`}
+          alt={authorData.profilePic}
         />
-
         <section className={styles.userInfoContainer}>
           <section className={styles.userInfo}>
             <section className={styles.userNameContainer}>
-              <span className={styles.userName}>Mr. Ducky</span>
+              <span className={styles.userName}>{authorData.displayName}</span>
             </section>
             <section className={styles.buttonContainer}>
               <button className={styles.followButton}>Follow</button>
-              <a href="https://github.com" className={styles.githubButton}>
-                <img src="../images/githubIcon.png" />
-              </a>
+              <IconButton
+                onClick={() => window.open(authorData.github, "_blank")}
+              >
+                <GitHubIcon />
+              </IconButton>
             </section>
           </section>
 
-          <span className={styles.userHandle}>@mr_ducky</span>
+          <span className={styles.userHandle}>
+            @{authorData.displayName.toLowerCase().replace(" ", "_")}
+          </span>
 
           <section className={styles.userStats}>
             <span>
               <p className={styles.count}>100</p> <p>posts</p>
             </span>
-            <span onClick={openFollowers} style={{ cursor: 'pointer' }}>
+            <span onClick={openFollowers} style={{ cursor: "pointer" }}>
               <p className={styles.count}>100</p> <p>followers</p>
             </span>
             <FollowList
@@ -54,7 +147,7 @@ export default function UserProfile() {
               onClose={() => setIsFollowerListModalOpen(false)}
               isFollowerList={showFollowerList}
             />
-            <span onClick={openFollowing} style={{ cursor: 'pointer' }}>
+            <span onClick={openFollowing} style={{ cursor: "pointer" }}>
               <p className={styles.count}>100</p> <p>following</p>
             </span>
             <FollowList
@@ -69,6 +162,7 @@ export default function UserProfile() {
           <button className={styles.followButton}>Get Profile Link</button>
         </section>
       </section>
+
       <section className={styles.bioContainer}>
         <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
@@ -76,62 +170,22 @@ export default function UserProfile() {
           minim veniam, quis nostrud exercitation ullamco laboris nisi ut
         </p>
       </section>
+
       <hr className={styles.horizontalLine} />
+
       <section className={styles.userPosts}>
-        <MiniPostCard
-          profilePic="../images/yellowduck.png"
-          userName="Mr. Ducky"
-          postTime="11:11 PM"
-          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-          postImage="../images/ducklings.jpg"
-          likeCount={1523382}
-          saveCount={250}
-          commentCount={10000} />
-        <MiniPostCard
-          profilePic="../images/yellowduck.png"
-          userName="Mr. Ducky"
-          postTime="11:11 PM"
-          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-          postImage="../images/ducklings.jpg"
-          likeCount={1523382}
-          saveCount={250}
-          commentCount={10000} />
-        <MiniPostCard
-          profilePic="../images/yellowduck.png"
-          userName="Mr. Ducky"
-          postTime="11:11 PM"
-          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-          postImage="../images/ducklings.jpg"
-          likeCount={1523382}
-          saveCount={250}
-          commentCount={10000} />
-        <MiniPostCard
-          profilePic="../images/yellowduck.png"
-          userName="Mr. Ducky"
-          postTime="11:11 PM"
-          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-          postImage="../images/ducklings.jpg"
-          likeCount={1523382}
-          saveCount={250}
-          commentCount={10000} />
-        <MiniPostCard
-          profilePic="../images/yellowduck.png"
-          userName="Mr. Ducky"
-          postTime="11:11 PM"
-          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-          postImage="../images/ducklings.jpg"
-          likeCount={1523382}
-          saveCount={250}
-          commentCount={10000} />
-        <MiniPostCard
-          profilePic="../images/yellowduck.png"
-          userName="Mr. Ducky"
-          postTime="11:11 PM"
-          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-          postImage="../images/ducklings.jpg"
-          likeCount={1523382}
-          saveCount={250}
-          commentCount={10000} />
+        {authorPosts.map((post) => (
+          <MiniPostCard
+            key={post.id}
+            title={post.title}
+            content={post.content}
+            author={post.author.displayName}
+            time={post.published}
+            comments={11}
+            likes={12}
+            saves={2}
+          />
+        ))}
       </section>
     </div>
   );

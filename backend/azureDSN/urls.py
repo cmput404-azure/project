@@ -10,10 +10,12 @@ from django.views.generic import TemplateView
 urlpatterns = [
     # Front end injection
     path('', TemplateView.as_view(template_name='index.html')),
+
+    path('api/stream/', StreamView.as_view(), name='stream'),
     
     # Follow API
     path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  
-    path('api/authors/<uuid:user_id>/followers/', FollowerView.as_view(), name='followers_handler'),  
+    path('api/authors/<uuid:user_id>/followers/', FollowerView.as_view(), name='get_followers'),  
     path('api/authors/<uuid:user_id>/following/', FollowCustomView.as_view(), name='following'),  
 
     # Inbox API
@@ -50,4 +52,10 @@ urlpatterns = [
     path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="author"),
     path("api/authors/<path:author_fqid>/", AuthorsView.as_view(), name="author"),
     path("api/authors/", AuthorsView.as_view(), name="authors_list"),
+
+    # Auth
+    path('api/login/', LoginView.as_view(), name='login'),
+    path('api/logout/', LogoutView.as_view(), name='logout'),
+    path('api/register/', RegisterView.as_view(), name='register'),
+    path("api/check_auth/", CheckAuthView.as_view(), name="check_auth"),
 ]
