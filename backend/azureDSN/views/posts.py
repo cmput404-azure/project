@@ -98,27 +98,18 @@ class AuthorPostView(APIView):
         """
         POST [local] create a new post but generate a new ID
             - Authenticated locally as author
-        """
-        '''this is the format
-            post_data =    {
+        
+        BODY = 
+            {
                 "type": "post",
                 "title": "A Test Post Title",
                 "description": "This is a test post.",
                 "contentType": "text/plain",
                 "content": "This is the content of the post.",
-                "author": {
-                    "id": "5f577ee2-0ccc-49a4-b3cc-47a8aeb265df",
-                    "displayName": "Bob",
-                    "host": "http://localhost:8000",
-                    "github": "http://github.com/bob",
-                    "page": "http://bob.com",
-                    "profile_image": "http://localhost:8000/media/profile_images/bob.png"
-                },
                 "published": "2015-03-09T13:07:04+00:00",
                 "visibility": 1
             }
-            
-        '''
+        """
 
         author = User.objects.get(uuid=author_serial)
         author_data = UserSerializer(author).data
