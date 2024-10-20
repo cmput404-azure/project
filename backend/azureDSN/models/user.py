@@ -11,7 +11,7 @@ class User(models.Model):
     display_name = models.CharField(max_length=20)
     github = models.URLField(null=True) # e.g. "http://github.com/gjohnson"
     page = models.URLField(null=True) # e.g. "http://nodebbbb/authors/222"
-    profile_image = models.ImageField(upload_to='profile_pictures/', null=True) # should be saved under BASE_DIR/azureDNS/media/profile_pictures/<filename>.jpg
+    profile_image = models.ImageField(upload_to='profile_pictures/', null=True, blank=True) # should be saved under BASE_DIR/azureDNS/media/profile_pictures/<filename>.jpg
     created_at = models.DateTimeField(default=datetime.now)
     modified_at = models.DateTimeField(auto_now=True) # Auto-update on every save
 
