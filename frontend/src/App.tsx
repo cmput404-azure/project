@@ -8,7 +8,7 @@ import NavigationBar from "./components/NavigationBar/NavigationBar";
 import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
 import { checkAuth } from "./util/auth/checkauth";
-import styles from './App.module.scss';
+import styles from "./App.module.scss";
 
 export default function App() {
   const nav = useNavigate();

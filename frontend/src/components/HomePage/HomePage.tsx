@@ -22,7 +22,6 @@ const HomePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
 
-
   // Fetch public posts
   useEffect(() => {
     const fetchPosts = async () => {
@@ -45,8 +44,6 @@ const HomePage = () => {
     fetchPosts();
   }, []);
   
-
-
   const handleAddClick = () => {
     console.log("Add button clicked");
   };
@@ -78,11 +75,6 @@ const HomePage = () => {
     },
   ];
 
-
-
-
-
-
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
   setActiveFilterPost(icon);
@@ -90,7 +82,6 @@ const HomePage = () => {
 
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
-
 
   return (
     <div className={styles.homePage}>

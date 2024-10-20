@@ -1,5 +1,5 @@
 import FollowList from "../FollowList/FollowList";
-import GitHubIcon from '@mui/icons-material/GitHub';
+import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import axios from "axios";
@@ -7,6 +7,7 @@ import { checkAuth } from "../../util/auth/checkauth";
 import styles from "./UserProfile.module.scss";
 import { useEffect } from "react";
 import { useState } from "react";
+import DeletePostModal from "../DeletePostModal/DeletePostModal";
 
 interface AuthorPost {
   type: string;
@@ -72,14 +73,58 @@ export default function UserProfile() {
         console.log(response.data); 
         setAuthorData(response.data); 
       } catch (error) {
+        console.error("Error checking auth", error);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const fetchAuthorPosts = async () => {
+    try {
+      const response = await axios.get<AuthorPost[]>(
+        `http://localhost:8000/api/authors/${user.uuid}/posts/`
+      );
+      console.log(response.data);
+      setAuthorPosts(response.data);
+    } catch (error) {
+      console.error("Error fetching the author posts", error);
+    }
+  };
+
+  // fetch the author data from the API when the component mounts
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchAuthorData = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/authors/${user.uuid}/`
+        );
+        console.log(response.data);
+        setAuthorData(response.data);
+      } catch (error) {
         console.error("Error fetching the author data", error);
       }
     };
+    fetchAuthorData();
+    fetchAuthorPosts();
+  }, [user]);
 
-    const fetchAuthorPosts = async () => {
+  const handleDeletePostButtonClicked = (postId: string) => {
+    setPostToDelete(postId);
+    setIsPostDeleteModalOpen(true);
+  };
+  const handleDeletePostModalClose = () => {
+    setIsPostDeleteModalOpen(false);
+    setPostToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (postToDelete) {
       try {
-        const response = await axios.get<AuthorPost[]>(
-          `http://localhost:8000/api/authors/${user.uuid}/posts/`
+        // API call to delete the post
+        await axios.delete(
+          `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToDelete}/`
         );
         console.log(response.data); 
         setAuthorPosts(response.data); 
