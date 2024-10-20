@@ -2,10 +2,11 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background-color: #777777;
+  background-color: #777;
   border-radius: 10px;
   width: 100%;
   max-width: 1100px;
+  padding: 15px;
 
   .post-bar {
     padding: 1%;
@@ -64,15 +65,44 @@
         font-weight: bold;
 
         &:hover {
-          background-color: #555555;
+          background-color: #555;
           transform: scale(1.1);
         }
       }
     }
   }
 
+  .detail-container {
+    width: 100%;
+    margin-top: 10px;
+
+    .input-label {
+      margin-top: 10px;
+      font-size: 16px;
+      color: white;
+      margin-left: 2%;
+    }
+
+    .description-input,
+    .content-input {
+      width: 96%;
+      margin: 5px 2%;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      resize: none;
+      background-color: #444;
+      color: white;
+
+      &::placeholder {
+        color: #d3d3d3;
+      }
+    }
+  }
+
   .button-bar {
-    margin: 1%;
+    margin-top: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -82,7 +112,7 @@
       display: flex;
       width: 20%;
       justify-content: space-between;
-      background-color: #555555;
+      background-color: #555;
       border-radius: 10px;
       overflow: hidden;
 
@@ -117,13 +147,11 @@
           background-image: url('../../images/noun-link-4305261.png'); /* Replace with actual URL */
         }
 
-
-
       }
     }
 
     .post-button {
-      background-color: #555555;
+      background-color: #555;
       color: white;
       padding: 8px 16px;
       border: none;
@@ -132,8 +160,12 @@
       transition: background-color 0.3s ease;
 
       &:hover {
-        background-color: #444444;
+        background-color: #444;
       }
     }
   }
 }
+
+
+
+
