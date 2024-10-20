@@ -4,4 +4,5 @@ from .like_serializer import LikeSerializer
 from .post_serializer import PostSerializer
 from .inbox_item_serializer import InboxItemSerializer
 from .inbox_serializer import InboxSerializer
+from .follow_serializer import FollowSerializer
 from .follow_request_serializer import FollowRequestSerializer
