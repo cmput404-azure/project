@@ -29,7 +29,7 @@ class AuthorsView(APIView):
             print(author_fqid)
 
             # TODO: In future need to send request to remote server to get author
-            author = get_object_or_404(User, fqid=author_fqid)
+            author = get_object_or_404(User, uuid=author_fqid)
 
             serializer = UserSerializer(author)
             return Response(serializer.data, status=200)

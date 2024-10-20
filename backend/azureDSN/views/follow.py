@@ -1,11 +1,14 @@
 import json
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404
 from rest_framework.views import APIView
 import http.client
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view
+from django.contrib.contenttypes.models import ContentType
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from drf_spectacular.utils import inline_serializer
 from rest_framework.response import Response
+from rest_framework import serializers
+from rest_framework import status
+
 from ..serializers.follow_serializer import FollowSerializer
 from ..serializers.user_serializer import UserSerializer
 from ..models import Follow
@@ -42,6 +45,52 @@ def fetch_remote_follower_data(remote_url):
         
 class FollowCustomView(APIView):
 
+
+    @extend_schema(
+        summary="Retrieve following users or friends based on query parameters",
+        description="""
+            This endpoint retrieves a list of users the specified user is following 
+            or their mutual friends based on the provided `action` query parameter.
+
+            action=following: Returns the list of users the given user is following.
+            action=friends: Returns the list of mutual followers (friends).
+        """,
+        operation_id='get_following_or_friends',
+        parameters=[
+            OpenApiParameter(
+                name='user_id',
+                description='UUID of the user to retrieve data for.',
+                type=str,
+                required=True,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name='action',
+                description='Specifies the operation to perform.',
+                type=str,
+                required=True,
+                location=OpenApiParameter.QUERY
+            )
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=inline_serializer(
+                    name="FollowingFriendsResponse",
+                    fields={
+                        'type': serializers.CharField(),
+                        'followers': FollowSerializer(many=True),
+                    }
+                ),
+                description='List of users retrieved successfully based on the action parameter.'
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                description='The specified user was not found.'
+            ),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                description='Invalid action parameter or other bad request.'
+            ),
+        }
+    )
     def get(self, request, user_id):
         """
             Based on query parameters following or friends, will direct to either get the 
@@ -91,32 +140,43 @@ class FollowCustomView(APIView):
 
         # Get the list of friend ids
         friend_ids = mutual_followers.values_list('local_follower_id', flat=True)
-        print(friend_ids)
         friends = User.objects.filter(uuid__in=friend_ids)
 
         serializer = UserSerializer(friends, many=True)
         return Response(serializer.data)
     
-    
-class FollowView(APIView):        
-    http_method_names = ['get', 'put', 'delete'] 
+class FollowerView(APIView):
+    @extend_schema(
+        summary="Get all the followers of the user",
+        description="""
+            Returns both remote and local followers of the user
+        """,
+        operation_id="followers",
+        parameters=[
+            OpenApiParameter(
+                name="user_id",
+                description="UUID of the user",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True
 
-    def get(self, request, user_id, follower_url=None):
-        """
-        Directs get request to either check for a follow relationship or to get list of all followers 
-        """
-
-        # Check if the user_id and follower_url should perform the "check follower" logic
-        if follower_url:
-            return self.check_follower(request, user_id, follower_url)
-
-        # If no follower_url is provided, handle another GET operation
-        return self.get_followers(request, user_id)
-    
-    def get_followers(self, request, user_id):
+            ),
+            OpenApiParameter(
+                name="follower_url",
+                description="URL of the follower",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True
+            )
+        ],
+        responses={
+            200: OpenApiResponse(description="Followers retrieved successfully"),
+            404: OpenApiResponse(description="The follower does not exist")
+        }
+    )
+    def get(self, request, user_id):
         """
         Get all the followers of a local user
-        Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/
 
         """
         # Get the followers list from Follow model
@@ -143,11 +203,110 @@ class FollowView(APIView):
         "followers": serializer.data,
         }
         return Response(response_data, status=200)
+    
+class FollowView(APIView):        
+    http_method_names = ['get', 'put', 'delete'] 
 
+    @extend_schema(
+        summary="Checks follower relationship",
+        description="""
+            Checks if the follower_url is a follower of user_id
+        """,
+        operation_id="follower_changes",
+        parameters=[
+            OpenApiParameter(
+                name="user_id",
+                description="UUID of the user",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True
+
+            ),
+            OpenApiParameter(
+                name="follower_url",
+                description="URL of the follower",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True
+            )
+        ],
+        responses={
+            200: OpenApiResponse(description="Is a follower"),
+            404: OpenApiResponse(description="Not a follower")
+        }
+    )
+    def get(self, request, user_id, follower_url=None):
+        """
+        Directs get request to either check for a follow relationship or to get list of all followers 
+        """
+
+        # Check if the user_id and follower_url should perform the "check follower" logic
+        if follower_url:
+            return self.check_follower(request, user_id, follower_url)
+
+        # If no follower_url is provided, handle another GET operation
+        return self.get_followers(request, user_id)
+    
+    
+    @extend_schema(
+        summary="Adds a follower to the user",
+        description="""
+            Adds a follower to the database, determining if the follower is local or remote
+        """,
+        parameters=[
+            OpenApiParameter(
+                name="user_id",
+                description="UUID of the user",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True
+
+            ),
+            OpenApiParameter(
+                name="follower_url",
+                description="URL of the follower",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True
+            )
+        ],
+        responses={
+            200: OpenApiResponse(description="Follower added successfully"),
+            400: OpenApiResponse(description= "Follower is already following user"),
+            404: OpenApiResponse(description="Error when adding follower")
+        }
+    )
     def put(self, request, user_id, follower_url):
         """Adds follower to the user"""
         return self.add_follower(request, user_id, follower_url)
 
+    @extend_schema(
+        summary="Deletes follower",
+        description="""
+            Removes the follow relationship in the database
+        """,
+        parameters=[
+            OpenApiParameter(
+                name="user_id",
+                description="UUID of the user",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True
+
+            ),
+            OpenApiParameter(
+                name="follower_url",
+                description="URL of the follower",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True
+            )
+        ],
+        responses={
+            200: OpenApiResponse(description="Follower removed successfully"),
+            404: OpenApiResponse(description="Follower not found"),
+        }
+    )
     def delete(self, request, user_id, follower_url):
         """Removes follower from user"""
         return self.remove_follower(request, user_id, follower_url)
@@ -186,8 +345,6 @@ class FollowView(APIView):
             user = User.objects.get(uuid=user_id) # Make sure the user exists
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
         
         # TODO: Replace with node name after
         follower_local = False
@@ -203,7 +360,7 @@ class FollowView(APIView):
         ).exists()
 
         if existing_follow:
-            return Response({"message": "Already following"}, status=400)
+            return Response({"message": "Already following"}, status=200)
         
         # Insert data as normal if the relationship doesn't already exist
 
