@@ -15,15 +15,15 @@ urlpatterns = [
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
     path("api/authors/<uuid:author_serial>/posts/", AuthorPostView.as_view(), name="create_post"),
     path("api/posts/<uuid:post_fqid>/", PostView.as_view(), name="post"),
-    
+
+    # Inbox API
+    path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+
     # Authors API
     path("api/authors/all/", AuthorsCompleteView.as_view(), name="authors_all"),
     path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="author"),
     path("api/authors/<path:author_fqid>/", AuthorsView.as_view(), name="author"),
     path("api/authors/", AuthorsView.as_view(), name="authors_list"),
-
-    # Inbox API
-    path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
     
     # Follow API
     path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  
