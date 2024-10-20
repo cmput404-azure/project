@@ -82,7 +82,7 @@ class AuthorPostView(APIView):
             author = get_object_or_404(User, uuid=author_serial)
 
             # retrieve all posts by the author
-            posts = Post.objects.filter(user=author)
+            posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3])
 
             comments = Comment.objects.filter(post__in=posts)
             likes = Like.objects.filter(post__in=posts)
@@ -134,23 +134,18 @@ class AuthorPostView(APIView):
             - local posts: must be authenticated locally as the author
         """
         if not User.objects.filter(uuid=author_serial).exists(): 
-            return Response("Author does not exist.", status=404)
+            return Response("Author does not exist.", status=404)        
         
-        if request.user.is_authenticated:
-            post = get_object_or_404(Post, uuid=post_serial)
-            
-            # TODO: Check if user of request is the author of the post (Authenticate)
-            if post.user.uuid == request.user.uuid:
-                post.visibility = 4
-                post.save()
-                return Response({
-                    "message": f"Deleted {post_serial}"
-                }, status=200)
-            else:
-                return Response("You are not the author of this post.", status=403)
-            
+        post = get_object_or_404(Post, uuid=post_serial)
+        # TODO: Check if user of request is the author of the post (Authenticate)
+        if post.user.uuid == author_serial:
+            post.visibility = 4
+            post.save()
+            return Response({
+                "message": f"Deleted {post_serial}"
+            }, status=200)
         else:
-            return Response("You must be authenticated to delete a post.", status=403)
+            return Response("You are not the author of this post.", status=403)
 
     def post(self, request, author_serial):
         """
