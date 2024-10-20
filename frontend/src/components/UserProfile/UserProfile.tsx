@@ -33,6 +33,8 @@ interface AuthorPost {
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
+  const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
@@ -51,31 +53,11 @@ export default function UserProfile() {
           username: data.username,
           uuid: data.uuid,
         });
-      } 
-      catch (error) {
-        console.error("Error checking auth", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-
-  // fetch the author data from the API when the component mounts
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchAuthorData = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8000/api/authors/${user.uuid}/`
-        );
-        console.log(response.data); 
-        setAuthorData(response.data); 
       } catch (error) {
         console.error("Error checking auth", error);
       }
     };
+
     fetchUser();
   }, []);
 
@@ -126,18 +108,18 @@ export default function UserProfile() {
         await axios.delete(
           `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToDelete}/`
         );
-        console.log(response.data); 
-        setAuthorPosts(response.data); 
+
+        // Refresh the posts after successful deletion
+        await fetchAuthorPosts();
+
+        // Close the modal after deletion
+        setIsPostDeleteModalOpen(false);
+        setPostToDelete(null);
       } catch (error) {
-        console.error("Error fetching the author posts", error);
+        console.error("Error deleting post", error);
       }
-    };
-
-    fetchAuthorData();
-    fetchAuthorPosts();
-  }, [user]);
-
-  // fetch the authors posts from the API when the component mounts
+    }
+  };
 
   const openFollowers = () => {
     setShowFollowerList(true);
@@ -208,30 +190,30 @@ export default function UserProfile() {
         </section>
       </section>
 
-      <section className={styles.bioContainer}>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-        </p>
-      </section>
-
       <hr className={styles.horizontalLine} />
 
       <section className={styles.userPosts}>
+        {/* map the author post response data to the mini profile card component */}
         {authorPosts.map((post) => (
           <MiniPostCard
             key={post.id}
-            title={post.title}
-            content={post.content}
             author={post.author.displayName}
+            title={post.title}
             time={post.published}
-            comments={11}
-            likes={12}
-            saves={2}
+            content={post.content}
+            likes={1523382}
+            saves={250}
+            comments={10000}
+            canDelete={true}
+            handleDelete={() => handleDeletePostButtonClicked(post.id)}
           />
         ))}
       </section>
+      <DeletePostModal
+        isOpen={isPostDeleteModalOpen}
+        onRequestClose={handleDeletePostModalClose}
+        onDelete={handleConfirmDelete}
+      />
     </div>
   );
 }
