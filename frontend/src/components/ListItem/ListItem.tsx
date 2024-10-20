@@ -99,7 +99,7 @@ export default function ListItem({
     }
 
     const deleteFollowRequest = async()=>{
-
+        // TODO:Delete from inbox after
         const tmpUserId="b2ec57e0-fce1-4fd0-8cff-e347efe528aa";
         console.log(notif_id);
 

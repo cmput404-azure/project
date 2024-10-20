@@ -14,34 +14,8 @@ import logo from "../../images/dog_icon.png";
 Modal.setAppElement("#root");
 
 const HomePage = () => {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Adjust based on your authentication logic
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-
-  // Fetch public posts
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        // Fetch public posts
-        const publicRes = await fetch("http://localhost:8000/api/stream/");
-        const publicPosts = await publicRes.json();
-
-        console.log(publicPosts);
-
-        setPosts(publicPosts);
-      } catch (err) {
-        console.log(err)
-        setError("Failed to fetch posts. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-  
 
   const handleAddClick = () => {
     console.log("Add button clicked");
@@ -74,28 +48,22 @@ const HomePage = () => {
     },
   ];
 
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
-
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
         <PostBar userImage={logo} showButtonBar={false}/>
-        {posts.map((post) => (
-          <PostCard
-            key={post.id}
-            profilePic="https://via.placeholder.com/50"
-            userName={post.author.displayName}
-            postTime={new Date(post.published).toLocaleString()}
-            postContent={post.content}
-            postImage={post.has_image ? post.image : ""}
-            likeCount={post.likes.length}
-            saveCount={0}
-            commentCount={post.comments.length}
-            onCommentButtonClick={handleCommentButtonClick}
-          />
-        ))}
+        <PostCard
+          profilePic="https://via.placeholder.com/50"
+          userName="John Doe"
+          postTime="2h ago"
+          postContent="This is a sample post."
+          postImage="https://via.placeholder.com/300"
+          likeCount={123}
+          saveCount={45}
+          commentCount={67}
+          onCommentButtonClick={() => handleCommentButtonClick()}
+        />
 
       </div>
 
