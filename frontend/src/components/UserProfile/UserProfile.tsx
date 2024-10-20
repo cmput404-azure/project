@@ -44,7 +44,7 @@ export default function UserProfile() {
     const fetchAuthorData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8000/api/authors/a351a7a2-232d-44b1-a604-b63739d55d2c/"
+          "http://localhost:8000/api/authors/c262fe48-9454-4dd1-ab4e-ba688aa89846/"
         );
         console.log(response.data); // Log the response data to the console
         setAuthorData(response.data); // Set the response data to state

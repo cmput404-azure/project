@@ -5,4 +5,4 @@ from .follow import FollowView, FollowCustomView, FollowerView
 from .inbox import InboxView
 from .comments import MultipleCommentsView, SingleCommentView
 from .likes import LikeView, AuthorLikesView, LikesView
-from .auth import LoginView, LogoutView, RegisterView
+from .auth import LoginView, LogoutView, RegisterView, CheckAuthView

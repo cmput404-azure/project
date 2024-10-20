@@ -12,7 +12,15 @@ class LoginView(APIView):
         user = authenticate(username=username, password=password)
         if user:
             login(request, user)
-            return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+
+            response = {
+                'is_authenticated': True,
+                'username': request.user.username,
+                'uuid': request.user.uuid,
+                'sessionId': request.session.session_key
+            }
+
+            return Response(response, status=status.HTTP_200_OK)
         return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     
 
@@ -34,3 +42,14 @@ class LogoutView(APIView):
     def post(self, request):
         logout(request)
         return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+    
+class CheckAuthView(APIView):
+    def get(self, request):
+        if request.user.is_authenticated:
+            response = {
+                'is_authenticated': True,
+                'username': request.user.username,
+                'uuid': request.user.uuid,
+            }
+            return Response(response, status=status.HTTP_200_OK)
+        return Response({'is_authenticated': False}, status=status.HTTP_200_OK)
