@@ -51,9 +51,11 @@ class AuthorPostView(APIView):
 
             # put the comments into the corresponding post
             for post in posts:
-                comment_serializer = CommentArraySerializer(comments=comments.filter(post=post))
-                post.comments = comment_serializer.get_comments(post)
-                post.likes = likes.filter(post=post)
+                # comment_serializer = CommentArraySerializer(comments=comments.filter(post=post))
+                # post.comments = comment_serializer.get_comments(post)
+                # post.likes = likes.filter(post=post)
+                post.comments = []
+                post.likes = []
 
 
             # if user is not authenticated
@@ -88,20 +90,18 @@ class AuthorPostView(APIView):
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
     
-    def delete(self, request, post_fqid):
+    def delete(self, request, post_serial, author_serial):
         """
         DELETE [local] remove a post
             - local posts: must be authenticated locally as the author
         """
-        post = get_object_or_404(Post, uuid=post_fqid)
+        post = get_object_or_404(Post, uuid=post_serial)
         
-        # Check if user of request is the author of the post
-        if request.user != post.user:
-            return Response("You are not the author of this post.", status=403)
+        # TODO: Check if user of request is the author of the post (Authenticate)
         
         post.delete()
         return Response({
-            "message": f"Deleted {post_fqid}"
+            "message": f"Deleted {post_serial}"
         }, status=200)
 
     def post(self, request, author_serial):
