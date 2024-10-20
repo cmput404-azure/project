@@ -48,15 +48,6 @@ const PostBar: React.FC<PostBarProps> = ({ userImage, showButtonBar }) => {
       //   description: description,
       //   contentType: "text/plain",
       //   content: content,
-      //   author: {
-      //     type: "author",
-      //     id: process.env.REACT_APP_AUTHOR_ID,
-      //     host: process.env.REACT_APP_HOST,
-      //     displayName: process.env.REACT_APP_DISPLAY_NAME,
-      //     page: process.env.REACT_APP_PAGE,
-      //     github: process.env.REACT_APP_GITHUB,
-      //     profileImage: process.env.REACT_APP_PROFILE_IMAGE,
-      //   },
       //   published: new Date().toISOString(),
       //   visibility: visibilityNumber,
       // };
