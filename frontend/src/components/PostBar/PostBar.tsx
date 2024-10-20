@@ -4,8 +4,7 @@ import styles from "./PostBar.module.scss";
 import { getVisibilityNumber, VisibilityChoices } from "../../models/modelTypes";
 import {Author, Post, Inbox} from "../../models/models"
 
-const UNKNOWN_USER_ID = "http://nodebbbb/api/authors/unknown";
-const UNKNOWN_USER_NAME = "Unknown User";
+const USER_ID = "82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0";
 
 interface PostBarProps {
   userImage: string;
@@ -45,47 +44,25 @@ const PostBar: React.FC<PostBarProps> = ({
       // First request: Create a new post
       const visibilityNumber = getVisibilityNumber(activeIcon.toUpperCase() as VisibilityChoices);
 
-      // const newPost = {
-      //   type: "post",
-      //   title: title,
-      //   description: description,
-      //   contentType: "text/plain",
-      //   content: content,
-      //   published: new Date().toISOString(),
-      //   visibility: visibilityNumber,
-      // };
-  
-      // const postResponse = await axios.post<Post>(
-      //   `${process.env.REACT_APP_SERVER}/api/authors/${process.env.REACT_APP_QUIN_NGUYEN}/posts/`,
-      //   newPost
-      // );
-      // console.log("Post successfully created:", postResponse.data);
-
-      const postResponse = {
-        data: {
-          id: "c3616cea-959f-4656-b1c4-34f9f39b8197", 
-          type: "post",
-          title: title,
-          description: description,
-          contentType: "text/plain",
-          content: content,
-          author: {
-            type: "author",
-            id: process.env.REACT_APP_AUTHOR_ID,
-            host: process.env.REACT_APP_HOST,
-            displayName: process.env.REACT_APP_DISPLAY_NAME,
-            page: process.env.REACT_APP_PAGE,
-            github: process.env.REACT_APP_GITHUB,
-            profileImage: process.env.REACT_APP_PROFILE_IMAGE,
-          },
-          published: new Date().toISOString(),
-          visibility: visibilityNumber,
-        }
+      const newPost = {
+        type: "post",
+        title: title,
+        description: description,
+        contentType: "text/plain",
+        content: content,
+        published: new Date().toISOString(),
+        visibility: visibilityNumber,
       };
+  
+      const postResponse = await axios.post<Post>(
+        `http://127.0.0.1:8000/api/authors/${USER_ID}/posts/`,
+        newPost
+      );
+      console.log("Post successfully created:", postResponse.data);
   
       // Second request: Get the followers
       const followersResponse = await axios.get<{ type: string, followers: Author[] }>(
-        `${process.env.REACT_APP_SERVER}/api/authors/${process.env.REACT_APP_QUIN_NGUYEN}/followers/`,
+        `http://127.0.0.1:8000/api/authors/${USER_ID}/followers/`,
       );
       const followers = followersResponse.data["followers"];
       console.log("Followers retrieved:", followers);
@@ -93,7 +70,7 @@ const PostBar: React.FC<PostBarProps> = ({
       
       // Third request: Get the friends
       const friendsResponse = await axios.get<Author[]>(
-        `${process.env.REACT_APP_SERVER}/api/authors/${process.env.REACT_APP_QUIN_NGUYEN}/following/?action=friends`,
+        `http://127.0.0.1:8000/api/authors/${USER_ID}/following/?action=friends`,
       );
       const friends = friendsResponse.data;
       console.log("Friends retrieved:", friends);
@@ -101,7 +78,7 @@ const PostBar: React.FC<PostBarProps> = ({
       if (visibilityNumber == 1 || visibilityNumber == 3) {
         // If public or unlisted, send to friends and followers
         for (const follower of followers) {
-          const inboxUrl = `${process.env.REACT_APP_SERVER}/api/authors/${follower.id}/inbox/`;
+          const inboxUrl = `http://127.0.0.1:8000/api/authors/${follower.id}/inbox/`;
           try {
             const inboxResponse = await axios.post<{message: string}>(inboxUrl, postResponse.data);
             console.log(inboxResponse.data);
@@ -113,7 +90,7 @@ const PostBar: React.FC<PostBarProps> = ({
       }
       // Friends receive inbox on all type of post
       for (const friend of friends) {
-        const inboxUrl = `${process.env.REACT_APP_SERVER}/api/authors/${friend.id}/inbox/`;
+        const inboxUrl = `http://127.0.0.1:8000/api/authors/${friend.id}/inbox/`;
         try {
           const inboxResponse = await axios.post<{message: string}>(inboxUrl, postResponse.data);
           console.log(inboxResponse.data);
