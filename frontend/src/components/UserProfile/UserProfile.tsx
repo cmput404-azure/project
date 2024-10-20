@@ -4,9 +4,26 @@ import styles from "./UserProfile.module.scss";
 import FollowList from "../FollowList/FollowList";
 import axios from "axios";
 import { useEffect } from "react";
+import Modal from "react-modal";
+import UseState from "react";
+import DeletePostModal from "../DeletePostModal/DeletePostModal";
+
+interface Post {
+  id: string;
+  content: string;
+  published: string;
+  author: {
+    displayName: string;
+  };
+}
+
+// Modal needs this to be set so it knows where to put the modal in the DOM
+Modal.setAppElement("#root");
 
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
+  const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
+  const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
@@ -28,6 +45,27 @@ export default function UserProfile() {
   }, []);
 
   // fetch the authors posts from the API when the component mounts
+  useEffect(() => {
+    const fetchAuthorPosts = async () => {
+      try {
+        const response = await axios.get(
+          "http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/"
+        );
+        setAuthorPosts(response.data as Post[]); // Set the response data to state
+      } catch (error) {
+        console.error("Error fetching the author posts", error);
+      }
+    };
+
+    fetchAuthorPosts();
+  }, []);
+
+  const handleDeletePostButtonClicked = () => {
+    setIsPostDeleteModalOpen(true);
+  };
+  const handleDeletePostModalClose = () => {
+    setIsPostDeleteModalOpen(false);
+  };
 
   const openFollowers = () => {
     setShowFollowerList(true);
@@ -113,18 +151,27 @@ export default function UserProfile() {
       <hr className={styles.horizontalLine} />
 
       <section className={styles.userPosts}>
-        <MiniPostCard
-          profilePic="../images/yellowduck.png"
-          userName={authorData.displayName}
-          postTime="11:11 PM"
-          postContent="Excited to share my promotion to Software Developer III, massive thanks to @CorgiLabs!"
-          postImage="../images/ducklings.jpg"
-          likeCount={1523382}
-          saveCount={250}
-          commentCount={10000}
-        />
-        {/* Add more MiniPostCard components as needed */}
+        {/* map the author post response data to the mini profile card component */}
+        {authorPosts.map((post) => (
+          <MiniPostCard
+            key={post.id}
+            profilePic="../../images/yellowduck.png"
+            userName={post.author.displayName}
+            postTime={post.published}
+            postContent={post.content}
+            postImage="../../images/ducklings.jpg"
+            likeCount={1523382}
+            saveCount={250}
+            commentCount={10000}
+            canDelete={true}
+            handleDelete={handleDeletePostButtonClicked}
+          />
+        ))}
       </section>
+      <DeletePostModal
+        isOpen={isPostDeleteModalOpen}
+        onRequestClose={handleDeletePostModalClose}
+      />
     </div>
   );
 }
