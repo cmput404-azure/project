@@ -1,6 +1,6 @@
 .author-post {
     border-radius: 8px;
-    padding: 12px 30px; /* Increased horizontal padding (left and right), vertical stays the same */
+    padding: 25px 30px;
     width: 100%;
     max-width: 300px;
     background-color: #777777; /* Gray background for the entire box */
@@ -11,7 +11,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px; /* Smaller gap between sections */
+    margin-bottom: 8px; 
   }
   
   .author-info {
@@ -20,7 +20,7 @@
   }
   
   .author-avatar {
-    width: 64px; /* Bigger avatar */
+    width: 64px; 
     height: 64px;
     border-radius: 50%;
     object-fit: cover;
@@ -29,8 +29,8 @@
   
   .author-info div {
     display: flex;
-    flex-direction: column; /* Ensures the name and username stack vertically */
-    justify-content: flex-start; /* Aligns text to the left */
+    flex-direction: column;
+    justify-content: flex-start; 
   }
   
   .author-info h3 {
@@ -38,12 +38,12 @@
     font-size: 16px;
     font-weight: bold;
     text-align: left;
-    color: white; /* Author's name is white */
+    color: white; 
   }
   
   .author-info p {
     margin: 0;
-    color: #bbbbbb; /* Lighter gray for the username */
+    color: #bbbbbb; 
     font-size: 14px;
     text-align: left;
   }
@@ -52,15 +52,12 @@
   .add-button {
     background-color: transparent;
     border: none;
-    font-size: 16px; /* Smaller font size for the button */
+    font-size: 16px;
     cursor: pointer;
-  }
-  
-  .add-button span {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 24px; /* Smaller button */
+    width: 24px; 
     height: 24px;
     border-radius: 50%;
     background-color: #a0a0a0;
@@ -68,6 +65,8 @@
     font-size: 18px;
     font-weight: bold;
   }
+  
+
   
   /* Post content section */
   .post-content {

@@ -4,6 +4,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.contenttypes.models import ContentType
 from urllib.parse import urlparse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from drf_spectacular.utils import inline_serializer
+from rest_framework import serializers
 
 from ..serializers import *
 from ..models import *
@@ -14,9 +17,33 @@ a POST request occurs if someone like, comment, share post or send follow reques
 a GET request occurs when a local user wants to check her/his inbox
 '''
 class InboxView(APIView): 
-    '''
-    When user want to check their inbox, we fetch all objects relating to that user_id
-    '''
+    @extend_schema(
+        summary="Retrieve Inbox",
+        description="Fetch all inbox items for the specified author.",
+        parameters=[
+            OpenApiParameter(
+                name='author_serial', 
+                description='UUID of the author whose inbox to retrieve', 
+                type=str,  
+                required=True,
+                location=OpenApiParameter.PATH
+            )
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=inline_serializer(
+                    name="InboxResponse",
+                    fields={
+                        'user': serializers.CharField(),
+                        'items': InboxItemSerializer(many=True),  # Keep the InboxItemSerializer here
+                        'type': serializers.CharField()
+                    }
+                ),
+                description='Inbox items retrieved successfully'
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(description='Author not found.')
+        }
+    )
     def get(self, request, author_serial):
         user_obj = get_object_or_404(User, uuid=author_serial)
         inbox_obj = get_object_or_404(Inbox, user=user_obj)
@@ -33,14 +60,47 @@ class InboxView(APIView):
         }
         return Response(data, status=status.HTTP_200_OK)
     
-    '''
-    The idea is that on receiving the inbox item, we map it to either post, like, comment or follow_request
-    We find that object stored in our inbox that delete it
-    When delete a post, I expect the type and id of the follow request is sent in the body 
-    When reject/accept a follow request, body is a follow request object
-    if payload is empty = no body, we clear the inbox
-    '''
+
+    @extend_schema(
+        summary="Delete Inbox Items",
+        description="Delete items from the inbox. If no body is provided, all inbox items are deleted. If a `type` and `id` are provided, the specific post or follow request is deleted.",
+        parameters=[
+            OpenApiParameter(
+                name='author_serial',
+                description='UUID of the author whose inbox is being modified.',
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True
+            ),
+            OpenApiParameter(
+                name='type',
+                description='Type of the item to delete (e.g., "post", "follow").',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                required=False
+            ),
+            OpenApiParameter(
+                name='id',
+                description='ID of the item to delete (e.g., post or follow request).',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                required=False
+            ),
+        ],
+        request=None,  # Request body not required for delete all case
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(description="Inbox items deleted successfully."),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(description="User, inbox, or item not found."),
+        }
+    )
     def delete(self, request, author_serial):
+        '''
+        The idea is that on receiving the inbox item, we map it to either post, like, comment or follow_request
+        We find that object stored in our inbox that delete it
+        When delete a post, I expect the type and id of the follow request is sent in the body 
+        When reject/accept a follow request, body is a follow request object
+        if payload is empty = no body, we clear the inbox
+        '''
         user_obj = get_object_or_404(User, uuid=author_serial)
         payload = request.data
         
@@ -48,7 +108,7 @@ class InboxView(APIView):
             # Delete the whole inbox
             inbox_obj = get_object_or_404(Inbox, user=user_obj)
             inbox_obj.items.clear()
-            return Response(status=status.HTTP_200_OK)
+            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_200_OK)
         
         if "type" not in payload:
             return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_404_NOT_FOUND)
@@ -103,15 +163,33 @@ class InboxView(APIView):
         return Response(InboxSerializer(inbox_obj, context={"request": request}).data, status=status.HTTP_200_OK)
 
     
-    '''
-    The idea is that on receiving the inbox item, we map it to either post, like, comment or follow_request
-    When sending/updating posts, body is a post object
-    When sending/updating comments, body is a comment object
-    When sending/updating likes, body is a like object
-    When sending/updating follow requests, body is a follow object
-    All these POST object must have a "type" field
-    '''
+    @extend_schema(
+        summary="Add Item to Inbox",
+        description="Add a new item (post, comment, like, or follow request) to the inbox.",
+        request=PostSerializer,  # This is the serializer used for the POST request body
+        parameters=[
+            OpenApiParameter(
+                name='author_serial', 
+                description='UUID of the author receiving the inbox item', 
+                type=str, 
+                required=True,
+                location=OpenApiParameter.PATH
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(description='Inbox item added successfully'),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(description='Invalid payload or missing type field'),
+        }
+    )
     def post(self, request, author_serial):
+        '''
+        The idea is that on receiving the inbox item, we map it to either post, like, comment or follow_request
+        When sending/updating posts, body is a post object
+        When sending/updating comments, body is a comment object
+        When sending/updating likes, body is a like object
+        When sending/updating follow requests, body is a follow object
+        All these POST object must have a "type" field
+        '''
         user_obj = get_object_or_404(User, uuid=author_serial)
         payload = request.data
        
@@ -194,7 +272,7 @@ class InboxView(APIView):
                                              created_at=payload["published"], 
                                              post=post_obj,
                                              comment=payload["comment"],
-                                             ContentType=payload["ContentType"])
+                                             contentType=payload["contentType"])
         serializer = CommentSerializer(comment_obj, data=payload, context={"request": request})
 
         if serializer.is_valid():
