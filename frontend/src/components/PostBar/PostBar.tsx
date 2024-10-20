@@ -150,7 +150,6 @@ const PostBar: React.FC<PostBarProps> = ({
             >
               <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
             </div>
-            <div className={styles["vertical-divider"]}></div>
             <div
               className={`${styles["icon-section"]} ${
                 activeIcon === "friends" ? styles.active : ""
@@ -159,7 +158,6 @@ const PostBar: React.FC<PostBarProps> = ({
             >
               <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
             </div>
-            <div className={styles["vertical-divider"]}></div>
             <div
               className={`${styles["icon-section"]} ${
                 activeIcon === "link" ? styles.active : ""
