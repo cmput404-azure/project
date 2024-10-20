@@ -29,6 +29,7 @@ class MultipleCommentsView(APIView):
             vd:POST_FQID: http://nodebbbb/api/authors/222/posts/249
             GET [local, remote]: the comments on the post (that our server knows about)    
             '''
+            print(post_fqid)
             post_id = post_fqid.split('/')[-1]
             post_obj = get_object_or_404(Post, uuid=post_id)
             author_id = post_obj.user.uuid
@@ -78,14 +79,11 @@ class SingleCommentView(APIView):
         else:
             # Case: Retrieve comment using comment FQID.
             try:
-                #TODO This is temporary. This and all other FQID functions should handle FQIDS properly
-                #By decoding the percent encoding and sending an http request to the corresponding node.
-                #the FQID should be assumed to be a valid url.
-                split = comment_fqid.split('/')
-                if len(split) > 1:
-                    comment_id = split[-1]
-                else:
-                    comment_id = comment_fqid
+                # TODO splitting and getting the last item is wrong as per the requirements
+                # we need to make sure that we execute an http request against the fqid since its
+                # a valid path and since its foreign we shouldn't be trying to retrieve from our database directly
+                # it all should be done via an http request
+                comment_id = comment_fqid.split('/')[-1]
             except IndexError:
                 return Response(
                     {"detail": "Invalid comment FQID."}, status=400
