@@ -9,7 +9,7 @@ import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 
-interface Post {
+interface AuthorPost {
   type: string;
   title: string;
   id: string;
@@ -35,7 +35,7 @@ Modal.setAppElement("#root");
 
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
-  const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
+  const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   // FollowerList
@@ -64,7 +64,7 @@ export default function UserProfile() {
       const response = await axios.get(
         "http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/"
       );
-      setAuthorPosts(response.data as Post[]); // Set the response data to state
+      setAuthorPosts(response.data as AuthorPost[]); // Set the response data to state
     } catch (error) {
       console.error("Error fetching the author posts", error);
     }
