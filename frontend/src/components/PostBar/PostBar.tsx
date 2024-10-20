@@ -11,19 +11,36 @@ interface PostBarProps {
 }
 type IconType = "public" | "friends" | "link";
 
-const PostBar: React.FC<PostBarProps> = ({ userImage, showButtonBar }) => {
+const PostBar: React.FC<PostBarProps> = ({
+  userImage,
+  showButtonBar = true,
+}) => {
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
-  const [postContent, setPostContent] = useState("");
-  // To update the postContent
-  const handlePostContentChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setPostContent(event.target.value);
-  };
+  const [title, setTitle] = useState("");
+  const [showDetail, setShowDetail] = useState(false);
+  const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
+
   // To update the activeIcon
   const handleIconClick = (icon: IconType) => {
-    setActiveIcon(icon);
+      setActiveIcon(icon);
+    };
+  // To update the title
+  const handleTitleChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setTitle(event.target.value);
   };
+  const handleInputClick = () => setShowDetail(true) ;
+  const handleDescriptionChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => setDescription(event.target.value);
+  const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
+    setContent(event.target.value);
+
+
+
+
   const handleCombinedClick = () => {
     handleInboxClick();
     handlePostClick();
@@ -35,7 +52,7 @@ const PostBar: React.FC<PostBarProps> = ({ userImage, showButtonBar }) => {
       id: `${UNKNOWN_USER_ID}/posts/${Date.now()}`, // Creating a unique ID for the post
       description: "A brief description of the post", // Using a placeholder description
       contentType: "text/plain",
-      content: postContent,
+      content: title,
       author: {
         type: "author",
         id: UNKNOWN_USER_ID,
@@ -85,10 +102,11 @@ const PostBar: React.FC<PostBarProps> = ({ userImage, showButtonBar }) => {
         <div className={styles["vertical-divider"]}></div>
         <input
           type="text"
-          placeholder="Type Something"
+          placeholder="Start your post with a title "
           className={styles["post-input"]}
-          value={postContent}
-          onChange={handlePostContentChange}
+          value={title}
+          onChange={handleTitleChange}
+          onClick={handleInputClick}
         />
         <button
           className={styles["add-button"]}
@@ -96,8 +114,32 @@ const PostBar: React.FC<PostBarProps> = ({ userImage, showButtonBar }) => {
         >
           <span>+</span>
         </button>
+      
+
       </section>
-      {showButtonBar && (
+
+{showDetail && (
+  <div className={styles["detail-container"]}>
+    <label className={styles["input-label"]}>Description</label>
+    <textarea
+      className={styles["description-input"]}
+      placeholder="Add a brief description..."
+      value={description}
+      onChange={handleDescriptionChange}
+    />
+
+    <label className={styles["input-label"]}>Content</label>
+    <textarea
+      className={styles["content-input"]}
+      placeholder="Write your post content here..."
+      value={content}
+      onChange={handleContentChange}
+    />
+  </div>
+)}
+
+
+      {(showButtonBar || showDetail)  && (
         <section className={styles["button-bar"]}>
           <div className={styles["icon-bar"]}>
             <div
@@ -141,25 +183,3 @@ const PostBar: React.FC<PostBarProps> = ({ userImage, showButtonBar }) => {
 
 export default PostBar;
 
-// import React from 'react';
-// import logo from './images/dog_icon.png';
-// import styles from './App.module.scss';
-
-// import PostBar from './components/PostBar/PostBar';
-// import AuthorPost from './components/AuthorPost/AuthorPost';
-
-// import PostCard from './components/PostCard/PostCard';
-// export default function App() {
-//   const handleAddClick = () => {
-//     console.log('Add button clicked');
-//   };
-
-//   return (
-//     <div className={styles.App}>
-//       Social distribution
-//       <PostBar userImage= {logo} onAddClick={handleAddClick} />
-//       <AuthorPost authorImage= {logo}  authorName = "Kyle Quach" userName="tmquach.meomeo" postText= "The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut." onAddClick={handleAddClick} />
-//     </div>
-
-//   );
-// }
