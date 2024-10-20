@@ -13,14 +13,14 @@ urlpatterns = [
     # Front end injection
     path('', TemplateView.as_view(template_name='index.html')),
     
+    # Inbox API
+    path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+    
     # Authors API
     path("api/authors/all/", AuthorsCompleteView.as_view(), name="authors_all"),
     path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="author"),
     path("api/authors/<path:author_fqid>/", AuthorsView.as_view(), name="author"),
     path("api/authors/", AuthorsView.as_view(), name="authors_list"),
-
-    # Inbox API
-    path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
     
     # Follow API
     path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  
