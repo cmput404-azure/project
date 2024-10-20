@@ -25,6 +25,8 @@ class AuthorPostView(APIView):
             - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
         """
         # TODO: remote node handling
+        if not User.objects.filter(uuid=author_serial).exists(): 
+            return Response("Author does not exist.", status=404)
 
         # If both author and post serials are provided
         if (author_serial and post_serial):
@@ -131,14 +133,24 @@ class AuthorPostView(APIView):
         DELETE [local] remove a post
             - local posts: must be authenticated locally as the author
         """
-        post = get_object_or_404(Post, uuid=post_serial)
+        if not User.objects.filter(uuid=author_serial).exists(): 
+            return Response("Author does not exist.", status=404)
         
-        # TODO: Check if user of request is the author of the post (Authenticate)
-        
-        post.delete()
-        return Response({
-            "message": f"Deleted {post_serial}"
-        }, status=200)
+        if request.user.is_authenticated:
+            post = get_object_or_404(Post, uuid=post_serial)
+            
+            # TODO: Check if user of request is the author of the post (Authenticate)
+            if post.user.uuid == request.user.uuid:
+                post.visibility = 4
+                post.save()
+                return Response({
+                    "message": f"Deleted {post_serial}"
+                }, status=200)
+            else:
+                return Response("You are not the author of this post.", status=403)
+            
+        else:
+            return Response("You must be authenticated to delete a post.", status=403)
 
     def post(self, request, author_serial):
         """

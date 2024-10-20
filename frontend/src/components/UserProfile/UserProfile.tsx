@@ -1,13 +1,13 @@
-import { useState } from "react";
-import MiniPostCard from "../MiniPostCard/MiniPostCard";
-import styles from "./UserProfile.module.scss";
 import FollowList from "../FollowList/FollowList";
-import axios from "axios";
-import { useEffect } from "react";
-import Modal from "react-modal";
-import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
+import MiniPostCard from "../MiniPostCard/MiniPostCard";
+import axios from "axios";
+import { checkAuth } from "../../util/auth/checkauth";
+import styles from "./UserProfile.module.scss";
+import { useEffect } from "react";
+import { useState } from "react";
+import DeletePostModal from "../DeletePostModal/DeletePostModal";
 
 interface AuthorPost {
   type: string;
@@ -30,9 +30,6 @@ interface AuthorPost {
   visibility: number;
 }
 
-// Modal needs this to be set so it knows where to put the modal in the DOM
-Modal.setAppElement("#root");
-
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
@@ -42,36 +39,58 @@ export default function UserProfile() {
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
 
-  // fetch the author data from the API when the component mounts
+  axios.defaults.withCredentials = true;
+  axios.defaults.xsrfCookieName = "csrftoken";
+  axios.defaults.xsrfHeaderName = "x-csrftoken";
+
+  const [user, setUser] = useState(null);
+
   useEffect(() => {
-    const fetchAuthorData = async () => {
+    const fetchUser = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/"
-        );
-        setAuthorData(response.data); // Set the response data to state
+        const data = await checkAuth();
+        setUser({
+          username: data.username,
+          uuid: data.uuid,
+        });
       } catch (error) {
-        console.error("Error fetching the author data", error);
+        console.error("Error checking auth", error);
       }
     };
 
-    fetchAuthorData();
+    fetchUser();
   }, []);
 
-  // fetch the authors posts from the API when the component mounts
   const fetchAuthorPosts = async () => {
     try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/"
+      const response = await axios.get<AuthorPost[]>(
+        `http://localhost:8000/api/authors/${user.uuid}/posts/`
       );
-      setAuthorPosts(response.data as AuthorPost[]); // Set the response data to state
+      console.log(response.data);
+      setAuthorPosts(response.data);
     } catch (error) {
       console.error("Error fetching the author posts", error);
     }
   };
+
+  // fetch the author data from the API when the component mounts
   useEffect(() => {
+    if (!user) return;
+
+    const fetchAuthorData = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/authors/${user.uuid}/`
+        );
+        console.log(response.data);
+        setAuthorData(response.data);
+      } catch (error) {
+        console.error("Error fetching the author data", error);
+      }
+    };
+    fetchAuthorData();
     fetchAuthorPosts();
-  }, []);
+  }, [user]);
 
   const handleDeletePostButtonClicked = (postId: string) => {
     setPostToDelete(postId);
@@ -87,7 +106,7 @@ export default function UserProfile() {
       try {
         // API call to delete the post
         await axios.delete(
-          `http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/${postToDelete}/`
+          `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToDelete}/`
         );
 
         // Refresh the posts after successful deletion
@@ -124,7 +143,6 @@ export default function UserProfile() {
           src={`https://ui-avatars.com/api/?background=random&name=${authorData.displayName}`}
           alt={authorData.profilePic}
         />
-
         <section className={styles.userInfoContainer}>
           <section className={styles.userInfo}>
             <section className={styles.userNameContainer}>

@@ -7,10 +7,8 @@ import HomePage from "./components/HomePage/HomePage";
 import NavigationBar from "./components/NavigationBar/NavigationBar";
 import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
-import styles from "./App.module.scss";
-import HomePage from "./components/HomePage/HomePage";
 import { checkAuth } from "./util/auth/checkauth";
-import styles from './App.module.scss';
+import styles from "./App.module.scss";
 
 export default function App() {
   const nav = useNavigate();
@@ -22,22 +20,25 @@ export default function App() {
       setIsLoggedIn(data.is_authenticated);
       console.log(data);
     });
-  })
+  });
   return (
     <div className={styles.App}>
-        <NavigationBar onClick={(item) => nav(`/${item}`)} isLoggedIn={isLoggedIn} />
+      <NavigationBar
+        onClick={(item) => nav(`/${item}`)}
+        isLoggedIn={isLoggedIn}
+      />
 
-        <div className={styles.content}>
-          <Routes>
-            <Route path="/" element={<HomePage/>} />
-            <Route path="/home" element={<HomePage/>} />
-            <Route path="/profile" element={<UserProfile />} />
-            <Route path="/settings" element={<Root />} />
-            <Route path="/login" element={<Auth />} />
-            <Route path="/logout" element={<Logout />} />
-            <Route path="*" element={<ErrorPage />} />
-          </Routes>
-        </div>
+      <div className={styles.content}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/settings" element={<Root />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="/logout" element={<Logout />} />
+          <Route path="*" element={<ErrorPage />} />
+        </Routes>
+      </div>
     </div>
   );
 }
