@@ -13,7 +13,7 @@ urlpatterns = [
     
     # Follow API
     path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  
-    path('api/authors/<uuid:user_id>/followers/', FollowerView.as_view(), name='followers_handler'),  
+    path('api/authors/<uuid:user_id>/followers/', FollowerView.as_view(), name='get_followers'),  
     path('api/authors/<uuid:user_id>/following/', FollowCustomView.as_view(), name='following'),  
 
     # Inbox API
