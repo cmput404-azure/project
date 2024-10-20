@@ -5,9 +5,9 @@ import FollowList from "../FollowList/FollowList";
 import axios from "axios";
 import { useEffect } from "react";
 import Modal from "react-modal";
-import UseState from "react";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
-import githubIcon from "../../images/githubIcon.png";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import { IconButton } from "@mui/material";
 
 interface Post {
   id: string;
@@ -120,14 +120,11 @@ export default function UserProfile() {
             </section>
             <section className={styles.buttonContainer}>
               <button className={styles.followButton}>Follow</button>
-              <a
-                href={authorData.github}
-                className={styles.githubButton}
-                target="_blank" // Opens the link in a new tab
-                rel="noopener noreferrer"
+              <IconButton
+                onClick={() => window.open(authorData.github, "_blank")}
               >
-                <img src={githubIcon} alt="GitHub" />
-              </a>
+                <GitHubIcon />
+              </IconButton>
             </section>
           </section>
 
