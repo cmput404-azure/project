@@ -188,6 +188,7 @@ export default function UserProfile() {
             comments={10000}
             canDelete={true}
             handleDelete={() => handleDeletePostButtonClicked(post.id)}
+            canEdit={true}
           />
         ))}
       </section>
