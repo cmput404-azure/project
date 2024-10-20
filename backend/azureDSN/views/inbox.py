@@ -108,7 +108,7 @@ class InboxView(APIView):
             # Delete the whole inbox
             inbox_obj = get_object_or_404(Inbox, user=user_obj)
             inbox_obj.items.clear()
-            return Response(status=status.HTTP_200_OK)
+            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_200_OK)
         
         if "type" not in payload:
             return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_404_NOT_FOUND)
