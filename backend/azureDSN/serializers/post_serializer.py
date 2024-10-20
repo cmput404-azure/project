@@ -10,7 +10,7 @@ class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
     # comments = CommentSerializer(many=True) 
     # likes = LikeSerializer(many=True)
-    id = serializers.UUIDField(source='uuid')
+    id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
     
@@ -30,8 +30,10 @@ class PostSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
+        print(validated_data)
         author_data = validated_data.pop('user')
         if not User.objects.filter(uuid=author_data['uuid']).exists():
+            print(author_data['uuid'])
             return Response({"message": "error, unauthorized"},status=403)
         user = User.objects.get(uuid=author_data['uuid'])
         post = Post.objects.create(user=user, **validated_data)

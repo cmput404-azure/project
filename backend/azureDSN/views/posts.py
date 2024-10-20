@@ -1,11 +1,10 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from django.http import HttpResponse
 from ..models import User, Post
-from ..serializers import UserSerializer, PostSerializer
+from ..serializers import PostSerializer, UserSerializer
 from rest_framework.response import Response
-import uuid
-from datetime import datetime
+from rest_framework import status
+
 
 class AuthorPostView(APIView):
     """
@@ -32,10 +31,35 @@ class AuthorPostView(APIView):
             
         # If only author serial is provided
         elif (author_serial):
-            pass
+            """
+            GET [local, remote] get the recent posts from author AUTHOR_SERIAL (paginated)
+                - Not authenticated: only public posts.
+                - Authenticated locally as author: all posts.
+                - Authenticated locally as friend of author: public + friends-only posts.
+                - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
+                
+            URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/
+            """
+            # make sure the author exists
+            author = get_object_or_404(User, uuid=author_serial)
+
+            # retrieve all posts by the author
+            posts = Post.objects.filter(user=author)
+
+            # if user is not authenticated
+            if not request.user.is_authenticated:
+                posts = posts.filter(visibility=1)
+            # if user is authenticated locally as author
+            elif request.user == author and request.user.is_authenticated:
+                posts = posts.all()
+            # if user is authenticated as friend of author
+            else:
+                posts = posts.filter(visibility__in=[1, 2])
+            
+            return Response(PostSerializer(posts, many=True).data, status=200)   
 
         else:
-            return HttpResponse("Need to specify at least an author ID", status=400)
+            return Response("Need to specify at least an author ID", status=400)
 
     def put(self, request, post_fqid):
         """
@@ -46,7 +70,7 @@ class AuthorPostView(APIView):
         
         # Check if user of request is the author of the post
         if request.user != post.user:
-            return HttpResponse("You are not the author of this post.", status=403)
+            return Response("You are not the author of this post.", status=403)
         
         serializer = PostSerializer(post, data=request.data)
         if serializer.is_valid():
@@ -63,12 +87,79 @@ class AuthorPostView(APIView):
         
         # Check if user of request is the author of the post
         if request.user != post.user:
-            return HttpResponse("You are not the author of this post.", status=403)
+            return Response("You are not the author of this post.", status=403)
         
         post.delete()
         return Response({
             "message": f"Deleted {post_fqid}"
         }, status=200)
+
+    def post(self, request, author_serial):
+        """
+        POST [local] create a new post but generate a new ID
+            - Authenticated locally as author
+        """
+        '''this is the format
+            post_data =    {
+                "type": "post",
+                "title": "A Test Post Title",
+                "description": "This is a test post.",
+                "contentType": "text/plain",
+                "content": "This is the content of the post.",
+                "author": {
+                    "id": "5f577ee2-0ccc-49a4-b3cc-47a8aeb265df",
+                    "displayName": "Bob",
+                    "host": "http://localhost:8000",
+                    "github": "http://github.com/bob",
+                    "page": "http://bob.com",
+                    "profile_image": "http://localhost:8000/media/profile_images/bob.png"
+                },
+                "published": "2015-03-09T13:07:04+00:00",
+                "visibility": 1
+            }
+            
+        '''
+
+        author = User.objects.get(uuid=author_serial)
+        author_data = UserSerializer(author).data
+        request.data["author"] = author_data
+        # return Response(request.data, status=200)
+
+        serializer = PostSerializer(data=request.data, partial=True)
+        if serializer.is_valid():
+            instance = serializer.save()
+
+            # response = {
+            #     "type": "post",
+            #     "title": instance.data["title"],
+            #     "description": instance.data["description"],
+            #     "id": instance.data["id"],
+            #     "contentType": instance.data["contentType"],
+            #     "content": instance.data["content"],
+            #     "author": {
+            #         "id": instance.data["user"]["uuid"],
+            #         "displayName": instance.data["user"]["display_name"],
+            #         "host": instance.data["user"]["host"],
+            #         "github": instance.data["user"]["github"],
+            #         "page": instance.data["user"]["page"],
+            #         "profile_image": instance.data["user"]["profile_image"]
+            #     },
+            #     "comments": {
+            #         "type": "comments",
+            #         "page": "http://localhost:8000/api/posts/{post_fqid}",
+            #         "id": "http://localhost:8000/api/posts/{post_fqid}/comments"
+            #         #etc
+            #     },
+            #     "likes": [],
+            #     "published": instance.data["created_at"],
+            #     "visibility": instance.data["visibility"]
+            # }
+            
+            # Serialize the response
+            response = PostSerializer(instance).data
+
+            return Response(response, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=400)
 
 class PostView(APIView):
     """
@@ -84,20 +175,19 @@ class PostView(APIView):
 
             # Check the visibility of the post
             if post.visibility == 2 and not request.user.is_authenticated:  # FRIENDS
-                return HttpResponse("Friend's only posts must be authenticated to view.", status=403)
+                return Response("Friend's only posts must be authenticated to view.", status=403)
             if post.visibility == 3 and not request.user.is_authenticated:  # UNLISTED
-                return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
+                return Response("Unlisted posts must be authenticated to view.", status=403)
             if post.visibility == 4:  # DELETED
-                return HttpResponse("Post does not exist.", status=404)
+                return Response("Post does not exist.", status=404)
             
             # Post is public if above conditions are not met
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
         else:
-            return HttpResponse("No post ID specified", status=400)
+            return Response("No post ID specified", status=400)
         
 class PostCreation(APIView):
-    
     def get(self, request, author_serial=None):
         """
         GET [local, remote] get the recent posts from author AUTHOR_SERIAL (paginated)
@@ -131,15 +221,8 @@ class PostCreation(APIView):
         POST [local] create a new post but generate a new ID
             - Authenticated locally as author
         """
-        user_obj = get_object_or_404(User, uuid=author_serial)
-        
-        # Check if user of request is the author of the post
-        # if request.user != author:
-        #     return HttpResponse("You are not the author of this post.", status=403)
-
         '''this is the format
-        
-        post_data =    {
+            post_data =    {
                 "type": "post",
                 "title": "A Test Post Title",
                 "description": "This is a test post.",
@@ -158,11 +241,8 @@ class PostCreation(APIView):
             }
             
         '''
-        
-        author = UserSerializer(user_obj).data
-        
 
-        serializer = PostSerializer(data=post_data, partial=True)
+        serializer = PostSerializer(data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
