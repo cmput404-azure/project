@@ -51,9 +51,11 @@ class AuthorPostView(APIView):
 
             # put the comments into the corresponding post
             for post in posts:
-                comment_serializer = CommentArraySerializer(comments=comments.filter(post=post))
-                post.comments = comment_serializer.get_comments(post)
-                post.likes = likes.filter(post=post)
+                # comment_serializer = CommentArraySerializer(comments=comments.filter(post=post))
+                # post.comments = comment_serializer.get_comments(post)
+                # post.likes = likes.filter(post=post)
+                post.comments = []
+                post.likes = []
 
 
             # if user is not authenticated
