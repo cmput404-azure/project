@@ -260,9 +260,9 @@ class LikesView(APIView):
             Return: likes object
             """
             type = "posts"
-            post = get_object_or_404(Post, uuid=post_serial)
-            # author = get_object_or_404(User, uuid=author_serial)
-
+            author = get_object_or_404(User, uuid=author_serial)
+            post = get_object_or_404(Post, uuid=post_serial, user=author)
+            
             likes = Like.objects.filter(post=post).order_by('-created_at')[:5]
             count = Like.objects.filter(post=post).count()
 
@@ -274,24 +274,11 @@ class LikesView(APIView):
             """
             type = "posts"
             try:
-                # Parse and decode the URL to handle percent-encoding
-                parsed_url = urlparse(post_fqid)
-                path = unquote(parsed_url.path)
-
-                # Example: "/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/"
-                path_parts = path.strip('/').split('/')
-
-                # Validate the path structure
-                if len(path_parts) < 4 or path_parts[-2] != 'posts':
-                    raise ValueError("Invalid FQID structure")
-
-                # Extract AUTHOR_SERIAL and POST_SERIAL
-                author_serial = path_parts[-4]
+                # Example: "/api/posts/{POST_SERIAL}"
+                path_parts = post_fqid.strip('/').split('/')
+                
                 post_serial = path_parts[-1]
-
-                # Validate that both are UUIDs
-                UUID(author_serial)
-                UUID(post_serial)
+                UUID(post_serial) # will raise error if not UUID
 
             except (IndexError, ValueError):
                 return Response(
@@ -299,11 +286,9 @@ class LikesView(APIView):
                 )
             
             post = get_object_or_404(Post, uuid=post_serial)
-            author = get_object_or_404(User, uuid=author_serial)
             likes = Like.objects.filter(post=post).order_by('-created_at')[:5]
             count = Like.objects.filter(post=post).count()
-            
-
+            author_serial = post.user.uuid
 
         likes = LikeSerializer(likes, many=True).data
 
