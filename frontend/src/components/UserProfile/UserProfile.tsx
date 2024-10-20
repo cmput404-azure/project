@@ -8,6 +8,7 @@ import Modal from "react-modal";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
+import EditPostModal from "../EditPostModal/EditPostModal";
 
 interface AuthorPost {
   type: string;
@@ -38,6 +39,8 @@ export default function UserProfile() {
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
+
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
@@ -100,6 +103,14 @@ export default function UserProfile() {
         console.error("Error deleting post", error);
       }
     }
+  };
+
+  const handleEditPostButtonClicked = (postId: string) => {
+    setIsEditPostModalOpen(true);
+  };
+
+  const handleEditPostModalClose = () => {
+    setIsEditPostModalOpen(false);
   };
 
   const openFollowers = () => {
@@ -189,6 +200,7 @@ export default function UserProfile() {
             canDelete={true}
             handleDelete={() => handleDeletePostButtonClicked(post.id)}
             canEdit={true}
+            handleEdit={() => handleEditPostButtonClicked(post.id)}
           />
         ))}
       </section>
@@ -196,6 +208,15 @@ export default function UserProfile() {
         isOpen={isPostDeleteModalOpen}
         onRequestClose={handleDeletePostModalClose}
         onDelete={handleConfirmDelete}
+      />
+      <EditPostModal
+        isOpen={isEditPostModalOpen}
+        onRequestClose={handleEditPostModalClose}
+        post={{
+          title: "Title",
+          content: "Content",
+        }}
+        onSubmit={() => {}}
       />
     </div>
   );
