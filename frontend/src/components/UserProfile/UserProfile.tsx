@@ -24,6 +24,7 @@ export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
@@ -45,26 +46,47 @@ export default function UserProfile() {
   }, []);
 
   // fetch the authors posts from the API when the component mounts
+  const fetchAuthorPosts = async () => {
+    try {
+      const response = await axios.get(
+        "http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/"
+      );
+      setAuthorPosts(response.data as Post[]); // Set the response data to state
+    } catch (error) {
+      console.error("Error fetching the author posts", error);
+    }
+  };
   useEffect(() => {
-    const fetchAuthorPosts = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/"
-        );
-        setAuthorPosts(response.data as Post[]); // Set the response data to state
-      } catch (error) {
-        console.error("Error fetching the author posts", error);
-      }
-    };
-
     fetchAuthorPosts();
   }, []);
 
-  const handleDeletePostButtonClicked = () => {
+  const handleDeletePostButtonClicked = (postId: string) => {
+    setPostToDelete(postId);
     setIsPostDeleteModalOpen(true);
   };
   const handleDeletePostModalClose = () => {
     setIsPostDeleteModalOpen(false);
+    setPostToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (postToDelete) {
+      try {
+        // API call to delete the post
+        await axios.delete(
+          `http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/${postToDelete}/`
+        );
+
+        // Refresh the posts after successful deletion
+        await fetchAuthorPosts();
+
+        // Close the modal after deletion
+        setIsPostDeleteModalOpen(false);
+        setPostToDelete(null);
+      } catch (error) {
+        console.error("Error deleting post", error);
+      }
+    }
   };
 
   const openFollowers = () => {
@@ -164,13 +186,14 @@ export default function UserProfile() {
             saveCount={250}
             commentCount={10000}
             canDelete={true}
-            handleDelete={handleDeletePostButtonClicked}
+            handleDelete={() => handleDeletePostButtonClicked(post.id)}
           />
         ))}
       </section>
       <DeletePostModal
         isOpen={isPostDeleteModalOpen}
         onRequestClose={handleDeletePostModalClose}
+        onDelete={handleConfirmDelete}
       />
     </div>
   );
