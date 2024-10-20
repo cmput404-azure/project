@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from ..models import User
-from django.conf import settings
 
 class UserSerializer(serializers.ModelSerializer):
     type = serializers.CharField(default='author', read_only=True)
@@ -8,19 +7,13 @@ class UserSerializer(serializers.ModelSerializer):
     host = serializers.URLField()
     displayName = serializers.CharField(source='display_name')
     github = serializers.URLField()
-    # profileImage = serializers.ImageField(source='profile_image', use_url=True)
-    profileImage = serializers.SerializerMethodField(source='profile_image')
+    profileImage = serializers.ImageField(source='profile_image', use_url=True)
     page = serializers.URLField()
 
     class Meta:
         model = User
         # TODO: MIGHT NEED TO ADD IMAGE LATER
         fields = ('type', 'id', 'host', 'displayName', 'github', 'page', 'profileImage')
-    
-    def get_profileImage(self, obj):
-        if obj.profile_image:  # if the image exists
-            return f"{settings.MEDIA_URL}{obj.profile_image}"
-        return None
 
     def create(self, validated_data):
         return User.objects.create(**validated_data)

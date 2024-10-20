@@ -1,12 +1,13 @@
-import FollowList from "../FollowList/FollowList";
-import GitHubIcon from '@mui/icons-material/GitHub';
-import { IconButton } from "@mui/material";
-import MiniPostCard from "../MiniPostCard/MiniPostCard";
-import axios from "axios";
-import { checkAuth } from "../../util/auth/checkauth";
-import styles from "./UserProfile.module.scss";
-import { useEffect } from "react";
 import { useState } from "react";
+import MiniPostCard from "../MiniPostCard/MiniPostCard";
+import styles from "./UserProfile.module.scss";
+import FollowList from "../FollowList/FollowList";
+import axios from "axios";
+import { useEffect } from "react";
+import Modal from "react-modal";
+import DeletePostModal from "../DeletePostModal/DeletePostModal";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import { IconButton } from "@mui/material";
 
 interface AuthorPost {
   type: string;
@@ -29,70 +30,77 @@ interface AuthorPost {
   visibility: number;
 }
 
+// Modal needs this to be set so it knows where to put the modal in the DOM
+Modal.setAppElement("#root");
+
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
+  const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
 
-  axios.defaults.withCredentials = true;
-  axios.defaults.xsrfCookieName = "csrftoken";
-  axios.defaults.xsrfHeaderName = "x-csrftoken";
-
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const data = await checkAuth();
-        setUser({
-          username: data.username,
-          uuid: data.uuid,
-        });
-      } 
-      catch (error) {
-        console.error("Error checking auth", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-
   // fetch the author data from the API when the component mounts
   useEffect(() => {
-    if (!user) return;
-
     const fetchAuthorData = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/authors/${user.uuid}/`
+          "http://localhost:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/"
         );
-        console.log(response.data); 
-        setAuthorData(response.data); 
+        setAuthorData(response.data); // Set the response data to state
       } catch (error) {
         console.error("Error fetching the author data", error);
       }
     };
 
-    const fetchAuthorPosts = async () => {
-      try {
-        const response = await axios.get<AuthorPost[]>(
-          `http://localhost:8000/api/authors/${user.uuid}/posts/`
-        );
-        console.log(response.data); 
-        setAuthorPosts(response.data); 
-      } catch (error) {
-        console.error("Error fetching the author posts", error);
-      }
-    };
-
     fetchAuthorData();
-    fetchAuthorPosts();
-  }, [user]);
+  }, []);
 
   // fetch the authors posts from the API when the component mounts
+  const fetchAuthorPosts = async () => {
+    try {
+      const response = await axios.get(
+        "http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/"
+      );
+      setAuthorPosts(response.data as AuthorPost[]); // Set the response data to state
+    } catch (error) {
+      console.error("Error fetching the author posts", error);
+    }
+  };
+  useEffect(() => {
+    fetchAuthorPosts();
+  }, []);
+
+  const handleDeletePostButtonClicked = (postId: string) => {
+    setPostToDelete(postId);
+    setIsPostDeleteModalOpen(true);
+  };
+  const handleDeletePostModalClose = () => {
+    setIsPostDeleteModalOpen(false);
+    setPostToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (postToDelete) {
+      try {
+        // API call to delete the post
+        await axios.delete(
+          `http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/${postToDelete}/`
+        );
+
+        // Refresh the posts after successful deletion
+        await fetchAuthorPosts();
+
+        // Close the modal after deletion
+        setIsPostDeleteModalOpen(false);
+        setPostToDelete(null);
+      } catch (error) {
+        console.error("Error deleting post", error);
+      }
+    }
+  };
 
   const openFollowers = () => {
     setShowFollowerList(true);
@@ -116,6 +124,7 @@ export default function UserProfile() {
           src={`https://ui-avatars.com/api/?background=random&name=${authorData.displayName}`}
           alt={authorData.profilePic}
         />
+
         <section className={styles.userInfoContainer}>
           <section className={styles.userInfo}>
             <section className={styles.userNameContainer}>
@@ -163,30 +172,30 @@ export default function UserProfile() {
         </section>
       </section>
 
-      <section className={styles.bioContainer}>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-        </p>
-      </section>
-
       <hr className={styles.horizontalLine} />
 
       <section className={styles.userPosts}>
+        {/* map the author post response data to the mini profile card component */}
         {authorPosts.map((post) => (
           <MiniPostCard
             key={post.id}
-            title={post.title}
-            content={post.content}
             author={post.author.displayName}
+            title={post.title}
             time={post.published}
-            comments={11}
-            likes={12}
-            saves={2}
+            content={post.content}
+            likes={1523382}
+            saves={250}
+            comments={10000}
+            canDelete={true}
+            handleDelete={() => handleDeletePostButtonClicked(post.id)}
           />
         ))}
       </section>
+      <DeletePostModal
+        isOpen={isPostDeleteModalOpen}
+        onRequestClose={handleDeletePostModalClose}
+        onDelete={handleConfirmDelete}
+      />
     </div>
   );
 }

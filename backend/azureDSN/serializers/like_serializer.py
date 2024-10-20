@@ -23,7 +23,7 @@ class LikeSerializer(serializers.ModelSerializer):
                 "displayName": {"type": "string"},
                 "github": {"type": "string"},
                 "page": {"type": "string"},
-                "profileImage": {"type": "image"}
+                # "profileImage": {"type": "image"}
             },
         }
     )
@@ -36,7 +36,7 @@ class LikeSerializer(serializers.ModelSerializer):
             "displayName": user_data.get("displayName"),
             "github": user_data.get("github"),
             "page": user_data.get("page"),
-            "profileImage": user_data.get("profileImage"),
+            # "profileImage": user_data.get("profileImage"),
         }
     
     def get_id(self, obj):
