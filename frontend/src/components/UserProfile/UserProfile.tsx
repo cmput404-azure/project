@@ -10,12 +10,24 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 
 interface Post {
+  type: string;
+  title: string;
   id: string;
+  contentType: string;
   content: string;
-  published: string;
   author: {
+    type: string;
+    id: string;
+    host: string;
     displayName: string;
+    github: string;
+    page: string;
+    profileImage: string;
   };
+  comments: any[];
+  likes: any[];
+  published: string;
+  visibility: number;
 }
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
@@ -168,13 +180,13 @@ export default function UserProfile() {
           <MiniPostCard
             key={post.id}
             profilePic="../../images/yellowduck.png"
-            userName={post.author.displayName}
-            postTime={post.published}
-            postContent={post.content}
-            postImage="../../images/ducklings.jpg"
-            likeCount={1523382}
-            saveCount={250}
-            commentCount={10000}
+            author={post.author.displayName}
+            title={post.title}
+            time={post.published}
+            content={post.content}
+            likes={1523382}
+            saves={250}
+            comments={10000}
             canDelete={true}
             handleDelete={() => handleDeletePostButtonClicked(post.id)}
           />

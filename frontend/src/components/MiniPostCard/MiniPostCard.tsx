@@ -3,27 +3,29 @@ import styles from "./MiniPostCard.module.scss";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 interface MiniPostCardProps {
-  profilePic: string;
-  userName: string;
-  postTime: string;
-  postContent: string;
-  postImage?: string;
-  likeCount: number;
-  saveCount: number;
-  commentCount: number;
+  profilePic?: string;
+  author: string;
+  time: string;
+  title: String;
+  content: string;
+  image?: string;
+  likes: number;
+  saves: number;
+  comments: number;
   canDelete?: boolean;
   handleDelete?: () => void;
 }
 
 function MiniPostCard({
   profilePic,
-  userName,
-  postTime,
-  postContent,
-  postImage,
-  likeCount,
-  saveCount,
-  commentCount,
+  author,
+  time,
+  title,
+  content,
+  image,
+  likes,
+  saves,
+  comments,
   canDelete,
   handleDelete,
 }: MiniPostCardProps) {
@@ -33,12 +35,15 @@ function MiniPostCard({
         <div className={styles.profileSection}>
           <img
             className={styles.profilePic}
-            src={profilePic}
-            alt={`${userName}'s profile`}
+            src={
+              profilePic ??
+              `https://ui-avatars.com/api/?background=random&name=${author}`
+            }
+            alt={author}
           />
           <div className={styles.userInfo}>
-            <span className={styles.userName}>{userName}</span>
-            <span className={styles.postTime}>{postTime}</span>
+            <span className={styles.userName}>{author}</span>
+            <span className={styles.postTime}>{time}</span>
           </div>
         </div>
         {canDelete ? (
@@ -46,11 +51,11 @@ function MiniPostCard({
         ) : null}
       </div>
 
-      {postImage ? (
+      {image ? (
         <div className={styles.cardImage}>
           <img
             className={styles.postImage}
-            src={postImage}
+            src={image}
             alt="Mini post content"
           />
         </div>
@@ -58,21 +63,23 @@ function MiniPostCard({
         <div className={styles.imgPlaceholder}></div>
       )}
 
-      <div className={styles.cardSummary}>{postContent}</div>
+      <div className={styles.cardSummary}>{title}</div>
+
+      <div className={styles.cardSummary}>{content}</div>
 
       <div className={styles.cardFooter}>
         <div className={styles.essentials}>
           <div className={styles.icon}>
             <i className="fas fa-heart"></i>
-            <span>{formatCount(likeCount)}</span>
+            <span>{formatCount(likes)}</span>
           </div>
           <div className={styles.icon}>
             <i className="fas fa-bookmark"></i>
-            <span>{formatCount(saveCount)}</span>
+            <span>{formatCount(saves)}</span>
           </div>
           <div className={styles.icon}>
             <i className="fas fa-comment"></i>
-            <span>{formatCount(commentCount)}</span>
+            <span>{formatCount(comments)}</span>
           </div>
         </div>
         <div className={styles.icon}>
