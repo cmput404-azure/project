@@ -3,8 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from ..models import User, Inbox, InboxItem, Post, FollowRequest
-from urllib.parse import urlparse
-from ..utils.test_util import *
+from django.contrib.contenttypes.models import ContentType
 
 
 class InboxViewTestCase(TestCase):

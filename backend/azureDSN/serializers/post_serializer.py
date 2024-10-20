@@ -8,8 +8,11 @@ from rest_framework.response import Response
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
-    comments = CommentSerializer(many=True) 
-    likes = LikeSerializer(many=True)
+    # comments = CommentSerializer(many=True) 
+    # likes = LikeSerializer(many=True)
+    comments = serializers.ListField(default=[])
+    likes = serializers.ListField(default=[])
+    
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
