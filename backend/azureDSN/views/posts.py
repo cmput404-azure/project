@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from ..models import User, Post
-from ..serializers import PostSerializer, UserSerializer
+from ..models import User, Post, Comment, Like
+from ..serializers import PostSerializer, UserSerializer, CreatePostSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -45,6 +45,16 @@ class AuthorPostView(APIView):
 
             # retrieve all posts by the author
             posts = Post.objects.filter(user=author)
+
+            comments = Comment.objects.filter(post__in=posts)
+            likes = Like.objects.filter(post__in=posts)
+
+            # put the comments into the corresponding post
+            for post in posts:
+                comment_serializer = CommentArraySerializer(comments=comments.filter(post=post))
+                post.comments = comment_serializer.get_comments(post)
+                post.likes = likes.filter(post=post)
+
 
             # if user is not authenticated
             if not request.user.is_authenticated:
@@ -114,40 +124,13 @@ class AuthorPostView(APIView):
         author = User.objects.get(uuid=author_serial)
         author_data = UserSerializer(author).data
         request.data["author"] = author_data
-        # return Response(request.data, status=200)
 
-        serializer = PostSerializer(data=request.data, partial=True)
+        serializer = CreatePostSerializer(data=request.data, partial=True)
         if serializer.is_valid():
             instance = serializer.save()
-
-            # response = {
-            #     "type": "post",
-            #     "title": instance.data["title"],
-            #     "description": instance.data["description"],
-            #     "id": instance.data["id"],
-            #     "contentType": instance.data["contentType"],
-            #     "content": instance.data["content"],
-            #     "author": {
-            #         "id": instance.data["user"]["uuid"],
-            #         "displayName": instance.data["user"]["display_name"],
-            #         "host": instance.data["user"]["host"],
-            #         "github": instance.data["user"]["github"],
-            #         "page": instance.data["user"]["page"],
-            #         "profile_image": instance.data["user"]["profile_image"]
-            #     },
-            #     "comments": {
-            #         "type": "comments",
-            #         "page": "http://localhost:8000/api/posts/{post_fqid}",
-            #         "id": "http://localhost:8000/api/posts/{post_fqid}/comments"
-            #         #etc
-            #     },
-            #     "likes": [],
-            #     "published": instance.data["created_at"],
-            #     "visibility": instance.data["visibility"]
-            # }
             
             # Serialize the response
-            response = PostSerializer(instance).data
+            response = CreatePostSerializer(instance).data
 
             return Response(response, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=400)
@@ -177,64 +160,3 @@ class PostView(APIView):
             return Response(serializer.data, status=200)
         else:
             return Response("No post ID specified", status=400)
-        
-class PostCreation(APIView):
-    def get(self, request, author_serial=None):
-        """
-        GET [local, remote] get the recent posts from author AUTHOR_SERIAL (paginated)
-            - Not authenticated: only public posts.
-            - Authenticated locally as author: all posts.
-            - Authenticated locally as friend of author: public + friends-only posts.
-            - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
-            
-        URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/
-        """
-        # make sure the author exists
-        author = get_object_or_404(User, uuid=author_serial)
-
-        # retrieve all posts by the author
-        posts = Post.objects.filter(user=author)
-
-        # if user is not authenticated
-        if not request.user.is_authenticated:
-            posts = posts.filter(visibility=1)
-        # if user is authenticated locally as author
-        elif request.user == author and request.user.is_authenticated:
-            posts = posts.all()
-        # if user is authenticated as friend of author
-        else:
-            posts = posts.filter(visibility=[1, 2])
-        
-        return Response(PostSerializer(posts, many=True).data, status=200)       
-    
-    def post(self, request, author_serial):
-        """
-        POST [local] create a new post but generate a new ID
-            - Authenticated locally as author
-        """
-        '''this is the format
-            post_data =    {
-                "type": "post",
-                "title": "A Test Post Title",
-                "description": "This is a test post.",
-                "contentType": "text/plain",
-                "content": "This is the content of the post.",
-                "author": {
-                    "id": "5f577ee2-0ccc-49a4-b3cc-47a8aeb265df",
-                    "displayName": "Bob",
-                    "host": "http://localhost:8000",
-                    "github": "http://github.com/bob",
-                    "page": "http://bob.com",
-                    "profile_image": "http://localhost:8000/media/profile_images/bob.png"
-                },
-                "published": "2015-03-09T13:07:04+00:00",
-                "visibility": 1
-            }
-            
-        '''
-
-        serializer = PostSerializer(data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)

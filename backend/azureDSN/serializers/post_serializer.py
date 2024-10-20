@@ -1,15 +1,15 @@
 from rest_framework import serializers
 from ..models import Post, User
 from .user_serializer import UserSerializer
-# from .comment_serializer import CommentSerializer
-# from .like_serializer import LikeSerializer
+from .comment_serializer import CommentSerializer
+from .like_serializer import LikeSerializer
 from rest_framework.response import Response
 
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
-    # comments = CommentSerializer(many=True) 
-    # likes = LikeSerializer(many=True)
+    comments = CommentSerializer(many=True) 
+    likes = LikeSerializer(many=True)
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
@@ -23,18 +23,18 @@ class PostSerializer(serializers.ModelSerializer):
             'contentType',
             'content',
             'author',
-            # 'comments',
-            # 'likes',
+            'comments',
+            'likes',
             'published',
             'visibility',
         )
 
     def create(self, validated_data):
-        print(validated_data)
         author_data = validated_data.pop('user')
+
         if not User.objects.filter(uuid=author_data['uuid']).exists():
-            print(author_data['uuid'])
             return Response({"message": "error, unauthorized"},status=403)
+        
         user = User.objects.get(uuid=author_data['uuid'])
         post = Post.objects.create(user=user, **validated_data)
         return post
@@ -54,4 +54,33 @@ class PostSerializer(serializers.ModelSerializer):
     
     def delete(self, post):
         post.delete()
+        return post
+    
+class CreatePostSerializer(serializers.ModelSerializer):
+    author = UserSerializer(source='user') 
+    id = serializers.UUIDField(source='uuid', read_only=True)
+    contentType = serializers.CharField(source='content_type')
+    published = serializers.DateTimeField(source='created_at')
+
+    class Meta:
+        model = Post
+        fields = (
+            'type',
+            'title',
+            'id',
+            'contentType',
+            'content',
+            'author',
+            'published',
+            'visibility',
+        )
+
+    def create(self, validated_data):
+        author_data = validated_data.pop('user')
+
+        if not User.objects.filter(uuid=author_data['uuid']).exists():
+            return Response({"message": "error, unauthorized"},status=403)
+        
+        user = User.objects.get(uuid=author_data['uuid'])
+        post = Post.objects.create(user=user, **validated_data)
         return post
