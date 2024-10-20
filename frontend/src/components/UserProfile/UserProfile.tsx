@@ -7,6 +7,8 @@ import { useEffect } from "react";
 import Modal from "react-modal";
 import UseState from "react";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
+import defaultProfile from "../../images/defaultProfile.jpg";
+import githubIcon from "../../images/githubIcon.png";
 
 interface Post {
   id: string;
@@ -106,11 +108,7 @@ export default function UserProfile() {
   return (
     <div className={styles.userProfileContainer}>
       <section className={styles.profileHeaderContainer}>
-        <img
-          className={styles.profilePic}
-          src="../images/yellowduck.png"
-          alt="Profile"
-        />
+        <img className={styles.profilePic} src={defaultProfile} alt="Profile" />
 
         <section className={styles.userInfoContainer}>
           <section className={styles.userInfo}>
@@ -125,7 +123,7 @@ export default function UserProfile() {
                 target="_blank" // Opens the link in a new tab
                 rel="noopener noreferrer"
               >
-                <img src="../images/githubIcon.png" alt="GitHub" />
+                <img src={githubIcon} alt="GitHub" />
               </a>
             </section>
           </section>
