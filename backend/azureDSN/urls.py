@@ -10,6 +10,8 @@ from django.views.generic import TemplateView
 urlpatterns = [
     # Front end injection
     path('', TemplateView.as_view(template_name='index.html')),
+
+    path('api/stream/', StreamView.as_view(), name='stream'),
     
     # Follow API
     path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  
