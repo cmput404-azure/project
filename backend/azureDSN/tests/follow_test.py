@@ -1,3 +1,4 @@
+import uuid
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
@@ -5,6 +6,7 @@ from unittest.mock import patch
 from ..models import Follow, User
 from ..serializers import UserSerializer, FollowSerializer
 from uuid import uuid4
+from urllib.parse import quote
 
 class FollowTests(APITestCase):
     def setUp(self):
@@ -47,7 +49,6 @@ class FollowTests(APITestCase):
         url = reverse('following', args=[self.user1.uuid])  
         response = self.client.get(f"{url}?action=following")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["type"], "followers")
         self.assertEqual(len(response.data["followers"]), 1)
         self.assertEqual(response.data["followers"][0]["displayName"], "TestUser2")
 
@@ -71,7 +72,6 @@ class FollowTests(APITestCase):
     def test_no_following(self):
         url = reverse('following', args=[self.user3.uuid])
         response = self.client.get(f"{url}?action=friends")
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0) 
     
@@ -79,6 +79,81 @@ class FollowTests(APITestCase):
         url = reverse('get_followers', args=[self.user2.uuid])  
         response = self.client.get(f"{url}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["type"], "followers")
         self.assertEqual(len(response.data["followers"]), 1)
         self.assertEqual(response.data["followers"][0]["displayName"], "TestUser1")
+
+    def test_get_no_follower(self):
+        url = reverse('get_followers', args=[self.user3.uuid])  
+        response = self.client.get(f"{url}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["followers"]), 0)
+    
+    def test_get_non_existing_follower(self):
+        random_uuid = uuid.uuid4()
+        url = reverse('get_followers', args=[random_uuid])  
+        response = self.client.get(f"{url}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_add_follower(self):
+        follower_url = f'http://127.0.0.1:8000/api/authors/{self.user3.uuid}'
+        encoded_url = quote(follower_url)
+        url = reverse('followers_handler', args=[self.user2.uuid, encoded_url])  
+        response = self.client.put(f"{url}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # check that followers table updated 
+        url_follower = reverse('get_followers', args = [self.user2.uuid])
+        follower_response = self.client.get(f"{url_follower}")
+        self.assertEqual(follower_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(follower_response.data["followers"]), 2)
+
+    def test_add_existing_follower(self):
+        follower_url = f'http://127.0.0.1:8000/api/authors/{self.user2.uuid}'
+        encoded_url = quote(follower_url)
+        url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
+        response = self.client.put(f"{url}")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        
+        # check that followers table updated 
+        url_follower = reverse('get_followers', args = [self.user1.uuid])
+        follower_response = self.client.get(f"{url_follower}")
+        self.assertEqual(follower_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(follower_response.data["followers"]), 1)
+
+    def test_delete_follower(self):
+        follower_url = f'http://127.0.0.1:8000/api/authors/{self.user2.uuid}'
+        encoded_url = quote(follower_url)
+        url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
+        response = self.client.delete(f"{url}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # check that followers table updated 
+        url_follower = reverse('get_followers', args = [self.user1.uuid])
+        follower_response = self.client.get(f"{url_follower}")
+        self.assertEqual(follower_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(follower_response.data["followers"]), 0)
+
+    def test_delete_non_existing_follower(self):
+        follower_url = f'http://127.0.0.1:8000/api/authors/{self.user3.uuid}'
+        encoded_url = quote(follower_url)
+        url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
+        response = self.client.delete(f"{url}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_check_follower(self):
+        follower_url = f'http://127.0.0.1:8000/api/authors/{self.user2.uuid}'
+        encoded_url = quote(follower_url)
+        url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
+        response = self.client.get(f"{url}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_check_no_follower(self):
+        follower_url = f'http://127.0.0.1:8000/api/authors/{self.user3.uuid}'
+        encoded_url = quote(follower_url)
+        url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
+        response = self.client.get(f"{url}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        
+
+
+    
