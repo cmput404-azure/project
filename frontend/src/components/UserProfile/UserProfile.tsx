@@ -162,14 +162,6 @@ export default function UserProfile() {
         </section>
       </section>
 
-      <section className={styles.bioContainer}>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-        </p>
-      </section>
-
       <hr className={styles.horizontalLine} />
 
       <section className={styles.userPosts}>
