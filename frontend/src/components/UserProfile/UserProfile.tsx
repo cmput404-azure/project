@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import Modal from "react-modal";
 import UseState from "react";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
-import defaultProfile from "../../images/defaultProfile.jpg";
 import githubIcon from "../../images/githubIcon.png";
 
 interface Post {
@@ -108,7 +107,11 @@ export default function UserProfile() {
   return (
     <div className={styles.userProfileContainer}>
       <section className={styles.profileHeaderContainer}>
-        <img className={styles.profilePic} src={defaultProfile} alt="Profile" />
+        <img
+          className={styles.profilePic}
+          src={`https://ui-avatars.com/api/?background=random&name=${authorData.displayName}`}
+          alt={authorData.profilePic}
+        />
 
         <section className={styles.userInfoContainer}>
           <section className={styles.userInfo}>
