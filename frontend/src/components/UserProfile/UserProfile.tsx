@@ -3,6 +3,7 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import axios from "axios";
+import { checkAuth } from "../../util/auth/checkauth";
 import styles from "./UserProfile.module.scss";
 import { useEffect } from "react";
 import { useState } from "react";
@@ -39,35 +40,57 @@ export default function UserProfile() {
   axios.defaults.xsrfCookieName = "csrftoken";
   axios.defaults.xsrfHeaderName = "x-csrftoken";
 
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await checkAuth();
+        setUser({
+          username: data.username,
+          uuid: data.uuid,
+        });
+      } 
+      catch (error) {
+        console.error("Error checking auth", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+
   // fetch the author data from the API when the component mounts
   useEffect(() => {
+    if (!user) return;
+
     const fetchAuthorData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8000/api/authors/c262fe48-9454-4dd1-ab4e-ba688aa89846/"
+          `http://localhost:8000/api/authors/${user.uuid}/`
         );
-        console.log(response.data); // Log the response data to the console
-        setAuthorData(response.data); // Set the response data to state
+        console.log(response.data); 
+        setAuthorData(response.data); 
       } catch (error) {
         console.error("Error fetching the author data", error);
       }
     };
 
-    async function fetchAuthorPosts(){
+    const fetchAuthorPosts = async () => {
       try {
         const response = await axios.get<AuthorPost[]>(
-          "http://localhost:8000/api/authors/a351a7a2-232d-44b1-a604-b63739d55d2c/posts/"
+          `http://localhost:8000/api/authors/${user.uuid}/posts/`
         );
         console.log(response.data); 
         setAuthorPosts(response.data); 
       } catch (error) {
-        console.error("Error fetching the author data", error);
+        console.error("Error fetching the author posts", error);
       }
-    }
+    };
 
     fetchAuthorData();
     fetchAuthorPosts();
-  }, []);
+  }, [user]);
 
   // fetch the authors posts from the API when the component mounts
 

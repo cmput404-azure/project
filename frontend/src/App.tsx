@@ -1,7 +1,7 @@
+import Auth, { Logout } from "./components/Auth/Auth";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import Auth from "./components/Auth/Auth";
 import ErrorPage from "./error-page";
 import HomePage from "./components/HomePage/HomePage";
 import NavigationBar from "./components/NavigationBar/NavigationBar";
@@ -32,6 +32,7 @@ export default function App() {
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/settings" element={<Root />} />
             <Route path="/login" element={<Auth />} />
+            <Route path="/logout" element={<Logout />} />
             <Route path="*" element={<ErrorPage />} />
           </Routes>
         </div>

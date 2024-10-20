@@ -13,14 +13,15 @@ class LoginView(APIView):
         if user:
             login(request, user)
 
-            response = {
+            response = Response({
                 'is_authenticated': True,
                 'username': request.user.username,
                 'uuid': request.user.uuid,
                 'sessionId': request.session.session_key
-            }
+            }, status=status.HTTP_200_OK)
+            response.set_cookie('sessionid', request.session.session_key, samesite='lax')
 
-            return Response(response, status=status.HTTP_200_OK)
+            return response
         return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     
 
@@ -39,7 +40,7 @@ class RegisterView(APIView):
         return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
     
 class LogoutView(APIView):
-    def post(self, request):
+    def get(self, request):
         logout(request)
         return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
     

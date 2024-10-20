@@ -26,7 +26,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ onClick, isLoggedIn }) =>
   }
 
 
-  
+
   const commonNavigationItems = [
     { icon: <i className="fa-solid fa-house" />, label: 'home' },
     { icon: <i className="fa-solid fa-magnifying-glass" />, label: 'search' },
@@ -83,13 +83,14 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ onClick, isLoggedIn }) =>
           {/* For top 3 icons */}
           <div className={styles.iconGroup}>
             {commonNavigationItems.map((item) => (
-              <div key={item.label} className={styles.navigationItem} onClick={() => {
+              <div key={item.label} className={styles.navigationItem} onClick={(e) => {
+                e.preventDefault();
                 if (item.label === 'Search') {
                   handleSearchClick();
-                } 
+                }
                 else if (item.label === 'Notifications') {
                   handleNotificationsClick(); // New handler for notifications
-                } 
+                }
                 else if (item.label === 'logout') {
                   logout();
                 }

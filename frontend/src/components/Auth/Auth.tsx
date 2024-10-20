@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 
+import { Button } from "@mui/material";
 import TextField from '@mui/material/TextField';
 import {login} from "../../util/auth/login";
+import { logout } from "../../util/auth/checkauth";
 import styles from './Auth.module.scss';
+import { useNavigate } from "react-router";
 
 function Auth() {
    const [isRegister, setIsRegister] = useState(false);
@@ -12,6 +15,7 @@ function Auth() {
    const [email, setEmail] = useState("");
    const [confirmPassword, setConfirmPassword] = useState("");
    const [error, setError] = useState("");
+   const navigate = useNavigate();
 
    const handleSubmit = (e) => {
       e.preventDefault();
@@ -32,7 +36,7 @@ function Auth() {
       } else {
          login(username, password)
          .then((response) => {
-            console.log(response);
+            navigate("/");
          })
          .catch((error) => {
             console.log(error);
@@ -118,6 +122,25 @@ function Auth() {
                {error && <p className={styles.error}>{error}</p>}
             </div>
          </form>
+         </div>
+      </div>
+   );
+}
+
+export function Logout() {
+   return (
+      <div className={styles.auth}>
+         <div className={styles.auth__container}>
+            <div className={styles.auth__container__header}>
+               <h1>Logout</h1>
+            </div>
+            <div className={styles.auth__container__form}>
+               <Button variant="contained" color="primary" onClick={() => {
+                  logout();
+               }}>
+                  Logout
+               </Button>
+            </div>
          </div>
       </div>
    );

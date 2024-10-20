@@ -7,13 +7,13 @@ class UserSerializer(serializers.ModelSerializer):
     host = serializers.URLField()
     displayName = serializers.CharField(source='display_name')
     github = serializers.URLField()
-    profileImage = serializers.ImageField(source='profile_image', use_url=True)
+    profileImage = serializers.ImageField(source='profile_image',  required=False)
     page = serializers.URLField()
 
     class Meta:
         model = User
         # TODO: MIGHT NEED TO ADD IMAGE LATER
-        fields = ('type', 'id', 'host', 'displayName', 'github', 'page', 'profileImage')
+        fields = ('type', 'id', 'host', 'displayName', 'github', 'page', "profileImage")
 
     def create(self, validated_data):
         return User.objects.create(**validated_data)
