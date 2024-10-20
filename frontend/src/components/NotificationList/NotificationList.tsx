@@ -27,7 +27,6 @@ export default function NotificationList() {
                 const userResponse = await axios.get(
                     `http://127.0.0.1:8000/api/authors/b2ec57e0-fce1-4fd0-8cff-e347efe528aa/inbox/`
                 );
-
                 const notificationsWithUsers = await Promise.all(
                     userResponse.data.items.map(async (item: any) => {
                         if (item.type === "follow") {
@@ -37,8 +36,8 @@ export default function NotificationList() {
                         return item;
                     })
                 );
-
                 setNotifications(notificationsWithUsers);
+                console.log(notificationsWithUsers);
                 setLoading(false);
             } catch (err) {
                 console.error("Error fetching notifications:", err);
@@ -81,6 +80,7 @@ export default function NotificationList() {
                                 isLike={false}
                                 isFollowerList={false}
                                 isUserList={false}
+                                notif_id = {item.id}
                                 user={item.user}
                             />
                         ) : (
@@ -91,6 +91,7 @@ export default function NotificationList() {
                                 isLike={false}
                                 isFollowerList={false}
                                 isUserList={false}
+                                notif_id = {item.id}
                                 user={item.user} // Adjust logic based on type
                             />
                         )

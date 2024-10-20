@@ -140,7 +140,6 @@ class FollowCustomView(APIView):
 
         # Get the list of friend ids
         friend_ids = mutual_followers.values_list('local_follower_id', flat=True)
-        print(friend_ids)
         friends = User.objects.filter(uuid__in=friend_ids)
 
         serializer = UserSerializer(friends, many=True)
