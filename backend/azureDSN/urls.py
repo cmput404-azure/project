@@ -1,17 +1,21 @@
 from django.urls import path
 
 from .views import *
-from django.contrib import admin
-from django.urls import path, re_path
-from django.conf import settings
+from .views.posts import * # raises warning for PostCreation if not imported
+from django.urls import path
 from django.views.generic import TemplateView
-from azureDSN.views import index
 
 # urlpatterns contains all of the routes that this application supports routing for.
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
 urlpatterns = [
     # Front end injection
     path('', TemplateView.as_view(template_name='index.html')),
+    
+    # Posts API
+    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
+    path("api/authors/<uuid:author_serial>/posts/", AuthorPostView.as_view(), name="create_post"),
+    path("api/posts/<uuid:post_fqid>/", PostView.as_view(), name="post"),
+
 
     # Likes API (Author Likes)
     path("api/authors/<uuid:author_serial>/liked/", AuthorLikesView.as_view(), name="author_likes_by_serial"),
@@ -28,6 +32,12 @@ urlpatterns = [
 
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+
+    # Authors API
+    path("api/authors/all/", AuthorsCompleteView.as_view(), name="authors_all"),
+    path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="author"),
+    path("api/authors/<path:author_fqid>/", AuthorsView.as_view(), name="author"),
+    path("api/authors/", AuthorsView.as_view(), name="authors_list"),
     
     # Follow API
     path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  

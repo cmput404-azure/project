@@ -11,7 +11,10 @@ interface PostBarProps {
 }
 type IconType = "public" | "friends" | "link";
 
-const PostBar: React.FC<PostBarProps> = ({ userImage, showButtonBar }) => {
+const PostBar: React.FC<PostBarProps> = ({
+  userImage,
+  showButtonBar = true,
+}) => {
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
   const [title, setTitle] = useState("");
   const [showDetail, setShowDetail] = useState(false);
