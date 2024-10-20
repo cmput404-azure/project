@@ -1,13 +1,16 @@
+import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
+import { User } from "../../models/models";
 import axios from "axios";
 import { checkAuth } from "../../util/auth/checkauth";
 import styles from "./UserProfile.module.scss";
+import { useAuth } from "../../state";
 import { useEffect } from "react";
+import { useNavigate } from "react-router";
 import { useState } from "react";
-import DeletePostModal from "../DeletePostModal/DeletePostModal";
 
 interface AuthorPost {
   type: string;
@@ -30,6 +33,11 @@ interface AuthorPost {
   visibility: number;
 }
 
+// TODO: Should convert axios to service layer later
+axios.defaults.withCredentials = true;
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "x-csrftoken";
+
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
@@ -39,32 +47,14 @@ export default function UserProfile() {
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
 
-  axios.defaults.withCredentials = true;
-  axios.defaults.xsrfCookieName = "csrftoken";
-  axios.defaults.xsrfHeaderName = "x-csrftoken";
+  const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const data = await checkAuth();
-        setUser({
-          username: data.username,
-          uuid: data.uuid,
-        });
-      } catch (error) {
-        console.error("Error checking auth", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
+  const authProvider = useAuth();
 
   const fetchAuthorPosts = async () => {
     try {
       const response = await axios.get<AuthorPost[]>(
-        `http://localhost:8000/api/authors/${user.uuid}/posts/`
+        `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`
       );
       console.log(response.data);
       setAuthorPosts(response.data);
@@ -75,12 +65,15 @@ export default function UserProfile() {
 
   // fetch the author data from the API when the component mounts
   useEffect(() => {
-    if (!user) return;
+    if (!authProvider.user) {
+      navigate("/login");
+      return;
+    };
 
     const fetchAuthorData = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/authors/${user.uuid}/`
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/`
         );
         console.log(response.data);
         setAuthorData(response.data);
@@ -90,7 +83,7 @@ export default function UserProfile() {
     };
     fetchAuthorData();
     fetchAuthorPosts();
-  }, [user]);
+  }, []);
 
   const handleDeletePostButtonClicked = (postId: string) => {
     setPostToDelete(postId);
@@ -106,7 +99,7 @@ export default function UserProfile() {
       try {
         // API call to delete the post
         await axios.delete(
-          `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToDelete}/`
+          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
         );
 
         // Refresh the posts after successful deletion

@@ -9,23 +9,27 @@ import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
 import { checkAuth } from "./util/auth/checkauth";
 import styles from "./App.module.scss";
+import { useAuth } from "./state";
 
 export default function App() {
   const nav = useNavigate();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const authProvider = useAuth();
 
   useEffect(() => {
     checkAuth().then((data) => {
-      setIsLoggedIn(data.is_authenticated);
-      console.log(data);
+      if (data.is_authenticated) {
+        authProvider.login(data.is_authenticated, data.user);
+        console.log(authProvider.user);
+      }
     });
-  });
+  }, []);
+  
   return (
     <div className={styles.App}>
       <NavigationBar
         onClick={(item) => nav(`/${item}`)}
-        isLoggedIn={isLoggedIn}
+        isLoggedIn={authProvider.isAuthenticated}
       />
 
       <div className={styles.content}>

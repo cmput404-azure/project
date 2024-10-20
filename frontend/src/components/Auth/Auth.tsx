@@ -5,6 +5,7 @@ import TextField from '@mui/material/TextField';
 import {login} from "../../util/auth/login";
 import { logout } from "../../util/auth/checkauth";
 import styles from './Auth.module.scss';
+import { useAuth } from "../../state";
 import { useNavigate } from "react-router";
 
 function Auth() {
@@ -128,6 +129,10 @@ function Auth() {
 }
 
 export function Logout() {
+   const navigate = useNavigate();
+
+   const authProvider = useAuth();
+
    return (
       <div className={styles.auth}>
          <div className={styles.auth__container}>
@@ -136,7 +141,10 @@ export function Logout() {
             </div>
             <div className={styles.auth__container__form}>
                <Button variant="contained" color="primary" onClick={() => {
-                  logout();
+                  logout().then(() => {
+                     navigate("/");
+                     authProvider.logout();
+                  });
                }}>
                   Logout
                </Button>
