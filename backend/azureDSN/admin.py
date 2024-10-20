@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import *
 
 class UserAdmin(BaseUserAdmin):
-    list_display = ('email', 'username', 'is_staff', 'is_superuser')
+    list_display = ('username', 'email', 'is_staff', 'is_superuser')
     search_fields = ('email', 'username')
     readonly_fields = ('created_at', 'modified_at')
 
@@ -21,7 +21,7 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
 
-    ordering = ('email',)
+    ordering = ('username',)
 
 
 # Register your models here.
