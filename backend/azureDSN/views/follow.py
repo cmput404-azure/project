@@ -140,7 +140,6 @@ class FollowCustomView(APIView):
 
         # Get the list of friend ids
         friend_ids = mutual_followers.values_list('local_follower_id', flat=True)
-        print(friend_ids)
         friends = User.objects.filter(uuid__in=friend_ids)
 
         serializer = UserSerializer(friends, many=True)
@@ -361,7 +360,7 @@ class FollowView(APIView):
         ).exists()
 
         if existing_follow:
-            return Response({"message": "Already following"}, status=400)
+            return Response({"message": "Already following"}, status=200)
         
         # Insert data as normal if the relationship doesn't already exist
 

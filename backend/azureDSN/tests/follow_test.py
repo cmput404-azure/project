@@ -8,6 +8,7 @@ from ..serializers import UserSerializer, FollowSerializer
 from uuid import uuid4
 from urllib.parse import quote
 
+
 class FollowTests(APITestCase):
     def setUp(self):
         self.user1_data = {

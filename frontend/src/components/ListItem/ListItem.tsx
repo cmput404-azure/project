@@ -8,6 +8,7 @@ interface ListItemProps {
     isLike: boolean;
     isFollowerList: boolean;
     isUserList:boolean;
+    notif_id?:string;
     user: {
         displayName: string;          
         github: string;
@@ -23,6 +24,7 @@ export default function ListItem({
     isLike,
     isFollowerList,
     isUserList,
+    notif_id,
     user
 }: ListItemProps) {
     const unFollow = async () => {
@@ -68,8 +70,6 @@ export default function ListItem({
                 },
             }
             await axios.post(`http://127.0.0.1:8000/api/authors/${tmpUserId}/inbox/`, followRequest);
-
-           
  
         } catch (error) {
             console.error('Fetch error:', error);  
@@ -99,23 +99,16 @@ export default function ListItem({
     }
 
     const deleteFollowRequest = async()=>{
-        // TODO:Delete from inbox after
-        const userResponse = await axios.get(`http://127.0.0.1:8000/api/authors/${tmpUserId}/`);
-        const userInfo = userResponse.data;
+
+        const tmpUserId="b2ec57e0-fce1-4fd0-8cff-e347efe528aa";
+        console.log(notif_id);
 
         const deletefollowRequest = {
-            type: "follow",
-            summary: `${user.displayName} wants to follow ${userInfo.displayName}`,
-            actor: {
-                type: "author",
-                id: `${user.id}`,
-                host: `${user.host}`,
-                displayName: `${user.displayName}`, 
-                github: `${user.github}`,
-                page:`${user.page}`
-            },
-        }
-        const deleteResponse = await axios.put(`http://127.0.0.1:8000/api/authors/${tmpUserId}/inbox/`,deletefollowRequest)
+            "type": "follow",
+            "id": notif_id
+        };
+
+        const deleteResponse = await axios.delete(`http://127.0.0.1:8000/api/authors/${tmpUserId}/inbox/`,{data: deletefollowRequest})
 
     }
 
