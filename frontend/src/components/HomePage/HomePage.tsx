@@ -13,6 +13,8 @@ import logo from "../../images/dog_icon.png";
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
 
+
+type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
@@ -42,7 +44,6 @@ const HomePage = () => {
     fetchPosts();
   }, []);
   
-
   const handleAddClick = () => {
     console.log("Add button clicked");
   };
@@ -74,6 +75,11 @@ const HomePage = () => {
     },
   ];
 
+  const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
+  function handleFilterPost(icon: ViewType) {
+  setActiveFilterPost(icon);
+  }
+
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
@@ -82,6 +88,26 @@ const HomePage = () => {
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
         <PostBar userImage={logo} showButtonBar={false}/>
+        <div className={styles["icon-bar"]}>
+            <div
+              className={`${styles["icon-section"]} ${
+                activeFilterPost === "all" ? styles.active : ""
+              }`}
+              onClick={() => handleFilterPost("all")}
+            >
+              <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+            </div>
+            <div className={styles["vertical-divider"]}></div>
+            <div
+              className={`${styles["icon-section"]} ${
+                activeFilterPost === "unlisted_friends-only" ? styles.active : ""
+              }`}
+              onClick={() => handleFilterPost("unlisted_friends-only")}
+            >
+              <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
+            </div>
+          </div>  
+
         {posts.map((post) => (
           <PostCard
             key={post.id}
@@ -96,7 +122,6 @@ const HomePage = () => {
             onCommentButtonClick={handleCommentButtonClick}
           />
         ))}
-
       </div>
 
       {/* Second Section: Author Post */}
