@@ -9,8 +9,8 @@ import axios from "axios";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import { useNavigate } from "react-router";
-
 import { Author } from "../../models/models";
+import getCsrfToken from "../../util/auth/getCSRF";
 
 interface AuthorPost {
   type: string;
@@ -93,9 +93,19 @@ export default function UserProfile() {
   async function handleConfirmDelete() {
     if (postToDelete && authProvider.user) {
       try {
+        // Fetch CSRF token
+        // From chatGPT "why are my CSRF tokens being ignored/not being sent", Downloaded 2024-10-20
+        const csrfToken = getCsrfToken();
+        const config = {
+          headers: {
+            "x-csrftoken": csrfToken,
+          },
+        };
+
         // API call to delete the post
         await axios.delete(
-          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`,
+          config
         );
 
         // Second request: Get the followers
@@ -103,14 +113,14 @@ export default function UserProfile() {
           type: string;
           followers: Author[];
         }>(
-          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/`
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/followers/`
         );
         const followers = followersResponse.data["followers"];
         console.log("Followers retrieved:", followers);
 
         // Third request: Get the friends
         const friendsResponse = await axios.get<Author[]>(
-          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`
         );
         const friends = friendsResponse.data;
         console.log("Friends retrieved:", friends);
@@ -129,13 +139,13 @@ export default function UserProfile() {
         // send to followers if post is public or unlisted
         // always send to friends for all type of posts
         const payload = {
-          id: `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
+          id: `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
           type: "post",
         };
 
         if (visibilityNumber == 1 || visibilityNumber == 3) {
           for (const follower of uniqueFollowers) {
-            const inboxUrl = `http://127.0.0.1:8000/api/authors/${follower.id}/inbox/`;
+            const inboxUrl = `http://localhost:8000/api/authors/${follower.id}/inbox/`;
             try {
               const inboxResponse = await axios.post<{ message: string }>(
                 inboxUrl,
@@ -156,7 +166,7 @@ export default function UserProfile() {
 
         // Friends receive inbox on all type of post
         for (const friend of friends) {
-          const inboxUrl = `http://127.0.0.1:8000/api/authors/${friend.id}/inbox/`;
+          const inboxUrl = `http://localhost/api/authors/${friend.id}/inbox/`;
           try {
             const inboxResponse = await axios.post<{ message: string }>(
               inboxUrl,
