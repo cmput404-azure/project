@@ -128,17 +128,22 @@ class AuthorPostView(APIView):
         except Post.DoesNotExist:
             return Response("Post does not exist.", status=404)
 
-        # update the post fields with request data (fallback to current values if not provided)
-        post.title = request.data.get('title', post.title)
-        post.content = request.data.get('content', post.content)
-        post.modified_at = request.data.get('modified_at', post.modified_at)
-        post.modified_at = timezone.now()  # update the modified time
+        # authenticate the user
+        
+        if post.user.uuid != author_serial:
+            return Response("You are not the author of this post.", status=403)
+        else:
+            # update the post fields with request data (fallback to current values if not provided)
+            post.title = request.data.get('title', post.title)
+            post.content = request.data.get('content', post.content)
+            post.modified_at = request.data.get('modified_at', post.modified_at)
+            post.modified_at = timezone.now()  # update the modified time
 
-        # save the changes
-        post.save()
+            # save the changes
+            post.save()
 
-        # return the updated post data using the serializer
-        return Response(PostSerializer(post).data, status=200)
+            # return the updated post data using the serializer
+            return Response(PostSerializer(post).data, status=200)
     
     def delete(self, request, post_serial, author_serial):
         """
