@@ -1,7 +1,51 @@
 from rest_framework import serializers
 from ..models import User
 from django.conf import settings
+from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
+from rest_framework import serializers
 
+@extend_schema_serializer(
+    examples=[
+        OpenApiExample(
+            "Single Author Example",
+            value={
+                "type": "author",
+                "id": "http://nodeaaaa/api/authors/111",
+                "host": "http://nodeaaaa/api/",
+                "displayName": "Greg Johnson",
+                "github": "http://github.com/gjohnson",
+                "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                "page": "http://nodeaaaa/authors/greg"
+            }
+        ),
+        OpenApiExample(
+            "All Authors Example",
+            value={
+                "type": "authors",
+                "authors": [
+                    {
+                        "type": "author",
+                        "id": "http://nodeaaaa/api/authors/111",
+                        "host": "http://nodeaaaa/api/",
+                        "displayName": "Greg Johnson",
+                        "github": "http://github.com/gjohnson",
+                        "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                        "page": "http://nodeaaaa/authors/greg"
+                    },
+                    {
+                        "type": "author",
+                        "id": "http://nodeaaaa/api/authors/222",
+                        "host": "http://nodeaaaa/api/",
+                        "displayName": "Jane Smith",
+                        "github": "http://github.com/jsmith",
+                        "profileImage": "https://i.imgur.com/n8pLKBs.jpeg",
+                        "page": "http://nodeaaaa/authors/jane"
+                    }
+                ]
+            }
+        )
+    ]
+)
 class UserSerializer(serializers.ModelSerializer):
     type = serializers.CharField(default='author', read_only=True)
     id = serializers.UUIDField(source='uuid')

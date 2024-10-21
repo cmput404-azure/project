@@ -1,25 +1,28 @@
 // @ts-nocheck
-import axios from 'axios';
-import styles from './ListItem.module.scss';
-import { useAuth } from "../../state";
 
 import React, { useEffect, useState } from 'react';
+
+import { api } from "../../service/config";
+import styles from './ListItem.module.scss';
+import { useAuth } from "../../state";
 
 interface ListItemProps {
     isRequest: boolean;
     isPost: boolean;
     isLike: boolean;
     isFollowerList: boolean;
-    isUserList:boolean;
-    notif_id?:string;
+    isUserList: boolean;
+    notif_id?: string;
     user: {
-        displayName: string;          
+        displayName: string;
         github: string;
         host: string;
         id: string; // use the host and id to get the foreign fqid
         page: string;
-        type:string;
-    };}
+        type: string;
+        profileImage: string | null;
+    };
+}
 
 export default function ListItem({
     isRequest,
@@ -31,10 +34,11 @@ export default function ListItem({
     user
 }: ListItemProps) {
     const authProvider = useAuth();
+    const [isRequested, setIsRequested] = useState(false);
 
-    axios.defaults.withCredentials = true;
-    axios.defaults.xsrfCookieName = "csrftoken";
-    axios.defaults.xsrfHeaderName = "x-csrftoken";
+    useEffect(() => {
+        // TODO: NEED TO CHECK IF USER HAS REQUESTED ALREADY
+    }, [isRequested]);
 
     const unFollow = async () => {
         const encodedHost = encodeURIComponent(user.host);
@@ -43,14 +47,13 @@ export default function ListItem({
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
 
         try {
-            const response = await axios.delete(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`, {
-            });
-  
-            const data = response.data; 
+            const response = await api.delete(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
+
+            const data = response.data;
         } catch (error) {
-            console.error('Fetch error:', error);  
+            console.error('Fetch error:', error);
         }
-    };   
+    };
 
     const sendFollowerRequest = async () => {
         const encodedHost = encodeURIComponent(user.host);
@@ -60,7 +63,7 @@ export default function ListItem({
 
         try {
             // Get the current user info
-            const userResponse = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/`);
+            const userResponse = await api.get(`/api/authors/${authProvider.user.uuid}/`);
             const userInfo = userResponse.data;
 
             const followRequest = {
@@ -70,46 +73,45 @@ export default function ListItem({
                     type: "author",
                     id: `${userInfo.id}`,
                     host: `${userInfo.host}`,
-                    displayName: `${userInfo.displayName}`, 
+                    displayName: `${userInfo.displayName}`,
                     github: `${userInfo.github}`,
-                    page:`${userInfo.page}`
+                    page: `${userInfo.page}`
                 },
             }
-            await axios.post(`http://127.0.0.1:8000/api/authors/${user.id}/inbox/`, followRequest);
- 
+            await api.post(`/api/authors/${user.id}/inbox/`, followRequest);
+            setIsRequested(true);
         } catch (error) {
-            console.error('Fetch error:', error);  
+            console.error('Fetch error:', error);
         }
-    };   
+    };
 
-    const declineFollower = async()=>{
+    const declineFollower = async () => {
         deleteFollowRequest();
 
     }
 
-    const addFollower = async()=>{
+    const addFollower = async () => {
         const encodedHost = encodeURIComponent(user.host);
         const encodedId = encodeURIComponent(user.id);
 
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
         // Add actor as follower
-        const response = await axios.put(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`, {
-        });
+        const response = await api.put(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
 
         const data = response.data;
 
         // TODO:Delete from inbox after
-       await deleteFollowRequest();
-       
+        await deleteFollowRequest();
+
     }
 
-    const deleteFollowRequest = async()=>{
+    const deleteFollowRequest = async () => {
         const deletefollowRequest = {
             "type": "follow",
             "id": notif_id
         };
 
-        const deleteResponse = await axios.delete(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/inbox/`,{data: deletefollowRequest})
+        const deleteResponse = await api.delete(`/api/authors/${authProvider.user.uuid}/inbox/`, { data: deletefollowRequest });
 
     }
 
@@ -128,19 +130,19 @@ export default function ListItem({
     return (
         <div className={styles.ListItemContainer}>
             <div className={styles.container}>
-                <img className={styles.listImg} src='../images/Shiba-pfp.jpg' alt='pfp' />
+                <img className={styles.listImg} src={user.profileImage ?? `https://ui-avatars.com/api/?background=random&name=${user.displayName}`} alt='pfp' />
                 <div className={styles.text}>
                     <h1>{user.displayName}
-                    <span className={styles.additionalText}>{additionalText}</span>
+                        <span className={styles.additionalText}>{additionalText}</span>
                     </h1>
                     <p>@{user.displayName}</p>
                 </div>
 
                 {isFollowerList ? <button onClick={unFollow}>Unfollow</button> : null}
-                {isUserList ? <button onClick={sendFollowerRequest}>Follow</button> : null}
+                {isUserList ? <button onClick={sendFollowerRequest}>{isRequested ? "Requested" : "Follow"}</button> : null}
 
-                {isRequest ? <span><button onClick={addFollower}>Accept</button> <button onClick = {declineFollower}>Decline</button></span> : null}
-                {isPost ? <img className={styles.listImgPost} src='../images/Shiba-pfp.jpg' alt='pfp' /> : null}
+                {isRequest ? <span><button onClick={addFollower}>Accept</button> <button onClick={declineFollower}>Decline</button></span> : null}
+                {isPost ? <img className={styles.listImgPost} src={user.profileImage ?? `https://ui-avatars.com/api/?background=random&name=${user.displayName}`}  alt='pfp' /> : null}
             </div>
         </div>
     )

@@ -5,7 +5,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import React, { useEffect, useState } from 'react';
 
 import ListItem from '../ListItem/ListItem';
-import axios from 'axios';
+import { api } from "../../service/config";
 import styles from './UserSearch.module.scss';
 
 export default function UserSearch() {
@@ -29,7 +29,7 @@ export default function UserSearch() {
             setLoading(true);
             setError(null);
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/authors/all/`); 
+                const response = await api.get(`/api/authors/all/`); 
                 setResults(response.data); // Adjust based on your API response structure
             } catch (err) {
                 console.error('Error fetching users:', err);

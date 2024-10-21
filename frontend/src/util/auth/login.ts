@@ -1,5 +1,5 @@
 import { User } from "../../models/models";
-import axios from "axios";
+import { api } from "../../service/config";
 
 interface LoginResponse {
    is_authenticated: boolean;
@@ -7,7 +7,7 @@ interface LoginResponse {
 }
 
 export async function login(username, password):  Promise<LoginResponse>{
-   const response = await axios.post<LoginResponse>("http://localhost:8000/api/login/", {
+   const response = await api.post<LoginResponse>("/api/login/", {
       username,
       password,
    });
