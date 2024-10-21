@@ -5,17 +5,54 @@ import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
 import AuthorPost from "../AuthorPost/AuthorPost";
 import CommentView from "../CommentView/CommentView";
-import styles from "./HomePage.module.scss"; // Assuming you are using SCSS modules
-
+import styles from "./HomePage.module.scss";
+import axios from "axios";
 import Modal from "react-modal";
 import logo from "../../images/dog_icon.png";
+import { useAuth } from "../../state";
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
 
+axios.defaults.withCredentials = true;
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "x-csrftoken";
+
+type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Adjust based on your authentication logic
+  const [publicPosts, setPublicPosts] = useState<any[]>([]);
+  const [nonPublicPosts, setNonPublicPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const authProvider = useAuth();
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const req = await fetch("http://localhost:8000/api/stream/");
+        const publicPosts = await req.json();
+        console.log("pub posts", publicPosts);
+
+        const otherReq = await fetch("http://localhost:8000/api/stream/auth", {
+          method: 'GET',
+          credentials: 'include', // This is crucial for sending cookies with the request
+        });
+        const privatePosts = await otherReq.json();
+        console.log("private POSTS >>> ", privatePosts);
+
+        setNonPublicPosts(privatePosts);
+        setPublicPosts(publicPosts);
+        setIsLoading(false);
+
+      } catch (err) {
+        console.log(err)
+        setError("Failed to fetch posts. Please try again.");
+      }
+    };
+
+    fetchPosts();
+  }, [])
 
   const handleAddClick = () => {
     console.log("Add button clicked");
@@ -48,37 +85,65 @@ const HomePage = () => {
     },
   ];
 
+
+  const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
+  function handleFilterPost(icon: ViewType) {
+    setActiveFilterPost(icon);
+  }
+
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+
+  const displayedPosts =
+    activeFilterPost === "all" ? publicPosts : nonPublicPosts;
+
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar userImage={logo} />
-        <PostCard
-          profilePic="https://via.placeholder.com/50"
-          userName="John Doe"
-          postTime="2h ago"
-          postContent="This is a sample post."
-          postImage="https://via.placeholder.com/300"
-          likeCount={123}
-          saveCount={45}
-          commentCount={67}
-          onCommentButtonClick={() => handleCommentButtonClick()}
-        />
-        <PostCard
-          profilePic="https://via.placeholder.com/50"
-          userName="John Doe"
-          postTime="2h ago"
-          postContent="This is a sample post."
-          postImage="https://via.placeholder.com/300"
-          likeCount={123}
-          saveCount={45}
-          commentCount={67}
-          onCommentButtonClick={() => handleCommentButtonClick()}
-        />
+        <PostBar userImage={logo} showButtonBar={false}/>
+        {authProvider.isAuthenticated && (
+        <div className={styles["icon-bar"]}>
+          <div
+            className={`${styles["icon-section"]} ${
+              activeFilterPost === "all" ? styles.active : ""
+            }`}
+            onClick={() => handleFilterPost("all")}
+          >
+            <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+          </div>
+          <div className={styles["vertical-divider"]}></div>
+          <div
+            className={`${styles["icon-section"]} ${
+              activeFilterPost === "unlisted_friends-only" ? styles.active : ""
+            }`}
+            onClick={() => handleFilterPost("unlisted_friends-only")}
+          >
+            <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
+          </div>
+        </div>
+      )}
+
+        {displayedPosts.map((post) => (
+          <PostCard
+            key={post.id}
+            profilePic="https://via.placeholder.com/50"
+            userName={post.author.displayName}
+            postTime={new Date(post.published).toLocaleString()}
+            postContent={post.content}
+            postImage={post.has_image ? post.image : ""}
+            likeCount={post.likes.length}
+            saveCount={0}
+            commentCount={post.comments.length}
+            onCommentButtonClick={handleCommentButtonClick}
+          />
+        ))}
+
       </div>
 
       {/* Second Section: Author Post */}
       <div className={styles.authorSection}>
+        <h2 className={styles.recommendedTitle} >Recommended Author</h2>
         <AuthorPost
           authorImage={logo}
           authorName="Kyle Quach"
@@ -86,6 +151,7 @@ const HomePage = () => {
           postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
           onAddClick={handleAddClick}
         />
+
       </div>
 
       {/* Comment Modal */}

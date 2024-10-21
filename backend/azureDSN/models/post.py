@@ -12,7 +12,7 @@ class Post(models.Model):
     content = models.CharField(max_length=2000, null=True)
     has_image = models.BooleanField(default=False)
     # To have multiple Images in one Post, must create a separate Image model and link to Post via a ForeignKey
-    image = models.ImageField(upload_to='post_images/')
+    image = models.ImageField(upload_to='post_images/', blank=True)
     content_type = models.TextField(default='text/plain')  # e.g., 'text/plain', 'text/markdown', etc.
     VISIBILITY_CHOICES = [
         (1, 'PUBLIC'),
