@@ -34,6 +34,7 @@ export default function EditPostModal({
     if (post) {
       // Ensure post is defined before saving
       onSubmit({ title, content });
+      onRequestClose(); // close modal after saving
     }
   };
 
