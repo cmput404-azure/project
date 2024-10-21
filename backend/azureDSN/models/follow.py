@@ -13,6 +13,6 @@ class Follow(models.Model):
     created_at = models.DateTimeField("date followed", default=datetime.now)
 
     def __str__(self):
-        follower = self.local_follower.name if self.local_follower else self.remote_follower
-        followee = self.local_followee.name if self.local_followee else self.remote_followee
+        follower = self.local_follower.username if self.local_follower else self.remote_follower
+        followee = self.local_followee.username if self.local_followee else self.remote_followee
         return f"{follower} follows {followee}"
