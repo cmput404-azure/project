@@ -40,6 +40,7 @@ export default function UserProfile() {
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
+  const [postToEdit, setPostToEdit] = useState<AuthorPost[] | null>(null);
 
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
@@ -105,12 +106,43 @@ export default function UserProfile() {
     }
   };
 
-  const handleEditPostButtonClicked = (postId: string) => {
-    setIsEditPostModalOpen(true);
+  const handleEditPostButtonClicked = async (postId: string) => {
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/${postId}/`
+      );
+      setPostToEdit(response.data as AuthorPost[]); // Set the post data to edit
+      setIsEditPostModalOpen(true); // Open the edit modal
+    } catch (error) {
+      console.error("Error fetching post data for editing", error);
+    }
   };
 
   const handleEditPostModalClose = () => {
+    setPostToEdit(null);
     setIsEditPostModalOpen(false);
+  };
+
+  const handleConfirmEdit = async (updatedPost: {
+    title: string;
+    content: string;
+  }) => {
+    if (postToEdit) {
+      try {
+        await axios.put(
+          `http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/${postToEdit["id"]}/`,
+          updatedPost
+        );
+
+        // Refresh the posts after successful update
+        await fetchAuthorPosts();
+
+        // Close the modal after updating
+        handleEditPostModalClose();
+      } catch (error) {
+        console.error("Error updating post", error);
+      }
+    }
   };
 
   const openFollowers = () => {
