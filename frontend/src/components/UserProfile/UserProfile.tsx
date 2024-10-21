@@ -52,10 +52,10 @@ export default function UserProfile() {
   async function fetchAuthorPosts() {
     try {
       if (authProvider.user) {
-        const response = await axios.get<AuthorPost[]>(
+      const response = await axios.get<AuthorPost[]>(
           `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`
-        );
-        setAuthorPosts(response.data);
+      );
+      setAuthorPosts(response.data);
       }
     } catch (error) {
       console.error("Error fetching the author posts", error);
@@ -63,16 +63,16 @@ export default function UserProfile() {
   }
 
   async function fetchAuthorData() {
-    try {
+      try {
       if (authProvider.user) {
         const response = await axios.get(
           `http://localhost:8000/api/authors/${authProvider.user.uuid}/`
         );
         setAuthorData(response.data);
       }
-    } catch (error) {
-      console.error("Error fetching the author data", error);
-    }
+      } catch (error) {
+        console.error("Error fetching the author data", error);
+      }
   }
 
   const handleDeletePostButtonClicked = (postId: string, visibilityNumber: number) => {
@@ -90,6 +90,7 @@ export default function UserProfile() {
   async function handleConfirmDelete() {
     if (postToDelete && authProvider.user) {
       try {
+        // API call to delete the post
         await axios.delete(
           `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
         );
