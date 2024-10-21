@@ -31,13 +31,12 @@ export default function NotificationList() {
                     `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/inbox/`
                 );
                 const notificationsWithUsers = await Promise.all(
-                    userResponse.data.items.map(async (item: any) => {
-                        if (item.type === "follow") {
-                            const user = await fetchUser(item.actor.id); // Fetch user object
-                            return { ...item, user }; // Include user info in the item
-                        }
-                        return item;
-                    })
+                    userResponse.data.items
+                        .filter((item: any) => item.type === "follow")
+                        .map(async (item: any) => {
+                        const user = await fetchUser(item.actor.id);
+                        return { ...item, user };
+                        })
                 );
                 setNotifications(notificationsWithUsers);
                 console.log(notificationsWithUsers);
