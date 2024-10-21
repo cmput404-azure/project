@@ -339,25 +339,27 @@ export default function UserProfile() {
 
       <hr className={styles.horizontalLine} />
 
-      <section className={styles.userPosts}>
-        {authorPosts.map((post) => (
-          <MiniPostCard
-            key={post.id}
-            author={post.author.displayName}
-            title={post.title}
-            time={post.published}
-            content={post.content}
-            likes={1523382}
-            saves={250}
-            comments={10000}
-            canDelete={true}
-            handleDelete={() =>
-              handleDeletePostButtonClicked(post.id, post.visibility)
-            }
-            canEdit={true}
-            handleEdit={() => handleEditPostButtonClicked(post.id)}
-          />
-        ))}
+      <section className={styles.userPostContainer}>
+        <section className={styles.userPosts}>
+          {authorPosts.map((post) => (
+            <MiniPostCard
+              key={post.id}
+              author={post.author.displayName}
+              title={post.title}
+              time={post.published}
+              content={post.content}
+              likes={1523382}
+              saves={250}
+              comments={10000}
+              canDelete={true}
+              handleDelete={() =>
+                handleDeletePostButtonClicked(post.id, post.visibility)
+              }
+              canEdit={true}
+              handleEdit={() => handleEditPostButtonClicked(post.id)}
+            />
+          ))}
+        </section>
       </section>
       <DeletePostModal
         isOpen={isPostDeleteModalOpen}
