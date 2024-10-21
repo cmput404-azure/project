@@ -29,8 +29,8 @@ export default function App() {
 
       <div className={styles.content}>
         <Routes>
-          <Route path="/" element={<HomePage isLoggedIn={authProvider.isAuthenticated}/>} />
-          <Route path="/home" element={<HomePage isLoggedIn={authProvider.isAuthenticated}/>} />
+          <Route path="/" element={<HomePage/>} />
+          <Route path="/home" element={<HomePage/>} />
           <Route path="/settings" element={<Root />} />
           <Route path="/login" element={<Auth />} />
           <Route

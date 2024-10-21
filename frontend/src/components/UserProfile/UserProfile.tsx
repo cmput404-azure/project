@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 
+import { Author } from "../../models/models";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
+import { Edit } from "@mui/icons-material";
+import EditPostModal from "../EditPostModal/EditPostModal";
 import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import axios from "axios";
+import getCsrfToken from "../../util/auth/getCSRF";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import { useNavigate } from "react-router";
-import { Author } from "../../models/models";
-import getCsrfToken from "../../util/auth/getCSRF";
 
 interface AuthorPost {
   type: string;
@@ -43,9 +45,12 @@ export default function UserProfile() {
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [visibilityNumber, setVisibilityNumber] = useState<number | null>(null);
+
+  const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
+  const [postToEdit, setPostToEdit] = useState<AuthorPost[]>([]);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
-  const [showFollowerList, setShowFollowerList] = useState<string>('');
+  const [showFollowerList, setShowFollowerList] = useState<string>("");
 
   const authProvider = useAuth();
 
@@ -84,10 +89,59 @@ export default function UserProfile() {
     setIsPostDeleteModalOpen(true);
   };
 
+  const handleEditPostButtonClicked = (postId: string) => {
+    setPostToEdit(authorPosts.filter((post) => post.id === postId));
+    setIsEditPostModalOpen(true);
+  };
+
   function handleDeletePostModalClose() {
     setIsPostDeleteModalOpen(false);
     setPostToDelete(null);
     setVisibilityNumber(null);
+  }
+
+  function handleEditPostModalClose() {
+    setIsEditPostModalOpen(false);
+    setPostToEdit([]);
+  }
+
+  // Function to handle updating the post
+  async function handleUpdatePost(updatedPost: {
+    title: string;
+    content: string;
+  }) {
+    if (postToEdit.length > 0 && authProvider.user) {
+      try {
+        const postId = postToEdit[0].id;
+        // Fetch CSRF token
+        // From chatGPT "why are my CSRF tokens being ignored/not being sent", Downloaded 2024-10-20
+        const csrfToken = getCsrfToken();
+        const config = {
+          headers: {
+            "x-csrftoken": csrfToken,
+          },
+        };
+
+        // PUT request to update the post
+        const response = await axios.put(
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/${postId}/`,
+          {
+            title: updatedPost.title,
+            content: updatedPost.content,
+          },
+          config
+        );
+
+        console.log("Post updated successfully:", response.data);
+
+        // call again to refresh teh posts
+        await fetchAuthorPosts();
+        // close modal after updating the post
+        handleEditPostModalClose();
+      } catch (error) {
+        console.error("Error updating post", error);
+      }
+    }
   }
 
   async function handleConfirmDelete() {
@@ -143,7 +197,7 @@ export default function UserProfile() {
           type: "post",
         };
 
-        if (visibilityNumber == 1 || visibilityNumber == 3) {
+        if (visibilityNumber === 1 || visibilityNumber === 3) {
           for (const follower of uniqueFollowers) {
             const inboxUrl = `http://localhost:8000/api/authors/${follower.id}/inbox/`;
             try {
@@ -195,16 +249,16 @@ export default function UserProfile() {
   }
 
   function openFollowers() {
-    setShowFollowerList('follower');
+    setShowFollowerList("follower");
     setIsFollowerListModalOpen(true);
   }
 
   function openFollowing() {
-    setShowFollowerList('following');
+    setShowFollowerList("following");
     setIsFollowerListModalOpen(true);
   }
   function openFriends() {
-    setShowFollowerList('friend');
+    setShowFollowerList("friend");
     setIsFollowerListModalOpen(true);
   }
 
@@ -266,12 +320,13 @@ export default function UserProfile() {
               onClose={() => setIsFollowerListModalOpen(false)}
               isFollowerList={showFollowerList}
             />
-            <span onClick={openFriends} style = {{cursor:"pointer"}}>
-              <p className = {styles.count}>10</p><p>friends</p>
+            <span onClick={openFriends} style={{ cursor: "pointer" }}>
+              <p className={styles.count}>10</p>
+              <p>friends</p>
             </span>
-            <FollowList 
+            <FollowList
               isOpen={isFollowerListModalOpen}
-              onClose={()=>setIsFollowerListModalOpen(false)}
+              onClose={() => setIsFollowerListModalOpen(false)}
               isFollowerList={showFollowerList}
             ></FollowList>
           </section>
@@ -284,28 +339,39 @@ export default function UserProfile() {
 
       <hr className={styles.horizontalLine} />
 
-      <section className={styles.userPosts}>
-        {authorPosts.map((post) => (
-          <MiniPostCard
-            key={post.id}
-            author={post.author.displayName}
-            title={post.title}
-            time={post.published}
-            content={post.content}
-            likes={1523382}
-            saves={250}
-            comments={10000}
-            canDelete={true}
-            handleDelete={() =>
-              handleDeletePostButtonClicked(post.id, post.visibility)
-            }
-          />
-        ))}
+      <section className={styles.userPostContainer}>
+        <section className={styles.userPosts}>
+          {authorPosts.map((post) => (
+            <MiniPostCard
+              key={post.id}
+              author={post.author.displayName}
+              title={post.title}
+              time={post.published}
+              content={post.content}
+              likes={1523382}
+              saves={250}
+              comments={10000}
+              canDelete={true}
+              handleDelete={() =>
+                handleDeletePostButtonClicked(post.id, post.visibility)
+              }
+              canEdit={true}
+              handleEdit={() => handleEditPostButtonClicked(post.id)}
+            />
+          ))}
+        </section>
       </section>
       <DeletePostModal
         isOpen={isPostDeleteModalOpen}
         onRequestClose={handleDeletePostModalClose}
         onDelete={handleConfirmDelete}
+      />
+
+      <EditPostModal
+        isOpen={isEditPostModalOpen}
+        onRequestClose={handleEditPostModalClose}
+        post={postToEdit.length > 0 ? postToEdit[0] : null}
+        onSubmit={handleUpdatePost}
       />
     </div>
   );

@@ -8,5 +8,5 @@ from .likes import LikeView, AuthorLikesView, LikesView
 
 from .auth import LoginView, LogoutView, RegisterView, CheckAuthView
 
-from .stream import StreamView
+from .stream import PublicStreamView, AuthStreamView
 

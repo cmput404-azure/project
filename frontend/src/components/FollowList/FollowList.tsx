@@ -87,7 +87,6 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
   };
 
   const fetchFollowing = async () => {
-    if (isFollowerList === false) {
       try {
         const response = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/`, {
           params: {
@@ -103,7 +102,6 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
         setLoading(false);
 
       }
-    }
   };
 
   return (
