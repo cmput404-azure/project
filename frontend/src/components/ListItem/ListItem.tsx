@@ -41,14 +41,14 @@ export default function ListItem({
     }, [isRequested]);
 
     const unFollow = async () => {
-        const encodedHost = encodeURIComponent(user.host);
-        const encodedId = encodeURIComponent(user.id);
+        const encodedHost = encodeURIComponent(user.host); // TODO: host is the same for now change later for the current authenticated user
+        const encodedId = encodeURIComponent(authProvider.user.uuid);
 
         const url = `${encodedHost}/api/authors/${encodedId}`;
         const encodedUrl = encodeURIComponent(url);
 
         try {
-            const response = await api.delete(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
+            const response = await api.delete(`/api/authors/${user.id}/followers/${encodedUrl}/`);
 
             const data = response.data;
         } catch (error) {
