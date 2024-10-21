@@ -270,7 +270,7 @@ class FollowView(APIView):
         ],
         responses={
             200: OpenApiResponse(description="Follower added successfully"),
-            400: OpenApiResponse(description= "Follower is already following user"),
+            409: OpenApiResponse(description= "Follower is already following user"),
             404: OpenApiResponse(description="Error when adding follower")
         }
     )
@@ -358,7 +358,7 @@ class FollowView(APIView):
         ).exists()
 
         if existing_follow:
-            return Response({"message": "Already following"}, status=200)
+            return Response({"message": "Already following"}, status=409)
         
         # Insert data as normal if the relationship doesn't already exist
 

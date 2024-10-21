@@ -13,6 +13,7 @@ class FollowTests(APITestCase):
     def setUp(self):
         self.user1_data = {
             "display_name": "TestUser1",
+            "username":"TestUser1",
             "github": "http://127.0.0.1:8000/admin/azureDSN/user/add/",
             "host": "http://127.0.0.1:8000/admin/azureDSN/user/add/",
             "page": "http://127.0.0.1:8000/admin/azureDSN/user/add/",
@@ -20,6 +21,7 @@ class FollowTests(APITestCase):
         }
         self.user2_data = {
             "display_name": "TestUser2",
+            "username":"TestUser2",
             "github": "http://127.0.0.1:8000/admin/azureDSN/user/add/",
             "host": "http://127.0.0.1:8000/admin/azureDSN/user/add/",
             "page": "http://127.0.0.1:8000/admin/azureDSN/user/add/",
@@ -27,6 +29,7 @@ class FollowTests(APITestCase):
         }
         self.user3_data = {
             "display_name": "TestUser3",
+            "username":"TestUser3",
             "github": "http://127.0.0.1:8000/admin/azureDSN/user/add/",
             "host": "http://127.0.0.1:8000/admin/azureDSN/user/add/",
             "page": "http://127.0.0.1:8000/admin/azureDSN/user/add/",
@@ -113,7 +116,7 @@ class FollowTests(APITestCase):
         encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.put(f"{url}")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
         
         # check that followers table updated 
         url_follower = reverse('get_followers', args = [self.user1.uuid])
