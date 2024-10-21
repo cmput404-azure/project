@@ -1,10 +1,10 @@
+import {Author, Post} from "../../models/models";
 import React, { useState } from "react";
+import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
+
 import axios from "axios";
 import styles from "./PostBar.module.scss";
-import { getVisibilityNumber, VisibilityChoices } from "../../models/modelTypes";
-import {Author, Post, Inbox} from "../../models/models"
-
-const USER_ID = "8954d4e1-cefe-449c-b623-a9a51ba83d2f"; // this is test user
+import { useAuth } from "../../state";
 
 interface PostBarProps {
   userImage: string;
@@ -21,6 +21,11 @@ const PostBar: React.FC<PostBarProps> = ({
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
+  const authProvider = useAuth();
+
+  axios.defaults.withCredentials = true;
+  axios.defaults.xsrfCookieName = "csrftoken";
+  axios.defaults.xsrfHeaderName = "x-csrftoken";
 
   // To update the activeIcon
   const handleIconClick = (icon: IconType) => {
@@ -41,6 +46,12 @@ const PostBar: React.FC<PostBarProps> = ({
 
   const handleCombinedClick = async () => {
     try {
+      console.log(authProvider.isAuthenticated)
+      if (!authProvider.isAuthenticated) {
+        console.error("User not loaded yet.");
+        return;
+      }
+
       // First request: Create a new post
       const visibilityNumber = getVisibilityNumber(activeIcon.toUpperCase() as VisibilityChoices);
 
@@ -55,29 +66,39 @@ const PostBar: React.FC<PostBarProps> = ({
       };
   
       const postResponse = await axios.post<Post>(
-        `http://127.0.0.1:8000/api/authors/${USER_ID}/posts/`,
+        `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/`,
         newPost
       );
       console.log("Post successfully created:", postResponse.data);
   
       // Second request: Get the followers
       const followersResponse = await axios.get<{ type: string, followers: Author[] }>(
-        `http://127.0.0.1:8000/api/authors/${USER_ID}/followers/`,
+        `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/`,
       );
       const followers = followersResponse.data["followers"];
       console.log("Followers retrieved:", followers);
 
-      
       // Third request: Get the friends
       const friendsResponse = await axios.get<Author[]>(
-        `http://127.0.0.1:8000/api/authors/${USER_ID}/following/?action=friends`,
+        `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`,
       );
       const friends = friendsResponse.data;
       console.log("Friends retrieved:", friends);
 
+
+      // Now friends and followers may be duplicated, we have to go through and remove 
+      // one from the follower list if it also exist in friend
+      // Create a Set of friend IDs for quick lookup
+      const friendIds = new Set(friends.map(friend => friend.id));
+
+      // Filter out followers that are also friends
+      const uniqueFollowers = followers.filter(follower => !friendIds.has(follower.id));
+      console.log("Filtered followers (excluding friends):", uniqueFollowers);
+
+      // send to followers if post is public or unlisted
+      // always send to friends for all type of posts
       if (visibilityNumber == 1 || visibilityNumber == 3) {
-        // If public or unlisted, send to friends and followers
-        for (const follower of followers) {
+        for (const follower of uniqueFollowers) {
           const inboxUrl = `http://127.0.0.1:8000/api/authors/${follower.id}/inbox/`;
           try {
             const inboxResponse = await axios.post<{message: string}>(inboxUrl, postResponse.data);
@@ -88,6 +109,7 @@ const PostBar: React.FC<PostBarProps> = ({
         }
         console.log("All posts sent to followers' inboxes.");
       }
+      
       // Friends receive inbox on all type of post
       for (const friend of friends) {
         const inboxUrl = `http://127.0.0.1:8000/api/authors/${friend.id}/inbox/`;
@@ -110,6 +132,10 @@ const PostBar: React.FC<PostBarProps> = ({
       console.error("Error in combined request flow:", error);
     }
   };
+
+  if(!authProvider.isAuthenticated){
+    return <></>
+  }
   
   return (
     <div className={styles.container}>
@@ -166,6 +192,7 @@ const PostBar: React.FC<PostBarProps> = ({
             >
               <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
             </div>
+            <div className={styles["vertical-divider"]}></div>
             <div
               className={`${styles["icon-section"]} ${
                 activeIcon === "friends" ? styles.active : ""
@@ -174,6 +201,7 @@ const PostBar: React.FC<PostBarProps> = ({
             >
               <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
             </div>
+            <div className={styles["vertical-divider"]}></div>
             <div
               className={`${styles["icon-section"]} ${
                 activeIcon === "unlisted" ? styles.active : ""

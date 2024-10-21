@@ -1,12 +1,14 @@
+import { useEffect, useState } from "react";
+
+import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import FollowList from "../FollowList/FollowList";
-import GitHubIcon from '@mui/icons-material/GitHub';
+import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import axios from "axios";
-import { checkAuth } from "../../util/auth/checkauth";
 import styles from "./UserProfile.module.scss";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useAuth } from "../../state";
+import { useNavigate } from "react-router";
 
 interface AuthorPost {
   type: string;
@@ -29,83 +31,90 @@ interface AuthorPost {
   visibility: number;
 }
 
+axios.defaults.withCredentials = true;
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "x-csrftoken";
+
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
-  // FollowerList
+  const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
 
-  axios.defaults.withCredentials = true;
-  axios.defaults.xsrfCookieName = "csrftoken";
-  axios.defaults.xsrfHeaderName = "x-csrftoken";
+  const authProvider = useAuth();
 
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const data = await checkAuth();
-        setUser({
-          username: data.username,
-          uuid: data.uuid,
-        });
-      } 
-      catch (error) {
-        console.error("Error checking auth", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-
-  // fetch the author data from the API when the component mounts
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchAuthorData = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8000/api/authors/${user.uuid}/`
-        );
-        console.log(response.data); 
-        setAuthorData(response.data); 
-      } catch (error) {
-        console.error("Error fetching the author data", error);
-      }
-    };
-
-    const fetchAuthorPosts = async () => {
-      try {
+  async function fetchAuthorPosts() {
+    try {
+      if (authProvider.user) {
         const response = await axios.get<AuthorPost[]>(
-          `http://localhost:8000/api/authors/${user.uuid}/posts/`
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`
         );
-        console.log(response.data); 
-        setAuthorPosts(response.data); 
-      } catch (error) {
-        console.error("Error fetching the author posts", error);
+        setAuthorPosts(response.data);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching the author posts", error);
+    }
+  }
 
-    fetchAuthorData();
-    fetchAuthorPosts();
-  }, [user]);
+  async function fetchAuthorData() {
+    try {
+      if (authProvider.user) {
+        const response = await axios.get(
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/`
+        );
+        setAuthorData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching the author data", error);
+    }
+  }
 
-  // fetch the authors posts from the API when the component mounts
+  function handleDeletePostButtonClicked(postId: string) {
+    setPostToDelete(postId);
+    setIsPostDeleteModalOpen(true);
+  }
 
-  const openFollowers = () => {
+  function handleDeletePostModalClose() {
+    setIsPostDeleteModalOpen(false);
+    setPostToDelete(null);
+  }
+
+  async function handleConfirmDelete() {
+    if (postToDelete && authProvider.user) {
+      try {
+        await axios.delete(
+          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
+        );
+        await fetchAuthorPosts(); // Refresh posts after deletion
+        setIsPostDeleteModalOpen(false);
+        setPostToDelete(null);
+      } catch (error) {
+        console.error("Error deleting post", error);
+      }
+    }
+  }
+
+  function openFollowers() {
     setShowFollowerList(true);
     setIsFollowerListModalOpen(true);
-  };
+  }
 
-  const openFollowing = () => {
+  function openFollowing() {
     setShowFollowerList(false);
     setIsFollowerListModalOpen(true);
-  };
+  }
+
+  useEffect(() => {
+    if (authProvider.user) {
+      fetchAuthorData();
+      fetchAuthorPosts();
+    }
+  }, [authProvider.user]);
 
   if (!authorData) {
-    return <div>Loading...</div>; // Display a loading message until data is fetched
+    return <div>Loading...</div>;
   }
 
   return (
@@ -163,30 +172,29 @@ export default function UserProfile() {
         </section>
       </section>
 
-      <section className={styles.bioContainer}>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-        </p>
-      </section>
-
       <hr className={styles.horizontalLine} />
 
       <section className={styles.userPosts}>
         {authorPosts.map((post) => (
           <MiniPostCard
             key={post.id}
-            title={post.title}
-            content={post.content}
             author={post.author.displayName}
+            title={post.title}
             time={post.published}
-            comments={11}
-            likes={12}
-            saves={2}
+            content={post.content}
+            likes={1523382}
+            saves={250}
+            comments={10000}
+            canDelete={true}
+            handleDelete={() => handleDeletePostButtonClicked(post.id)}
           />
         ))}
       </section>
+      <DeletePostModal
+        isOpen={isPostDeleteModalOpen}
+        onRequestClose={handleDeletePostModalClose}
+        onDelete={handleConfirmDelete}
+      />
     </div>
   );
 }

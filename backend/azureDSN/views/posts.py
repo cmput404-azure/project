@@ -4,6 +4,7 @@ from ..models import User, Post, Comment, Like
 from ..serializers import PostSerializer, UserSerializer, CreatePostSerializer
 from rest_framework.response import Response
 from rest_framework import status
+from django.http import HttpResponse
 
 
 class AuthorPostView(APIView):
@@ -24,10 +25,47 @@ class AuthorPostView(APIView):
             - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
         """
         # TODO: remote node handling
+        if not User.objects.filter(uuid=author_serial).exists(): 
+            return Response("Author does not exist.", status=404)
 
         # If both author and post serials are provided
         if (author_serial and post_serial):
-            pass
+            # Retrieve the author
+            author = get_object_or_404(User, uuid=author_serial)
+            
+            # Retrieve the post
+            post = get_object_or_404(Post, uuid=post_serial, user=author)
+
+            # Check visibility for permission logic:
+            if post.visibility == 1:  # PUBLIC
+                # Public posts are visible to everyone
+                serializer = PostSerializer(post)
+                return Response(serializer.data, status=200)
+
+            elif post.visibility == 2:  # FRIENDS
+                # Friends-only posts require authentication
+                if not request.user.is_authenticated:
+                    return HttpResponse("Friends-only posts must be authenticated to view.", status=403)
+                # Check if the request user is the author or a friend of the author
+                if request.user != author and request.user not in author.friends.all():
+                    return HttpResponse("You do not have permission to view this friend's post.", status=403)
+                
+                # If permission is granted, serialize and return the post
+                serializer = PostSerializer(post)
+                return Response(serializer.data, status=200)
+
+            elif post.visibility == 3:  # UNLISTED
+                # Unlisted posts require authentication
+                if not request.user.is_authenticated:
+                    return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
+                
+                # If authenticated, return the post
+                serializer = PostSerializer(post)
+                return Response(serializer.data, status=200)
+
+            elif post.visibility == 4:  # DELETED
+                # Deleted posts should return a 404 error
+                return HttpResponse("This post does not exist.", status=404)
             
         # If only author serial is provided
         elif (author_serial):
@@ -44,7 +82,7 @@ class AuthorPostView(APIView):
             author = get_object_or_404(User, uuid=author_serial)
 
             # retrieve all posts by the author
-            posts = Post.objects.filter(user=author)
+            posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3])
 
             comments = Comment.objects.filter(post__in=posts)
             likes = Like.objects.filter(post__in=posts)
@@ -95,14 +133,19 @@ class AuthorPostView(APIView):
         DELETE [local] remove a post
             - local posts: must be authenticated locally as the author
         """
+        if not User.objects.filter(uuid=author_serial).exists(): 
+            return Response("Author does not exist.", status=404)        
+        
         post = get_object_or_404(Post, uuid=post_serial)
-        
         # TODO: Check if user of request is the author of the post (Authenticate)
-        
-        post.delete()
-        return Response({
-            "message": f"Deleted {post_serial}"
-        }, status=200)
+        if post.user.uuid == author_serial:
+            post.visibility = 4
+            post.save()
+            return Response({
+                "message": f"Deleted {post_serial}"
+            }, status=200)
+        else:
+            return Response("You are not the author of this post.", status=403)
 
     def post(self, request, author_serial):
         """

@@ -5,40 +5,46 @@ import { useEffect, useState } from "react";
 import ErrorPage from "./error-page";
 import HomePage from "./components/HomePage/HomePage";
 import NavigationBar from "./components/NavigationBar/NavigationBar";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
 import { checkAuth } from "./util/auth/checkauth";
-import styles from './App.module.scss';
+import styles from "./App.module.scss";
+import { useAuth } from "./state";
 
 export default function App() {
   const nav = useNavigate();
+  const authProvider = useAuth();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userUUID, setUserUUID] = useState<string>("");
+  if (authProvider.loading) {
+    return <div className={styles.App}>Loading...</div>;
+  }
 
-  useEffect(() => {
-    checkAuth().then((data) => {
-      setIsLoggedIn(data.is_authenticated);
-      console.log(data);
-      setUserUUID(data.uuid);
-    });
-  })
   return (
     <div className={styles.App}>
-        <NavigationBar onClick={(item) => nav(`/${item}`)} isLoggedIn={isLoggedIn} />
+      <NavigationBar
+        onClick={(item) => nav(`/${item}`)}
+        isLoggedIn={authProvider.isAuthenticated}
+      />
 
-        <div className={styles.content}>
-          <Routes>
-            <Route path="/" element={<HomePage isLoggedIn={isLoggedIn} userUUID={userUUID}/>} />
-            <Route path="/home" element={<HomePage isLoggedIn={isLoggedIn} userUUID={userUUID}/>} />
+      <div className={styles.content}>
+        <Routes>
+          <Route path="/" element={<HomePage isLoggedIn={authProvider.isAuthenticated}/>} />
+          <Route path="/home" element={<HomePage isLoggedIn={authProvider.isAuthenticated}/>} />
+          <Route path="/settings" element={<Root />} />
+          <Route path="/login" element={<Auth />} />
+          <Route
+            element={
+              <ProtectedRoute />
+            }
+          >
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/settings" element={<Root />} />
-            <Route path="/login" element={<Auth />} />
             <Route path="/logout" element={<Logout />} />
-            <Route path="*" element={<ErrorPage />} />
-          </Routes>
-        </div>
+          </Route>
+   
+          <Route path="*" element={<ErrorPage />} />
+        </Routes>
+      </div>
     </div>
   );
 }
-
