@@ -194,3 +194,4 @@ yarn-error.log*
 frontend/package-lock.json
 
 /backend/azureDSN/media
+.fuse*
