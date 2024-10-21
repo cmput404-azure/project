@@ -177,13 +177,22 @@
   width: 90%;
 }
 
-.userPostsContainer {
+.posts {
   align-items: center;
   display: flex;
   flex-direction: column;
   gap: 20px;
   justify-content: center;
   width: 80%;
+}
+
+.userPostsContainer {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  width: 90%;
 }
 
 .userPosts {
