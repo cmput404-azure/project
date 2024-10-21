@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 
+import { Author } from "../../models/models";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
+import { Edit } from "@mui/icons-material";
+import EditPostModal from "../EditPostModal/EditPostModal";
 import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import axios from "axios";
+import getCsrfToken from "../../util/auth/getCSRF";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import { useNavigate } from "react-router";
-import { Author } from "../../models/models";
-import getCsrfToken from "../../util/auth/getCSRF";
-import { Edit } from "@mui/icons-material";
-import EditPostModal from "../EditPostModal/EditPostModal";
 
 interface AuthorPost {
   type: string;
@@ -197,7 +197,7 @@ export default function UserProfile() {
           type: "post",
         };
 
-        if (visibilityNumber == 1 || visibilityNumber == 3) {
+        if (visibilityNumber === 1 || visibilityNumber === 3) {
           for (const follower of uniqueFollowers) {
             const inboxUrl = `http://localhost:8000/api/authors/${follower.id}/inbox/`;
             try {
