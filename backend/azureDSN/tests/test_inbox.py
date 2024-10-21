@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from ..models import User, Inbox, InboxItem, Post, FollowRequest
 from django.contrib.contenttypes.models import ContentType
+import time
 
 
 class InboxViewTestCase(TestCase):
@@ -76,15 +77,6 @@ class InboxViewTestCase(TestCase):
             "description": "This post is a test",
             "contentType": "text/plain",
             "content": "Quin public a post, this notifies kyle's inbox",
-            "author":{
-                "type":"test author",
-                "id":f"http://localhost:8000/api/authors/{self.user.uuid}",
-                "host":"http://127.0.0.1:8000/azureDSN/",
-                "displayName":"Test User",
-                "github": "https://github.com/QuinNguyen02",
-                "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
-                "page": "post_images/Screenshot_2024-10-17_014549.png"
-            },
             "comments": {},
             "likes": {},
             "published": "2024-10-19T13:07:04+00:00",
@@ -175,14 +167,18 @@ class InboxViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["message"], "Notice post's owner about your like successfully")
 
+import random 
+
 def create_user():
-    user_obj = User.objects.create(display_name="Test User", 
+    random_suffix = random.randint(1000, 9999)  # Add random digits to ensure uniqueness
+    user_obj = User.objects.create(username=f"TestUser{int(time.time())}{random_suffix}",
+                                   display_name=f"TestUser{int(time.time())}",
                                     host="http://testserver", 
                                     github="http://github.com/quin",
                                     profile_image="http://testserver.com/image.png",
                                     page="http://testserver/profile")
     return user_obj
-    
+        
 def create_post(user_obj):        
     post_obj = Post.objects.create(user=user_obj,
                                     title="Test Post",
@@ -196,10 +192,11 @@ def create_post(user_obj):
 def create_user_givenID(user_id):
     user_obj = {
         "type": "author",
+        "username": f"TestUser{int(time.time())}",
         "id": f"http://127.0.0.1:8000/authors/{user_id}",
         "url": f"http://127.0.0.1:8000/authors/{user_id}",
         "host": "http://127.0.0.1:8000/",
-        "displayName": "Test User",
+        "displayName": f"TestUser{int(time.time())}",
         "github": "http://github.com/quin",
         "profileImage": "http://testserver/profile"
     }
