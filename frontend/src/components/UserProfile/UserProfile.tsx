@@ -39,7 +39,7 @@ export default function UserProfile() {
         const response = await api.get<AuthorPostsResponse>(
           `/api/authors/${authProvider.user.uuid}/posts/`
         );
-        setAuthorPosts(response.data.results);
+        setAuthorPosts(response.data.results.reverse());
       }
     } catch (error) {
       console.error("Error fetching the author posts", error);
@@ -101,16 +101,14 @@ export default function UserProfile() {
             title: updatedPost.title,
             content: updatedPost.content,
             visibility: updatedPost.visibility,
-          },
+          }
         );
 
         // Second request: Get the followers
         const followersResponse = await api.get<{
           type: string;
           followers: Author[];
-        }>(
-          `/api/authors/${authProvider.user.uuid}/followers/`
-        );
+        }>(`/api/authors/${authProvider.user.uuid}/followers/`);
         const followers = followersResponse.data["followers"];
         console.log("Followers retrieved:", followers);
 
@@ -147,7 +145,7 @@ export default function UserProfile() {
             try {
               const inboxResponse = await api.put<{ message: string }>(
                 inboxUrl,
-                payload,
+                payload
               );
               console.log(inboxResponse.data);
             } catch (error) {
@@ -168,7 +166,7 @@ export default function UserProfile() {
           try {
             const inboxResponse = await api.put<{ message: string }>(
               inboxUrl,
-              payload,
+              payload
             );
             console.log(inboxResponse.data);
           } catch (error) {
@@ -196,16 +194,14 @@ export default function UserProfile() {
       try {
         // API call to delete the post
         await api.delete(
-          `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`,
+          `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
         );
 
         // Second request: Get the followers
         const followersResponse = await api.get<{
           type: string;
           followers: Author[];
-        }>(
-          `/api/authors/${authProvider.user.uuid}/followers/`
-        );
+        }>(`/api/authors/${authProvider.user.uuid}/followers/`);
         const followers = followersResponse.data["followers"];
         console.log("Followers retrieved:", followers);
 
@@ -230,8 +226,7 @@ export default function UserProfile() {
         // send to followers if post is public or unlisted
         // always send to friends for all type of posts
         const config2 = {
-          headers: {
-          },
+          headers: {},
           data: {
             id: `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
             type: "post",
