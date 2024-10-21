@@ -105,6 +105,45 @@ export default function UserProfile() {
     setPostToEdit([]);
   }
 
+  // Function to handle updating the post
+  async function handleUpdatePost(updatedPost: {
+    title: string;
+    content: string;
+  }) {
+    if (postToEdit.length > 0 && authProvider.user) {
+      try {
+        const postId = postToEdit[0].id;
+        // Fetch CSRF token
+        // From chatGPT "why are my CSRF tokens being ignored/not being sent", Downloaded 2024-10-20
+        const csrfToken = getCsrfToken();
+        const config = {
+          headers: {
+            "x-csrftoken": csrfToken,
+          },
+        };
+
+        // PUT request to update the post
+        const response = await axios.put(
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/${postId}/`,
+          {
+            title: updatedPost.title,
+            content: updatedPost.content,
+          },
+          config
+        );
+
+        console.log("Post updated successfully:", response.data);
+
+        // call again to refresh teh posts
+        await fetchAuthorPosts();
+        // close modal after updating the post
+        handleEditPostModalClose();
+      } catch (error) {
+        console.error("Error updating post", error);
+      }
+    }
+  }
+
   async function handleConfirmDelete() {
     if (postToDelete && authProvider.user) {
       try {
@@ -330,9 +369,7 @@ export default function UserProfile() {
         isOpen={isEditPostModalOpen}
         onRequestClose={handleEditPostModalClose}
         post={postToEdit.length > 0 ? postToEdit[0] : null}
-        onSubmit={(updatedPost) => {
-          console.log("Edit post:", updatedPost);
-        }}
+        onSubmit={handleUpdatePost}
       />
     </div>
   );
