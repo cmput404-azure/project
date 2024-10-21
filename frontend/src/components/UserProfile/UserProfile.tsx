@@ -1,13 +1,14 @@
+import { useEffect, useState } from "react";
+
+import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import axios from "axios";
-import { checkAuth } from "../../util/auth/checkauth";
 import styles from "./UserProfile.module.scss";
-import { useEffect } from "react";
-import { useState } from "react";
-import DeletePostModal from "../DeletePostModal/DeletePostModal";
+import { useAuth } from "../../state";
+import { useNavigate } from "react-router";
 
 import {Author} from "../../models/models"
 
@@ -32,6 +33,10 @@ interface AuthorPost {
   visibility: number;
 }
 
+axios.defaults.withCredentials = true;
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "x-csrftoken";
+
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
@@ -42,88 +47,63 @@ export default function UserProfile() {
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
 
-  axios.defaults.withCredentials = true;
-  axios.defaults.xsrfCookieName = "csrftoken";
-  axios.defaults.xsrfHeaderName = "x-csrftoken";
+  const authProvider = useAuth();
 
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const data = await checkAuth();
-        setUser({
-          username: data.username,
-          uuid: data.uuid,
-        });
-      } catch (error) {
-        console.error("Error checking auth", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  const fetchAuthorPosts = async () => {
+  async function fetchAuthorPosts() {
     try {
-      const response = await axios.get<AuthorPost[]>(
-        `http://localhost:8000/api/authors/${user.uuid}/posts/`
-      );
-      console.log(response.data);
-      setAuthorPosts(response.data);
+      if (authProvider.user) {
+        const response = await axios.get<AuthorPost[]>(
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`
+        );
+        setAuthorPosts(response.data);
+      }
     } catch (error) {
       console.error("Error fetching the author posts", error);
     }
-  };
+  }
 
-  // fetch the author data from the API when the component mounts
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchAuthorData = async () => {
-      try {
+  async function fetchAuthorData() {
+    try {
+      if (authProvider.user) {
         const response = await axios.get(
-          `http://localhost:8000/api/authors/${user.uuid}/`
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/`
         );
-        console.log(response.data);
         setAuthorData(response.data);
-      } catch (error) {
-        console.error("Error fetching the author data", error);
       }
-    };
-    fetchAuthorData();
-    fetchAuthorPosts();
-  }, [user]);
+    } catch (error) {
+      console.error("Error fetching the author data", error);
+    }
+  }
 
   const handleDeletePostButtonClicked = (postId: string, visibilityNumber: number) => {
     setPostToDelete(postId);
     setVisibilityNumber(visibilityNumber);
     setIsPostDeleteModalOpen(true);
-  };
-  const handleDeletePostModalClose = () => {
+  }
+
+  function handleDeletePostModalClose() {
     setIsPostDeleteModalOpen(false);
     setPostToDelete(null);
     setVisibilityNumber(null);
   };
 
-  const handleConfirmDelete = async () => {
-    if (postToDelete) {
+  async function handleConfirmDelete() {
+    if (postToDelete && authProvider.user) {
       try {
-        // API call to delete the post
         await axios.delete(
-          `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToDelete}/`
+          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
         );
 
         // Second request: Get the followers
         const followersResponse = await axios.get<{ type: string, followers: Author[] }>(
-          `http://127.0.0.1:8000/api/authors/${user.uuid}/followers/`,
+          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/`,
         );
         const followers = followersResponse.data["followers"];
         console.log("Followers retrieved:", followers);
 
         // Third request: Get the friends
         const friendsResponse = await axios.get<Author[]>(
-          `http://127.0.0.1:8000/api/authors/${user.uuid}/following/?action=friends`,
+          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`,
         );
         const friends = friendsResponse.data;
         console.log("Friends retrieved:", friends);
@@ -141,7 +121,7 @@ export default function UserProfile() {
         // send to followers if post is public or unlisted
         // always send to friends for all type of posts
         const payload = {
-          id: `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToDelete}`,
+          id: `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
           type: "post"
         }
 
@@ -180,20 +160,27 @@ export default function UserProfile() {
         console.error("Error deleting post", error);
       }
     }
-  };
+  }
 
-  const openFollowers = () => {
+  function openFollowers() {
     setShowFollowerList(true);
     setIsFollowerListModalOpen(true);
-  };
+  }
 
-  const openFollowing = () => {
+  function openFollowing() {
     setShowFollowerList(false);
     setIsFollowerListModalOpen(true);
-  };
+  }
+
+  useEffect(() => {
+    if (authProvider.user) {
+      fetchAuthorData();
+      fetchAuthorPosts();
+    }
+  }, [authProvider.user]);
 
   if (!authorData) {
-    return <div>Loading...</div>; // Display a loading message until data is fetched
+    return <div>Loading...</div>;
   }
 
   return (
@@ -254,7 +241,6 @@ export default function UserProfile() {
       <hr className={styles.horizontalLine} />
 
       <section className={styles.userPosts}>
-        {/* map the author post response data to the mini profile card component */}
         {authorPosts.map((post) => (
           <MiniPostCard
             key={post.id}

@@ -10,6 +10,12 @@ export interface Author {
     page: string;
 }
 
+export interface User{
+    username: string;
+    uuid: string;
+    profileImage: string | null;
+}
+
 export interface FollowRequest {
     type: string;
     summary: string;
@@ -89,3 +95,4 @@ export interface Inbox {
     type: string;
     items: InboxItem[]
 }
+
