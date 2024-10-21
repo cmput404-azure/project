@@ -94,6 +94,7 @@ export default function UserProfile() {
   async function handleUpdatePost(updatedPost: {
     title: string;
     content: string;
+    visibility: number;
   }) {
     if (postToEdit.length > 0 && authProvider.user) {
       try {
@@ -113,6 +114,7 @@ export default function UserProfile() {
           {
             title: updatedPost.title,
             content: updatedPost.content,
+            visibility: updatedPost.visibility,
           },
           config
         );
@@ -260,9 +262,8 @@ export default function UserProfile() {
           data: {
             id: `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
             type: "post",
-          }
+          },
         };
-
 
         if (visibilityNumber === 1 || visibilityNumber === 3) {
           for (const follower of uniqueFollowers) {
