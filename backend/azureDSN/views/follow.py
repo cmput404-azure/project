@@ -44,8 +44,6 @@ def fetch_remote_follower_data(remote_url):
         return None
         
 class FollowCustomView(APIView):
-
-
     @extend_schema(
         summary="Retrieve following users or friends based on query parameters",
         description="""

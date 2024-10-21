@@ -66,10 +66,10 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ onClick, isLoggedIn }) =>
         <div className={styles.iconGroup}>
           {[...commonNavigationItems, ...(isLoggedIn ? loggedInNavigationItems : loggedOutNavigationItems), ...bottomNavigationItems].map((item) => (
             <div key={item.label} className={styles.navigationItem} onClick={() => {
-              if (item.label === 'Search') {
+              if (item.label === 'search') {
                 handleSearchClick();
-              } else if (item.label === 'Notifications') {
-                handleNotificationsClick(); // New handler for notifications
+              } else if (item.label === 'notifications') {
+                handleNotificationsClick(); 
               } else {
                 onClick(item.label); // Default handler for other items
               }
@@ -85,10 +85,10 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ onClick, isLoggedIn }) =>
             {commonNavigationItems.map((item) => (
               <div key={item.label} className={styles.navigationItem} onClick={(e) => {
                 e.preventDefault();
-                if (item.label === 'Search') {
+                if (item.label === 'search') {
                   handleSearchClick();
                 }
-                else if (item.label === 'Notifications') {
+                else if (item.label === 'notifications') {
                   handleNotificationsClick(); // New handler for notifications
                 }
                 else if (item.label === 'logout') {
