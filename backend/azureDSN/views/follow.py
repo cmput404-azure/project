@@ -322,7 +322,7 @@ class FollowView(APIView):
             decoded_url = unquote(follower_url)
             parts = decoded_url.strip("/").split("/")
             follower_id = parts[-1]
-            follower = Follow.objects.filter(local_follower_id = user_id, local_followee_id=follower_id)
+            follower = Follow.objects.filter(local_followee_id = user_id, local_follower_id=follower_id)
         
         # Verifies that follower exists
         if not follower:
