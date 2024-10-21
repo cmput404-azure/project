@@ -89,29 +89,8 @@ class AuthorTests(APITestCase):
             self.assertIn(author["github"], ['github.com/testauthor', 'github.com/testauthor2', 'github.com/testauthor3', 'github.com/testauthor4', 'github.com/testauthor5', 'github.com/testauthor6', 'github.com/testauthor7'])
             self.assertIn(author["page"], ['http://localhost:8000/api/authors/testauthor', 'http://localhost:8000/api/authors/testauthor2', 'http://localhost:8000/api/authors/testauthor3', 'http://localhost:8000/api/authors/testauthor4', 'http://localhost:8000/api/authors/testauthor5', 'http://localhost:8000/api/authors/testauthor6', 'http://localhost:8000/api/authors/testauthor7'])
     
-    # test getting authors with pagination 
+    # TODO: test getting authors with pagination 
     # def test_retrieve_authors_paginated(self):
-    #     """Test retrieving all authors with pagination."""
-    #     url = reverse('authors_all')
-        
-    #     # Simulate paginated response (e.g., page 1, size 3)
-    #     response = self.client.get(url, {'page': 1, 'page_size': 3})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-    #     payload = response.data
-    #     self.assertEqual(payload["type"], "authors")
-    #     self.assertEqual(len(payload["authors"]), 3)  # Check if 3 authors were returned on the first page
-
-    #     # Check pagination metadata if it's returned
-    #     pagination = PageNumberPagination()
-    #     pagination.page_size = 3
-    #     authors = User.objects.all()
-    #     paginated_authors = pagination.paginate_queryset(authors, request=None)
-    #     self.assertEqual(len(paginated_authors), 3)  # Ensure only 3 authors are paginated on page 1
-
-    #     # Check if next and previous pagination links exist (if applicable)
-    #     self.assertIn('next', response.data)
-    #     self.assertIn('previous', response.data)
     
     # test getting author by uuid
     def test_get_author_by_uuid(self):
