@@ -1,8 +1,9 @@
+import { Author, Post } from "../../models/models";
 import React, { useState } from "react";
-import {Author, Post} from "../../models/models";
 import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
 
 import axios from "axios";
+import getCsrfToken from "../../util/auth/getCSRF";
 import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
 
@@ -11,6 +12,10 @@ interface PostBarProps {
   showButtonBar?: boolean;
 }
 type IconType = "public" | "friends" | "unlisted";
+
+axios.defaults.withCredentials = true;
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "x-csrftoken";
 
 const PostBar: React.FC<PostBarProps> = ({
   userImage,
@@ -24,21 +29,24 @@ const PostBar: React.FC<PostBarProps> = ({
 
   const authProvider = useAuth();
 
-  axios.defaults.withCredentials = true;
-  axios.defaults.xsrfCookieName = "csrftoken";
-  axios.defaults.xsrfHeaderName = "x-csrftoken";
+  const csrfToken = getCsrfToken();
+  const config = {
+    headers: {
+      "x-csrftoken": csrfToken,
+    },
+  };
 
   // To update the activeIcon
   const handleIconClick = (icon: IconType) => {
-      setActiveIcon(icon);
-    };
+    setActiveIcon(icon);
+  };
   // To update the title
   const handleTitleChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setTitle(event.target.value);
   };
-  const handleInputClick = () => setShowDetail(true) ;
+  const handleInputClick = () => setShowDetail(true);
   const handleDescriptionChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>
   ) => setDescription(event.target.value);
@@ -65,23 +73,23 @@ const PostBar: React.FC<PostBarProps> = ({
         published: new Date().toISOString(),
         visibility: visibilityNumber,
       };
-  
+
       const postResponse = await axios.post<Post>(
-        `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/`,
-        newPost
+        `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`,
+        newPost, config
       );
       console.log("Post successfully created:", postResponse.data);
-  
+
       // Second request: Get the followers
       const followersResponse = await axios.get<{ type: string, followers: Author[] }>(
-        `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/`,
+        `http://localhost:8000/api/authors/${authProvider.user.uuid}/followers/`, config
       );
       const followers = followersResponse.data["followers"];
       console.log("Followers retrieved:", followers);
 
       // Third request: Get the friends
       const friendsResponse = await axios.get<Author[]>(
-        `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`,
+        `http://localhost:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`, config
       );
       const friends = friendsResponse.data;
       console.log("Friends retrieved:", friends);
@@ -100,9 +108,9 @@ const PostBar: React.FC<PostBarProps> = ({
       // always send to friends for all type of posts
       if (visibilityNumber == 1 || visibilityNumber == 3) {
         for (const follower of uniqueFollowers) {
-          const inboxUrl = `http://127.0.0.1:8000/api/authors/${follower.id}/inbox/`;
+          const inboxUrl = `http://localhost:8000/api/authors/${follower.id}/inbox/`;
           try {
-            const inboxResponse = await axios.post<{message: string}>(inboxUrl, postResponse.data);
+            const inboxResponse = await axios.post<{ message: string }>(inboxUrl, postResponse.data);
             console.log(inboxResponse.data);
           } catch (error) {
             console.error(`Error sending post to inbox of ${follower.id}:`, error);
@@ -110,12 +118,12 @@ const PostBar: React.FC<PostBarProps> = ({
         }
         console.log("All posts sent to followers' inboxes.");
       }
-      
+
       // Friends receive inbox on all type of post
       for (const friend of friends) {
-        const inboxUrl = `http://127.0.0.1:8000/api/authors/${friend.id}/inbox/`;
+        const inboxUrl = `http://localhost:8000/api/authors/${friend.id}/inbox/`;
         try {
-          const inboxResponse = await axios.post<{message: string}>(inboxUrl, postResponse.data);
+          const inboxResponse = await axios.post<{ message: string }>(inboxUrl, postResponse.data);
           console.log(inboxResponse.data);
         } catch (error) {
           console.error(`Error sending post to friend's inbox of ${friend.id}:`, error);
@@ -128,16 +136,16 @@ const PostBar: React.FC<PostBarProps> = ({
       setTitle("")
       setDescription("")
       setContent("")
-      
+
     } catch (error) {
       console.error("Error in combined request flow:", error);
     }
   };
 
-  if(!authProvider.isAuthenticated){
+  if (!authProvider.isAuthenticated) {
     return <></>
   }
-  
+
   return (
     <div className={styles.container}>
       <section className={styles["post-bar"]}>
@@ -157,56 +165,53 @@ const PostBar: React.FC<PostBarProps> = ({
         >
           <span>+</span>
         </button>
-      
+
 
       </section>
 
-{showDetail && (
-  <div className={styles["detail-container"]}>
-    <label className={styles["input-label"]}>Description</label>
-    <textarea
-      className={styles["description-input"]}
-      placeholder="Add a brief description..."
-      value={description}
-      onChange={handleDescriptionChange}
-    />
+      {showDetail && (
+        <div className={styles["detail-container"]}>
+          <label className={styles["input-label"]}>Description</label>
+          <textarea
+            className={styles["description-input"]}
+            placeholder="Add a brief description..."
+            value={description}
+            onChange={handleDescriptionChange}
+          />
 
-    <label className={styles["input-label"]}>Content</label>
-    <textarea
-      className={styles["content-input"]}
-      placeholder="Write your post content here..."
-      value={content}
-      onChange={handleContentChange}
-    />
-  </div>
-)}
+          <label className={styles["input-label"]}>Content</label>
+          <textarea
+            className={styles["content-input"]}
+            placeholder="Write your post content here..."
+            value={content}
+            onChange={handleContentChange}
+          />
+        </div>
+      )}
 
 
-      {(showButtonBar || showDetail)  && (
+      {(showButtonBar || showDetail) && (
         <section className={styles["button-bar"]}>
           <div className={styles["icon-bar"]}>
             <div
-              className={`${styles["icon-section"]} ${
-                activeIcon === "public" ? styles.active : ""
-              }`}
+              className={`${styles["icon-section"]} ${activeIcon === "public" ? styles.active : ""
+                }`}
               onClick={() => handleIconClick("public")}
             >
               <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
             </div>
             <div className={styles["vertical-divider"]}></div>
             <div
-              className={`${styles["icon-section"]} ${
-                activeIcon === "friends" ? styles.active : ""
-              }`}
+              className={`${styles["icon-section"]} ${activeIcon === "friends" ? styles.active : ""
+                }`}
               onClick={() => handleIconClick("friends")}
             >
               <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
             </div>
             <div className={styles["vertical-divider"]}></div>
             <div
-              className={`${styles["icon-section"]} ${
-                activeIcon === "unlisted" ? styles.active : ""
-              }`}
+              className={`${styles["icon-section"]} ${activeIcon === "unlisted" ? styles.active : ""
+                }`}
               onClick={() => handleIconClick("unlisted")}
             >
               <i className={`${styles.icon} ${styles["link-icon"]}`}></i>
