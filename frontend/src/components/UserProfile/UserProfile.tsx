@@ -132,6 +132,82 @@ export default function UserProfile() {
           config
         );
 
+        // Second request: Get the followers
+        const followersResponse = await axios.get<{
+          type: string;
+          followers: Author[];
+        }>(
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/followers/`
+        );
+        const followers = followersResponse.data["followers"];
+        console.log("Followers retrieved:", followers);
+
+        // Third request: Get the friends
+        const friendsResponse = await axios.get<Author[]>(
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`
+        );
+        const friends = friendsResponse.data;
+        console.log("Friends retrieved:", friends);
+
+        // Now friends and followers may be duplicated, we have to go through and remove
+        // one from the follower list if it also exist in friend
+        // Create a Set of friend IDs for quick lookup
+        const friendIds = new Set(friends.map((friend) => friend.id));
+
+        // Filter out followers that are also friends
+        const uniqueFollowers = followers.filter(
+          (follower) => !friendIds.has(follower.id)
+        );
+        console.log("Filtered followers (excluding friends):", uniqueFollowers);
+
+        // send to followers if post is public or unlisted
+        // always send to friends for all type of posts
+        const payload = {
+          id: postId,
+          title: updatedPost.title,
+          content: updatedPost.content,
+        };
+
+        if (postToEdit[0].visibility === 1 || postToEdit[0].visibility === 3) {
+          for (const follower of uniqueFollowers) {
+            const inboxUrl = `http://localhost:8000/api/authors/${follower.id}/inbox/`;
+            try {
+              const inboxResponse = await axios.put<{ message: string }>(
+                inboxUrl,
+                payload,
+                config
+              );
+              console.log(inboxResponse.data);
+            } catch (error) {
+              console.error(
+                `Error sending post to inbox of ${follower.id}:`,
+                error
+              );
+            }
+          }
+          console.log(
+            "Error sending noti on updated posts to followers' inboxes."
+          );
+        }
+
+        // Friends receive inbox on all type of post
+        for (const friend of friends) {
+          const inboxUrl = `http://localhost:8000/api/authors/${friend.id}/inbox/`;
+          try {
+            const inboxResponse = await axios.put<{ message: string }>(
+              inboxUrl,
+              payload,
+              config
+            );
+            console.log(inboxResponse.data);
+          } catch (error) {
+            console.error(
+              `Error sending noti on updated posts to ${friend.id}:`,
+              error
+            );
+          }
+        }
+
         console.log("Post updated successfully:", response.data);
 
         // call again to refresh teh posts
@@ -192,18 +268,24 @@ export default function UserProfile() {
 
         // send to followers if post is public or unlisted
         // always send to friends for all type of posts
-        const payload = {
-          id: `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
-          type: "post",
+        const config2 = {
+          headers: {
+            "x-csrftoken": csrfToken,
+          },
+          data: {
+            id: `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
+            type: "post",
+          }
         };
+        
 
         if (visibilityNumber === 1 || visibilityNumber === 3) {
           for (const follower of uniqueFollowers) {
             const inboxUrl = `http://localhost:8000/api/authors/${follower.id}/inbox/`;
             try {
-              const inboxResponse = await axios.post<{ message: string }>(
+              const inboxResponse = await axios.delete<{ message: string }>(
                 inboxUrl,
-                payload
+                config2
               );
               console.log(inboxResponse.data);
             } catch (error) {
@@ -220,11 +302,11 @@ export default function UserProfile() {
 
         // Friends receive inbox on all type of post
         for (const friend of friends) {
-          const inboxUrl = `http://localhost/api/authors/${friend.id}/inbox/`;
+          const inboxUrl = `http://localhost:8000/api/authors/${friend.id}/inbox/`;
           try {
-            const inboxResponse = await axios.post<{ message: string }>(
+            const inboxResponse = await axios.delete<{ message: string }>(
               inboxUrl,
-              payload
+              config2
             );
             console.log(inboxResponse.data);
           } catch (error) {
