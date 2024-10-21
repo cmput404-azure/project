@@ -6,6 +6,7 @@ from ..models import User, Post
 from ..serializers import UserSerializer, PostSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework import status
+from uuid import UUID
 
 class AuthorsPagination(PageNumberPagination):
     page_size = 5
@@ -101,7 +102,7 @@ class AuthorsSpecificView(APIView):
         operation_id='get_author',
         tags=['Authors API']
     )
-    def get(self, request, author_serial=None, author_fqid=None):
+    def get(self, request, author_fqid=None, author_serial=None ):
         """
         GET [local, remote] get the public authors
         """
@@ -114,10 +115,11 @@ class AuthorsSpecificView(APIView):
             return Response(serializer.data, status=200)
         elif(author_fqid):
             # if fqid provided
-            print(author_fqid)
+            author_serial = author_fqid.split('/')[-1]
+            UUID(author_serial)
 
             # TODO: In future need to send request to remote server to get author
-            author = get_object_or_404(User, uuid=author_fqid)
+            author = get_object_or_404(User, uuid=author_serial)
 
             serializer = UserSerializer(author)
             return Response(serializer.data, status=200)
@@ -168,14 +170,16 @@ class AuthorsSpecificView(APIView):
         """
         PUT [local]: update a particular author's profile
         """
+        if(author_serial):
+            author = get_object_or_404(User, uuid=author_serial)
+            serializer = UserSerializer(author, data=request.data) # Send the whole JSON object everytime so partial won't be True
 
-        print("Received request data:", request.data)
-        author = get_object_or_404(User, uuid=author_serial)
-        serializer = UserSerializer(author, data=request.data) # Send the whole JSON object everytime so partial won't be True
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=200)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=200)
+        elif(author_fqid):
+            author = get_object_or_404(User, uuid=author_fqid)
+            serializer = UserSerializer(author, data=request.data) # Send the whole JSON object everytime so partial won't be True
 
         return Response(serializer.errors, status=400)
     
