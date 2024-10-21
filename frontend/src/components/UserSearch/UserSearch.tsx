@@ -29,7 +29,8 @@ export default function UserSearch() {
             setLoading(true);
             setError(null);
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/authors/all/`); // Adjust the endpoint to fetch all users
+                const response = await axios.get(`http://127.0.0.1:8000/api/authors/all/`); 
+                console.log(response.data);
                 setResults(response.data); // Adjust based on your API response structure
             } catch (err) {
                 console.error('Error fetching users:', err);

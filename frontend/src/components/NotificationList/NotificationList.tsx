@@ -5,8 +5,7 @@ import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
 import axios from 'axios';
 import styles from './NotificationList.module.scss';
-
-
+import { useAuth } from "../../state";
 
 
 interface FollowerResponse {
@@ -19,13 +18,17 @@ export default function NotificationList() {
     const [notifications, setNotifications] = useState<Follower[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const authProvider = useAuth();
 
+    axios.defaults.withCredentials = true;
+    axios.defaults.xsrfCookieName = "csrftoken";
+    axios.defaults.xsrfHeaderName = "x-csrftoken";
     useEffect(() => {
-        const fetchNotifications = async () => {
-
+    
+        const fetchNotifications = async (id: string) => {
             try {
                 const userResponse = await axios.get(
-                    `http://127.0.0.1:8000/api/authors/b2ec57e0-fce1-4fd0-8cff-e347efe528aa/inbox/`
+                    `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/inbox/`
                 );
                 const notificationsWithUsers = await Promise.all(
                     userResponse.data.items.map(async (item: any) => {
@@ -44,20 +47,20 @@ export default function NotificationList() {
                 setError("Failed to fetch notifications");
                 setLoading(false);
             }
-
-        }
-        fetchNotifications();
-
+        };
+    
+        fetchNotifications()
     }, []);
 
-    const fetchUser = async (userId: string) => {
+    
+    const fetchUser = async () => {
         try {
             const response = await axios.get(
-                `http://127.0.0.1:8000/api/authors/${userId}/`
+                `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/`
             );
             return response.data;
         } catch (err) {
-            console.error(`Error fetching user ${userId}:`, err);
+            console.error(`Error fetching user ${authProvider.user.uuid}:`, err);
             return null; // Handle failure gracefully
         }
     };

@@ -1,6 +1,9 @@
 // @ts-nocheck
 import axios from 'axios';
 import styles from './ListItem.module.scss';
+import { useAuth } from "../../state";
+
+import React, { useEffect, useState } from 'react';
 
 interface ListItemProps {
     isRequest: boolean;
@@ -27,6 +30,12 @@ export default function ListItem({
     notif_id,
     user
 }: ListItemProps) {
+    const authProvider = useAuth();
+
+    axios.defaults.withCredentials = true;
+    axios.defaults.xsrfCookieName = "csrftoken";
+    axios.defaults.xsrfHeaderName = "x-csrftoken";
+
     const unFollow = async () => {
         const encodedHost = encodeURIComponent(user.host);
         const encodedId = encodeURIComponent(user.id);
@@ -34,7 +43,7 @@ export default function ListItem({
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
 
         try {
-            const response = await axios.delete(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/${encodedUrl}/`, {
+            const response = await axios.delete(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`, {
             });
   
             const data = response.data;
@@ -46,7 +55,6 @@ export default function ListItem({
     };   
 
     const sendFollowerRequest = async () => {
-        const tmpUserId="b2ec57e0-fce1-4fd0-8cff-e347efe528aa";
         const encodedHost = encodeURIComponent(user.host);
         const encodedId = encodeURIComponent(user.id);
 
@@ -54,22 +62,22 @@ export default function ListItem({
 
         try {
             // Get the current user info
-            const userResponse = await axios.get(`http://127.0.0.1:8000/api/authors/${tmpUserId}/`);
+            const userResponse = await axios.get(`http://127.0.0.1:8000/api/authors/${authorProvider.user.uuid}/`);
             const userInfo = userResponse.data;
 
             const followRequest = {
                 type: "follow",
-                summary: `${user.displayName} wants to follow ${userInfo.displayName}`,
+                summary: `${userInfo.displayName} wants to follow ${user.displayName}`,
                 actor: {
                     type: "author",
-                    id: `${user.id}`,
-                    host: `${user.host}`,
-                    displayName: `${user.displayName}`, 
-                    github: `${user.github}`,
-                    page:`${user.page}`
+                    id: `${userInfo.id}`,
+                    host: `${userInfo.host}`,
+                    displayName: `${userInfo.displayName}`, 
+                    github: `${userInfo.github}`,
+                    page:`${userInfo.page}`
                 },
             }
-            await axios.post(`http://127.0.0.1:8000/api/authors/${tmpUserId}/inbox/`, followRequest);
+            await axios.post(`http://127.0.0.1:8000/api/authors/${user.id}/inbox/`, followRequest);
  
         } catch (error) {
             console.error('Fetch error:', error);  
@@ -82,13 +90,12 @@ export default function ListItem({
     }
 
     const addFollower = async()=>{
-        const tmpUserId="b2ec57e0-fce1-4fd0-8cff-e347efe528aa";
         const encodedHost = encodeURIComponent(user.host);
         const encodedId = encodeURIComponent(user.id);
 
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
         // Add actor as follower
-        const response = await axios.put(`http://127.0.0.1:8000/api/authors/${tmpUserId}/followers/${encodedUrl}/`, {
+        const response = await axios.put(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`, {
         });
 
         const data = response.data;
@@ -99,16 +106,12 @@ export default function ListItem({
     }
 
     const deleteFollowRequest = async()=>{
-
-        const tmpUserId="b2ec57e0-fce1-4fd0-8cff-e347efe528aa";
-        console.log(notif_id);
-
         const deletefollowRequest = {
             "type": "follow",
             "id": notif_id
         };
 
-        const deleteResponse = await axios.delete(`http://127.0.0.1:8000/api/authors/${tmpUserId}/inbox/`,{data: deletefollowRequest})
+        const deleteResponse = await axios.delete(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/inbox/`,{data: deletefollowRequest})
 
     }
 
