@@ -92,7 +92,7 @@ const PostBar: React.FC<PostBarProps> = ({
 
       // send to followers if post is public or unlisted
       // always send to friends for all type of posts
-      if (visibilityNumber == 1 || visibilityNumber == 3) {
+      if (visibilityNumber === 1 || visibilityNumber === 3) {
         for (const follower of uniqueFollowers) {
           const inboxUrl = `/api/authors/${follower.id}/inbox/`;
           try {

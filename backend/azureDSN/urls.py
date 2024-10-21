@@ -8,9 +8,6 @@ from django.views.generic import TemplateView
 # urlpatterns contains all of the routes that this application supports routing for.
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
 urlpatterns = [
-    # Front end injection
-    path('', TemplateView.as_view(template_name='index.html')),
-
     path('api/stream/', PublicStreamView.as_view(), name='stream'),
     path('api/stream/auth', AuthStreamView.as_view(), name='auth_stream'),
     
@@ -78,4 +75,7 @@ urlpatterns = [
     path('api/logout/', LogoutView.as_view(), name='logout'),
     path('api/register/', RegisterView.as_view(), name='register'),
     path("api/check_auth/", CheckAuthView.as_view(), name="check_auth"),
+
+    # Front end injection
+    path('', TemplateView.as_view(template_name='index.html')),
 ]
