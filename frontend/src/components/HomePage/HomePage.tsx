@@ -1,22 +1,18 @@
 // HomePage.jsx
-import React, { useState, useEffect } from "react";
-import NavigationBar from "../NavigationBar/NavigationBar";
-import PostBar from "../PostBar/PostBar";
-import PostCard from "../PostCard/PostCard";
+import { useEffect, useState } from "react";
+
 import AuthorPost from "../AuthorPost/AuthorPost";
 import CommentView from "../CommentView/CommentView";
-import styles from "./HomePage.module.scss";
-import axios from "axios";
 import Modal from "react-modal";
+import PostBar from "../PostBar/PostBar";
+import PostCard from "../PostCard/PostCard";
+import { api } from "../../service/config";
 import logo from "../../images/dog_icon.png";
+import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
-
-axios.defaults.withCredentials = true;
-axios.defaults.xsrfCookieName = "csrftoken";
-axios.defaults.xsrfHeaderName = "x-csrftoken";
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
@@ -30,19 +26,16 @@ const HomePage = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const req = await fetch("http://localhost:8000/api/stream/");
-        const publicPosts = await req.json();
+        const req = await api.get("/api/stream/");
+        const publicPosts = req.data;
         console.log("pub posts", publicPosts);
 
-        const otherReq = await fetch("http://localhost:8000/api/stream/auth", {
-          method: 'GET',
-          credentials: 'include', // This is crucial for sending cookies with the request
-        });
-        const privatePosts = await otherReq.json();
+        const otherReq = await api.get("/api/stream/auth");
+        const privatePosts = otherReq.data;
         console.log("private POSTS >>> ", privatePosts);
 
-        setNonPublicPosts(privatePosts);
-        setPublicPosts(publicPosts);
+        setNonPublicPosts(privatePosts as any[]);
+        setPublicPosts(publicPosts as any[]);
         setIsLoading(false);
 
       } catch (err) {
@@ -50,7 +43,6 @@ const HomePage = () => {
         setError("Failed to fetch posts. Please try again.");
       }
     };
-
     fetchPosts();
   }, [])
 

@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import axios from 'axios';
-import getCsrfToken from "../../util/auth/getCSRF";
+import { api } from "../../service/config";
 import styles from './ListItem.module.scss';
 import { useAuth } from "../../state";
 
@@ -25,16 +24,6 @@ interface ListItemProps {
     };
 }
 
-axios.defaults.withCredentials = true;
-axios.defaults.xsrfCookieName = "csrftoken";
-axios.defaults.xsrfHeaderName = "x-csrftoken";
-
-const csrfToken = getCsrfToken();
-const config = {
-    headers: {
-    "x-csrftoken": csrfToken,
-    },
-};
 export default function ListItem({
     isRequest,
     isPost,
@@ -58,7 +47,7 @@ export default function ListItem({
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
 
         try {
-            const response = await axios.delete(`http://localhost:8000/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`, config);
+            const response = await api.delete(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
 
             const data = response.data;
         } catch (error) {
@@ -74,7 +63,7 @@ export default function ListItem({
 
         try {
             // Get the current user info
-            const userResponse = await axios.get(`http://localhost:8000/api/authors/${authProvider.user.uuid}/`, config);
+            const userResponse = await api.get(`/api/authors/${authProvider.user.uuid}/`);
             const userInfo = userResponse.data;
 
             const followRequest = {
@@ -89,7 +78,7 @@ export default function ListItem({
                     page: `${userInfo.page}`
                 },
             }
-            await axios.post(`http://localhost:8000/api/authors/${user.id}/inbox/`, followRequest, config);
+            await api.post(`/api/authors/${user.id}/inbox/`, followRequest);
             setIsRequested(true);
         } catch (error) {
             console.error('Fetch error:', error);
@@ -107,7 +96,7 @@ export default function ListItem({
 
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
         // Add actor as follower
-        const response = await axios.put(`http://localhost:8000/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`, config);
+        const response = await api.put(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
 
         const data = response.data;
 
@@ -122,7 +111,7 @@ export default function ListItem({
             "id": notif_id
         };
 
-        const deleteResponse = await axios.delete(`http://localhost:8000/api/authors/${authProvider.user.uuid}/inbox/`, { data: deletefollowRequest }, config);
+        const deleteResponse = await api.delete(`/api/authors/${authProvider.user.uuid}/inbox/`, { data: deletefollowRequest });
 
     }
 

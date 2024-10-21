@@ -1,4 +1,5 @@
 import { User } from "../../models/models";
+import { api } from "../../service/config";
 import axios from "axios";
 
 interface CheckAuthResponse {
@@ -16,7 +17,7 @@ axios.defaults.xsrfHeaderName = "x-csrftoken";
 
 export async function checkAuth(): Promise<CheckAuthResponse> {
    try {
-      const res = await axios.get<CheckAuthResponse>("http://localhost:8000/api/check_auth/");
+      const res = await api.get<CheckAuthResponse>("/api/check_auth/");
       return res.data;
    } 
    catch (error) {
@@ -27,7 +28,7 @@ export async function checkAuth(): Promise<CheckAuthResponse> {
 export async function logout(): Promise<LogoutResponse> {
    try {
       // clear the cookies
-      const res = await axios.get<LogoutResponse>("http://localhost:8000/api/logout/");
+      const res = await api.get<LogoutResponse>("/api/logout/");
       return res.data;
    }
    catch (error) {
