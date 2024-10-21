@@ -5,6 +5,7 @@ import Modal from 'react-modal';
 import axios from 'axios';
 import styles from './FollowList.module.scss';
 import { useAuth } from "../../state";
+import { api } from "../../service/config";
 
 
 interface Follower {
@@ -55,7 +56,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFriends = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/`, {
+      const response = await api.get(`/api/authors/${authProvider.user.uuid}/following/`, {
         params: {
           action: 'friends'
         }
@@ -73,7 +74,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFollowers = async () => {
     try {
-      const response = await axios.get<FollowerResponse>(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/`, {
+      const response = await api.get<FollowerResponse>(`/api/authors/${authProvider.user.uuid}/followers/`, {
       });
 
       const data = response.data;
@@ -88,7 +89,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFollowing = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/`, {
+      const response = await api.get(`/api/authors/${authProvider.user.uuid}/following/`, {
         params: {
           action: 'following'
         }
