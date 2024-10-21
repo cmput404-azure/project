@@ -11,6 +11,8 @@ import { useAuth } from "../../state";
 import { useNavigate } from "react-router";
 import { Author } from "../../models/models";
 import getCsrfToken from "../../util/auth/getCSRF";
+import { Edit } from "@mui/icons-material";
+import EditPostModal from "../EditPostModal/EditPostModal";
 
 interface AuthorPost {
   type: string;
@@ -43,9 +45,12 @@ export default function UserProfile() {
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [visibilityNumber, setVisibilityNumber] = useState<number | null>(null);
+
+  const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
+  const [postToEdit, setPostToEdit] = useState<AuthorPost[]>([]);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
-  const [showFollowerList, setShowFollowerList] = useState<string>('');
+  const [showFollowerList, setShowFollowerList] = useState<string>("");
 
   const authProvider = useAuth();
 
@@ -84,10 +89,20 @@ export default function UserProfile() {
     setIsPostDeleteModalOpen(true);
   };
 
+  const handleEditPostButtonClicked = (postId: string) => {
+    setPostToEdit(authorPosts.filter((post) => post.id === postId));
+    setIsEditPostModalOpen(true);
+  };
+
   function handleDeletePostModalClose() {
     setIsPostDeleteModalOpen(false);
     setPostToDelete(null);
     setVisibilityNumber(null);
+  }
+
+  function handleEditPostModalClose() {
+    setIsEditPostModalOpen(false);
+    setPostToEdit([]);
   }
 
   async function handleConfirmDelete() {
@@ -195,16 +210,16 @@ export default function UserProfile() {
   }
 
   function openFollowers() {
-    setShowFollowerList('follower');
+    setShowFollowerList("follower");
     setIsFollowerListModalOpen(true);
   }
 
   function openFollowing() {
-    setShowFollowerList('following');
+    setShowFollowerList("following");
     setIsFollowerListModalOpen(true);
   }
   function openFriends() {
-    setShowFollowerList('friend');
+    setShowFollowerList("friend");
     setIsFollowerListModalOpen(true);
   }
 
@@ -266,12 +281,13 @@ export default function UserProfile() {
               onClose={() => setIsFollowerListModalOpen(false)}
               isFollowerList={showFollowerList}
             />
-            <span onClick={openFriends} style = {{cursor:"pointer"}}>
-              <p className = {styles.count}>10</p><p>friends</p>
+            <span onClick={openFriends} style={{ cursor: "pointer" }}>
+              <p className={styles.count}>10</p>
+              <p>friends</p>
             </span>
-            <FollowList 
+            <FollowList
               isOpen={isFollowerListModalOpen}
-              onClose={()=>setIsFollowerListModalOpen(false)}
+              onClose={() => setIsFollowerListModalOpen(false)}
               isFollowerList={showFollowerList}
             ></FollowList>
           </section>
@@ -299,6 +315,8 @@ export default function UserProfile() {
             handleDelete={() =>
               handleDeletePostButtonClicked(post.id, post.visibility)
             }
+            canEdit={true}
+            handleEdit={() => handleEditPostButtonClicked(post.id)}
           />
         ))}
       </section>
@@ -306,6 +324,15 @@ export default function UserProfile() {
         isOpen={isPostDeleteModalOpen}
         onRequestClose={handleDeletePostModalClose}
         onDelete={handleConfirmDelete}
+      />
+
+      <EditPostModal
+        isOpen={isEditPostModalOpen}
+        onRequestClose={handleEditPostModalClose}
+        post={postToEdit.length > 0 ? postToEdit[0] : null}
+        onSubmit={(updatedPost) => {
+          console.log("Edit post:", updatedPost);
+        }}
       />
     </div>
   );
