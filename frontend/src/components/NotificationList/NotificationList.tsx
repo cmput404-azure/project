@@ -53,10 +53,10 @@ export default function NotificationList() {
     }, []);
 
     
-    const fetchUser = async () => {
+    const fetchUser = async (id:string) => {
         try {
             const response = await axios.get(
-                `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/`
+                `http://127.0.0.1:8000/api/authors/${id}/`
             );
             return response.data;
         } catch (err) {

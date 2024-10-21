@@ -162,7 +162,6 @@ class InboxView(APIView):
     '''
     def delete_follow_request(self, user_object, payload, request):
         # Validate the follow request object sent with the payload
-        print("PLEASE", payload["id"])
         try:
             follow_obj = FollowRequest.objects.get(id=payload["id"])
         except FollowRequest.DoesNotExist:
