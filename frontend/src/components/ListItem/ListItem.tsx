@@ -44,7 +44,8 @@ export default function ListItem({
         const encodedHost = encodeURIComponent(user.host);
         const encodedId = encodeURIComponent(user.id);
 
-        const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
+        const url = `${encodedHost}/api/authors/${encodedId}`;
+        const encodedUrl = encodeURIComponent(url);
 
         try {
             const response = await api.delete(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
