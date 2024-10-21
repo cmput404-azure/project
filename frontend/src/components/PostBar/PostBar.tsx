@@ -1,5 +1,5 @@
-import {Author, Post} from "../../models/models";
 import React, { useState } from "react";
+import {Author, Post} from "../../models/models";
 import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
 
 import axios from "axios";
@@ -21,6 +21,7 @@ const PostBar: React.FC<PostBarProps> = ({
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
+
   const authProvider = useAuth();
 
   axios.defaults.withCredentials = true;
