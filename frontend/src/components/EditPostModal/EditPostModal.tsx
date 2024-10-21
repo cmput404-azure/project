@@ -31,7 +31,6 @@ export default function EditPostModal({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<number>(0);
-
   // Ensure that modal fields reset when `post` data changes
   useEffect(() => {
     if (post) {
@@ -58,6 +57,10 @@ export default function EditPostModal({
     return null; // Return null if post data is unavailable to prevent rendering errors
   }
 
+  console.log(post);
+  console.log(post.title);
+  console.log(post.content);
+  console.log(post.visibility);
   return (
     <Modal
       isOpen={isOpen}
@@ -96,9 +99,9 @@ export default function EditPostModal({
               label="Visibility"
               onChange={handleVisibilityChange}
             >
-              <MenuItem value={0}>Public</MenuItem>
-              <MenuItem value={1}>Friends-Only</MenuItem>
-              <MenuItem value={2}>Unlisted</MenuItem>
+              <MenuItem value={1}>Public</MenuItem>
+              <MenuItem value={2}>Friends-Only</MenuItem>
+              <MenuItem value={3}>Unlisted</MenuItem>
             </Select>
           </FormControl>
         </div>

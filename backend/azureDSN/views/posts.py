@@ -139,6 +139,7 @@ class AuthorPostView(APIView):
             # update the post fields with request data (fallback to current values if not provided)
             post.title = request.data.get('title', post.title)
             post.content = request.data.get('content', post.content)
+            post.visibility = request.data.get('visibility', post.visibility)
             post.modified_at = request.data.get('modified_at', post.modified_at)
             post.modified_at = timezone.now()  # update the modified time
 
