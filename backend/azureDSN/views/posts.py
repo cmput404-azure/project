@@ -153,14 +153,6 @@ class AuthorPostView(APIView):
         # check if user exists
         if not User.objects.filter(uuid=author_serial).exists():
             return Response("Author does not exist.", status=404)
-        
-        session_key = request.session
-        print (session_key)
-        # session = Session.objects.get(session_key=session_key)
-        # uid = session.get_decoded().get('_auth_user_id')
-        # user = User.objects.get(pk=uid)
-        
-        # print (user.uuid)
 
         # check if user is authenticated
         if not request.user.is_authenticated:     
