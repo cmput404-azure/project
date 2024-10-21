@@ -13,6 +13,7 @@ interface PostCardProps {
   saveCount: number;
   commentCount: number;
   onCommentButtonClick: () => void;
+  onClick?: () => void;
 }
 
 function PostCard({
@@ -25,9 +26,10 @@ function PostCard({
   saveCount,
   commentCount,
   onCommentButtonClick,
+  onClick,
 }: PostCardProps) {
   return (
-    <div className={styles.card}>
+    <div className={styles.card} onClick={onClick}>
       <div className={styles.grid}>
         <img
           className={styles.profilePic}
@@ -43,11 +45,17 @@ function PostCard({
         </div>
         <div className={styles.cardFooter}>
           <div className={styles.essentials}>
-            <div className={styles.icon}>
+            <div className={styles.icon} onClick={(e) => {
+              e.stopPropagation();
+              console.log("Like");
+            }}>
               <i className="fas fa-heart"></i>
               <span>{formatCount(likeCount)}</span>
             </div>
-            <div className={styles.icon}>
+            <div className={styles.icon} onClick={(e) => {
+              e.stopPropagation();
+              console.log("Save");
+            }}>
               <i className="fas fa-bookmark"></i>
               <span>{formatCount(saveCount)}</span>
             </div>

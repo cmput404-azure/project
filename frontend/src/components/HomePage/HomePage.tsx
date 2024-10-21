@@ -124,6 +124,7 @@ const HomePage = () => {
             saveCount={0}
             commentCount={post.comments.length}
             onCommentButtonClick={handleCommentButtonClick}
+            onClick={handleCommentButtonClick}
           />
         ))}
 

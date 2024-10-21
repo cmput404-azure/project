@@ -6,6 +6,12 @@
     min-height: max-content;
     background-color: rgb(123, 123, 123);
     color: white; // Default text color for the whole card
+
+    &:hover{
+        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+        transition: box-shadow 0.3s ease-in-out;
+        cursor: pointer;
+    }
 }
 
 .grid {
