@@ -7,10 +7,21 @@ from ..serializers import PostSerializer, InboxItemSerializer
 from django.shortcuts import get_object_or_404
 from ..models import Post, User, Inbox, InboxItem
 from django.contrib.contenttypes.models import ContentType
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 
 # TODO if user is admin, also get deleted post
 
 class PublicStreamView(APIView):
+    @extend_schema(
+        summary="Retrieve Public Posts",
+        description="Retrieve all public posts available on the node, sorted by the most recent creation date.",
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=PostSerializer(many=True),
+                description="List of public posts"
+            )
+        },
+    )
     def get(self, request):
         """Retrieve the public posts of the node (currently only working for nodes)"""
         # if author is not authenticated just return the public posts
@@ -25,6 +36,42 @@ class PublicStreamView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class AuthStreamView(APIView):
+    @extend_schema(
+        summary="Retrieve Authenticated User's Posts and Inbox",
+        description=(
+            "Retrieve unlisted and friends-only posts for the authenticated user "
+            "and items from the user's inbox related to posts, sorted by publication date."
+        ),
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                description="Combined list of posts and inbox items.",
+                response={
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "type": {"type": "string", "example": "post"},
+                            "title": {"type": "string", "example": "First Post"},
+                            "id": {"type": "string", "format": "uuid", "example": "f14c9d67-bc44-4d47-9bda-0fd6f7972b5e"},
+                            "contentType": {"type": "string", "example": "text/plain"},
+                            "content": {"type": "string", "example": "Hello, world!"},
+                            "author": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {"type": "string", "example": "user-uuid"},
+                                    "displayName": {"type": "string", "example": "John Doe"}
+                                }
+                            },
+                            "comments": {"type": "array", "items": {"type": "string"}, "example": []},
+                            "likes": {"type": "array", "items": {"type": "string"}, "example": []},
+                            "published": {"type": "string", "format": "date-time", "example": "2024-10-21T12:30:00Z"},
+                            "visibility": {"type": "integer", "example": 2}
+                        },
+                    },
+                }
+            )
+        }
+    )
     def get(self, request):
         print("Req: ", request)
         print("user: ", request.user)
