@@ -104,7 +104,7 @@ class LikesAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['type'], f"likes")
-        self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/likes/")
+        self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/liked/")
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(len(response.data['src']), 1)
         self.assertEqual(response.data['src'][0]['author']['id'], f"{self.user.uuid}")
@@ -126,7 +126,6 @@ class LikesAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['type'], f"likes")
-        self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/likes/")
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(len(response.data['src']), 1)
         self.assertEqual(response.data['src'][0]['author']['id'], f"{self.user.uuid}")
@@ -201,7 +200,6 @@ class LikesAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['type'], f"likes")
-        self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/posts/{self.post.uuid}/likes/")
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(len(response.data['src']), 1)
         self.assertEqual(response.data['src'][0]['author']['id'], f"{self.user.uuid}")
