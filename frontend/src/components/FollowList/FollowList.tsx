@@ -1,10 +1,11 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
-
 import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
 import axios from 'axios';
 import styles from './FollowList.module.scss';
+import { useAuth } from "../../state";
+
 
 interface Follower {
   displayName: string;
@@ -19,7 +20,7 @@ interface Follower {
 interface FollowerListProps {
   isOpen: boolean;
   onClose: () => void;
-  isFollowerList: boolean; // true --> followerlist, false --> followingList
+  isFollowerList: string; 
 }
 
 
@@ -33,21 +34,46 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const authProvider = useAuth();
+
+  axios.defaults.withCredentials = true;
+  axios.defaults.xsrfCookieName = "csrftoken";
+  axios.defaults.xsrfHeaderName = "x-csrftoken";
 
   useEffect(() => {
     if (isOpen) {
-      if (isFollowerList === true) {
+      if (isFollowerList === 'follower') {
         fetchFollowers(); // Fetch followers only when the modal is open
         return;
-      } else {
+      } else if (isFollowerList === 'following') {
         fetchFollowing();
+      }else{
+        fetchFriends();
       }
     }
   }, [isOpen]);
 
+  const fetchFriends = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/`, {
+        params: {
+          action: 'friends'
+        }
+      });
+      const data = response.data;
+      setFollowers(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      setLoading(false);
+
+    }
+  };
+
+
   const fetchFollowers = async () => {
     try {
-      const response = await axios.get<FollowerResponse>(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/`, {
+      const response = await axios.get<FollowerResponse>(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/`, {
       });
 
       const data = response.data;
@@ -61,9 +87,8 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
   };
 
   const fetchFollowing = async () => {
-    if (isFollowerList === false) {
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/following/`, {
+        const response = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/`, {
           params: {
             action: 'following'
           }
@@ -77,7 +102,6 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
         setLoading(false);
 
       }
-    }
   };
 
   return (

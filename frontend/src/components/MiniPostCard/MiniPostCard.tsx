@@ -1,75 +1,102 @@
-import { formatCount } from '../../util/formatting/formatCount';
-import styles from './MiniPostCard.module.scss';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import { formatCount } from "../../util/formatting/formatCount";
+import styles from "./MiniPostCard.module.scss";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 interface MiniPostCardProps {
-    profilePic: string;
-    userName: string;
-    postTime: string;
-    postContent: string;
-    postImage?: string;
-    likeCount: number;
-    saveCount: number;
-    commentCount: number;
+  profilePic?: string;
+  author: string;
+  time: string;
+  title: String;
+  content: string;
+  image?: string;
+  likes: number;
+  saves: number;
+  comments: number;
+  canEdit?: boolean;
+  handleEdit?: () => void;
+  canDelete?: boolean;
+  handleDelete?: () => void;
 }
 
 function MiniPostCard({
-    profilePic,
-    userName,
-    postTime,
-    postContent,
-    postImage,
-    likeCount,
-    saveCount,
-    commentCount
+  profilePic,
+  author,
+  time,
+  title,
+  content,
+  image,
+  likes,
+  saves,
+  comments,
+  canEdit = false,
+  handleEdit,
+  canDelete = false,
+  handleDelete,
 }: MiniPostCardProps) {
-
   return (
     <div className={styles.card}>
-        <div className={styles.cardHeader}>
-            <div className={styles.profileSection}>
-            <img className={styles.profilePic} src={profilePic} alt={`${userName}'s profile`} />
-            <div className={styles.userInfo}>
-                <span className={styles.userName}>{userName}</span>
-                <span className={styles.postTime}>{postTime}</span>
-            </div>
-            </div>
-            <i className="fas fa-ellipsis-h"></i>
+      <div className={styles.cardHeader}>
+        <div className={styles.profileSection}>
+          <img
+            className={styles.profilePic}
+            src={
+              profilePic ??
+              `https://ui-avatars.com/api/?background=random&name=${author}`
+            }
+            alt={author}
+          />
+          <div className={styles.userInfo}>
+            <span className={styles.userName}>{author}</span>
+            <span className={styles.postTime}>{time}</span>
+          </div>
         </div>
-
-        { postImage ? (
-            <div className={styles.cardImage}>
-                <img className={styles.postImage} src={postImage} alt="Mini post content" />
-            </div>
-        ) : (
-            <div className={styles.imgPlaceholder}></div>
-        )}
-        
-        <div className={styles.cardSummary}>
-            {postContent}
+        <div className={styles.icons}>
+          {canEdit ? (
+            <i className="fas fa-pencil-alt" onClick={handleEdit}></i>
+          ) : null}
+          {canDelete ? (
+            <i className="fas fa-trash-alt" onClick={handleDelete}></i>
+          ) : null}
         </div>
+      </div>
 
-        <div className={styles.cardFooter}>
+      {image ? (
+        <div className={styles.cardImage}>
+          <img
+            className={styles.postImage}
+            src={image}
+            alt="Mini post content"
+          />
+        </div>
+      ) : (
+        <div className={styles.imgPlaceholder}></div>
+      )}
+
+      <div className={styles.cardSummary}>{title}</div>
+
+      <div className={styles.cardSummary}>{content}</div>
+
+      <div className={styles.cardFooter}>
         <div className={styles.essentials}>
-            <div className={styles.icon}>
-                <i className="fas fa-heart"></i>
-                <span>{formatCount(likeCount)}</span>
-            </div>
-            <div className={styles.icon}>
+          <div className={styles.icon}>
+            <i className="fas fa-heart"></i>
+            <span>{formatCount(likes)}</span>
+          </div>
+          <div className={styles.icon}>
             <i className="fas fa-bookmark"></i>
-                <span>{formatCount(saveCount)}</span>
-            </div>
-            <div className={styles.icon}>
-                <i className="fas fa-comment"></i>
-                <span>{formatCount(commentCount)}</span>
-            </div>
+            <span>{formatCount(saves)}</span>
+          </div>
+          <div className={styles.icon}>
+            <i className="fas fa-comment"></i>
+            <span>{formatCount(comments)}</span>
+          </div>
         </div>
-            <div className={styles.icon}>
-                <i className="fas fa-share"></i>
-            </div>
+        <div className={styles.icon}>
+          <i className="fas fa-share"></i>
         </div>
-        </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default MiniPostCard;

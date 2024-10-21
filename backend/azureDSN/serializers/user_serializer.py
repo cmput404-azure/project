@@ -1,18 +1,70 @@
 from rest_framework import serializers
 from ..models import User
+from django.conf import settings
+from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
+from rest_framework import serializers
 
+@extend_schema_serializer(
+    examples=[
+        OpenApiExample(
+            "Single Author Example",
+            value={
+                "type": "author",
+                "id": "http://nodeaaaa/api/authors/111",
+                "host": "http://nodeaaaa/api/",
+                "displayName": "Greg Johnson",
+                "github": "http://github.com/gjohnson",
+                "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                "page": "http://nodeaaaa/authors/greg"
+            }
+        ),
+        OpenApiExample(
+            "All Authors Example",
+            value={
+                "type": "authors",
+                "authors": [
+                    {
+                        "type": "author",
+                        "id": "http://nodeaaaa/api/authors/111",
+                        "host": "http://nodeaaaa/api/",
+                        "displayName": "Greg Johnson",
+                        "github": "http://github.com/gjohnson",
+                        "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                        "page": "http://nodeaaaa/authors/greg"
+                    },
+                    {
+                        "type": "author",
+                        "id": "http://nodeaaaa/api/authors/222",
+                        "host": "http://nodeaaaa/api/",
+                        "displayName": "Jane Smith",
+                        "github": "http://github.com/jsmith",
+                        "profileImage": "https://i.imgur.com/n8pLKBs.jpeg",
+                        "page": "http://nodeaaaa/authors/jane"
+                    }
+                ]
+            }
+        )
+    ]
+)
 class UserSerializer(serializers.ModelSerializer):
     type = serializers.CharField(default='author', read_only=True)
     id = serializers.UUIDField(source='uuid')
     host = serializers.URLField()
     displayName = serializers.CharField(source='display_name')
     github = serializers.URLField()
-    # profileImage = serializers.ImageField(source='profile_image')
+    # profileImage = serializers.ImageField(source='profile_image', use_url=True)
+    profileImage = serializers.SerializerMethodField(source='profile_image')
     page = serializers.URLField()
 
     class Meta:
         model = User
-        fields = ('type', 'id', 'host', 'displayName', 'github', 'page') # image not included
+        # TODO: MIGHT NEED TO ADD IMAGE LATER
+        fields = ('type', 'id', 'host', 'displayName', 'github', 'page', 'profileImage')
+    
+    def get_profileImage(self, obj):
+        if obj.profile_image:  # if the image exists
+            return f"{settings.MEDIA_URL}{obj.profile_image}"
+        return None
 
     def create(self, validated_data):
         return User.objects.create(**validated_data)

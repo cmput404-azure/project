@@ -7,7 +7,13 @@
   flex-direction: column;
   justify-content: flex-start;
   padding: 25px;
+  box-sizing: border-box;
   position: relative; /* allows absolute positioning of the profile link */
+  width: 100%;
+  margin: auto 10rem;
+  height: 95%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .profileHeaderContainer {
@@ -91,6 +97,7 @@
 .followButton:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
   transform: scale(1.1);
+  background-color: #787878;
 }
 
 .githubButton {
@@ -167,17 +174,26 @@
   background-color: #989898;
   height: 0.5px;
   margin-top: 20px;
+  width: 90%;
+}
+
+.userPostsContainer {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
   width: 80%;
 }
 
 .userPosts {
-  align-items: flex-start;
+  align-items: center;
   display: flex;
   flex-flow: row wrap;
   height: 100%;
   justify-content: flex-start;
   margin-top: 20px;
-  width: 100%
+  width: 100%;
 }
 
 .postGrid {

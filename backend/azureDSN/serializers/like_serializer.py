@@ -1,9 +1,7 @@
-
-from .post_serializer import PostSerializer
 from rest_framework import serializers
 from ..models import Like, Post
-from .user_serializer import UserSerializer
 from django.utils.timezone import make_aware
+from drf_spectacular.utils import extend_schema_field
 
 class LikeSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField(source='user')
@@ -15,6 +13,20 @@ class LikeSerializer(serializers.ModelSerializer):
         model = Like
         fields = ('type', 'author', 'published', 'id', 'object')
 
+    @extend_schema_field(
+        {
+            "type": "object",
+            "properties": {
+                "type": {"type": "string"},
+                "id": {"type": "string"},
+                "host": {"type": "string"},
+                "displayName": {"type": "string"},
+                "github": {"type": "string"},
+                "page": {"type": "string"},
+                "profileImage": {"type": "image"}
+            },
+        }
+    )
     def get_author(self, obj):
         user_data = obj.user  # This should be a dictionary
         return {
@@ -24,7 +36,7 @@ class LikeSerializer(serializers.ModelSerializer):
             "displayName": user_data.get("displayName"),
             "github": user_data.get("github"),
             "page": user_data.get("page"),
-            # "profileImage": user_data.get("profileImage"),
+            "profileImage": user_data.get("profileImage"),
         }
     
     def get_id(self, obj):
@@ -55,10 +67,10 @@ class LikeSerializer(serializers.ModelSerializer):
         object_url = validated_data['object'] # the Post object URL
         post_id = object_url.split('/')[-1] # Post 'id' is always the last part of the URL
 
-        post = Post.objects.get(id=post_id)
+        post = Post.objects.get(uuid=post_id)
         like = Like.objects.create(
             user=author_data,
-            post_id=post,
+            post=post,
             **validated_data
         )
 
@@ -68,14 +80,7 @@ class LikeSerializer(serializers.ModelSerializer):
         like.delete()
         return like
     
-# class LikesSerializer(serializers.Serializer):
-#     type = serializers.CharField(default='likes')
-#     id = serializers.URLField()
-#     page = serializers.URLField()
-#     page_number = serializers.IntegerField(default=1)
-#     size = serializers.IntegerField(default=50)
-#     count = serializers.IntegerField()
-#     src = LikeSerializer(many=True)
+
 
 
     
