@@ -4,9 +4,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.contenttypes.models import ContentType
 from urllib.parse import urlparse
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes
 from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
+from django.utils import timezone
 
 from ..serializers import *
 from ..models import *
@@ -176,6 +177,76 @@ class InboxView(APIView):
         follow_obj.delete()
         return Response(InboxSerializer(inbox_obj, context={"request": request}).data, status=status.HTTP_200_OK)
 
+    
+    @extend_schema(
+        summary="Update Inbox Item or Remote Payload",
+        description="Update an inbox item with the specified post ID. If the post is stored as JSON (remote payload), it will update the remote payload.",
+        parameters=[
+            OpenApiParameter(
+                name='author_serial',
+                description='UUID of the author whose inbox is being modified.',
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH,
+                required=True
+            )
+        ],
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'id': {'type': 'string', 'format': 'uuid', 'description': 'UUID of the post to update'},
+                    'title': {'type': 'string', 'description': 'New title of the post', 'maxLength': 255},
+                    'content': {'type': 'string', 'description': 'New content of the post'}
+                },
+                'required': ['id']
+            }
+        },
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(description="Post updated successfully."),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(description="Post or inbox item not found."),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(description="Invalid input.")
+        }
+    )
+    def put(self, request, author_serial):
+        user_obj = get_object_or_404(User, uuid=author_serial)
+        inbox_obj = get_object_or_404(Inbox, user=user_obj)
+        payload = request.data
+        
+        post_content_type = ContentType.objects.get(model="post")
+        inbox_item_obj = InboxItem.objects.filter(
+                                                    inbox=inbox_obj,
+                                                    content_type=post_content_type,
+                                                    object_id=payload['id']  # Filtering by the specific post ID
+                                                ).order_by("-id")
+
+        if inbox_item_obj.exists():
+            for item in inbox_item_obj:
+                # item = inbox_item_obj.content_object
+                item.content_object.title = request.data.get('title', item.content_object.title)
+                item.content_object.content = request.data.get('content', item.content_object.content)
+                item.content_object.modified_at = timezone.now()
+                item.content_object.save()
+            
+            return Response({"message": "Update post successfully."}, status=status.HTTP_200_OK)
+
+        else:
+            # No matching inbox item found, store the payload as a JSON object
+            existing_item = InboxItem.objects.filter(
+            inbox=inbox_obj,
+            remote_payload__id=payload['id']  # Check if remote_payload's id matches the incoming id
+            ).first()
+
+            if existing_item:
+                # Update the remote_payload with the new data
+                existing_item.remote_payload['title'] = request.data.get('title', existing_item.remote_payload.get('title'))
+                existing_item.remote_payload['content'] = request.data.get('content', existing_item.remote_payload.get('content'))
+                existing_item.modified_at = timezone.now()  # Optionally update modified_at
+                existing_item.save()
+
+                return Response({"message": "Update post successfully."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": "No post founded"}, status=status.HTTP_200_OK)
+        
     
     @extend_schema(
         summary="Add Item to Inbox",
