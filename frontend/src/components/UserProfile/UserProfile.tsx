@@ -41,7 +41,7 @@ export default function UserProfile() {
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
-  const [showFollowerList, setShowFollowerList] = useState(true);
+  const [showFollowerList, setShowFollowerList] = useState<string>('');
 
   const authProvider = useAuth();
 
@@ -97,12 +97,16 @@ export default function UserProfile() {
   }
 
   function openFollowers() {
-    setShowFollowerList(true);
+    setShowFollowerList('follower');
     setIsFollowerListModalOpen(true);
   }
 
   function openFollowing() {
-    setShowFollowerList(false);
+    setShowFollowerList('following');
+    setIsFollowerListModalOpen(true);
+  }
+  function openFriends() {
+    setShowFollowerList('friend');
     setIsFollowerListModalOpen(true);
   }
 
@@ -164,6 +168,14 @@ export default function UserProfile() {
               onClose={() => setIsFollowerListModalOpen(false)}
               isFollowerList={showFollowerList}
             />
+            <span onClick={openFriends} style = {{cursor:"pointer"}}>
+              <p className = {styles.count}>10</p><p>friends</p>
+            </span>
+            <FollowList 
+              isOpen={isFollowerListModalOpen}
+              onClose={()=>setIsFollowerListModalOpen(false)}
+              isFollowerList={showFollowerList}
+            ></FollowList>
           </section>
         </section>
 

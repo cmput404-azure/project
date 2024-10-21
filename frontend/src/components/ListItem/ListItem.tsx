@@ -46,9 +46,7 @@ export default function ListItem({
             const response = await axios.delete(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`, {
             });
   
-            const data = response.data;
-            console.log(data);
- 
+            const data = response.data; 
         } catch (error) {
             console.error('Fetch error:', error);  
         }
@@ -62,7 +60,7 @@ export default function ListItem({
 
         try {
             // Get the current user info
-            const userResponse = await axios.get(`http://127.0.0.1:8000/api/authors/${authorProvider.user.uuid}/`);
+            const userResponse = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/`);
             const userInfo = userResponse.data;
 
             const followRequest = {

@@ -20,7 +20,7 @@ interface Follower {
 interface FollowerListProps {
   isOpen: boolean;
   onClose: () => void;
-  isFollowerList: boolean; // true --> followerlist, false --> followingList
+  isFollowerList: string; 
 }
 
 
@@ -42,14 +42,33 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   useEffect(() => {
     if (isOpen) {
-      if (isFollowerList === true) {
+      if (isFollowerList === 'follower') {
         fetchFollowers(); // Fetch followers only when the modal is open
         return;
-      } else {
+      } else if (isFollowerList === 'following') {
         fetchFollowing();
+      }else{
+        fetchFriends();
       }
     }
   }, [isOpen]);
+
+  const fetchFriends = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/`, {
+        params: {
+          action: 'friends'
+        }
+      });
+      const data = response.data;
+      setFollowers(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      setLoading(false);
+
+    }
+  };
 
 
   const fetchFollowers = async () => {
