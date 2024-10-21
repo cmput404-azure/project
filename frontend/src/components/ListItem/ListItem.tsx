@@ -1,7 +1,8 @@
 // @ts-nocheck
 import axios from 'axios';
 import styles from './ListItem.module.scss';
-import { checkAuth } from '../../util/auth/checkauth';
+import { useAuth } from "../../state";
+
 import React, { useEffect, useState } from 'react';
 
 interface ListItemProps {
@@ -29,27 +30,12 @@ export default function ListItem({
     notif_id,
     user
 }: ListItemProps) {
-    const [userId, setuserId] = useState<string>('');
+    const authProvider = useAuth();
 
-    useEffect(() => {
-        const getUserId = async()=>{
-            try {
-                let response = await checkAuth();
-                if (response) {
-                  let userId = response.uuid;
-                  console.log(userId);
-                  setuserId(userId);
-                } else {
-                  console.error("checkAuth returned no response.");
-                }
-              } catch (error) {
-                console.error("Error fetching user ID:", error);
-              }
-        };
-        getUserId();
+    axios.defaults.withCredentials = true;
+    axios.defaults.xsrfCookieName = "csrftoken";
+    axios.defaults.xsrfHeaderName = "x-csrftoken";
 
-      }, []);
-    
     const unFollow = async () => {
         const encodedHost = encodeURIComponent(user.host);
         const encodedId = encodeURIComponent(user.id);
@@ -57,7 +43,7 @@ export default function ListItem({
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
 
         try {
-            const response = await axios.delete(`http://127.0.0.1:8000/api/authors/${userId}/followers/${encodedUrl}/`, {
+            const response = await axios.delete(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`, {
             });
   
             const data = response.data;
@@ -76,7 +62,7 @@ export default function ListItem({
 
         try {
             // Get the current user info
-            const userResponse = await axios.get(`http://127.0.0.1:8000/api/authors/${userId}/`);
+            const userResponse = await axios.get(`http://127.0.0.1:8000/api/authors/${authorProvider.user.uuid}/`);
             const userInfo = userResponse.data;
 
             const followRequest = {
@@ -109,7 +95,7 @@ export default function ListItem({
 
         const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
         // Add actor as follower
-        const response = await axios.put(`http://127.0.0.1:8000/api/authors/${userId}/followers/${encodedUrl}/`, {
+        const response = await axios.put(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`, {
         });
 
         const data = response.data;
@@ -125,7 +111,7 @@ export default function ListItem({
             "id": notif_id
         };
 
-        const deleteResponse = await axios.delete(`http://127.0.0.1:8000/api/authors/${userId}/inbox/`,{data: deletefollowRequest})
+        const deleteResponse = await axios.delete(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/inbox/`,{data: deletefollowRequest})
 
     }
 

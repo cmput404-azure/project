@@ -5,7 +5,7 @@ import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
 import axios from 'axios';
 import styles from './NotificationList.module.scss';
-import { checkAuth } from '../../util/auth/checkauth';
+import { useAuth } from "../../state";
 
 
 interface FollowerResponse {
@@ -18,29 +18,17 @@ export default function NotificationList() {
     const [notifications, setNotifications] = useState<Follower[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [userId, setuserId] = useState<string>('');
+    const authProvider = useAuth();
 
+    axios.defaults.withCredentials = true;
+    axios.defaults.xsrfCookieName = "csrftoken";
+    axios.defaults.xsrfHeaderName = "x-csrftoken";
     useEffect(() => {
-        const getUserId = async () => {
-            try {
-                const response = await checkAuth();
-                if (response) {
-                    const userId = response.uuid;
-                    console.log(userId);
-                    setuserId(userId); // Update userId state
-                    fetchNotifications(userId); // Fetch notifications after setting userId
-                } else {
-                    console.error("checkAuth returned no response.");
-                }
-            } catch (error) {
-                console.error("Error fetching user ID:", error);
-            }
-        };
     
         const fetchNotifications = async (id: string) => {
             try {
                 const userResponse = await axios.get(
-                    `http://127.0.0.1:8000/api/authors/${id}/inbox/`
+                    `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/inbox/`
                 );
                 const notificationsWithUsers = await Promise.all(
                     userResponse.data.items.map(async (item: any) => {
@@ -61,18 +49,18 @@ export default function NotificationList() {
             }
         };
     
-        getUserId(); // Call getUserId when the component mounts
+        fetchNotifications()
     }, []);
 
     
-    const fetchUser = async (userId: string) => {
+    const fetchUser = async () => {
         try {
             const response = await axios.get(
-                `http://127.0.0.1:8000/api/authors/${userId}/`
+                `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/`
             );
             return response.data;
         } catch (err) {
-            console.error(`Error fetching user ${userId}:`, err);
+            console.error(`Error fetching user ${authProvider.user.uuid}:`, err);
             return null; // Handle failure gracefully
         }
     };
