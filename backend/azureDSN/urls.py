@@ -69,8 +69,8 @@ urlpatterns = [
 
     # Authors API
     path("api/authors/all/", AuthorsCompleteView.as_view(), name="authors_all"),
-    path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="author"),
-    path("api/authors/<path:author_fqid>/", AuthorsView.as_view(), name="author"),
+    path("api/authors/<uuid:author_serial>/", AuthorsSpecificView.as_view(), name="author_serial"),
+    path("api/authors/<path:author_fqid>/", AuthorsSpecificView.as_view(), name="author_fqid"),
     path("api/authors/", AuthorsView.as_view(), name="authors_list"),
 
     # Auth

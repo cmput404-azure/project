@@ -1,6 +1,6 @@
 from .index import index
 from .posts import PostView, AuthorPostView
-from .authors import AuthorsView, AuthorsCompleteView
+from .authors import *
 from .follow import FollowView, FollowCustomView, FollowerView
 from .inbox import InboxView
 from .comments import MultipleCommentsView, SingleCommentView

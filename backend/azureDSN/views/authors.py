@@ -14,6 +14,59 @@ class AuthorsPagination(PageNumberPagination):
 
 class AuthorsView(APIView):
     pagination_provider  = AuthorsPagination
+   
+    @extend_schema(
+        summary="Retrieve all authors with page options",
+        description="Retrieve an author by UUID or all authors on the node",
+        parameters=[
+            OpenApiParameter(
+                name="page",
+                description="Page number",
+                required=False,
+                type=int
+            ),
+            OpenApiParameter(
+                name="size",
+                description="Number of items per page",
+                required=False,
+                type=int
+            )
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                description='Author(s) retrieved successfully.',
+                response=UserSerializer,
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                description='Author not found.'
+            )
+        },
+        operation_id='get_author',
+        tags=['Authors API']
+    )
+    def get(self, request):
+        """
+        GET [local, remote] get all authors on the node
+        """
+        authors = User.objects.all()
+        pagination = self.pagination_provider()
+        page = pagination.paginate_queryset(authors, request)
+
+        serializer = UserSerializer(page, many=True)
+        authors_serialized = serializer.data
+
+        authors = []
+        for author in authors_serialized:
+            authors.append(author)
+
+        return Response({
+            "type": "authors",
+            "authors": authors
+        }, status=200)
+
+class AuthorsSpecificView(APIView):
+    pagination_provider  = AuthorsPagination
+
     @extend_schema(
         summary="Retrieve an author or all authors",
         description=(
@@ -45,6 +98,7 @@ class AuthorsView(APIView):
                 description='Author not found.'
             )
         },
+        operation_id='get_author',
         tags=['Authors API']
     )
     def get(self, request, author_serial=None, author_fqid=None):
@@ -67,24 +121,7 @@ class AuthorsView(APIView):
 
             serializer = UserSerializer(author)
             return Response(serializer.data, status=200)
-        else:
-            # Default behavior to return all authors
-            authors = User.objects.all()
-            pagination = self.pagination_provider()
-            page = pagination.paginate_queryset(authors, request)
 
-            serializer = UserSerializer(page, many=True)
-            authors_serialized = serializer.data
-
-            authors = []
-            for author in authors_serialized:
-                authors.append(author)
-
-            return Response({
-                "type": "authors",
-                "authors": authors
-            }, status=200)
-    
     @extend_schema(
         summary="Update Author Profile",
         description="Update the profile of a specific author identified by `author_serial`. You must provide the full author data in the request body.",
@@ -96,6 +133,13 @@ class AuthorsView(APIView):
                 required=True,
                 location=OpenApiParameter.PATH
             ),
+            OpenApiParameter(
+                name='author_fqid',
+                description='FQID of the Author to update',
+                type=str,
+                required=True,
+                location=OpenApiParameter.PATH
+            )
         ],
         request=UserSerializer,
         responses={
@@ -117,9 +161,10 @@ class AuthorsView(APIView):
             ),
             404: OpenApiResponse(description="Author not found.")
         },
+        operation_id='update_author',
         tags=["Authors API"]
     )
-    def put(self, request, author_serial=None):
+    def put(self, request, author_serial=None, author_fqid=None):
         """
         PUT [local]: update a particular author's profile
         """
@@ -134,6 +179,12 @@ class AuthorsView(APIView):
 
         return Response(serializer.errors, status=400)
     
+    @extend_schema(exclude=True)  # Hide this method from Swagger
+    def put_no_params(self, request):
+        """
+        PUT [no params]: This method will not appear in the Swagger docs.
+        """
+        return Response(status=405)
 
 class AuthorsCompleteView(APIView):
     @extend_schema(
@@ -198,3 +249,4 @@ class AuthorsCompleteView(APIView):
         authors = User.objects.all()
         serializer = UserSerializer(authors, many=True)
         return Response(serializer.data, status=200)
+
