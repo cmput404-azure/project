@@ -12,6 +12,8 @@ interface MiniPostCardProps {
   likes: number;
   saves: number;
   comments: number;
+  canEdit?: boolean;
+  handleEdit?: () => void;
   canDelete?: boolean;
   handleDelete?: () => void;
 }
@@ -26,7 +28,9 @@ function MiniPostCard({
   likes,
   saves,
   comments,
-  canDelete,
+  canEdit = false,
+  handleEdit,
+  canDelete = false,
   handleDelete,
 }: MiniPostCardProps) {
   return (
@@ -46,9 +50,14 @@ function MiniPostCard({
             <span className={styles.postTime}>{time}</span>
           </div>
         </div>
-        {canDelete ? (
-          <i className="fas fa-trash-alt" onClick={handleDelete}></i>
-        ) : null}
+        <div className={styles.icons}>
+          {canEdit ? (
+            <i className="fas fa-pencil-alt" onClick={handleEdit}></i>
+          ) : null}
+          {canDelete ? (
+            <i className="fas fa-trash-alt" onClick={handleDelete}></i>
+          ) : null}
+        </div>
       </div>
 
       {image ? (

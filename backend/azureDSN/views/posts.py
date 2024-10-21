@@ -5,7 +5,8 @@ from ..serializers import PostSerializer, UserSerializer, CreatePostSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
-
+from django.utils import timezone
+from django.contrib.sessions.models import Session
 
 class AuthorPostView(APIView):
     """
@@ -111,34 +112,58 @@ class AuthorPostView(APIView):
         else:
             return Response("Need to specify at least an author ID", status=400)
 
-    def put(self, request, post_fqid):
+    def put(self, request, author_serial, post_serial):
         """
         PUT [local] update a post
             - local posts: must be authenticated locally as the author
         """
-        post = get_object_or_404(Post, uuid=post_fqid)
+        # make sure the author exists
+        if not User.objects.filter(uuid=author_serial).exists(): 
+            return Response("Author does not exist.", status=404)  
         
-        # Check if user of request is the author of the post
-        if request.user != post.user:
+        author = User.objects.get(uuid=author_serial) 
+
+        # retrieve the specific post by the author where visibility is not deleted
+        try:
+            post = Post.objects.get(user=author, uuid=post_serial, visibility__in=[1, 2, 3])
+        except Post.DoesNotExist:
+            return Response("Post does not exist.", status=404)
+
+        # authenticate the user
+        if post.user.uuid != author_serial:
             return Response("You are not the author of this post.", status=403)
-        
-        serializer = PostSerializer(post, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=200)
-        return Response(serializer.errors, status=400)
+        else:
+            # update the post fields with request data (fallback to current values if not provided)
+            post.title = request.data.get('title', post.title)
+            post.content = request.data.get('content', post.content)
+            post.modified_at = request.data.get('modified_at', post.modified_at)
+            post.modified_at = timezone.now()  # update the modified time
+
+            # save the changes
+            post.save()
+
+            # return the updated post data using the serializer
+            return Response(PostSerializer(post).data, status=200)
     
     def delete(self, request, post_serial, author_serial):
         """
         DELETE [local] remove a post
             - local posts: must be authenticated locally as the author
         """
-        if not User.objects.filter(uuid=author_serial).exists(): 
-            return Response("Author does not exist.", status=404)        
-        
+        # check if user exists
+        if not User.objects.filter(uuid=author_serial).exists():
+            return Response("Author does not exist.", status=404)
+
+        # check if user is authenticated
+        if not request.user.is_authenticated:     
+            return Response("You must be authenticated to delete a post.", status=403)
+           
+        # TODO: check if node admin   
+           
+        # TODO: check if the author owns the post
+                
         post = get_object_or_404(Post, uuid=post_serial)
-        # TODO: Check if user of request is the author of the post (Authenticate)
-        if post.user.uuid == author_serial:
+        if post.user.uuid == request.user.uuid:
             post.visibility = 4
             post.save()
             return Response({
