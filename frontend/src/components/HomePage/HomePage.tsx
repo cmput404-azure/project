@@ -32,7 +32,6 @@ type ViewType = "all" | "unlisted_friends-only";
   // Fetch public posts
   useEffect(() => {
     const fetchPosts = async () => {
-
       try {
         // Fetch public posts
         const url = userUUID 
