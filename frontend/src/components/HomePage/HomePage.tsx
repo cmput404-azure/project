@@ -32,11 +32,6 @@ type ViewType = "all" | "unlisted_friends-only";
   // Fetch public posts
   useEffect(() => {
     const fetchPosts = async () => {
-      if (!userUUID) { // need to wait for the auth first to finish
-        console.error('User UUID is not set.');
-        setIsLoading(false);
-        return;
-      }
       try {
         // Fetch public posts
         const url = userUUID 
