@@ -138,6 +138,7 @@ export default function UserProfile() {
           id: postId,
           title: updatedPost.title,
           content: updatedPost.content,
+          visibility: updatedPost.visibility,
         };
 
         if (postToEdit[0].visibility === 1 || postToEdit[0].visibility === 3) {
