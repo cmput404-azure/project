@@ -14,11 +14,13 @@ export default function App() {
   const nav = useNavigate();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userUUID, setUserUUID] = useState<string>("");
 
   useEffect(() => {
     checkAuth().then((data) => {
       setIsLoggedIn(data.is_authenticated);
       console.log(data);
+      setUserUUID(data.uuid);
     });
   })
   return (
@@ -27,8 +29,8 @@ export default function App() {
 
         <div className={styles.content}>
           <Routes>
-            <Route path="/" element={<HomePage/>} />
-            <Route path="/home" element={<HomePage/>} />
+            <Route path="/" element={<HomePage isLoggedIn={isLoggedIn} userUUID={userUUID}/>} />
+            <Route path="/home" element={<HomePage isLoggedIn={isLoggedIn} userUUID={userUUID}/>} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/settings" element={<Root />} />
             <Route path="/login" element={<Auth />} />

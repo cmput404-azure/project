@@ -4,7 +4,7 @@ import styles from "./PostBar.module.scss";
 import { getVisibilityNumber, VisibilityChoices } from "../../models/modelTypes";
 import {Author, Post, Inbox} from "../../models/models"
 
-const USER_ID = "82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0";
+const USER_ID = "8954d4e1-cefe-449c-b623-a9a51ba83d2f"; // this is test user
 
 interface PostBarProps {
   userImage: string;

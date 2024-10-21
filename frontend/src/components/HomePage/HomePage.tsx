@@ -13,11 +13,17 @@ import logo from "../../images/dog_icon.png";
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
 
+interface HomePageProps {
+  isLoggedIn: boolean;
+  userUUID: string;
+}
 
 type ViewType = "all" | "unlisted_friends-only";
-const HomePage = () => {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+// const HomePage = () => {
+  const HomePage: React.FC<HomePageProps> = ({ isLoggedIn, userUUID }) => {
+  const [publicPosts, setPublicPosts] = useState<any[]>([]);
+  const [nonPublicPosts, setNonPublicPosts] = useState<any[]>([]);
+  // const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
@@ -26,14 +32,36 @@ const HomePage = () => {
   // Fetch public posts
   useEffect(() => {
     const fetchPosts = async () => {
+      if (!userUUID) { // need to wait for the auth first to finish
+        console.error('User UUID is not set.');
+        setIsLoading(false);
+        return;
+      }
       try {
         // Fetch public posts
-        const publicRes = await fetch("http://localhost:8000/api/stream/");
-        const publicPosts = await publicRes.json();
+        const url = userUUID 
+        ? `http://localhost:8000/api/stream/?uuid=${userUUID}` // logged in
+        : `http://localhost:8000/api/stream/`; // not logged in
 
-        console.log(publicPosts);
+        const req = await fetch(url);
+        var allPosts = await req.json();
+        console.log("the public posts", allPosts);
 
-        setPosts(publicPosts);
+        if (isLoggedIn) {
+          const req = await fetch(`http://localhost:8000/api/authors/${userUUID}/inbox/?action=posts`)
+          const otherPosts = await req.json();
+          console.log("the ones from inbox: ", otherPosts.items);
+
+          allPosts = [...allPosts, ...otherPosts.items];
+        } 
+
+        const publicPosts = allPosts.filter(post => post.visibility === 1);
+        const nonPublicPosts = allPosts.filter(post => post.visibility !== 1);
+
+
+        setPublicPosts(publicPosts);
+        setNonPublicPosts(nonPublicPosts);
+        setIsLoading(false);
       } catch (err) {
         console.log(err)
         setError("Failed to fetch posts. Please try again.");
@@ -43,8 +71,7 @@ const HomePage = () => {
     };
 
     fetchPosts();
-  }, []);
-  
+  }, [isLoggedIn, userUUID]);
 
 
   const handleAddClick = () => {
@@ -85,39 +112,43 @@ const HomePage = () => {
 
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
-  setActiveFilterPost(icon);
+    setActiveFilterPost(icon);
   }
 
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
+  const displayedPosts =
+    activeFilterPost === "all" ? publicPosts : nonPublicPosts;
 
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
         <PostBar userImage={logo} showButtonBar={false}/>
+        {isLoggedIn && (
         <div className={styles["icon-bar"]}>
-            <div
-              className={`${styles["icon-section"]} ${
-                activeFilterPost === "all" ? styles.active : ""
-              }`}
-              onClick={() => handleFilterPost("all")}
-            >
-              <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
-            </div>
-            <div className={styles["vertical-divider"]}></div>
-            <div
-              className={`${styles["icon-section"]} ${
-                activeFilterPost === "unlisted_friends-only" ? styles.active : ""
-              }`}
-              onClick={() => handleFilterPost("unlisted_friends-only")}
-            >
-              <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
-            </div>
-          </div>  
+          <div
+            className={`${styles["icon-section"]} ${
+              activeFilterPost === "all" ? styles.active : ""
+            }`}
+            onClick={() => handleFilterPost("all")}
+          >
+            <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+          </div>
+          <div className={styles["vertical-divider"]}></div>
+          <div
+            className={`${styles["icon-section"]} ${
+              activeFilterPost === "unlisted_friends-only" ? styles.active : ""
+            }`}
+            onClick={() => handleFilterPost("unlisted_friends-only")}
+          >
+            <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
+          </div>
+        </div>
+      )}
 
-        {posts.map((post) => (
+        {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
             profilePic="https://via.placeholder.com/50"
