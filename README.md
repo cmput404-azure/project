@@ -8,6 +8,10 @@ See [the web page](https://uofa-cmput404.github.io/general/project.html) for a d
 
 Make a distributed social network!
 
+Link: https://azuredsn-889a4fb9b2bb.herokuapp.com/
+
+Docs: https://azuredsn-889a4fb9b2bb.herokuapp.com/api/docs
+
 ## License
 
 MIT License

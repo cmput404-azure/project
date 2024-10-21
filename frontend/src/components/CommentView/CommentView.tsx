@@ -1,7 +1,7 @@
-import React from "react";
 import Modal from "react-modal";
-import styles from "./CommentView.module.scss";
 import PostBar from "../PostBar/PostBar";
+import React from "react";
+import styles from "./CommentView.module.scss";
 
 interface Comment {
   id: number;
@@ -63,7 +63,6 @@ const CommentView: React.FC<CommentViewProps> = ({
       {/* Comment Section */}
       <div className={styles.commentBar}>
         <PostBar
-          userImage="https://via.placeholder.com/50"
           showButtonBar={false}
         />
       </div>

@@ -224,6 +224,7 @@ class InboxView(APIView):
                 # item = inbox_item_obj.content_object
                 item.content_object.title = request.data.get('title', item.content_object.title)
                 item.content_object.content = request.data.get('content', item.content_object.content)
+                item.content_object.visibility = request.data.get('visibility', item.content_object.content)
                 item.content_object.modified_at = timezone.now()
                 item.content_object.save()
             
@@ -240,6 +241,7 @@ class InboxView(APIView):
                 # Update the remote_payload with the new data
                 existing_item.remote_payload['title'] = request.data.get('title', existing_item.remote_payload.get('title'))
                 existing_item.remote_payload['content'] = request.data.get('content', existing_item.remote_payload.get('content'))
+                existing_item.remote_payload['visibility'] = request.data.get('visibility', existing_item.remote_payload.get('visibility'))
                 existing_item.modified_at = timezone.now()  # Optionally update modified_at
                 existing_item.save()
 

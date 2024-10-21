@@ -1,13 +1,28 @@
 from rest_framework.views import APIView
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, JsonResponse 
+from django.shortcuts import get_object_or_404
 from ..models import Post, Like, User, Comment
 from ..serializers import LikeSerializer
 from rest_framework.response import Response
 from uuid import UUID
-from urllib.parse import urlparse, unquote
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
+
+class LikesPagination(PageNumberPagination):
+    page_size=5
+    page_size_query_param='size'
+    max_page_size=100
+
+    def get_paginated_response(self, data):
+        return Response({
+            "type": "likes",
+            "id": self.request.build_absolute_uri(),
+            "page": self.request.build_absolute_uri(),
+            "page_number": self.page.number,
+            "size": self.page.paginator.per_page,
+            "count": self.page.paginator.count,
+            "src": data,
+        })
 
 class LikeView(APIView):
     @extend_schema(
@@ -87,6 +102,8 @@ class LikeView(APIView):
 
     
 class AuthorLikesView(APIView):
+    pagination_provider = LikesPagination
+
     @extend_schema(
             summary="Retrieve Likes by an Author.",
             description="Retrieve the latest 5 Like objects by `author_serial` or `author_fqid`.",
@@ -141,8 +158,7 @@ class AuthorLikesView(APIView):
             Returns: likes object
             """
             author = get_object_or_404(User, uuid=author_serial)
-            likes = Like.objects.filter(user__id=str(author.uuid)).order_by('-created_at')[:5] # Limit to latest 5 likes
-            count = Like.objects.filter(user__id=str(author.uuid)).count()
+            likes = Like.objects.filter(user__id=str(author.uuid)).order_by('-created_at')
 
         else:
             """
@@ -159,30 +175,22 @@ class AuthorLikesView(APIView):
                 )
             
             author = get_object_or_404(User, uuid=author_serial)
-            likes = Like.objects.filter(user__id=str(author.uuid)).order_by('-created_at')[:5]
-            count = Like.objects.filter(user__id=str(author.uuid)).count()
+            likes = Like.objects.filter(user__id=str(author.uuid)).order_by('-created_at')
 
-        serialized_likes = LikeSerializer(likes, many=True).data
 
-        uri = request.build_absolute_uri("/")
+        pagination = self.pagination_provider()
+        page = pagination.paginate_queryset(likes, request)
 
-        response = {
-            "type": "likes",
-            "id": uri + f"api/authors/{author_serial}/likes/",
-            "page": uri + f"api/authors/{author_serial}/likes/", # might need to implement this page to view all user likes
-            "page_number": 1, # not sure what pagenum is for
-            "size": 50, # don't really know what this is
-            "count": count,
-            "src": serialized_likes,
-        }
+        serialized_likes = LikeSerializer(page, many=True).data
 
-        return Response(response, status=200)
+        return pagination.get_paginated_response(serialized_likes) # auto returns status code
 
 
 class LikesView(APIView):
+    pagination_provider = LikesPagination
     @extend_schema(
             summary="Retrieve Likes of a Post or Comment (TBD).",
-            description="Retrieve multiple Like objects of a Post by `post_fqid` or a combination of `author_serial` or `post_serial`.",
+            description="Retrieve multiple Like objects of a Post by `post_fqid` or a combination of `author_serial` or `post_serial`. This has",
             parameters=[
                 OpenApiParameter(
                     name='author_serial',
@@ -263,8 +271,7 @@ class LikesView(APIView):
             author = get_object_or_404(User, uuid=author_serial)
             post = get_object_or_404(Post, uuid=post_serial, user=author)
             
-            likes = Like.objects.filter(post=post).order_by('-created_at')[:5]
-            count = Like.objects.filter(post=post).count()
+            likes = Like.objects.filter(post=post).order_by('-created_at')
 
         elif (post_fqid):
             """
@@ -286,22 +293,14 @@ class LikesView(APIView):
                 )
             
             post = get_object_or_404(Post, uuid=post_serial)
-            likes = Like.objects.filter(post=post).order_by('-created_at')[:5]
+            likes = Like.objects.filter(post=post).order_by('-created_at')
             count = Like.objects.filter(post=post).count()
             author_serial = post.user.uuid
 
-        likes = LikeSerializer(likes, many=True).data
+        pagination = self.pagination_provider()
+        page = pagination.paginate_queryset(likes, request)
 
-        uri = request.build_absolute_uri("/")
+        serialized_likes = LikeSerializer(page, many=True).data
 
-        response_data = {
-            "type": "likes",
-            "id": uri + f"api/authors/{author_serial}/{type}/{post_serial}/likes/",
-            "page": uri + f"api/authors/{author_serial}/{type}/{post_serial}",
-            "page_number": 1,
-            "size": 50,
-            "count": count,
-            "src": likes
-        }
+        return pagination.get_paginated_response(serialized_likes) # auto returns status code
 
-        return Response(response_data, status=200)
