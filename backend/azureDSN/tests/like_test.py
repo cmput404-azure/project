@@ -10,6 +10,7 @@ class LikesAPITest(APITestCase):
         self.client = APIClient()
         self.user = User.objects.create(
             display_name="Test User",
+            username="Test User",
             host="http://localhost:8000/",
             github="http://github.com/testuser",
             page="http://localhost:8000/authors/testuser",

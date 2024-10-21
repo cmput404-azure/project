@@ -5,43 +5,55 @@ import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
 import AuthorPost from "../AuthorPost/AuthorPost";
 import CommentView from "../CommentView/CommentView";
-import styles from "./HomePage.module.scss"; // Assuming you are using SCSS modules
-
+import styles from "./HomePage.module.scss";
+import axios from "axios";
 import Modal from "react-modal";
 import logo from "../../images/dog_icon.png";
+
+interface HomePageProps {
+  isLoggedIn: boolean
+}
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
 
-const HomePage = () => {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+axios.defaults.withCredentials = true;
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "x-csrftoken";
+
+type ViewType = "all" | "unlisted_friends-only";
+  const HomePage: React.FC<HomePageProps> = ({ isLoggedIn }) => {
+  const [publicPosts, setPublicPosts] = useState<any[]>([]);
+  const [nonPublicPosts, setNonPublicPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
 
-  // Fetch public posts
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        // Fetch public posts
-        const publicRes = await fetch("http://localhost:8000/api/stream/");
-        const publicPosts = await publicRes.json();
+        const req = await fetch("http://localhost:8000/api/stream/", {
+          method: 'GET',
+          credentials: 'include', // This is crucial for sending cookies with the request
+        });
+        const allPosts = await req.json();
+        console.log("all posts", allPosts);
 
-        console.log(publicPosts);
+        const publicPosts = allPosts.filter(post => post.visibility === 1);
+        const nonPublicPosts = allPosts.filter(post => post.visibility !== 1);
 
-        setPosts(publicPosts);
+        setPublicPosts(publicPosts);
+        setNonPublicPosts(nonPublicPosts);
+        setIsLoading(false);
+
       } catch (err) {
         console.log(err)
         setError("Failed to fetch posts. Please try again.");
-      } finally {
-        setIsLoading(false);
       }
     };
 
     fetchPosts();
-  }, []);
-  
+  }, [])
 
   const handleAddClick = () => {
     console.log("Add button clicked");
@@ -74,15 +86,46 @@ const HomePage = () => {
     },
   ];
 
+
+  const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
+  function handleFilterPost(icon: ViewType) {
+    setActiveFilterPost(icon);
+  }
+
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
+
+  const displayedPosts =
+    activeFilterPost === "all" ? publicPosts : nonPublicPosts;
 
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
         <PostBar userImage={logo} showButtonBar={false}/>
-        {posts.map((post) => (
+        {isLoggedIn && (
+        <div className={styles["icon-bar"]}>
+          <div
+            className={`${styles["icon-section"]} ${
+              activeFilterPost === "all" ? styles.active : ""
+            }`}
+            onClick={() => handleFilterPost("all")}
+          >
+            <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+          </div>
+          <div className={styles["vertical-divider"]}></div>
+          <div
+            className={`${styles["icon-section"]} ${
+              activeFilterPost === "unlisted_friends-only" ? styles.active : ""
+            }`}
+            onClick={() => handleFilterPost("unlisted_friends-only")}
+          >
+            <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
+          </div>
+        </div>
+      )}
+
+        {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
             profilePic="https://via.placeholder.com/50"

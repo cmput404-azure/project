@@ -50,18 +50,19 @@ class InboxView(APIView):
         user_obj = get_object_or_404(User, uuid=author_serial)
         inbox_obj = get_object_or_404(Inbox, user=user_obj)
         
-        if action == 'posts':
-        # Assuming that `content_object` refers to a Post model, and that it has a 'visibility' field
-        # This will only fetch inbox items of type 'post' and visibility 2 or 3
-            post_content_type = ContentType.objects.get(model="post")
-            inbox_items_obj = InboxItem.objects.filter(
-                                                        inbox=inbox_obj,
-                                                        content_type=post_content_type,
-                                                        object_id__in=Post.objects.filter(visibility__in=[2, 3]).values_list('uuid', flat=True)
-                                                    ).order_by("-id")
-        else:
-            # Get the latest inbox items
-            inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-id")
+        # if action == 'posts':
+        # # Assuming that `content_object` refers to a Post model, and that it has a 'visibility' field
+        # # This will only fetch inbox items of type 'post' and visibility 2 or 3
+        #     post_content_type = ContentType.objects.get(model="post")
+        #     inbox_items_obj = InboxItem.objects.filter(
+        #                                                 inbox=inbox_obj,
+        #                                                 content_type=post_content_type,
+        #                                                 object_id__in=Post.objects.filter(visibility__in=[2, 3]).values_list('uuid', flat=True)
+        #                                             ).order_by("-id")
+        # else:
+        
+        # Get the latest inbox items
+        inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-id")
         
         serializer = InboxItemSerializer(inbox_items_obj, many=True, context={"request": request})
         # author is return in format of her/his url
