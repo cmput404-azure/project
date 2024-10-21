@@ -1,4 +1,4 @@
-import  {ContentType} from "./modelTypes"
+import {ContentType} from "./modelTypes"
 
 export interface Author {
     type: string;
@@ -8,6 +8,12 @@ export interface Author {
     github?: string | null;
     profileImage?: string | null;
     page: string;
+}
+
+export interface User{
+    username: string;
+    uuid: string;
+    profileImage: string | null;
 }
 
 export interface FollowRequest {
@@ -89,3 +95,4 @@ export interface Inbox {
     type: string;
     items: InboxItem[]
 }
+

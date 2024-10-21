@@ -1,14 +1,16 @@
+import { useEffect, useState } from "react";
+
+import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import axios from "axios";
-import { checkAuth } from "../../util/auth/checkauth";
 import styles from "./UserProfile.module.scss";
-import { useEffect } from "react";
-import { useState } from "react";
-import DeletePostModal from "../DeletePostModal/DeletePostModal";
-import EditPostModal from "../EditPostModal/EditPostModal";
+import { useAuth } from "../../state";
+import { useNavigate } from "react-router";
+
+import { Author } from "../../models/models";
 
 interface AuthorPost {
   type: string;
@@ -40,87 +42,134 @@ export default function UserProfile() {
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
-  const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
-  const [postToEdit, setPostToEdit] = useState<AuthorPost[] | null>(null);
-
+  const [visibilityNumber, setVisibilityNumber] = useState<number | null>(null);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
-  const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const data = await checkAuth();
-        setUser({
-          username: data.username,
-          uuid: data.uuid,
-        });
-      } catch (error) {
-        console.error("Error checking auth", error);
-      }
-    };
+  const authProvider = useAuth();
 
-    fetchUser();
-  }, []);
-
-  const fetchAuthorPosts = async () => {
+  async function fetchAuthorPosts() {
     try {
-      const response = await axios.get<AuthorPost[]>(
-        `http://localhost:8000/api/authors/${user.uuid}/posts/`
-      );
-      console.log(response.data);
-      setAuthorPosts(response.data);
+      if (authProvider.user) {
+        const response = await axios.get<AuthorPost[]>(
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`
+        );
+        setAuthorPosts(response.data);
+      }
     } catch (error) {
       console.error("Error fetching the author posts", error);
     }
-  };
+  }
 
-  // fetch the author data from the API when the component mounts
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchAuthorData = async () => {
-      try {
+  async function fetchAuthorData() {
+    try {
+      if (authProvider.user) {
         const response = await axios.get(
-          `http://localhost:8000/api/authors/${user.uuid}/`
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/`
         );
-        console.log(response.data);
         setAuthorData(response.data);
-      } catch (error) {
-        console.error("Error fetching the author data", error);
       }
-    };
-    fetchAuthorData();
-    fetchAuthorPosts();
-  }, [user]);
+    } catch (error) {
+      console.error("Error fetching the author data", error);
+    }
+  }
 
-  const handleDeletePostButtonClicked = (postId: string) => {
+  const handleDeletePostButtonClicked = (
+    postId: string,
+    visibilityNumber: number
+  ) => {
     setPostToDelete(postId);
+    setVisibilityNumber(visibilityNumber);
     setIsPostDeleteModalOpen(true);
   };
-  const handleDeletePostModalClose = () => {
+
+  function handleDeletePostModalClose() {
     setIsPostDeleteModalOpen(false);
     setPostToDelete(null);
-  };
+    setVisibilityNumber(null);
+  }
 
-  const csrfToken = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("csrftoken="))
-    ?.split("=")[1];
-
-  const handleConfirmDelete = async () => {
-    if (postToDelete) {
+  async function handleConfirmDelete() {
+    if (postToDelete && authProvider.user) {
       try {
         // API call to delete the post
         await axios.delete(
-          `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToDelete}/`,
-          {
-            headers: {
-              "x-csrftoken": csrfToken,
-            },
-          }
+          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
         );
+
+        // Second request: Get the followers
+        const followersResponse = await axios.get<{
+          type: string;
+          followers: Author[];
+        }>(
+          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/`
+        );
+        const followers = followersResponse.data["followers"];
+        console.log("Followers retrieved:", followers);
+
+        // Third request: Get the friends
+        const friendsResponse = await axios.get<Author[]>(
+          `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`
+        );
+        const friends = friendsResponse.data;
+        console.log("Friends retrieved:", friends);
+
+        // Now friends and followers may be duplicated, we have to go through and remove
+        // one from the follower list if it also exist in friend
+        // Create a Set of friend IDs for quick lookup
+        const friendIds = new Set(friends.map((friend) => friend.id));
+
+        // Filter out followers that are also friends
+        const uniqueFollowers = followers.filter(
+          (follower) => !friendIds.has(follower.id)
+        );
+        console.log("Filtered followers (excluding friends):", uniqueFollowers);
+
+        // send to followers if post is public or unlisted
+        // always send to friends for all type of posts
+        const payload = {
+          id: `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
+          type: "post",
+        };
+
+        if (visibilityNumber == 1 || visibilityNumber == 3) {
+          for (const follower of uniqueFollowers) {
+            const inboxUrl = `http://127.0.0.1:8000/api/authors/${follower.id}/inbox/`;
+            try {
+              const inboxResponse = await axios.post<{ message: string }>(
+                inboxUrl,
+                payload
+              );
+              console.log(inboxResponse.data);
+            } catch (error) {
+              console.error(
+                `Error sending post to inbox of ${follower.id}:`,
+                error
+              );
+            }
+          }
+          console.log(
+            "Error sending noti on deleted posts to followers' inboxes."
+          );
+        }
+
+        // Friends receive inbox on all type of post
+        for (const friend of friends) {
+          const inboxUrl = `http://127.0.0.1:8000/api/authors/${friend.id}/inbox/`;
+          try {
+            const inboxResponse = await axios.post<{ message: string }>(
+              inboxUrl,
+              payload
+            );
+            console.log(inboxResponse.data);
+          } catch (error) {
+            console.error(
+              `Error sending noti on deleted posts to ${friend.id}:`,
+              error
+            );
+          }
+        }
 
         // Refresh the posts after successful deletion
         await fetchAuthorPosts();
@@ -128,68 +177,32 @@ export default function UserProfile() {
         // Close the modal after deletion
         setIsPostDeleteModalOpen(false);
         setPostToDelete(null);
+        setVisibilityNumber(null);
       } catch (error) {
         console.error("Error deleting post", error);
       }
     }
-  };
+  }
 
-  const handleEditPostButtonClicked = async (postId: string) => {
-    try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postId}/`
-      );
-      setPostToEdit(response.data as AuthorPost[]); // Set the post data to edit
-      setIsEditPostModalOpen(true); // Open the edit modal
-    } catch (error) {
-      console.error("Error fetching post data for editing", error);
-    }
-  };
-
-  const handleEditPostModalClose = () => {
-    setPostToEdit(null);
-    setIsEditPostModalOpen(false);
-  };
-
-  const handleConfirmEdit = async (updatedPost: {
-    title: string;
-    content: string;
-  }) => {
-    if (postToEdit) {
-      try {
-        await axios.put(
-          `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToEdit["id"]}/`,
-          {
-            title: updatedPost.title,
-            content: updatedPost.content,
-            type: "post", // Ensure the type is set correctly as per your PUT request
-            // get the new modified post date
-            published: new Date().toISOString(),
-          }
-        );
-
-        // Refresh the posts after successful update
-        await fetchAuthorPosts();
-
-        // Close the modal after updating
-        handleEditPostModalClose();
-      } catch (error) {
-        console.error("Error updating post", error);
-      }
-    }
-  };
-  const openFollowers = () => {
+  function openFollowers() {
     setShowFollowerList(true);
     setIsFollowerListModalOpen(true);
-  };
+  }
 
-  const openFollowing = () => {
+  function openFollowing() {
     setShowFollowerList(false);
     setIsFollowerListModalOpen(true);
-  };
+  }
+
+  useEffect(() => {
+    if (authProvider.user) {
+      fetchAuthorData();
+      fetchAuthorPosts();
+    }
+  }, [authProvider.user]);
 
   if (!authorData) {
-    return <div>Loading...</div>; // Display a loading message until data is fetched
+    return <div>Loading...</div>;
   }
 
   return (
@@ -250,7 +263,6 @@ export default function UserProfile() {
       <hr className={styles.horizontalLine} />
 
       <section className={styles.userPosts}>
-        {/* map the author post response data to the mini profile card component */}
         {authorPosts.map((post) => (
           <MiniPostCard
             key={post.id}
@@ -262,9 +274,9 @@ export default function UserProfile() {
             saves={250}
             comments={10000}
             canDelete={true}
-            handleDelete={() => handleDeletePostButtonClicked(post.id)}
-            canEdit={true}
-            handleEdit={() => handleEditPostButtonClicked(post.id)}
+            handleDelete={() =>
+              handleDeletePostButtonClicked(post.id, post.visibility)
+            }
           />
         ))}
       </section>
@@ -272,16 +284,6 @@ export default function UserProfile() {
         isOpen={isPostDeleteModalOpen}
         onRequestClose={handleDeletePostModalClose}
         onDelete={handleConfirmDelete}
-      />
-      <EditPostModal
-        isOpen={isEditPostModalOpen}
-        onRequestClose={handleEditPostModalClose}
-        post={
-          postToEdit
-            ? { title: postToEdit[0].title, content: postToEdit[0].content }
-            : { title: "", content: "" }
-        }
-        onSubmit={handleConfirmEdit} // Pass handleConfirmEdit here
       />
     </div>
   );

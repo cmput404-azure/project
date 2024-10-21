@@ -15,9 +15,11 @@ class LoginView(APIView):
 
             response = Response({
                 'is_authenticated': True,
-                'username': request.user.username,
-                'uuid': request.user.uuid,
-                'sessionId': request.session.session_key
+                'user': {
+                    'username': request.user.username,
+                    'uuid': request.user.uuid,
+                    'profileImage': request.user.profile_image.url if request.user.profile_image else None
+                }
             }, status=status.HTTP_200_OK)
             response.set_cookie('sessionid', request.session.session_key, samesite='lax')
 
@@ -49,8 +51,11 @@ class CheckAuthView(APIView):
         if request.user.is_authenticated:
             response = {
                 'is_authenticated': True,
-                'username': request.user.username,
-                'uuid': request.user.uuid,
+                'user': {
+                    'username': request.user.username,
+                    'uuid': request.user.uuid,
+                    'profileImage': request.user.profile_image.url if request.user.profile_image else None
+                }
             }
             return Response(response, status=status.HTTP_200_OK)
         return Response({'is_authenticated': False}, status=status.HTTP_200_OK)

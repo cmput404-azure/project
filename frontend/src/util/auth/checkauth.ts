@@ -1,9 +1,9 @@
+import { User } from "../../models/models";
 import axios from "axios";
 
 interface CheckAuthResponse {
    is_authenticated: boolean;
-   username: string;
-   uuid: string;
+   user: User;
 }
 
 interface LogoutResponse {
@@ -15,8 +15,6 @@ axios.defaults.xsrfCookieName = "csrftoken";
 axios.defaults.xsrfHeaderName = "x-csrftoken";
 
 export async function checkAuth(): Promise<CheckAuthResponse> {
-   
-
    try {
       const res = await axios.get<CheckAuthResponse>("http://localhost:8000/api/check_auth/");
       return res.data;

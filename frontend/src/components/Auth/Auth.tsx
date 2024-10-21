@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { Button } from "@mui/material";
 import TextField from '@mui/material/TextField';
-import {login} from "../../util/auth/login";
+import { login } from "../../util/auth/login";
 import { logout } from "../../util/auth/checkauth";
 import styles from './Auth.module.scss';
-import { useNavigate } from "react-router";
+import { useAuth } from "../../state";
 
 function Auth() {
    const [isRegister, setIsRegister] = useState(false);
@@ -16,6 +17,18 @@ function Auth() {
    const [confirmPassword, setConfirmPassword] = useState("");
    const [error, setError] = useState("");
    const navigate = useNavigate();
+   const authProvider = useAuth();
+
+   const location = useLocation();
+
+   useEffect(() => {
+      // Check if user is already logged in, return to prev page
+      const from = location.state?.from?.pathname || '/';
+
+      if (authProvider.isAuthenticated) {
+         navigate(from);
+      }
+   }, [authProvider.isAuthenticated, authProvider.loading, navigate, location]);
 
    const handleSubmit = (e) => {
       e.preventDefault();
@@ -32,7 +45,7 @@ function Auth() {
       }
 
       if (isRegister) {
-         // Register logic
+         // Handle registration logic here
       } else {
          login(username, password)
          .then((response) => {
@@ -40,6 +53,7 @@ function Auth() {
          })
          .catch((error) => {
             console.log(error);
+            setError("Login failed. Please check your credentials.");
          });
       }
 
@@ -128,6 +142,9 @@ function Auth() {
 }
 
 export function Logout() {
+   const navigate = useNavigate();
+   const authProvider = useAuth();
+
    return (
       <div className={styles.auth}>
          <div className={styles.auth__container}>
@@ -136,7 +153,10 @@ export function Logout() {
             </div>
             <div className={styles.auth__container__form}>
                <Button variant="contained" color="primary" onClick={() => {
-                  logout();
+                  logout().then(() => {
+                     navigate("/");
+                     authProvider.logout();
+                  });
                }}>
                   Logout
                </Button>
