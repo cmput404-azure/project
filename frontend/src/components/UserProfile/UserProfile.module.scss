@@ -7,10 +7,13 @@
   flex-direction: column;
   justify-content: flex-start;
   padding: 25px;
+  box-sizing: border-box;
   position: relative; /* allows absolute positioning of the profile link */
-  width: 70%;
-  margin-top: 2%;
-  height: max-content;
+  width: 100%;
+  margin: auto 10rem;
+  height: 95%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .profileHeaderContainer {
@@ -179,7 +182,7 @@
   display: flex;
   flex-flow: row wrap;
   height: 100%;
-  justify-content: center;
+  justify-content: flex-start;
   margin-top: 20px;
   width: 100%;
 }
