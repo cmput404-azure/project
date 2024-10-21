@@ -1,11 +1,9 @@
-import {Author, Post} from "../../models/models";
 import React, { useState } from "react";
+import {Author, Post} from "../../models/models";
 import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
 
 import axios from "axios";
 import styles from "./PostBar.module.scss";
-import { getVisibilityNumber, VisibilityChoices } from "../../models/modelTypes";
-import {Author, Post} from "../../models/models"
 import { useAuth } from "../../state";
 
 interface PostBarProps {
