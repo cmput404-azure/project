@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styles from "./PostBar.module.scss";
 import { getVisibilityNumber, VisibilityChoices } from "../../models/modelTypes";
-import {Author, Post, Inbox} from "../../models/models"
+import {Author, Post} from "../../models/models"
 import { useAuth } from "../../state";
 
 interface PostBarProps {
