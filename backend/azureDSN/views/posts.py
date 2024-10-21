@@ -121,8 +121,11 @@ class AuthorPostView(APIView):
         if not User.objects.filter(uuid=author_serial).exists(): 
             return Response("Author does not exist.", status=404)  
         
+        # check if user is authenticated
+        if not request.user.is_authenticated:     
+            return Response("You must be authenticated to delete a post.", status=403)
+        
         author = User.objects.get(uuid=author_serial) 
-
         # retrieve the specific post by the author where visibility is not deleted
         try:
             post = Post.objects.get(user=author, uuid=post_serial, visibility__in=[1, 2, 3])
