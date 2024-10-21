@@ -7,6 +7,7 @@ class StreamViewTest(APITestCase):
         self.client = APIClient()
         self.user = User.objects.create(
             display_name="Test User",
+            username="Test User",
             host="http://localhost:8000/",
             github="http://github.com/testuser",
             page="http://localhost:8000/authors/testuser",
@@ -36,9 +37,9 @@ class StreamViewTest(APITestCase):
             user=self.user,
             image=None,
             visibility=4
-        )
+        ) # Deleted post will not be queried
 
-    def test_stream_view(self):
+    def test_stream_view(self): # This is unauthenticated user because no password
         url = reverse('stream')
         response = self.client.get(url)
         
