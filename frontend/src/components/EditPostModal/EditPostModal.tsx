@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "react-modal";
 import styles from "./EditPostModal.module.scss";
 
@@ -8,7 +8,7 @@ interface EditPostModalProps {
   post: {
     title: string;
     content: string;
-  };
+  } | null; // Allow post to be null or undefined
   onSubmit: (updatedPost: { title: string; content: string }) => void;
 }
 
@@ -18,12 +18,28 @@ export default function EditPostModal({
   post,
   onSubmit,
 }: EditPostModalProps) {
-  const [title, setTitle] = useState(post.title);
-  const [content, setContent] = useState(post.content);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+
+  // Ensure that modal fields reset when `post` data changes
+  useEffect(() => {
+    if (post) {
+      // Check if post is defined
+      setTitle(post.title);
+      setContent(post.content);
+    }
+  }, [post]);
 
   const handleSave = () => {
-    onSubmit({ title, content });
+    if (post) {
+      // Ensure post is defined before saving
+      onSubmit({ title, content });
+    }
   };
+
+  if (!post) {
+    return null; // Return null if post data is unavailable to prevent rendering errors
+  }
 
   return (
     <Modal
