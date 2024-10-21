@@ -9,10 +9,7 @@ import styles from "./HomePage.module.scss";
 import axios from "axios";
 import Modal from "react-modal";
 import logo from "../../images/dog_icon.png";
-
-interface HomePageProps {
-  isLoggedIn: boolean
-}
+import { useAuth } from "../../state";
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
@@ -22,12 +19,13 @@ axios.defaults.xsrfCookieName = "csrftoken";
 axios.defaults.xsrfHeaderName = "x-csrftoken";
 
 type ViewType = "all" | "unlisted_friends-only";
-  const HomePage: React.FC<HomePageProps> = ({ isLoggedIn }) => {
+const HomePage = () => {
   const [publicPosts, setPublicPosts] = useState<any[]>([]);
   const [nonPublicPosts, setNonPublicPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const authProvider = useAuth();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -104,7 +102,7 @@ type ViewType = "all" | "unlisted_friends-only";
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
         <PostBar userImage={logo} showButtonBar={false}/>
-        {isLoggedIn && (
+        {authProvider.isAuthenticated && (
         <div className={styles["icon-bar"]}>
           <div
             className={`${styles["icon-section"]} ${
