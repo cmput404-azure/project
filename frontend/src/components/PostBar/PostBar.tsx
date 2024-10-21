@@ -2,8 +2,7 @@ import { Author, Post } from "../../models/models";
 import React, { useState } from "react";
 import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
 
-import axios from "axios";
-import getCsrfToken from "../../util/auth/getCSRF";
+import { api } from "../../service/config";
 import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
 
@@ -12,10 +11,6 @@ interface PostBarProps {
   showButtonBar?: boolean;
 }
 type IconType = "public" | "friends" | "unlisted";
-
-axios.defaults.withCredentials = true;
-axios.defaults.xsrfCookieName = "csrftoken";
-axios.defaults.xsrfHeaderName = "x-csrftoken";
 
 const PostBar: React.FC<PostBarProps> = ({
   userImage,
@@ -28,13 +23,6 @@ const PostBar: React.FC<PostBarProps> = ({
   const [content, setContent] = useState("");
 
   const authProvider = useAuth();
-
-  const csrfToken = getCsrfToken();
-  const config = {
-    headers: {
-      "x-csrftoken": csrfToken,
-    },
-  };
 
   // To update the activeIcon
   const handleIconClick = (icon: IconType) => {
@@ -74,22 +62,22 @@ const PostBar: React.FC<PostBarProps> = ({
         visibility: visibilityNumber,
       };
 
-      const postResponse = await axios.post<Post>(
-        `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`,
-        newPost, config
+      const postResponse = await api.post<Post>(
+        `/api/authors/${authProvider.user.uuid}/posts/`,
+        newPost
       );
       console.log("Post successfully created:", postResponse.data);
 
       // Second request: Get the followers
-      const followersResponse = await axios.get<{ type: string, followers: Author[] }>(
-        `http://localhost:8000/api/authors/${authProvider.user.uuid}/followers/`, config
+      const followersResponse = await api.get<{ type: string, followers: Author[] }>(
+        `/api/authors/${authProvider.user.uuid}/followers/`
       );
       const followers = followersResponse.data["followers"];
       console.log("Followers retrieved:", followers);
 
       // Third request: Get the friends
-      const friendsResponse = await axios.get<Author[]>(
-        `http://localhost:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`, config
+      const friendsResponse = await api.get<Author[]>(
+        `/api/authors/${authProvider.user.uuid}/following/?action=friends`
       );
       const friends = friendsResponse.data;
       console.log("Friends retrieved:", friends);
@@ -108,9 +96,9 @@ const PostBar: React.FC<PostBarProps> = ({
       // always send to friends for all type of posts
       if (visibilityNumber == 1 || visibilityNumber == 3) {
         for (const follower of uniqueFollowers) {
-          const inboxUrl = `http://localhost:8000/api/authors/${follower.id}/inbox/`;
+          const inboxUrl = `/api/authors/${follower.id}/inbox/`;
           try {
-            const inboxResponse = await axios.post<{ message: string }>(inboxUrl, postResponse.data);
+            const inboxResponse = await api.post<{ message: string }>(inboxUrl, postResponse.data);
             console.log(inboxResponse.data);
           } catch (error) {
             console.error(`Error sending post to inbox of ${follower.id}:`, error);
@@ -121,9 +109,9 @@ const PostBar: React.FC<PostBarProps> = ({
 
       // Friends receive inbox on all type of post
       for (const friend of friends) {
-        const inboxUrl = `http://localhost:8000/api/authors/${friend.id}/inbox/`;
+        const inboxUrl = `/api/authors/${friend.id}/inbox/`;
         try {
-          const inboxResponse = await axios.post<{ message: string }>(inboxUrl, postResponse.data);
+          const inboxResponse = await api.post<{ message: string }>(inboxUrl, postResponse.data);
           console.log(inboxResponse.data);
         } catch (error) {
           console.error(`Error sending post to friend's inbox of ${friend.id}:`, error);
