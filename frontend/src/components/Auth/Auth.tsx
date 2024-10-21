@@ -49,6 +49,8 @@ function Auth() {
       } else {
          login(username, password)
          .then((response) => {
+            authProvider.setIsAuthenticated(true);
+            authProvider.setUser(response.user);
             navigate("/");
          })
          .catch((error) => {
