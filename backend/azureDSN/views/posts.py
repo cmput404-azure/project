@@ -129,7 +129,6 @@ class AuthorPostView(APIView):
             return Response("Post does not exist.", status=404)
 
         # authenticate the user
-        
         if post.user.uuid != author_serial:
             return Response("You are not the author of this post.", status=403)
         else:
