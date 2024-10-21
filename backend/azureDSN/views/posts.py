@@ -182,7 +182,16 @@ class AuthorPostView(APIView):
             ],
             responses={
                 status.HTTP_200_OK: OpenApiResponse(
-                    description="Successfully deleted the post."
+                    description="Successfully deleted post",
+                    response={
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": "string",
+                                "description": "Successfully deleted post"
+                            }
+                        }
+                    }
                 ),
                 status.HTTP_404_NOT_FOUND:
                     OpenApiResponse(description='Post or Author not found.'),
