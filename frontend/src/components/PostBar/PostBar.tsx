@@ -132,6 +132,10 @@ const PostBar: React.FC<PostBarProps> = ({
       console.error("Error in combined request flow:", error);
     }
   };
+
+  if(!authProvider.isAuthenticated){
+    return <></>
+  }
   
   return (
     <div className={styles.container}>
