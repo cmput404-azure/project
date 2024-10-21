@@ -55,8 +55,8 @@ urlpatterns = [
 
     # Posts API
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
-    path("api/authors/<uuid:author_serial>/posts/", AuthorPostView.as_view(), name="create_post"),
-    path("api/posts/<uuid:post_fqid>/", PostView.as_view(), name="post"),
+    path("api/authors/<uuid:author_serial>/posts/", AuthorPostsAllView.as_view(), name="create_post"),
+    path("api/posts/<path:post_fqid>/", PostView.as_view(), name="post"),
 
 
     # Likes API (specific Likes)
@@ -69,8 +69,8 @@ urlpatterns = [
 
     # Authors API
     path("api/authors/all/", AuthorsCompleteView.as_view(), name="authors_all"),
-    path("api/authors/<uuid:author_serial>/", AuthorsView.as_view(), name="author"),
-    path("api/authors/<path:author_fqid>/", AuthorsView.as_view(), name="author"),
+    path("api/authors/<uuid:author_serial>/", AuthorsSpecificView.as_view(), name="author_serial"),
+    path("api/authors/<path:author_fqid>/", AuthorsSpecificView.as_view(), name="author_fqid"),
     path("api/authors/", AuthorsView.as_view(), name="authors_list"),
 
     # Auth

@@ -1,6 +1,6 @@
+import { Author, Post } from "../../models/models";
 import { useEffect, useState } from "react";
 
-import { Author } from "../../models/models";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import { Edit } from "@mui/icons-material";
 import EditPostModal from "../EditPostModal/EditPostModal";
@@ -12,27 +12,12 @@ import axios from "axios";
 import getCsrfToken from "../../util/auth/getCSRF";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
-import { useNavigate } from "react-router";
 
-interface AuthorPost {
-  type: string;
-  title: string;
-  id: string;
-  contentType: string;
-  content: string;
-  author: {
-    type: string;
-    id: string;
-    host: string;
-    displayName: string;
-    github: string;
-    page: string;
-    profileImage: string;
-  };
-  comments: any[];
-  likes: any[];
-  published: string;
-  visibility: number;
+interface AuthorPostsResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Post[];
 }
 
 axios.defaults.withCredentials = true;
@@ -41,13 +26,13 @@ axios.defaults.xsrfHeaderName = "x-csrftoken";
 
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
-  const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
+  const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [visibilityNumber, setVisibilityNumber] = useState<number | null>(null);
 
   const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
-  const [postToEdit, setPostToEdit] = useState<AuthorPost[]>([]);
+  const [postToEdit, setPostToEdit] = useState<Post[]>([]);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState<string>("");
@@ -57,10 +42,10 @@ export default function UserProfile() {
   async function fetchAuthorPosts() {
     try {
       if (authProvider.user) {
-        const response = await axios.get<AuthorPost[]>(
+        const response = await axios.get<AuthorPostsResponse>(
           `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`
         );
-        setAuthorPosts(response.data);
+        setAuthorPosts(response.data.results);
       }
     } catch (error) {
       console.error("Error fetching the author posts", error);
