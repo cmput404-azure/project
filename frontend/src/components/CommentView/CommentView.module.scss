@@ -19,6 +19,7 @@
   outline: none;
   margin-top: 70px;
   margin-bottom: 20px;
+  overflow-y: auto;
 }
 
 .post {
@@ -26,18 +27,21 @@
   flex-direction: column;
   justify-content: end;
   align-self: end;
-  margin-bottom: -20px;
+  margin-bottom: -30px;
+
 }
 
 .comments {
   display: flex;
   flex-direction: column;
   background-color: rgb(123, 123, 123, 0.8); // slightly transparent
-  border-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
   padding: 10px;
 }
 
 .commentsHeader {
+  padding-top: 10px;
   padding-bottom: 7px;
   color: #ffffff;
   border-bottom: 1px solid #ffffff;
@@ -93,6 +97,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 70px;
+  margin-top: 10px;
   width: 100%;
+  margin-bottom: 50px;
 }

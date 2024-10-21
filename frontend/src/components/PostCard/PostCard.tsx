@@ -1,6 +1,7 @@
-import styles from "./PostCard.module.scss";
-import { formatCount } from "../../util/formatting/formatCount";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+
+import { formatCount } from "../../util/formatting/formatCount";
+import styles from "./PostCard.module.scss";
 
 interface PostCardProps {
   profilePic: string;
@@ -30,7 +31,7 @@ function PostCard({
       <div className={styles.grid}>
         <img
           className={styles.profilePic}
-          src={profilePic}
+          src={profilePic ?? `https://ui-avatars.com/api/?background=random&name=${userName}`}
           alt={`${userName}'s profile`}
         />
         <div className={styles.headerText}>

@@ -28,16 +28,13 @@ const HomePage = () => {
       try {
         const req = await api.get("/api/stream/");
         const publicPosts = req.data;
-        console.log("pub posts", publicPosts);
 
         const otherReq = await api.get("/api/stream/auth");
         const privatePosts = otherReq.data;
-        console.log("private POSTS >>> ", privatePosts);
 
         setNonPublicPosts(privatePosts as any[]);
         setPublicPosts(publicPosts as any[]);
         setIsLoading(false);
-
       } catch (err) {
         console.log(err)
         setError("Failed to fetch posts. Please try again.");
@@ -93,7 +90,7 @@ const HomePage = () => {
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar userImage={logo} showButtonBar={false}/>
+        <PostBar showButtonBar={false}/>
         {authProvider.isAuthenticated && (
         <div className={styles["icon-bar"]}>
           <div
@@ -115,11 +112,10 @@ const HomePage = () => {
           </div>
         </div>
       )}
-
         {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
-            profilePic="https://via.placeholder.com/50"
+            profilePic={post.author.profileImage}
             userName={post.author.displayName}
             postTime={new Date(post.published).toLocaleString()}
             postContent={post.content}

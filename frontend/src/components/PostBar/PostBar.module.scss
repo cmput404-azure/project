@@ -66,8 +66,7 @@
         font-weight: bold;
 
         &:hover {
-          background-color: #555;
-          transform: scale(1.1);
+          background-color: #70ffaf;
         }
       }
     }
@@ -127,7 +126,7 @@
         transition: background-color 0.3s ease;
 
         &.active {
-          background-color: #8f8f8f;
+          background-color: #70ffaf;
         }
 
         .icon {
@@ -160,7 +159,7 @@
       transition: background-color 0.3s ease;
 
       &:hover {
-        background-color: #444;
+        background-color: #70ffaf;
       }
     }
   }
