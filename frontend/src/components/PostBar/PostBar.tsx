@@ -7,13 +7,11 @@ import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
 
 interface PostBarProps {
-  userImage: string;
   showButtonBar?: boolean;
 }
 type IconType = "public" | "friends" | "unlisted";
 
 const PostBar: React.FC<PostBarProps> = ({
-  userImage,
   showButtonBar = true,
 }) => {
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
@@ -137,7 +135,7 @@ const PostBar: React.FC<PostBarProps> = ({
   return (
     <div className={styles.container}>
       <section className={styles["post-bar"]}>
-        <img src={userImage} alt="User" className={styles["user-image"]} />
+        <img src={authProvider.user.profileImage ?? `https://ui-avatars.com/api/?background=random&name=${authProvider.user.username}`} alt="User" className={styles["user-image"]} />
         <div className={styles["vertical-divider"]}></div>
         <input
           type="text"

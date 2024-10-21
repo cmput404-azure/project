@@ -5,6 +5,7 @@ import Modal from 'react-modal';
 import axios from 'axios';
 import styles from './FollowList.module.scss';
 import { useAuth } from "../../state";
+import { api } from "../../service/config";
 
 
 interface Follower {
@@ -20,7 +21,7 @@ interface Follower {
 interface FollowerListProps {
   isOpen: boolean;
   onClose: () => void;
-  isFollowerList: string; 
+  isFollowerList: string;
 }
 
 
@@ -47,7 +48,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
         return;
       } else if (isFollowerList === 'following') {
         fetchFollowing();
-      }else{
+      } else {
         fetchFriends();
       }
     }
@@ -55,7 +56,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFriends = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/`, {
+      const response = await api.get(`/api/authors/${authProvider.user.uuid}/following/`, {
         params: {
           action: 'friends'
         }
@@ -73,7 +74,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFollowers = async () => {
     try {
-      const response = await axios.get<FollowerResponse>(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/`, {
+      const response = await api.get<FollowerResponse>(`/api/authors/${authProvider.user.uuid}/followers/`, {
       });
 
       const data = response.data;
@@ -87,21 +88,21 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
   };
 
   const fetchFollowing = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/`, {
-          params: {
-            action: 'following'
-          }
-        });
+    try {
+      const response = await api.get(`/api/authors/${authProvider.user.uuid}/following/`, {
+        params: {
+          action: 'following'
+        }
+      });
 
-        const data = response.data;
-        setFollowers(response.data.followers);
-        setLoading(false);
-      } catch (error) {
-        console.error('Fetch error:', error);
-        setLoading(false);
+      const data = response.data;
+      setFollowers(response.data.followers);
+      setLoading(false);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      setLoading(false);
 
-      }
+    }
   };
 
   return (
@@ -121,29 +122,19 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
         <p>{error}</p>
       ) : (
         <ul className={styles.ul}>
-          {followers.map((follower, index) =>
-            isFollowerList ? (
+          {followers.map((follower, index) => (
+            <div key={index}>
+              <p>{follower.name}</p> 
               <ListItem
-                key={index}
                 isRequest={false}
                 isPost={false}
                 isLike={false}
-                isFollowerList={false}
+                isFollowerList={isFollowerList === "following"}
                 isUserList={false}
                 user={follower}
               />
-            ) : (
-              <ListItem
-                key={index}
-                isRequest={false}
-                isPost={false}
-                isLike={false}
-                isFollowerList={true}
-                isUserList={false}
-                user={follower}
-              />
-            )
-          )}
+            </div>
+          ))}
         </ul>
       )}
     </Modal>
