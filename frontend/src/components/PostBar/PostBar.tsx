@@ -3,8 +3,7 @@ import axios from "axios";
 import styles from "./PostBar.module.scss";
 import { getVisibilityNumber, VisibilityChoices } from "../../models/modelTypes";
 import {Author, Post, Inbox} from "../../models/models"
-import { checkAuth } from "../../util/auth/checkauth";
-
+import { useAuth } from "../../state";
 
 interface PostBarProps {
   userImage: string;
@@ -21,7 +20,8 @@ const PostBar: React.FC<PostBarProps> = ({
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
-  const [user, setUser] = useState(null);
+
+  const authProvider = useAuth();
 
   axios.defaults.withCredentials = true;
   axios.defaults.xsrfCookieName = "csrftoken";
@@ -44,26 +44,9 @@ const PostBar: React.FC<PostBarProps> = ({
   const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
     setContent(event.target.value);
 
-   // Fetch user data on component mount
-   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const data = await checkAuth();
-        setUser({
-          username: data.username,
-          uuid: data.uuid,
-        });
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-    
-    fetchUserData();
-  }, []);
-
   const handleCombinedClick = async () => {
     try {
-      if (!user) {
+      if (!authProvider.user) {
         console.error("User not loaded yet.");
         return;
       }
@@ -82,21 +65,21 @@ const PostBar: React.FC<PostBarProps> = ({
       };
   
       const postResponse = await axios.post<Post>(
-        `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/`,
+        `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/`,
         newPost
       );
       console.log("Post successfully created:", postResponse.data);
   
       // Second request: Get the followers
       const followersResponse = await axios.get<{ type: string, followers: Author[] }>(
-        `http://127.0.0.1:8000/api/authors/${user.uuid}/followers/`,
+        `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/followers/`,
       );
       const followers = followersResponse.data["followers"];
       console.log("Followers retrieved:", followers);
 
       // Third request: Get the friends
       const friendsResponse = await axios.get<Author[]>(
-        `http://127.0.0.1:8000/api/authors/${user.uuid}/following/?action=friends`,
+        `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/following/?action=friends`,
       );
       const friends = friendsResponse.data;
       console.log("Friends retrieved:", friends);
