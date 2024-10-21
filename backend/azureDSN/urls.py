@@ -27,10 +27,29 @@ urlpatterns = [
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/<uuid:comment_serial>/likes", LikesView.as_view(), name="get_comment_likes"),
     
     # Comments API
-    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments", MultipleCommentsView.as_view(), name="multiple_comment_view_by_postid"),
-    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comment/<path:comment_fqid>", SingleCommentView.as_view(), name="single_comment_view_by_fqid"),
-    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comment/<str:comment_serial>", SingleCommentView.as_view(), name="single_comment_view_by_uuid"),
-    path("api/posts/<path:post_fqid>/comments", MultipleCommentsView.as_view(), name="comments_by_fqid"),
+    # MultipleCommentsView
+    path(
+        'api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/',
+        MultipleCommentsView.as_view(),
+        name='comments_by_serial'
+    ),
+    path(
+        'api/posts/<path:post_fqid>/comments/',
+        MultipleCommentsView.as_view(),
+        name='comments_by_fqid'
+    ),
+
+    # SingleCommentView
+    path(
+        'api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/<uuid:comment_serial>/',
+        SingleCommentView.as_view(),
+        name='comment_by_serial'
+    ),
+    path(
+        'api/comments/<path:comment_fqid>/',
+        SingleCommentView.as_view(),
+        name='comment_by_fqid'
+    ),
 
 
     # Posts API
