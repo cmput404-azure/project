@@ -7,13 +7,39 @@ from rest_framework import status
 from django.http import HttpResponse
 from django.utils import timezone
 from django.contrib.sessions.models import Session
-
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 class AuthorPostView(APIView):
     """
     URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
     URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/
     """
     
+    @extend_schema(
+        summary="Retrieve a Post",
+        description="Retrieve a specific Post object by `post_serial` or a combination of `author_serial` and `post_serial`. Returns a 404 if not found.",
+        parameters=[
+            OpenApiParameter(
+                name='author_serial',
+                description='UUID of the Author of the Post to retrieve',
+                type=str,
+                required=True,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name='post_serial',
+                description='UUID of the Post to retrieve',
+                type=str,
+                required=False,
+                location=OpenApiParameter.PATH
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(response=PostSerializer, description='Post retrieved successfully'),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(description='Post or Author not found.'),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(description='Invalid Post Serial or Author Serial'),
+        },
+        tags=['Posts API']
+    )
     def get(self, request, author_serial=None, post_serial=None):
         """
         GET [local, remote] get the public post whose serial is POST_SERIAL
