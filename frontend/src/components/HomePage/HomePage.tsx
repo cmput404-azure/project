@@ -5,7 +5,7 @@ import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
 import AuthorPost from "../AuthorPost/AuthorPost";
 import CommentView from "../CommentView/CommentView";
-import styles from "./HomePage.module.scss"; // Assuming you are using SCSS modules
+import styles from "./HomePage.module.scss";
 import axios from "axios";
 import Modal from "react-modal";
 import logo from "../../images/dog_icon.png";
@@ -22,11 +22,9 @@ axios.defaults.xsrfCookieName = "csrftoken";
 axios.defaults.xsrfHeaderName = "x-csrftoken";
 
 type ViewType = "all" | "unlisted_friends-only";
-// const HomePage = () => {
   const HomePage: React.FC<HomePageProps> = ({ isLoggedIn }) => {
   const [publicPosts, setPublicPosts] = useState<any[]>([]);
   const [nonPublicPosts, setNonPublicPosts] = useState<any[]>([]);
-  // const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
@@ -34,7 +32,7 @@ type ViewType = "all" | "unlisted_friends-only";
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const req = await fetch("http://localhost:8000/api/stream/", { // this only gets public posts of the node + friends-only and unlisted posts of this user
+        const req = await fetch("http://localhost:8000/api/stream/", {
           method: 'GET',
           credentials: 'include', // This is crucial for sending cookies with the request
         });
@@ -56,46 +54,6 @@ type ViewType = "all" | "unlisted_friends-only";
 
     fetchPosts();
   }, [])
-
-  // // Fetch public posts
-  // useEffect(() => {
-  //   const fetchPosts = async () => {
-  //     try {
-  //       // Fetch public posts
-  //       console.log("current user: ", authProvider.user);
-  //       const url = authProvider.user.uuid
-  //       ? `http://localhost:8000/api/stream/?uuid=${authProvider.user.uuid}` // logged in
-  //       : `http://localhost:8000/api/stream/`; // not logged in
-
-  //       const req = await fetch(url);
-  //       var allPosts = await req.json();
-  //       console.log("the public posts", allPosts);
-
-  //       if (authProvider.isAuthenticated) {
-  //         const req = await fetch(`http://localhost:8000/api/authors/${authProvider.user.uuid}/inbox/?action=posts`)
-  //         const otherPosts = await req.json();
-  //         console.log("the ones from inbox: ", otherPosts.items);
-
-  //         allPosts = [...allPosts, ...otherPosts.items];
-  //       } 
-
-  //       const publicPosts = allPosts.filter(post => post.visibility === 1);
-  //       const nonPublicPosts = allPosts.filter(post => post.visibility !== 1);
-
-
-  //       setPublicPosts(publicPosts);
-  //       setNonPublicPosts(nonPublicPosts);
-  //       setIsLoading(false);
-  //     } catch (err) {
-  //       console.log(err)
-  //       setError("Failed to fetch posts. Please try again.");
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   fetchPosts();
-  // }, [authProvider.isAuthenticated, authProvider.user.uuid]);
 
   const handleAddClick = () => {
     console.log("Add button clicked");
