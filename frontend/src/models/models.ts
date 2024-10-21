@@ -1,4 +1,4 @@
-import  {ContentType} from "./modelTypes"
+import {ContentType} from "./modelTypes"
 
 export interface Author {
     type: string;

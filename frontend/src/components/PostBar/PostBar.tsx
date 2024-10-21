@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from "react";
+import {Author, Post} from "../../models/models";
+import React, { useState } from "react";
+import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
+
 import axios from "axios";
 import styles from "./PostBar.module.scss";
 import { getVisibilityNumber, VisibilityChoices } from "../../models/modelTypes";
@@ -46,7 +49,8 @@ const PostBar: React.FC<PostBarProps> = ({
 
   const handleCombinedClick = async () => {
     try {
-      if (!authProvider.user) {
+      console.log(authProvider.isAuthenticated)
+      if (!authProvider.isAuthenticated) {
         console.error("User not loaded yet.");
         return;
       }
@@ -131,6 +135,10 @@ const PostBar: React.FC<PostBarProps> = ({
       console.error("Error in combined request flow:", error);
     }
   };
+
+  if(!authProvider.isAuthenticated){
+    return <></>
+  }
   
   return (
     <div className={styles.container}>
