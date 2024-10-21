@@ -31,6 +31,10 @@ interface AuthorPost {
   visibility: number;
 }
 
+axios.defaults.withCredentials = true;
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "x-csrftoken";
+
 export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
@@ -42,10 +46,6 @@ export default function UserProfile() {
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
-
-  axios.defaults.withCredentials = true;
-  axios.defaults.xsrfCookieName = "csrftoken";
-  axios.defaults.xsrfHeaderName = "x-csrftoken";
 
   const [user, setUser] = useState(null);
 
@@ -105,12 +105,22 @@ export default function UserProfile() {
     setPostToDelete(null);
   };
 
+  const csrfToken = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("csrftoken="))
+    ?.split("=")[1];
+
   const handleConfirmDelete = async () => {
     if (postToDelete) {
       try {
         // API call to delete the post
         await axios.delete(
-          `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToDelete}/`
+          `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToDelete}/`,
+          {
+            headers: {
+              "x-csrftoken": csrfToken,
+            },
+          }
         );
 
         // Refresh the posts after successful deletion
@@ -149,8 +159,14 @@ export default function UserProfile() {
     if (postToEdit) {
       try {
         await axios.put(
-          `http://127.0.0.1:8000/api/authors/5f577ee2-0ccc-49a4-b3cc-47a8aeb265df/posts/${postToEdit["id"]}/`,
-          updatedPost
+          `http://127.0.0.1:8000/api/authors/${user.uuid}/posts/${postToEdit["id"]}/`,
+          {
+            title: updatedPost.title,
+            content: updatedPost.content,
+            type: "post", // Ensure the type is set correctly as per your PUT request
+            // get the new modified post date
+            published: new Date().toISOString(),
+          }
         );
 
         // Refresh the posts after successful update
@@ -163,7 +179,6 @@ export default function UserProfile() {
       }
     }
   };
-
   const openFollowers = () => {
     setShowFollowerList(true);
     setIsFollowerListModalOpen(true);
@@ -262,11 +277,12 @@ export default function UserProfile() {
       <EditPostModal
         isOpen={isEditPostModalOpen}
         onRequestClose={handleEditPostModalClose}
-        post={{
-          title: "Title",
-          content: "Content",
-        }}
-        onSubmit={() => {}}
+        post={
+          postToEdit
+            ? { title: postToEdit[0].title, content: postToEdit[0].content }
+            : { title: "", content: "" }
+        }
+        onSubmit={handleConfirmEdit} // Pass handleConfirmEdit here
       />
     </div>
   );

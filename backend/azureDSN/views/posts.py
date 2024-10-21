@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
 from django.utils import timezone
+from django.contrib.sessions.models import Session
 
 class AuthorPostView(APIView):
     """
@@ -149,12 +150,29 @@ class AuthorPostView(APIView):
         DELETE [local] remove a post
             - local posts: must be authenticated locally as the author
         """
-        if not User.objects.filter(uuid=author_serial).exists(): 
-            return Response("Author does not exist.", status=404)        
         
+        # check if user exists
+        if not User.objects.filter(uuid=author_serial).exists():
+            return Response("Author does not exist.", status=404)
+        
+        session_key = request.session
+        print (session_key)
+        # session = Session.objects.get(session_key=session_key)
+        # uid = session.get_decoded().get('_auth_user_id')
+        # user = User.objects.get(pk=uid)
+        
+        # print (user.uuid)
+
+        # check if user is authenticated
+        if not request.user.is_authenticated:     
+            return Response("You must be authenticated to delete a post.", status=403)
+           
+        # TODO: check if node admin   
+           
+        # TODO: check if the author owns the post
+                
         post = get_object_or_404(Post, uuid=post_serial)
-        # TODO: Check if user of request is the author of the post (Authenticate)
-        if post.user.uuid == author_serial:
+        if post.user.uuid == request.user.uuid:
             post.visibility = 4
             post.save()
             return Response({
