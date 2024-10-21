@@ -88,7 +88,8 @@ class AuthorTests(APITestCase):
             self.assertIn(author["host"], ['http://localhost:8000/api/'])
             self.assertIn(author["github"], ['github.com/testauthor', 'github.com/testauthor2', 'github.com/testauthor3', 'github.com/testauthor4', 'github.com/testauthor5', 'github.com/testauthor6', 'github.com/testauthor7'])
             self.assertIn(author["page"], ['http://localhost:8000/api/authors/testauthor', 'http://localhost:8000/api/authors/testauthor2', 'http://localhost:8000/api/authors/testauthor3', 'http://localhost:8000/api/authors/testauthor4', 'http://localhost:8000/api/authors/testauthor5', 'http://localhost:8000/api/authors/testauthor6', 'http://localhost:8000/api/authors/testauthor7'])
-        
+    
+    # test getting authors with pagination 
     # def test_retrieve_authors_paginated(self):
     #     """Test retrieving all authors with pagination."""
     #     url = reverse('authors_all')
@@ -119,6 +120,34 @@ class AuthorTests(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['displayName'], self.test_author.display_name)
+    
+
+    # test updating author by uuid
+    def test_update_author_by_uuid(self):
+        """Test updating an author by UUID."""
+        url = reverse('author_serial', kwargs={'author_serial': self.test_author.uuid})
+        updated_data = {
+            'id': f"{self.test_author.uuid}",
+            'displayName': 'Updated Test Author',
+            'host': 'http://localhost:8000/api/',
+            'github': 'http://github.com/updated_testauthor',
+            'page': 'http://localhost:8000/api/authors/updated_testauthor',
+        }
+        response = self.client.put(url, updated_data, format='json')
+        
+        # check if the response is not valid
+        if response.status_code != 200:
+            print(response.data) 
+
+        self.assertEqual(response.status_code, 200)
+
+        # chcek that the author's details were updated
+        self.test_author.refresh_from_db()
+        self.assertEqual(str(self.test_author.uuid), updated_data['id']) # make sure its the same user object
+        self.assertEqual(self.test_author.display_name, updated_data['displayName'])
+        self.assertEqual(self.test_author.host, updated_data['host'])
+        self.assertEqual(self.test_author.github, updated_data['github'])
+        self.assertEqual(self.test_author.page, updated_data['page'])
 
     # test getting author by fqid
     def test_get_author_by_fqid(self):
@@ -134,6 +163,3 @@ class AuthorTests(APITestCase):
         self.assertEqual(response.data['host'], 'http://localhost:8000/api/')
         self.assertEqual(response.data['github'], 'github.com/testauthor')
         self.assertEqual(response.data['page'], 'http://localhost:8000/api/authors/testauthor')
-
-
-
