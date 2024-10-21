@@ -13,6 +13,7 @@ class StreamViewTest(APITestCase):
             page="http://localhost:8000/authors/testuser",
             profile_image=None
         )
+
         # self.client.force_authenticate(user=self.user)
 
         self.post = Post.objects.create(
@@ -37,11 +38,11 @@ class StreamViewTest(APITestCase):
             user=self.user,
             image=None,
             visibility=4
-        ) # Deleted post will not be queried
+        )
 
     def test_stream_view(self): # This is unauthenticated user because no password
         url = reverse('stream')
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 2) # deleted post not shown in stream
