@@ -1,16 +1,14 @@
+import { useEffect, useState } from "react";
+
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
-import { User } from "../../models/models";
 import axios from "axios";
-import { checkAuth } from "../../util/auth/checkauth";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
-import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useState } from "react";
 
 interface AuthorPost {
   type: string;
@@ -33,7 +31,6 @@ interface AuthorPost {
   visibility: number;
 }
 
-// TODO: Should convert axios to service layer later
 axios.defaults.withCredentials = true;
 axios.defaults.xsrfCookieName = "csrftoken";
 axios.defaults.xsrfHeaderName = "x-csrftoken";
@@ -43,89 +40,81 @@ export default function UserProfile() {
   const [authorPosts, setAuthorPosts] = useState<AuthorPost[]>([]);
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
-  // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
 
-  const navigate = useNavigate();
-
   const authProvider = useAuth();
 
-  const fetchAuthorPosts = async () => {
+  async function fetchAuthorPosts() {
     try {
-      const response = await axios.get<AuthorPost[]>(
-        `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`
-      );
-      console.log(response.data);
-      setAuthorPosts(response.data);
+      if (authProvider.user) {
+        const response = await axios.get<AuthorPost[]>(
+          `http://localhost:8000/api/authors/${authProvider.user.uuid}/posts/`
+        );
+        setAuthorPosts(response.data);
+      }
     } catch (error) {
       console.error("Error fetching the author posts", error);
     }
-  };
+  }
 
-  // fetch the author data from the API when the component mounts
-  useEffect(() => {
-    if (!authProvider.user) {
-      navigate("/login");
-      return;
-    };
-
-    const fetchAuthorData = async () => {
-      try {
+  async function fetchAuthorData() {
+    try {
+      if (authProvider.user) {
         const response = await axios.get(
           `http://localhost:8000/api/authors/${authProvider.user.uuid}/`
         );
-        console.log(response.data);
         setAuthorData(response.data);
-      } catch (error) {
-        console.error("Error fetching the author data", error);
       }
-    };
-    fetchAuthorData();
-    fetchAuthorPosts();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching the author data", error);
+    }
+  }
 
-  const handleDeletePostButtonClicked = (postId: string) => {
+  function handleDeletePostButtonClicked(postId: string) {
     setPostToDelete(postId);
     setIsPostDeleteModalOpen(true);
-  };
-  const handleDeletePostModalClose = () => {
+  }
+
+  function handleDeletePostModalClose() {
     setIsPostDeleteModalOpen(false);
     setPostToDelete(null);
-  };
+  }
 
-  const handleConfirmDelete = async () => {
-    if (postToDelete) {
+  async function handleConfirmDelete() {
+    if (postToDelete && authProvider.user) {
       try {
-        // API call to delete the post
         await axios.delete(
           `http://127.0.0.1:8000/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
         );
-
-        // Refresh the posts after successful deletion
-        await fetchAuthorPosts();
-
-        // Close the modal after deletion
+        await fetchAuthorPosts(); // Refresh posts after deletion
         setIsPostDeleteModalOpen(false);
         setPostToDelete(null);
       } catch (error) {
         console.error("Error deleting post", error);
       }
     }
-  };
+  }
 
-  const openFollowers = () => {
+  function openFollowers() {
     setShowFollowerList(true);
     setIsFollowerListModalOpen(true);
-  };
+  }
 
-  const openFollowing = () => {
+  function openFollowing() {
     setShowFollowerList(false);
     setIsFollowerListModalOpen(true);
-  };
+  }
+
+  useEffect(() => {
+    if (authProvider.user) {
+      fetchAuthorData();
+      fetchAuthorPosts();
+    }
+  }, [authProvider.user]);
 
   if (!authorData) {
-    return <div>Loading...</div>; // Display a loading message until data is fetched
+    return <div>Loading...</div>;
   }
 
   return (
@@ -186,7 +175,6 @@ export default function UserProfile() {
       <hr className={styles.horizontalLine} />
 
       <section className={styles.userPosts}>
-        {/* map the author post response data to the mini profile card component */}
         {authorPosts.map((post) => (
           <MiniPostCard
             key={post.id}

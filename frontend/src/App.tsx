@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import ErrorPage from "./error-page";
 import HomePage from "./components/HomePage/HomePage";
 import NavigationBar from "./components/NavigationBar/NavigationBar";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
 import { checkAuth } from "./util/auth/checkauth";
@@ -13,18 +14,12 @@ import { useAuth } from "./state";
 
 export default function App() {
   const nav = useNavigate();
-
   const authProvider = useAuth();
 
-  useEffect(() => {
-    checkAuth().then((data) => {
-      if (data.is_authenticated) {
-        authProvider.login(data.is_authenticated, data.user);
-        console.log(authProvider.user);
-      }
-    });
-  }, []);
-  
+  if (authProvider.loading) {
+    return <div className={styles.App}>Loading...</div>;
+  }
+
   return (
     <div className={styles.App}>
       <NavigationBar
@@ -36,10 +31,17 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/home" element={<HomePage />} />
-          <Route path="/profile" element={<UserProfile />} />
           <Route path="/settings" element={<Root />} />
           <Route path="/login" element={<Auth />} />
-          <Route path="/logout" element={<Logout />} />
+          <Route
+            element={
+              <ProtectedRoute />
+            }
+          >
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/logout" element={<Logout />} />
+          </Route>
+   
           <Route path="*" element={<ErrorPage />} />
         </Routes>
       </div>
