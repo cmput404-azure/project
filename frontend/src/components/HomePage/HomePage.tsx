@@ -60,14 +60,14 @@ const HomePage = () => {
   const comments = [
     {
       id: 1,
-      image: "https://via.placeholder.com/50",
+      image: `https://ui-avatars.com/api/?background=random&name=${"Garfield"}`,
       author: "Garfield",
       timePosted: "8h ago",
       text: "Great Success!",
     },
     {
       id: 2,
-      image: "https://via.placeholder.com/50",
+      image: `https://ui-avatars.com/api/?background=random&name=${"Douglas"}`,
       author: "Douglas",
       timePosted: "10h ago",
       text: "Well Done!",
@@ -149,7 +149,7 @@ const HomePage = () => {
         onRequestClose={handleCommentModalClose}
         postComponent={
           <PostCard
-            profilePic="https://via.placeholder.com/50"
+            profilePic={`https://ui-avatars.com/api/?background=random&name=John Doe`}
             userName="John Doe"
             postTime="2h ago"
             postContent="This is a sample post."
