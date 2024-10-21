@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
-import Modal from "react-modal";
-import styles from "./EditPostModal.module.scss";
+import React, { useEffect, useState } from "react";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+
 import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import Modal from "react-modal";
+import styles from "./EditPostModal.module.scss";
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -57,10 +58,6 @@ export default function EditPostModal({
     return null; // Return null if post data is unavailable to prevent rendering errors
   }
 
-  console.log(post);
-  console.log(post.title);
-  console.log(post.content);
-  console.log(post.visibility);
   return (
     <Modal
       isOpen={isOpen}
