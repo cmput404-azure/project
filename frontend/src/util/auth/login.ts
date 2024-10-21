@@ -1,10 +1,9 @@
+import { User } from "../../models/models";
 import axios from "axios";
 
 interface LoginResponse {
    is_authenticated: boolean;
-   uuid: string;
-   username: string;
-   sessionId: string;
+   user: User;
 }
 
 export async function login(username, password):  Promise<LoginResponse>{
