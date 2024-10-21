@@ -168,7 +168,7 @@ class FollowerView(APIView):
             )
         ],
         responses={
-            200: OpenApiResponse(description="Followers retrieved successfully"),
+            200: OpenApiResponse(response=UserSerializer,description="Followers retrieved successfully"),
             404: OpenApiResponse(description="The follower does not exist")
         }
     )
