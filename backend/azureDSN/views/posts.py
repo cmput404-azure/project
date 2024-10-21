@@ -150,7 +150,6 @@ class AuthorPostView(APIView):
         DELETE [local] remove a post
             - local posts: must be authenticated locally as the author
         """
-        
         # check if user exists
         if not User.objects.filter(uuid=author_serial).exists():
             return Response("Author does not exist.", status=404)

@@ -46,7 +46,6 @@ export default function UserProfile() {
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState(true);
-
   const [user, setUser] = useState(null);
 
   useEffect(() => {
