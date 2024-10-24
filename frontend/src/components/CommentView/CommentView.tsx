@@ -43,7 +43,7 @@ const CommentInputField = ({ authorDisplayName }) => {
   const [textErrorMsg, setTextErrorMsg] = useState("");
   const [textInField, setTextInField] = useState("");
 
-  const MAX_CHARACTERS = 50; // toggles the max amount of characters allowed in a comment
+  const MAX_CHARACTERS = 50; // Max comment toggle
 
   const handleCommentFieldClick = () => {
     setCommentFieldClicked(true);
