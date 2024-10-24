@@ -3,9 +3,14 @@ import React from "react";
 import styles from "./CommentView.module.scss";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
+import { text } from "stream/consumers";
 
 const CommentInputField = ({ author }) => {
   const [commentFieldClicked, setCommentFieldClicked] = useState(false);
+  const [isTextError, setIsTextError] = useState<boolean>(false);
+  const [textErrorMsg, setTextErrorMsg] = useState("");
+
+  const MAX_CHARACTERS = 50; // toggles the max amount of characters allowed in a comment
 
   const handleCommentFieldClick = () => {
     setCommentFieldClicked(true);
@@ -13,6 +18,21 @@ const CommentInputField = ({ author }) => {
 
   const handleCommentFieldCancel = () => {
     setCommentFieldClicked(false);
+    setIsTextError(false);
+    setTextErrorMsg("");
+  };
+
+  // Inspired from https://muhimasri.com/blogs/mui-validation/, Downloaded 2024-10-24
+  const handleTextInput = (e) => {
+    if (e.target.value.length == MAX_CHARACTERS) {
+      setIsTextError(true);
+      setTextErrorMsg(
+        `Comment must be less than ${MAX_CHARACTERS} characters long`
+      );
+    } else {
+      setIsTextError(false);
+      setTextErrorMsg(`Max ${MAX_CHARACTERS} characters`);
+    }
   };
 
   return (
@@ -32,26 +52,28 @@ const CommentInputField = ({ author }) => {
             placeholder="Add a comment..."
             variant="standard"
             // From https://stackoverflow.com/questions/45939909/put-length-constraint-in-a-textfield-in-react-js, Downloaded 2024-10-24
-            inputProps={{ maxLength: 50 }} // MUI docs says thsi will be deprecated eventually, but works for now
-            helperText="Max 50 characters"
+            inputProps={{ maxLength: MAX_CHARACTERS }} // MUI docs says thsi will be deprecated eventually, but works for now
+            helperText={textErrorMsg}
             // Styling inspired from https://muhimasri.com/blogs/mui-textfield-colors-styles/, Downloaded 2024-10-24
             sx={{
-              input: { color: "white" },
-              "& .MuiInputLabel-root": { color: "white" },
-              "& .MuiInput-underline:before": { borderBottomColor: "white" },
+              input: { color: "#fff" },
+              "& .MuiInputLabel-root": { color: "#fff" },
+              "& .MuiInput-underline:before": { borderBottomColor: "#fff" },
               "& .MuiInput-underline:hover:before": {
-                borderBottomColor: "white",
+                borderBottomColor: "#fff",
               },
               "& .MuiInput-underline:hover": {
-                borderBottomColor: "white",
+                borderBottomColor: "#fff",
               },
               "& .MuiInput-underline:hover:after": {
-                borderBottomColor: "white",
+                borderBottomColor: "#fff",
               },
-              "& .MuiInput-underline:after": { borderBottomColor: "white" },
-              "& .MuiFormHelperText-root": { color: "white" },
+              "& .MuiInput-underline:after": { borderBottomColor: "#fff" },
+              "& .MuiFormHelperText-root": { color: "#fff" },
             }}
             onClick={handleCommentFieldClick}
+            onChange={handleTextInput}
+            error={isTextError}
           />
         </div>
       </div>
