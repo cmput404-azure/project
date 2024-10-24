@@ -1,7 +1,56 @@
 import Modal from "react-modal";
-import PostBar from "../PostBar/PostBar";
 import React from "react";
 import styles from "./CommentView.module.scss";
+import TextField from "@mui/material/TextField";
+import { useState } from "react";
+
+const CommentInputField = ({}) => {
+  const [commentFieldClicked, setCommentFieldClicked] = useState(false);
+
+  const handleCommentFieldClick = () => {
+    setCommentFieldClicked(true);
+  };
+
+  const handleCommentFieldCancel = () => {
+    setCommentFieldClicked(false);
+  };
+
+  return (
+    <section className={styles.commentInput}>
+      <TextField
+        className={styles.commentInputField}
+        label="Add a comment"
+        placeholder="Add a comment..."
+        variant="standard"
+        // styling inspired from https://muhimasri.com/blogs/mui-textfield-colors-styles/, Downloaded 2024-10-24
+        sx={{
+          input: { color: "white" },
+          "& .MuiInputLabel-root": { color: "white" }, // Label color
+          "& .MuiInput-underline:before": { borderBottomColor: "white" },
+          "& .MuiInput-underline:hover": {
+            borderBottomColor: "white",
+          },
+          "& .MuiInput-underline:hover:before": {
+            borderBottomColor: "white",
+          },
+          "& .MuiInput-underline:after": { borderBottomColor: "white" },
+        }}
+        onClick={handleCommentFieldClick}
+      />
+      {commentFieldClicked && (
+        <div className={styles.commentButtonContainer}>
+          <button
+            className={styles.cancelButton}
+            onClick={handleCommentFieldCancel}
+          >
+            cancel
+          </button>
+          <button className={styles.postButton}>Post</button>
+        </div>
+      )}
+    </section>
+  );
+};
 
 interface Comment {
   id: number;
@@ -39,6 +88,7 @@ const CommentView: React.FC<CommentViewProps> = ({
 
         {/* Comments Section */}
         <div className={styles.commentsSection}>
+          <CommentInputField />
           {comments.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
@@ -59,13 +109,6 @@ const CommentView: React.FC<CommentViewProps> = ({
           ))}
         </div>
       </section>
-
-      {/* Comment Section */}
-      <div className={styles.commentBar}>
-        <PostBar
-          showButtonBar={false}
-        />
-      </div>
     </Modal>
   );
 };
