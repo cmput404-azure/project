@@ -44,7 +44,7 @@ const CommentInputField = ({ authorDisplayName }) => {
   const [textInField, setTextInField] = useState("");
   const [disableCommentButton, setDisableCommentButton] = useState(true);
 
-  const MAX_CHARACTERS = 50; // Max comment toggle
+  const MAX_CHARACTERS = 500; // Max comment toggle
 
   const handleCommentFieldClick = () => {
     setCommentFieldClicked(true);
