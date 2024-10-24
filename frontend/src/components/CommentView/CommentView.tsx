@@ -32,7 +32,8 @@ const CommentInputField = ({ author }) => {
             placeholder="Add a comment..."
             variant="standard"
             // From https://stackoverflow.com/questions/45939909/put-length-constraint-in-a-textfield-in-react-js, Downloaded 2024-10-24
-            inputProps={{ maxLength: 10 }} // MUI docs says thsi will be deprecated eventually, but works for now
+            inputProps={{ maxLength: 50 }} // MUI docs says thsi will be deprecated eventually, but works for now
+            helperText="Max 50 characters"
             // Styling inspired from https://muhimasri.com/blogs/mui-textfield-colors-styles/, Downloaded 2024-10-24
             sx={{
               input: { color: "white" },
@@ -41,10 +42,14 @@ const CommentInputField = ({ author }) => {
               "& .MuiInput-underline:hover:before": {
                 borderBottomColor: "white",
               },
+              "& .MuiInput-underline:hover": {
+                borderBottomColor: "white",
+              },
               "& .MuiInput-underline:hover:after": {
                 borderBottomColor: "white",
               },
               "& .MuiInput-underline:after": { borderBottomColor: "white" },
+              "& .MuiFormHelperText-root": { color: "white" },
             }}
             onClick={handleCommentFieldClick}
           />

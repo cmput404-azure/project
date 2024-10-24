@@ -95,15 +95,13 @@
 .commentInput {
   display: flex;
   flex-direction: column;
-  padding-top: 10px;
-  padding-right: 10px;
-  padding-left: 10px;
 }
 
 .commentDisplay {
   display: flex;
   flex-direction: row;
-  padding: 10px;
+  padding: 0px 10px;
+  padding-top: 5px;
   .userImageContainer {
     display: flex;
     justify-content: center;
@@ -123,6 +121,7 @@
 .commentButtonContainer {
   display: flex;
   justify-content: space-between;
+  padding: 0px 10px;
 }
 
 .cancelButton {
