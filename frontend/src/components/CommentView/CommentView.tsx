@@ -3,12 +3,12 @@ import React from "react";
 import styles from "./CommentView.module.scss";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import { text } from "stream/consumers";
 
 const CommentInputField = ({ author }) => {
   const [commentFieldClicked, setCommentFieldClicked] = useState(false);
   const [isTextError, setIsTextError] = useState<boolean>(false);
   const [textErrorMsg, setTextErrorMsg] = useState("");
+  const [textInField, setTextInField] = useState("");
 
   const MAX_CHARACTERS = 50; // toggles the max amount of characters allowed in a comment
 
@@ -20,10 +20,12 @@ const CommentInputField = ({ author }) => {
     setCommentFieldClicked(false);
     setIsTextError(false);
     setTextErrorMsg("");
+    setTextInField("");
   };
 
   // Inspired from https://muhimasri.com/blogs/mui-validation/, Downloaded 2024-10-24
   const handleTextInput = (e) => {
+    setTextInField(e.target.value);
     if (e.target.value.length == MAX_CHARACTERS) {
       setIsTextError(true);
       setTextErrorMsg(
@@ -49,11 +51,8 @@ const CommentInputField = ({ author }) => {
           <TextField
             className={styles.commentInputField}
             label="Add a comment"
-            placeholder="Add a comment..."
+            placeholder="Type your comment..."
             variant="standard"
-            // From https://stackoverflow.com/questions/45939909/put-length-constraint-in-a-textfield-in-react-js, Downloaded 2024-10-24
-            inputProps={{ maxLength: MAX_CHARACTERS }} // MUI docs says thsi will be deprecated eventually, but works for now
-            helperText={textErrorMsg}
             // Styling inspired from https://muhimasri.com/blogs/mui-textfield-colors-styles/, Downloaded 2024-10-24
             sx={{
               input: { color: "#fff" },
@@ -73,7 +72,11 @@ const CommentInputField = ({ author }) => {
             }}
             onClick={handleCommentFieldClick}
             onChange={handleTextInput}
+            // From https://stackoverflow.com/questions/45939909/put-length-constraint-in-a-textfield-in-react-js, Downloaded 2024-10-24
+            inputProps={{ maxLength: MAX_CHARACTERS }} // MUI docs says thsi will be deprecated eventually, but works for now
             error={isTextError}
+            helperText={textErrorMsg}
+            value={textInField}
           />
         </div>
       </div>
