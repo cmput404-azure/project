@@ -172,7 +172,7 @@ const HomePage = () => {
           ) : null
         }
         comments={comments}
-        author={authProvider.user}
+        author={authProvider.isAuthenticated ? authProvider.user : null}
       />
     </div>
   );

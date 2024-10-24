@@ -6,7 +6,7 @@ import { useState } from "react";
 import styled from "@mui/material/styles/styled";
 import { Comment } from "@mui/icons-material";
 
-// Styling inspired from https://medium.com/@irwantoalvin/how-to-style-your-material-ui-textfield-integrate-it-with-react-hook-form-and-make-it-reusable-0f3050a90e9a, Downloaded 2024-10-25
+// Styling inspired from https://medium.com/@irwantoalvin/how-to-style-your-material-ui-textfield-integrate-it-with-react-hook-form-and-make-it-reusable-0f3050a90e9a, Downloaded 2024-10-24
 // need to style field like this otherwise stylings may reset and not appear properly
 const StyledCommentInputField = styled(TextField)({
   "& label": {
@@ -167,7 +167,11 @@ const CommentView: React.FC<CommentViewProps> = ({
 
         {/* Comments Section */}
         <div className={styles.commentsSection}>
-          <CommentInputField authorDisplayName={author.username} />
+          {/* Comment Input Field */}
+          {!(author == null) && (
+            <CommentInputField authorDisplayName={author.username} />
+          )}
+
           {comments.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
