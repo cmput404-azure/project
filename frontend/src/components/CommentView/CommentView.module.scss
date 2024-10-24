@@ -28,7 +28,6 @@
   justify-content: end;
   align-self: end;
   margin-bottom: -30px;
-
 }
 
 .comments {
@@ -93,11 +92,75 @@
   color: #d0d0d0;
 }
 
-.commentBar {
+.commentInput {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 10px;
+  flex-direction: column;
+}
+
+.commentDisplay {
+  display: flex;
+  flex-direction: row;
+  padding: 0px 10px;
+  padding-top: 5px;
+  .userImageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .textFieldContainer {
+    width: 100%;
+    padding-bottom: 10px;
+  }
+}
+
+.commentInputField {
+  color: white;
   width: 100%;
-  margin-bottom: 50px;
+}
+
+.commentButtonContainer {
+  display: flex;
+  justify-content: space-between;
+  padding: 0px 10px;
+}
+
+.cancelButton {
+  padding: 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    background-color: #ff4d4d;
+    color: #555;
+  }
+}
+
+.commentButton {
+  padding: 10px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    background-color: #70ffaf;
+    color: #555;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: #888;
+    color: #ccc;
+
+    &:hover {
+      background-color: #888;
+      color: #ccc;
+    }
+  }
 }
