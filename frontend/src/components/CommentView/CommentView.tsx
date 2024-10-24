@@ -3,6 +3,39 @@ import React from "react";
 import styles from "./CommentView.module.scss";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
+import styled from "@mui/material/styles/styled";
+import { Comment } from "@mui/icons-material";
+
+// Styling inspired from https://medium.com/@irwantoalvin/how-to-style-your-material-ui-textfield-integrate-it-with-react-hook-form-and-make-it-reusable-0f3050a90e9a, Downloaded 2024-10-25
+// need to style field like this otherwise stylings may reset and not appear properly
+const StyledCommentInputField = styled(TextField)({
+  "& label": {
+    color: "white !important",
+  },
+
+  "& input": {
+    color: "white !important",
+  },
+
+  // style underline
+  "& .MuiInput-underline:before": {
+    borderBottomColor: "white !important",
+  },
+
+  "& .MuiInput-underline:after": {
+    borderBottomColor: "white !important",
+  },
+
+  // style helper text
+  "& .MuiFormHelperText-root": {
+    color: "#70ffaf",
+
+    // style error helper text
+    "&.Mui-error": {
+      color: "#ff7070",
+    },
+  },
+});
 
 const CommentInputField = ({ authorDisplayName }) => {
   const [commentFieldClicked, setCommentFieldClicked] = useState(false);
@@ -52,29 +85,11 @@ const CommentInputField = ({ authorDisplayName }) => {
           />
         </div>
         <div className={styles.textFieldContainer}>
-          <TextField
+          <StyledCommentInputField
             className={styles.commentInputField}
             label="Add a comment"
             placeholder="Type your comment..."
             variant="standard"
-            // Styling inspired from https://muhimasri.com/blogs/mui-textfield-colors-styles/, Downloaded 2024-10-24
-            sx={{
-              input: { color: "#fff" },
-              "& .MuiInputLabel-root": { color: "#fff" },
-              "& .MuiInput-underline": { borderBottomColor: "#fff" },
-              "& .MuiInput-underline:before": { borderBottomColor: "#fff" },
-              "& .MuiInput-underline:hover:before": {
-                borderBottomColor: "#fff",
-              },
-              "& .MuiInput-underline:hover": {
-                borderBottomColor: "#fff",
-              },
-              "& .MuiInput-underline:hover:after": {
-                borderBottomColor: "#fff",
-              },
-              "& .MuiInput-underline:after": { borderBottomColor: "#fff" },
-              "& .MuiFormHelperText-root": { color: "#fff" },
-            }}
             onClick={handleCommentFieldClick}
             onChange={handleTextInput}
             // From https://stackoverflow.com/questions/45939909/put-length-constraint-in-a-textfield-in-react-js, Downloaded 2024-10-24
