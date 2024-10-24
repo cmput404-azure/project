@@ -139,7 +139,7 @@
   }
 }
 
-.postButton {
+.commentButton {
   padding: 10px;
   background-color: #555;
   color: white;
@@ -151,5 +151,16 @@
   &:hover {
     background-color: #70ffaf;
     color: #555;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: #888;
+    color: #ccc;
+
+    &:hover {
+      background-color: #888;
+      color: #ccc;
+    }
   }
 }

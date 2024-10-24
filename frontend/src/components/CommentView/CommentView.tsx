@@ -42,6 +42,7 @@ const CommentInputField = ({ authorDisplayName }) => {
   const [isTextError, setIsTextError] = useState<boolean>(false);
   const [textErrorMsg, setTextErrorMsg] = useState("");
   const [textInField, setTextInField] = useState("");
+  const [disableCommentButton, setDisableCommentButton] = useState(true);
 
   const MAX_CHARACTERS = 50; // Max comment toggle
 
@@ -66,11 +67,18 @@ const CommentInputField = ({ authorDisplayName }) => {
     if (e.target.value.length == MAX_CHARACTERS) {
       setIsTextError(true);
       setTextErrorMsg(
-        `Comment must be less than ${MAX_CHARACTERS} characters long`
+        `You've reached the max character limit of ${MAX_CHARACTERS}`
       );
+    } else if (e.target.value.length == 0) {
+      setIsTextError(true);
+      setDisableCommentButton(true);
+      setTextErrorMsg("Comment cannot be empty");
     } else {
       setIsTextError(false);
-      setTextErrorMsg(`Max ${MAX_CHARACTERS} characters`);
+      setDisableCommentButton(false);
+      setTextErrorMsg(
+        `${e.target.value.length}/${MAX_CHARACTERS} characters used`
+      );
     }
   };
 
@@ -108,7 +116,11 @@ const CommentInputField = ({ authorDisplayName }) => {
           >
             cancel
           </button>
-          <button className={styles.postButton} onClick={handleCommentSubmit}>
+          <button
+            className={styles.commentButton}
+            disabled={disableCommentButton}
+            onClick={handleCommentSubmit}
+          >
             Comment
           </button>
         </div>
