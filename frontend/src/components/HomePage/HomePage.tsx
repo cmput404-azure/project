@@ -172,13 +172,7 @@ const HomePage = () => {
           ) : null
         }
         comments={comments}
-        author={
-          // similar to how we fuond the post to pass into the modal, we find teh display name of the author by using the selectedPostID
-          selectedPost &&
-          displayedPosts.find((post) => post.id === selectedPost.id)
-            ? selectedPost.author.displayName
-            : null
-        }
+        author={authProvider.user}
       />
     </div>
   );

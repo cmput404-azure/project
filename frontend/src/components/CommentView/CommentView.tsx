@@ -4,7 +4,7 @@ import styles from "./CommentView.module.scss";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
 
-const CommentInputField = ({ author }) => {
+const CommentInputField = ({ authorDisplayName }) => {
   const [commentFieldClicked, setCommentFieldClicked] = useState(false);
   const [isTextError, setIsTextError] = useState<boolean>(false);
   const [textErrorMsg, setTextErrorMsg] = useState("");
@@ -47,7 +47,7 @@ const CommentInputField = ({ author }) => {
         <div className={styles.userImageContainer}>
           <img
             className={styles.userImage}
-            src={`https://ui-avatars.com/api/?background=random&name=${author}`}
+            src={`https://ui-avatars.com/api/?background=random&name=${authorDisplayName}`}
             alt="User Profile"
           />
         </div>
@@ -114,7 +114,7 @@ interface CommentViewProps {
   onRequestClose: () => void;
   postComponent: React.ReactNode;
   comments: Comment[]; // List of comments
-  author: string;
+  author: any; // author object
 }
 
 const CommentView: React.FC<CommentViewProps> = ({
@@ -139,7 +139,7 @@ const CommentView: React.FC<CommentViewProps> = ({
 
         {/* Comments Section */}
         <div className={styles.commentsSection}>
-          <CommentInputField author={author} />
+          <CommentInputField authorDisplayName={author.username} />
           {comments.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
