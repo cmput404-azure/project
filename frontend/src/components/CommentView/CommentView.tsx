@@ -4,7 +4,7 @@ import styles from "./CommentView.module.scss";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
 
-const CommentInputField = ({}) => {
+const CommentInputField = ({ author }) => {
   const [commentFieldClicked, setCommentFieldClicked] = useState(false);
 
   const handleCommentFieldClick = () => {
@@ -17,26 +17,37 @@ const CommentInputField = ({}) => {
 
   return (
     <section className={styles.commentInput}>
-      <TextField
-        className={styles.commentInputField}
-        label="Add a comment"
-        placeholder="Add a comment..."
-        variant="standard"
-        // styling inspired from https://muhimasri.com/blogs/mui-textfield-colors-styles/, Downloaded 2024-10-24
-        sx={{
-          input: { color: "white" },
-          "& .MuiInputLabel-root": { color: "white" }, // Label color
-          "& .MuiInput-underline:before": { borderBottomColor: "white" },
-          "& .MuiInput-underline:hover": {
-            borderBottomColor: "white",
-          },
-          "& .MuiInput-underline:hover:before": {
-            borderBottomColor: "white",
-          },
-          "& .MuiInput-underline:after": { borderBottomColor: "white" },
-        }}
-        onClick={handleCommentFieldClick}
-      />
+      <div className={styles.commentDisplay}>
+        <div className={styles.userImageContainer}>
+          <img
+            className={styles.userImage}
+            src={`https://ui-avatars.com/api/?background=random&name=${author}`}
+            alt="User Profile"
+          />
+        </div>
+        <div className={styles.textFieldContainer}>
+          <TextField
+            className={styles.commentInputField}
+            label="Add a comment"
+            placeholder="Add a comment..."
+            variant="standard"
+            // styling inspired from https://muhimasri.com/blogs/mui-textfield-colors-styles/, Downloaded 2024-10-24
+            sx={{
+              input: { color: "white" },
+              "& .MuiInputLabel-root": { color: "white" },
+              "& .MuiInput-underline:before": { borderBottomColor: "white" },
+              "& .MuiInput-underline:hover:before": {
+                borderBottomColor: "white",
+              },
+              "& .MuiInput-underline:hover:after": {
+                borderBottomColor: "white",
+              },
+              "& .MuiInput-underline:after": { borderBottomColor: "white" },
+            }}
+            onClick={handleCommentFieldClick}
+          />
+        </div>
+      </div>
       {commentFieldClicked && (
         <div className={styles.commentButtonContainer}>
           <button
@@ -65,6 +76,7 @@ interface CommentViewProps {
   onRequestClose: () => void;
   postComponent: React.ReactNode;
   comments: Comment[]; // List of comments
+  author: string;
 }
 
 const CommentView: React.FC<CommentViewProps> = ({
@@ -72,6 +84,7 @@ const CommentView: React.FC<CommentViewProps> = ({
   onRequestClose,
   postComponent,
   comments,
+  author,
 }) => {
   return (
     <Modal
@@ -88,7 +101,7 @@ const CommentView: React.FC<CommentViewProps> = ({
 
         {/* Comments Section */}
         <div className={styles.commentsSection}>
-          <CommentInputField />
+          <CommentInputField author={author} />
           {comments.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>

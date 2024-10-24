@@ -12,7 +12,7 @@ interface PostCardProps {
   likeCount: number;
   saveCount: number;
   commentCount: number;
-  onCommentButtonClick?: () => void;
+  onCommentButtonClick?: () => void; // optional
   onClick?: () => void;
 }
 
