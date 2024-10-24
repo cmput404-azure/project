@@ -61,6 +61,7 @@ const CommentInputField = ({ authorDisplayName }) => {
             sx={{
               input: { color: "#fff" },
               "& .MuiInputLabel-root": { color: "#fff" },
+              "& .MuiInput-underline": { borderBottomColor: "#fff" },
               "& .MuiInput-underline:before": { borderBottomColor: "#fff" },
               "& .MuiInput-underline:hover:before": {
                 borderBottomColor: "#fff",
