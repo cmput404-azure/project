@@ -10,6 +10,7 @@ import { api } from "../../service/config";
 import logo from "../../images/dog_icon.png";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
+import { post } from "axios";
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
@@ -21,6 +22,7 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const authProvider = useAuth();
 
   useEffect(() => {
@@ -36,24 +38,26 @@ const HomePage = () => {
         setPublicPosts(publicPosts as any[]);
         setIsLoading(false);
       } catch (err) {
-        console.log(err)
+        console.log(err);
         setError("Failed to fetch posts. Please try again.");
       }
     };
     fetchPosts();
-  }, [])
+  }, []);
 
   const handleAddClick = () => {
     console.log("Add button clicked");
   };
 
   // handle when the comment button is clicked
-  const handleCommentButtonClick = () => {
+  const handleCommentButtonClick = (post: any) => {
     setIsCommentModalOpen(true);
+    setSelectedPost(post);
   };
   // handle when the comment modal is closed
   const handleCommentModalClose = () => {
     setIsCommentModalOpen(false);
+    setSelectedPost(null);
   };
 
   // test comments
@@ -74,7 +78,6 @@ const HomePage = () => {
     },
   ];
 
-
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
     setActiveFilterPost(icon);
@@ -90,28 +93,30 @@ const HomePage = () => {
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar showButtonBar={false}/>
+        <PostBar showButtonBar={false} />
         {authProvider.isAuthenticated && (
-        <div className={styles["icon-bar"]}>
-          <div
-            className={`${styles["icon-section"]} ${
-              activeFilterPost === "all" ? styles.active : ""
-            }`}
-            onClick={() => handleFilterPost("all")}
-          >
-            <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+          <div className={styles["icon-bar"]}>
+            <div
+              className={`${styles["icon-section"]} ${
+                activeFilterPost === "all" ? styles.active : ""
+              }`}
+              onClick={() => handleFilterPost("all")}
+            >
+              <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+            </div>
+            <div className={styles["vertical-divider"]}></div>
+            <div
+              className={`${styles["icon-section"]} ${
+                activeFilterPost === "unlisted_friends-only"
+                  ? styles.active
+                  : ""
+              }`}
+              onClick={() => handleFilterPost("unlisted_friends-only")}
+            >
+              <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
+            </div>
           </div>
-          <div className={styles["vertical-divider"]}></div>
-          <div
-            className={`${styles["icon-section"]} ${
-              activeFilterPost === "unlisted_friends-only" ? styles.active : ""
-            }`}
-            onClick={() => handleFilterPost("unlisted_friends-only")}
-          >
-            <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
-          </div>
-        </div>
-      )}
+        )}
         {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
@@ -123,16 +128,15 @@ const HomePage = () => {
             likeCount={post.likes.length}
             saveCount={0}
             commentCount={post.comments.length}
-            onCommentButtonClick={handleCommentButtonClick}
-            onClick={handleCommentButtonClick}
+            onCommentButtonClick={() => handleCommentButtonClick(post)}
+            onClick={() => handleCommentButtonClick(post)}
           />
         ))}
-
       </div>
 
       {/* Second Section: Author Post */}
       <div className={styles.authorSection}>
-        <h2 className={styles.recommendedTitle} >Recommended Author</h2>
+        <h2 className={styles.recommendedTitle}>Recommended Author</h2>
         <AuthorPost
           authorImage={logo}
           authorName="Kyle Quach"
@@ -140,7 +144,6 @@ const HomePage = () => {
           postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
           onAddClick={handleAddClick}
         />
-
       </div>
 
       {/* Comment Modal */}
@@ -148,19 +151,34 @@ const HomePage = () => {
         isOpen={isCommentModalOpen}
         onRequestClose={handleCommentModalClose}
         postComponent={
-          <PostCard
-            profilePic={`https://ui-avatars.com/api/?background=random&name=John Doe`}
-            userName="John Doe"
-            postTime="2h ago"
-            postContent="This is a sample post."
-            postImage="https://via.placeholder.com/300"
-            likeCount={123}
-            saveCount={45}
-            commentCount={67}
-            onCommentButtonClick={() => handleCommentButtonClick()}
-          />
+          // find the post that was selected by uising the selectedPostID
+          selectedPost &&
+          displayedPosts.find((post) => post.id === selectedPost.id) ? (
+            // pass in the selected post for the modal to display
+            <PostCard
+              key={selectedPost.id}
+              profilePic={
+                selectedPost.author?.profileImage ||
+                `https://ui-avatars.com/api/?background=random&name=${selectedPost.author?.displayName}`
+              }
+              userName={selectedPost.author.displayName}
+              postTime={new Date(selectedPost.published).toLocaleString()}
+              postContent={selectedPost.content}
+              postImage={""}
+              likeCount={0}
+              saveCount={0}
+              commentCount={0}
+            />
+          ) : null
         }
         comments={comments}
+        author={
+          // similar to how we fuond the post to pass into the modal, we find teh display name of the author by using the selectedPostID
+          selectedPost &&
+          displayedPosts.find((post) => post.id === selectedPost.id)
+            ? selectedPost.author.displayName
+            : null
+        }
       />
     </div>
   );

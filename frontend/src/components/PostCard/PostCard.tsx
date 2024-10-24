@@ -12,7 +12,7 @@ interface PostCardProps {
   likeCount: number;
   saveCount: number;
   commentCount: number;
-  onCommentButtonClick: () => void;
+  onCommentButtonClick?: () => void;
   onClick?: () => void;
 }
 
@@ -33,7 +33,10 @@ function PostCard({
       <div className={styles.grid}>
         <img
           className={styles.profilePic}
-          src={profilePic ?? `https://ui-avatars.com/api/?background=random&name=${userName}`}
+          src={
+            profilePic ??
+            `https://ui-avatars.com/api/?background=random&name=${userName}`
+          }
           alt={`${userName}'s profile`}
         />
         <div className={styles.headerText}>
@@ -45,17 +48,23 @@ function PostCard({
         </div>
         <div className={styles.cardFooter}>
           <div className={styles.essentials}>
-            <div className={styles.icon} onClick={(e) => {
-              e.stopPropagation();
-              console.log("Like");
-            }}>
+            <div
+              className={styles.icon}
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("Like");
+              }}
+            >
               <i className="fas fa-heart"></i>
               <span>{formatCount(likeCount)}</span>
             </div>
-            <div className={styles.icon} onClick={(e) => {
-              e.stopPropagation();
-              console.log("Save");
-            }}>
+            <div
+              className={styles.icon}
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("Save");
+              }}
+            >
               <i className="fas fa-bookmark"></i>
               <span>{formatCount(saveCount)}</span>
             </div>
