@@ -23,6 +23,10 @@ const CommentInputField = ({ author }) => {
     setTextInField("");
   };
 
+  const handleCommentSubmit = () => {
+    console.log(`Comment: "${textInField}" | Submitted`); // for testing, change to API call or whatever
+  };
+
   // Inspired from https://muhimasri.com/blogs/mui-validation/, Downloaded 2024-10-24
   const handleTextInput = (e) => {
     setTextInField(e.target.value);
@@ -88,7 +92,9 @@ const CommentInputField = ({ author }) => {
           >
             cancel
           </button>
-          <button className={styles.postButton}>Post</button>
+          <button className={styles.postButton} onClick={handleCommentSubmit}>
+            Comment
+          </button>
         </div>
       )}
     </section>
