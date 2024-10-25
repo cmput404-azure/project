@@ -7,6 +7,7 @@ import { login } from "../../util/auth/login";
 import { logout } from "../../util/auth/checkauth";
 import styles from './Auth.module.scss';
 import { useAuth } from "../../state";
+import authService from "../../service/auth";
 
 function Auth() {
    const [isRegister, setIsRegister] = useState(false);
@@ -30,7 +31,7 @@ function Auth() {
       }
    }, [authProvider.isAuthenticated, authProvider.loading, navigate, location]);
 
-   const handleSubmit = (e) => {
+   const handleSubmit = async (e) => {
       e.preventDefault();
       setError("");
 
@@ -45,7 +46,15 @@ function Auth() {
       }
 
       if (isRegister) {
-         // Handle registration logic here
+         const response = await authService.register({ username, password, email, name });
+
+         if (response) {
+            alert("Registration successful! Please log in.");
+            setIsRegister(false); // Switch back to login form
+          } else {
+            setError("Registration failed. Username might already be taken.");
+          }
+
       } else {
          login(username, password)
          .then((response) => {
