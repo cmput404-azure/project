@@ -58,6 +58,7 @@ export default function UserProfile() {
         );
         console.log("User info updated successfully:", response.data);
         fetchAuthorData();
+        fetchAuthorPosts();
       }
     } catch (error) {
       console.error("Error updating user info", error);
