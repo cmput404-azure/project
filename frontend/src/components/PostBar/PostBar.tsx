@@ -11,6 +11,10 @@ interface PostBarProps {
 }
 type IconType = "public" | "friends" | "unlisted";
 
+// Max character limits
+const TITLE_MAX_LENGTH = 200;
+const CONTENT_MAX_LENGTH = 2000;
+
 const PostBar: React.FC<PostBarProps> = ({
   showButtonBar = true,
 }) => {
@@ -26,18 +30,25 @@ const PostBar: React.FC<PostBarProps> = ({
   const handleIconClick = (icon: IconType) => {
     setActiveIcon(icon);
   };
-  // To update the title
-  const handleTitleChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setTitle(event.target.value);
+
+  // Input handlers with validation
+  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.value.length <= TITLE_MAX_LENGTH) {
+      setTitle(event.target.value);
+    }
   };
+
   const handleInputClick = () => setShowDetail(true);
+
   const handleDescriptionChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>
   ) => setDescription(event.target.value);
-  const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
-    setContent(event.target.value);
+
+  const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (event.target.value.length <= CONTENT_MAX_LENGTH) {
+      setContent(event.target.value);
+    }
+  };
 
   const handleCombinedClick = async () => {
     try {
@@ -117,7 +128,7 @@ const PostBar: React.FC<PostBarProps> = ({
       }
       console.log("All posts sent to followers/friends' inboxes.");
 
-      // Closse the input modal and reset input fields
+      // Close the input modal and reset input fields
       setShowDetail(false)
       setTitle("")
       setDescription("")
@@ -127,6 +138,8 @@ const PostBar: React.FC<PostBarProps> = ({
       console.error("Error in combined request flow:", error);
     }
   };
+
+  const isPostDisabled = title.length === 0 || content.length === 0;
 
   if (!authProvider.isAuthenticated) {
     return <></>
@@ -145,6 +158,9 @@ const PostBar: React.FC<PostBarProps> = ({
           onChange={handleTitleChange}
           onClick={handleInputClick}
         />
+        <span className={styles["char-counter"]}>
+          {title.length} / {TITLE_MAX_LENGTH}
+        </span>
         <button
           className={styles["add-button"]}
           onClick={() => console.log("Add button clicked")}
@@ -172,6 +188,9 @@ const PostBar: React.FC<PostBarProps> = ({
             value={content}
             onChange={handleContentChange}
           />
+          <span className={styles["char-counter"]}>
+            {content.length} / {CONTENT_MAX_LENGTH}
+          </span>
         </div>
       )}
 
@@ -206,6 +225,7 @@ const PostBar: React.FC<PostBarProps> = ({
           <button
             className={styles["post-button"]}
             onClick={handleCombinedClick}
+            disabled={isPostDisabled}
           >
             Post
           </button>

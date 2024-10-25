@@ -161,6 +161,15 @@
       &:hover {
         background-color: #70ffaf;
       }
+
+      &:disabled {
+        background-color: #999;
+        cursor: not-allowed;
+    
+        &:hover {
+          background-color: #999;
+        }
+      }
     }
   }
 }
