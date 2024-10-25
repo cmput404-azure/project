@@ -24,7 +24,7 @@ export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
   // Edit profile
-  const [isEditingProfile, setIsEditingProfile] = useState(true);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   // Delete post
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
