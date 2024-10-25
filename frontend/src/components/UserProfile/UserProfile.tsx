@@ -1,6 +1,7 @@
 import { Author, Post } from "../../models/models";
 import { useEffect, useState } from "react";
 
+import EditProfileModal from "../EditProfileModal/EditProfileModal";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import EditPostModal from "../EditPostModal/EditPostModal";
 import FollowList from "../FollowList/FollowList";
@@ -22,6 +23,8 @@ export default function UserProfile() {
   // Author data
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
+  // Edit profile
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   // Delete post
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
@@ -32,6 +35,15 @@ export default function UserProfile() {
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState<string>("");
+
+  const handleEditProfileButtonClicked = () => {
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveEditProfileButtonClicked = (data) => {
+    setIsEditingProfile(false);
+    console.log(data);
+  };
 
   const authProvider = useAuth();
 
@@ -325,7 +337,12 @@ export default function UserProfile() {
               <span className={styles.userName}>{authorData.displayName}</span>
             </section>
             <section className={styles.buttonContainer}>
-              <button className={styles.followButton}>Edit Profile</button>
+              <button
+                className={styles.followButton}
+                onClick={handleEditProfileButtonClicked}
+              >
+                Edit Profile
+              </button>
               <IconButton
                 onClick={() => window.open(authorData.github, "_blank")}
               >
@@ -334,9 +351,9 @@ export default function UserProfile() {
             </section>
           </section>
 
-          <span className={styles.userHandle}>
+          {/* {          <span className={styles.userHandle}>
             @{authorData.displayName.toLowerCase().replace(" ", "_")}
-          </span>
+          </span>} */}
 
           <section className={styles.userStats}>
             <span>
@@ -399,6 +416,13 @@ export default function UserProfile() {
           ))}
         </section>
       </section>
+      <EditProfileModal
+        isOpen={isEditingProfile}
+        onSave={handleSaveEditProfileButtonClicked}
+        onClose={() => setIsEditingProfile(false)}
+        author={authorData}
+      />
+
       <DeletePostModal
         isOpen={isPostDeleteModalOpen}
         onRequestClose={handleDeletePostModalClose}
