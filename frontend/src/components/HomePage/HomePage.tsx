@@ -6,8 +6,8 @@ import CommentView from "../CommentView/CommentView";
 import Modal from "react-modal";
 import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
-import { getStream } from "../../service/stream";
 import logo from "../../images/dog_icon.png";
+import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
 
@@ -24,11 +24,12 @@ const HomePage = () => {
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const authProvider = useAuth();
 
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const publicPosts = await getStream();
-        const privatePosts = await getStream(true);
+        const publicPosts = await stream.getStream();
+        const privatePosts = await stream.getStream(true);
 
         setNonPublicPosts(privatePosts as any[]);
         setPublicPosts(publicPosts as any[]);

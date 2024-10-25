@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import axios, { get } from 'axios';
-import { getFollowers, getFollowing, getFriends } from "../../service/follow";
+import follow, { getFollowers, getFollowing, getFriends } from "../../service/follow";
 
 import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
@@ -23,11 +23,6 @@ interface FollowerListProps {
   isOpen: boolean;
   onClose: () => void;
   isFollowerList: string;
-}
-
-
-interface FollowerResponse {
-  followers: Follower[];
 }
 
 Modal.setAppElement('#root');
@@ -53,7 +48,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFriends = async () => {
     try {
-      const data = await getFriends(authProvider.user.uuid);
+      const data = await follow.getFriends(authProvider.user.uuid);
       setFollowers(data);
       setLoading(false);
     } catch (error) {
@@ -66,7 +61,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFollowers = async () => {
     try {
-      const data = await getFollowers(authProvider.user.uuid);
+      const data = await follow.getFollowers(authProvider.user.uuid);
       setFollowers(data);
       setLoading(false);
     } catch (error) {
@@ -77,7 +72,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFollowing = async () => {
     try {
-      const data = await getFollowing(authProvider.user.uuid);
+      const data = await follow.getFollowing(authProvider.user.uuid);
       setFollowers(data);
       setLoading(false);
     } catch (error) {
