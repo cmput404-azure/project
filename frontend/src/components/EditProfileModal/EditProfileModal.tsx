@@ -48,12 +48,50 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
   console.log(author);
   const [displayName, setDisplayName] = React.useState("");
   const [githubLink, setGithubLink] = React.useState("");
+  const [isDisplayNameError, setIsDisplayNameError] = React.useState(false);
+  const [isGithubLinkError, setIsGithubLinkError] = React.useState(false);
+  const [displayNameErrorMsg, setDisplayNameErrorMsg] = React.useState("");
+  const [githubLinkErrorMsg, setGithubLinkErrorMsg] = React.useState("");
+  const [isSubmitDisabled, setIsSubmitDisabled] = React.useState(false);
+
+  const MAX_DISPLAYNAME_LENGTH = 20;
 
   useEffect(() => {
     console.log(`Author data: ${author}`);
     setDisplayName(author.displayName);
     setGithubLink(author.github);
+
+    if (displayName.length == MAX_DISPLAYNAME_LENGTH) {
+      setIsDisplayNameError(true);
+      setIsSubmitDisabled(false);
+      setDisplayNameErrorMsg(
+        `You've reached the max character limit of ${MAX_DISPLAYNAME_LENGTH}`
+      );
+    } else {
+      setIsDisplayNameError(false);
+      setIsSubmitDisabled(false);
+      setDisplayNameErrorMsg("");
+    }
   }, [author, isOpen]);
+
+  const validateDisplayName = (e) => {
+    setDisplayName(e.target.value);
+    if (e.target.value.length == MAX_DISPLAYNAME_LENGTH) {
+      setIsDisplayNameError(true);
+      setIsSubmitDisabled(false);
+      setDisplayNameErrorMsg(
+        `You've reached the max character limit of ${MAX_DISPLAYNAME_LENGTH}`
+      );
+    } else if (e.target.value.length === 0) {
+      setIsDisplayNameError(true);
+      setIsSubmitDisabled(true);
+      setDisplayNameErrorMsg("Display name cannot be empty");
+    } else {
+      setIsDisplayNameError(false);
+      setIsSubmitDisabled(false);
+      setDisplayNameErrorMsg("");
+    }
+  };
 
   const handleSave = () => {
     console.log(`Saving profile data: ${displayName}, ${githubLink}`);
@@ -74,8 +112,11 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
             <StyledInputTextField
               label="Display Name"
               placeholder="Enter a display name ..."
+              onChange={validateDisplayName}
               value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              inputProps={{ maxLength: MAX_DISPLAYNAME_LENGTH }}
+              error={isDisplayNameError}
+              helperText={displayNameErrorMsg}
             />
           </div>
           <div className={styles.inputContainer}>
@@ -90,7 +131,11 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
             <button onClick={onClose} className={styles.cancel}>
               Cancel
             </button>
-            <button onClick={handleSave} className={styles.save}>
+            <button
+              onClick={handleSave}
+              className={styles.save}
+              disabled={isSubmitDisabled}
+            >
               Save
             </button>
           </div>

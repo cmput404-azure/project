@@ -75,20 +75,31 @@
       color: #555;
     }
   }
+}
 
-  .save {
-    padding: 15px;
-    background-color: #555;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: 0.3s;
+.save {
+  padding: 15px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.3s;
+
+  &:hover {
+    background-color: #70ffaf;
+    color: #555;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: #888;
+    color: #ccc;
 
     &:hover {
-      background-color: #70ffaf;
-      color: #555;
+      background-color: #888;
+      color: #ccc;
     }
   }
 }
