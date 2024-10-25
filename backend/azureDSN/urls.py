@@ -8,6 +8,8 @@ from django.views.generic import TemplateView
 # urlpatterns contains all of the routes that this application supports routing for.
 # this routes traffic from polls/ to the index function that we defined earlier in the views file.
 urlpatterns = [
+    path('api/register/', RegisterView.as_view(), name='register'),
+
     path('api/stream/', PublicStreamView.as_view(), name='stream'),
     path('api/stream/auth', AuthStreamView.as_view(), name='auth_stream'),
     
