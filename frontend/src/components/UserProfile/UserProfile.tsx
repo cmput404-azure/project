@@ -19,12 +19,14 @@ interface AuthorPostsResponse {
 }
 
 export default function UserProfile() {
+  // Author data
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
+  // Delete post
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [visibilityNumber, setVisibilityNumber] = useState<number | null>(null);
-
+  // Edit post
   const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
   const [postToEdit, setPostToEdit] = useState<Post[]>([]);
   // FollowerList
@@ -323,7 +325,7 @@ export default function UserProfile() {
               <span className={styles.userName}>{authorData.displayName}</span>
             </section>
             <section className={styles.buttonContainer}>
-              <button className={styles.followButton}>Follow</button>
+              <button className={styles.followButton}>Edit Profile</button>
               <IconButton
                 onClick={() => window.open(authorData.github, "_blank")}
               >
