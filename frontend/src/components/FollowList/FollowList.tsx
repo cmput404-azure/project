@@ -1,12 +1,13 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
+import axios, { get } from 'axios';
+import follow, { getFollowers, getFollowing, getFriends } from "../../service/follow";
+
 import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
-import axios from 'axios';
+import { api } from "../../service/config";
 import styles from './FollowList.module.scss';
 import { useAuth } from "../../state";
-import { api } from "../../service/config";
-
 
 interface Follower {
   displayName: string;
@@ -24,11 +25,6 @@ interface FollowerListProps {
   isFollowerList: string;
 }
 
-
-interface FollowerResponse {
-  followers: Follower[];
-}
-
 Modal.setAppElement('#root');
 
 export default function FollowList({ isOpen, onClose, isFollowerList }: FollowerListProps) {
@@ -36,10 +32,6 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const authProvider = useAuth();
-
-  axios.defaults.withCredentials = true;
-  axios.defaults.xsrfCookieName = "csrftoken";
-  axios.defaults.xsrfHeaderName = "x-csrftoken";
 
   useEffect(() => {
     if (isOpen) {
@@ -56,13 +48,8 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFriends = async () => {
     try {
-      const response = await api.get(`/api/authors/${authProvider.user.uuid}/following/`, {
-        params: {
-          action: 'friends'
-        }
-      });
-      const data = response.data;
-      setFollowers(response.data);
+      const data = await follow.getFriends(authProvider.user.uuid);
+      setFollowers(data);
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
@@ -74,34 +61,23 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   const fetchFollowers = async () => {
     try {
-      const response = await api.get<FollowerResponse>(`/api/authors/${authProvider.user.uuid}/followers/`, {
-      });
-
-      const data = response.data;
-      setFollowers(response.data.followers);
+      const data = await follow.getFollowers(authProvider.user.uuid);
+      setFollowers(data);
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
       setLoading(false);
-
     }
   };
 
   const fetchFollowing = async () => {
     try {
-      const response = await api.get(`/api/authors/${authProvider.user.uuid}/following/`, {
-        params: {
-          action: 'following'
-        }
-      });
-
-      const data = response.data;
-      setFollowers(response.data.followers);
+      const data = await follow.getFollowing(authProvider.user.uuid);
+      setFollowers(data);
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
       setLoading(false);
-
     }
   };
 
@@ -122,6 +98,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
         <p>{error}</p>
       ) : (
         <ul className={styles.ul}>
+
           {followers.map((follower, index) => (
             <div key={index}>
               <p>{follower.name}</p> 

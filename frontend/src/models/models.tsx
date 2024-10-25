@@ -31,6 +31,14 @@ export interface FollowRequest {
     object: Author
 }
 
+export interface Follower {
+    displayName: string;
+    github: string;
+    host: string;
+    id: string; // use the host and id to get the foreign fqid
+    page: string;
+    type: string;
+}
 export interface Like {
     type: string;
     author: Author;
