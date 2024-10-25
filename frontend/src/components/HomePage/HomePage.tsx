@@ -7,10 +7,11 @@ import Modal from "react-modal";
 import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
 import { api } from "../../service/config";
+import { getStream } from "../../service/stream";
 import logo from "../../images/dog_icon.png";
+import { post } from "axios";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
-import { post } from "axios";
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
@@ -28,11 +29,8 @@ const HomePage = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const req = await api.get("/api/stream/");
-        const publicPosts = req.data;
-
-        const otherReq = await api.get("/api/stream/auth");
-        const privatePosts = otherReq.data;
+        const publicPosts = await getStream();
+        const privatePosts = await getStream(true);
 
         setNonPublicPosts(privatePosts as any[]);
         setPublicPosts(publicPosts as any[]);
