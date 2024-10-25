@@ -6,10 +6,8 @@ import CommentView from "../CommentView/CommentView";
 import Modal from "react-modal";
 import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
-import { api } from "../../service/config";
 import { getStream } from "../../service/stream";
 import logo from "../../images/dog_icon.png";
-import { post } from "axios";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
 
