@@ -87,7 +87,7 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
       console.log("error2");
       setIsGithubLinkError(true);
       setGithubLinkErrorMsg(
-        "Invalid Github link, link must begin with 'https://github.com/'"
+        `Invalid Github link, link must begin with "https://github.com/"`
       );
       return false;
     } else {
@@ -105,7 +105,7 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
     const isDisplayNameValid = validateDisplayName(author.displayName || "");
     const isGithubLinkValid = validateGithubLink(author.github || "");
     setIsSubmitDisabled(!isDisplayNameValid || !isGithubLinkValid);
-  }, [author]);
+  }, [author, isOpen]);
 
   const handleDisplayNameChange = (e) => {
     const value = e.target.value;
