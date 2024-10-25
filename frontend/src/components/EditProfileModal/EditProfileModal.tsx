@@ -56,61 +56,69 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
 
   const MAX_DISPLAYNAME_LENGTH = 20;
 
-  useEffect(() => {
-    console.log(`Author data: ${author}`);
-    setDisplayName(author.displayName);
-    setGithubLink(author.github);
-
-    if (displayName.length == MAX_DISPLAYNAME_LENGTH) {
+  const validateDisplayName = (value) => {
+    if (value.length === MAX_DISPLAYNAME_LENGTH) {
       setIsDisplayNameError(true);
-      setIsSubmitDisabled(false);
       setDisplayNameErrorMsg(
         `You've reached the max character limit of ${MAX_DISPLAYNAME_LENGTH}`
       );
-    } else {
-      setIsDisplayNameError(false);
-      setIsSubmitDisabled(false);
-      setDisplayNameErrorMsg("");
-    }
-  }, [author, isOpen]);
-
-  const validateDisplayName = (e) => {
-    setDisplayName(e.target.value);
-    if (e.target.value.length == MAX_DISPLAYNAME_LENGTH) {
+      return true;
+    } else if (value.length === 0) {
       setIsDisplayNameError(true);
-      setIsSubmitDisabled(false);
-      setDisplayNameErrorMsg(
-        `You've reached the max character limit of ${MAX_DISPLAYNAME_LENGTH}`
-      );
-    } else if (e.target.value.length === 0) {
-      setIsDisplayNameError(true);
-      setIsSubmitDisabled(true);
       setDisplayNameErrorMsg("Display name cannot be empty");
+      return false;
     } else {
       setIsDisplayNameError(false);
-      setIsSubmitDisabled(false);
       setDisplayNameErrorMsg("");
+      return true;
     }
   };
 
-  const validateGithubLink = (e) => {
-    setGithubLink(e.target.value);
-    if (e.target.value.length === 0) {
+  const validateGithubLink = (value) => {
+    if (value.length === 0) {
+      console.log("error1");
       setIsGithubLinkError(true);
-      setIsSubmitDisabled(true);
       setGithubLinkErrorMsg("Github link cannot be empty");
+      return false;
     }
     // From chatGPT, "regex statement to check if the link starts with `https://github.com/`", Downloaded 2024-10-25
     // check if the link starts with https://github.com/
-    else if (!e.target.value.match(/^https:\/\/github\.com\//)) {
+    else if (!value.match(/^https:\/\/github\.com\//)) {
+      console.log("error2");
       setIsGithubLinkError(true);
-      setIsSubmitDisabled(true);
-      setGithubLinkErrorMsg("Invalid Github link");
+      setGithubLinkErrorMsg(
+        "Invalid Github link, link must begin with 'https://github.com/'"
+      );
+      return false;
     } else {
+      console.log("error3");
       setIsGithubLinkError(false);
-      setIsSubmitDisabled(false);
       setGithubLinkErrorMsg("");
+      return true;
     }
+  };
+
+  useEffect(() => {
+    setDisplayName(author.displayName);
+    setGithubLink(author.github);
+
+    const isDisplayNameValid = validateDisplayName(author.displayName || "");
+    const isGithubLinkValid = validateGithubLink(author.github || "");
+    setIsSubmitDisabled(!isDisplayNameValid || !isGithubLinkValid);
+  }, [author]);
+
+  const handleDisplayNameChange = (e) => {
+    const value = e.target.value;
+    setDisplayName(value);
+    const isDisplayNameValid = validateDisplayName(value);
+    setIsSubmitDisabled(!isDisplayNameValid || isGithubLinkError);
+  };
+
+  const handleGithubLinkChange = (e) => {
+    const value = e.target.value;
+    setGithubLink(value);
+    const isGithubLinkValid = validateGithubLink(value);
+    setIsSubmitDisabled(!isGithubLinkValid || !isDisplayNameError);
   };
 
   const handleSave = () => {
@@ -132,7 +140,7 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
             <StyledInputTextField
               label="Display Name"
               placeholder="Enter a display name ..."
-              onChange={validateDisplayName}
+              onChange={handleDisplayNameChange}
               value={displayName}
               inputProps={{ maxLength: MAX_DISPLAYNAME_LENGTH }}
               error={isDisplayNameError}
@@ -143,7 +151,7 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
             <StyledInputTextField
               label="Github Link"
               placeholder="Enter a Github link ..."
-              onChange={validateGithubLink}
+              onChange={handleGithubLinkChange}
               value={githubLink}
               error={isGithubLinkError}
               helperText={githubLinkErrorMsg}
