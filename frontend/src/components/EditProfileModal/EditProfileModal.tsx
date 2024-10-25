@@ -53,7 +53,7 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
     console.log(`Author data: ${author}`);
     setDisplayName(author.displayName);
     setGithubLink(author.github);
-  }, [author]);
+  }, [author, isOpen]);
 
   const handleSave = () => {
     console.log(`Saving profile data: ${displayName}, ${githubLink}`);
@@ -73,6 +73,7 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
           <div className={styles.inputContainer}>
             <StyledInputTextField
               label="Display Name"
+              placeholder="Enter a display name ..."
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
             />
@@ -80,6 +81,7 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
           <div className={styles.inputContainer}>
             <StyledInputTextField
               label="Github Link"
+              placeholder="Enter a Github link ..."
               value={githubLink}
               onChange={(e) => setGithubLink(e.target.value)}
             />
