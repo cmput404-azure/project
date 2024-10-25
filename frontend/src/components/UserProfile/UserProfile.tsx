@@ -24,7 +24,7 @@ export default function UserProfile() {
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
   // Edit profile
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(true);
   // Delete post
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
@@ -49,50 +49,6 @@ export default function UserProfile() {
     setIsEditingProfile(false);
   };
 
-  async function updateUserInfo(data) {
-    try {
-      if (authProvider.user) {
-        const response = await api.put(
-          `/api/authors/${authProvider.user.uuid}/`,
-          data
-        );
-        console.log("User info updated successfully:", response.data);
-        fetchAuthorData();
-        fetchAuthorPosts();
-      }
-    } catch (error) {
-      console.error("Error updating user info", error);
-    }
-  }
-
-  const authProvider = useAuth();
-
-  async function fetchAuthorPosts() {
-    try {
-      if (authProvider.user) {
-        const response = await api.get<AuthorPostsResponse>(
-          `/api/authors/${authProvider.user.uuid}/posts/`
-        );
-        setAuthorPosts(response.data.results.reverse());
-      }
-    } catch (error) {
-      console.error("Error fetching the author posts", error);
-    }
-  }
-
-  async function fetchAuthorData() {
-    try {
-      if (authProvider.user) {
-        const response = await api.get(
-          `/api/authors/${authProvider.user.uuid}/`
-        );
-        setAuthorData(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching the author data", error);
-    }
-  }
-
   const handleDeletePostButtonClicked = (
     postId: string,
     visibilityNumber: number
@@ -116,6 +72,75 @@ export default function UserProfile() {
   function handleEditPostModalClose() {
     setIsEditPostModalOpen(false);
     setPostToEdit([]);
+  }
+
+  function openFollowers() {
+    setShowFollowerList("follower");
+    setIsFollowerListModalOpen(true);
+  }
+
+  function openFollowing() {
+    setShowFollowerList("following");
+    setIsFollowerListModalOpen(true);
+  }
+  function openFriends() {
+    setShowFollowerList("friend");
+    setIsFollowerListModalOpen(true);
+  }
+
+  // authentication
+  const authProvider = useAuth();
+
+  useEffect(() => {
+    if (authProvider.user) {
+      fetchAuthorData();
+      fetchAuthorPosts();
+    }
+  }, [authProvider.user]);
+
+  // function to get the info of the user who is currently logged in
+  async function fetchAuthorData() {
+    try {
+      if (authProvider.user) {
+        const response = await api.get(
+          `/api/authors/${authProvider.user.uuid}/`
+        );
+        setAuthorData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching the author data", error);
+    }
+  }
+
+  // function to update an Authors data
+  async function updateUserInfo(data) {
+    try {
+      if (authProvider.user) {
+        const response = await api.put(
+          `/api/authors/${authProvider.user.uuid}/`,
+          data
+        );
+        console.log("User info updated successfully:", response.data);
+        fetchAuthorData();
+        fetchAuthorPosts();
+      }
+    } catch (error) {
+      console.error("Error updating user info", error);
+    }
+  }
+
+  // function to get all the authors posts, used to refresh after save
+  async function fetchAuthorPosts() {
+    try {
+      if (authProvider.user) {
+        const response = await api.get<AuthorPostsResponse>(
+          `/api/authors/${authProvider.user.uuid}/posts/`
+        );
+        setAuthorPosts(response.data.results.reverse());
+      }
+    } catch (error) {
+      console.error("Error fetching the author posts", error);
+    }
   }
 
   // Function to handle updating the post
@@ -317,27 +342,6 @@ export default function UserProfile() {
       }
     }
   }
-
-  function openFollowers() {
-    setShowFollowerList("follower");
-    setIsFollowerListModalOpen(true);
-  }
-
-  function openFollowing() {
-    setShowFollowerList("following");
-    setIsFollowerListModalOpen(true);
-  }
-  function openFriends() {
-    setShowFollowerList("friend");
-    setIsFollowerListModalOpen(true);
-  }
-
-  useEffect(() => {
-    if (authProvider.user) {
-      fetchAuthorData();
-      fetchAuthorPosts();
-    }
-  }, [authProvider.user]);
 
   if (!authorData) {
     return <div>Loading...</div>;
