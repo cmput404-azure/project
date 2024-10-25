@@ -1,15 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Modal from "react-modal";
+import TextField from "@mui/material/TextField";
 
 import styles from "./EditProfileModal.module.scss";
 
 interface EditProfileModalProps {
   isOpen: boolean;
-  onSave: (profileData: {
-    profileImage: string;
-    displayName: string;
-    githubLink: string;
-  }) => void;
+  onSave: (profileData: { displayName: string; githubLink: string }) => void;
   author: any; //contains all the author data
   onClose: () => void;
 }
@@ -21,12 +18,18 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
   onClose,
 }) => {
   console.log(author);
-  const [profileImage, setProfileImage] = React.useState("");
   const [displayName, setDisplayName] = React.useState("");
   const [githubLink, setGithubLink] = React.useState("");
 
+  useEffect(() => {
+    console.log(`Author data: ${author}`);
+    setDisplayName(author.displayName);
+    setGithubLink(author.github);
+  }, [author]);
+
   const handleSave = () => {
-    onSave({ profileImage, displayName, githubLink });
+    console.log(`Saving profile data: ${displayName}, ${githubLink}`);
+    onSave({ displayName, githubLink });
     onClose(); // close modal
   };
 
@@ -39,7 +42,24 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
       <div className={styles.container}>
         <h1>Edit Profile</h1>
         <div className={styles.form}>
-          <button onClick={handleSave}>Save</button>
+          <div className={styles.inputContainer}>
+            <TextField
+              label="Display Name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+          </div>
+          <div className={styles.inputContainer}>
+            <TextField
+              label="Github Link"
+              value={githubLink}
+              onChange={(e) => setGithubLink(e.target.value)}
+            />
+          </div>
+          <div className={styles.buttonContainer}>
+            <button onClick={onClose}>Cancel</button>
+            <button onClick={handleSave}>Save</button>
+          </div>
         </div>
       </div>
     </Modal>
