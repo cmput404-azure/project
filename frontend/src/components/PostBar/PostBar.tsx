@@ -31,13 +31,6 @@ const PostBar: React.FC<PostBarProps> = ({
     setActiveIcon(icon);
   };
 
-  // // To update the title
-  // const handleTitleChange = (
-  //   event: React.ChangeEvent<HTMLInputElement>
-  // ) => {
-  //   setTitle(event.target.value);
-  // };
-
   // Input handlers with validation
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.value.length <= TITLE_MAX_LENGTH) {
@@ -50,9 +43,6 @@ const PostBar: React.FC<PostBarProps> = ({
   const handleDescriptionChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>
   ) => setDescription(event.target.value);
-
-  // const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
-  //   setContent(event.target.value);
 
   const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (event.target.value.length <= CONTENT_MAX_LENGTH) {
