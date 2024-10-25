@@ -93,6 +93,26 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
     }
   };
 
+  const validateGithubLink = (e) => {
+    setGithubLink(e.target.value);
+    if (e.target.value.length === 0) {
+      setIsGithubLinkError(true);
+      setIsSubmitDisabled(true);
+      setGithubLinkErrorMsg("Github link cannot be empty");
+    }
+    // From chatGPT, "regex statement to check if the link starts with `https://github.com/`", Downloaded 2024-10-25
+    // check if the link starts with https://github.com/
+    else if (!e.target.value.match(/^https:\/\/github\.com\//)) {
+      setIsGithubLinkError(true);
+      setIsSubmitDisabled(true);
+      setGithubLinkErrorMsg("Invalid Github link");
+    } else {
+      setIsGithubLinkError(false);
+      setIsSubmitDisabled(false);
+      setGithubLinkErrorMsg("");
+    }
+  };
+
   const handleSave = () => {
     console.log(`Saving profile data: ${displayName}, ${githubLink}`);
     onSave({ displayName, githubLink });
@@ -123,8 +143,10 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
             <StyledInputTextField
               label="Github Link"
               placeholder="Enter a Github link ..."
+              onChange={validateGithubLink}
               value={githubLink}
-              onChange={(e) => setGithubLink(e.target.value)}
+              error={isGithubLinkError}
+              helperText={githubLinkErrorMsg}
             />
           </div>
           <div className={styles.buttonContainer}>
