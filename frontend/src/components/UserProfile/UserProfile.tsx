@@ -41,9 +41,28 @@ export default function UserProfile() {
   };
 
   const handleSaveEditProfileButtonClicked = (data) => {
-    setIsEditingProfile(false);
+    let tempAuthorData = authorData;
+    tempAuthorData.displayName = data.displayName;
+    tempAuthorData.github = data.githubLink;
+    updateUserInfo(tempAuthorData);
     console.log(data);
+    setIsEditingProfile(false);
   };
+
+  async function updateUserInfo(data) {
+    try {
+      if (authProvider.user) {
+        const response = await api.put(
+          `/api/authors/${authProvider.user.uuid}/`,
+          data
+        );
+        console.log("User info updated successfully:", response.data);
+        fetchAuthorData();
+      }
+    } catch (error) {
+      console.error("Error updating user info", error);
+    }
+  }
 
   const authProvider = useAuth();
 
