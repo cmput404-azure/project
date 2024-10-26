@@ -163,9 +163,7 @@ function PostCard({
               />
             </div>
           ) : (
-            <div
-              className={styles.imgPlaceholder}
-            ></div> /* Placeholder for layout consistency */
+            <div className={styles.postText}>{postContent}</div>
           )}
         </div>
       </div>
