@@ -67,6 +67,8 @@ export default function NotificationList() {
       ) : error ? (
         <p>{error}</p>
       ) : (
+        <div>
+        <h2 className = {styles.h2}>Notifications</h2>
         <ul className={styles.ul}>
           {notifications.map((item, index) =>
             item.type === "follow" ? (
@@ -94,7 +96,10 @@ export default function NotificationList() {
             )
           )}
         </ul>
-      )}
+      </div>
+      )
+      
+      }
     </div>
   );
 }
