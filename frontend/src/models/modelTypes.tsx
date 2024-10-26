@@ -6,6 +6,7 @@ export enum InboxItemType {
 }
 
 export enum ContentType {
+    BASE64 = "application/base64",
     MARKDOWN = "text/markdown",
     PLAIN = "text/plain",
 }

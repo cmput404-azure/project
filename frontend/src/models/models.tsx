@@ -60,10 +60,10 @@ export interface Comment {
 
 export interface Post {
     type?: string | "post";
-    title?: string;
+    title: string;
     id: string;
-    description?: string;
-    content?: string;
+    description: string;
+    content: string;
     author: Author;
     contentType: ContentType;
     comments?: Comment[] | null;
