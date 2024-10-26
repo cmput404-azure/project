@@ -74,28 +74,20 @@ export interface Post {
 // This might be one of the four: post, like, comment and request so I simply store all the possible variables
 export interface InboxItem {
     type: string;
-    title: string;
     id: string;
-    description: string;
-    author: Author;
-    contentType: ContentType;
-    comments: Comment[];
-    likes: Like[];
-    published: string;
-    visibility: number;
-    comment: string;
-    post: string;
-    object: string | Author;
-    summary: string;
-    actor: {
-        type: string;
-        id: string;
-        host: string;
-        displayName: string;
-        github: string;
-        profileImage: string;
-        page: string;
-    }
+    title?: string;
+    description?: string;
+    author?: Author;
+    contentType?: ContentType;
+    comments?: Comment[];
+    likes?: Like[];
+    published?: string;
+    visibility?: number;
+    comment?: string;
+    post?: string;
+    object?: string | Author;
+    summary?: string;
+    actor?: Author;
 }
 
 export interface Inbox {
