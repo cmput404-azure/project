@@ -15,7 +15,12 @@ interface PostBarProps {
 }
 type IconType = "public" | "friends" | "unlisted";
 
+// Max character limits
+const TITLE_MAX_LENGTH = 200;
+const CONTENT_MAX_LENGTH = 2000;
+
 const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
+
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
   const [title, setTitle] = useState("");
   const [showDetail, setShowDetail] = useState(false);
@@ -28,16 +33,25 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
   const handleIconClick = (icon: IconType) => {
     setActiveIcon(icon);
   };
+
   // To update the title
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value);
+    if (event.target.value.length <= TITLE_MAX_LENGTH) {
+      setTitle(event.target.value);
+    }
   };
+
   const handleInputClick = () => setShowDetail(true);
+
   const handleDescriptionChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>
   ) => setDescription(event.target.value);
-  const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
-    setContent(event.target.value);
+
+  const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (event.target.value.length <= CONTENT_MAX_LENGTH) {
+      setContent(event.target.value);
+    }
+  };
 
   const handleCombinedClick = async () => {
     try {
@@ -133,15 +147,19 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
       }
       console.log("All posts sent to followers/friends' inboxes.");
 
-      // Closse the input modal and reset input fields
-      setShowDetail(false);
-      setTitle("");
-      setDescription("");
-      setContent("");
+
+      // Close the input modal and reset input fields
+      setShowDetail(false)
+      setTitle("")
+      setDescription("")
+      setContent("")
+
     } catch (error) {
       console.error("Error in combined request flow:", error);
     }
   };
+
+  const isPostDisabled = title.length === 0 || content.length === 0;
 
   if (!authProvider.isAuthenticated) {
     return <></>;
@@ -167,6 +185,9 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
           onChange={handleTitleChange}
           onClick={handleInputClick}
         />
+        <span className={styles["char-counter"]}>
+          {title.length} / {TITLE_MAX_LENGTH}
+        </span>
         <button
           className={styles["add-button"]}
           onClick={() => console.log("Add button clicked")}
@@ -192,6 +213,9 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
             value={content}
             onChange={handleContentChange}
           />
+          <span className={styles["char-counter"]}>
+            {content.length} / {CONTENT_MAX_LENGTH}
+          </span>
         </div>
       )}
 
@@ -228,6 +252,7 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
           <button
             className={styles["post-button"]}
             onClick={handleCombinedClick}
+            disabled={isPostDisabled}
           >
             Post
           </button>

@@ -6,11 +6,10 @@ import CommentView from "../CommentView/CommentView";
 import Modal from "react-modal";
 import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
-import { api } from "../../service/config";
 import logo from "../../images/dog_icon.png";
+import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
-import { post } from "axios";
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
@@ -26,14 +25,12 @@ const HomePage = () => {
   const [user, setUser] = useState<any>(null);
   const authProvider = useAuth();
 
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const req = await api.get("/api/stream/");
-        const publicPosts = req.data;
-
-        const otherReq = await api.get("/api/stream/auth");
-        const privatePosts = otherReq.data;
+        const publicPosts = await stream.getStream();
+        const privatePosts = await stream.getStream(true);
 
         const authorReq = await api.get(
           `/api/authors/${authProvider.user.uuid}/`
