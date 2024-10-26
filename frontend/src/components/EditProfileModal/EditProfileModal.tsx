@@ -45,7 +45,6 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
   onSave,
   onClose,
 }) => {
-  console.log(author);
   const [displayName, setDisplayName] = React.useState("");
   const [githubLink, setGithubLink] = React.useState("");
   const [isDisplayNameError, setIsDisplayNameError] = React.useState(false);
@@ -53,48 +52,47 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
   const [displayNameErrorMsg, setDisplayNameErrorMsg] = React.useState("");
   const [githubLinkErrorMsg, setGithubLinkErrorMsg] = React.useState("");
   const [isSubmitDisabled, setIsSubmitDisabled] = React.useState(false);
+  const [isDisplayNameValid, setIsDisplayNameValid] = React.useState(false);
+  const [isGithubLinkValid, setIsGithubLinkValid] = React.useState(false);
 
   const MAX_DISPLAYNAME_LENGTH = 20;
 
   const validateDisplayName = (value) => {
-    if (value.length === MAX_DISPLAYNAME_LENGTH) {
+    if (value.length == MAX_DISPLAYNAME_LENGTH) {
       setIsDisplayNameError(true);
       setDisplayNameErrorMsg(
         `You've reached the max character limit of ${MAX_DISPLAYNAME_LENGTH}`
       );
-      return true;
+      return true; // there is no error
     } else if (value.length === 0) {
       setIsDisplayNameError(true);
       setDisplayNameErrorMsg("Display name cannot be empty");
-      return false;
+      return false; // there is an error
     } else {
       setIsDisplayNameError(false);
       setDisplayNameErrorMsg("");
-      return true;
+      return true; // there is no error
     }
   };
 
   const validateGithubLink = (value) => {
     if (value.length === 0) {
-      console.log("error1");
       setIsGithubLinkError(true);
       setGithubLinkErrorMsg("Github link cannot be empty");
-      return false;
+      return false; // there is an error
     }
     // From chatGPT, "regex statement to check if the link starts with `https://github.com/`", Downloaded 2024-10-25
     // check if the link starts with https://github.com/
     else if (!value.match(/^https:\/\/github\.com\//)) {
-      console.log("error2");
       setIsGithubLinkError(true);
       setGithubLinkErrorMsg(
         `Invalid Github link, link must begin with "https://github.com/"`
       );
-      return false;
+      return false; // there is an error
     } else {
-      console.log("error3");
       setIsGithubLinkError(false);
       setGithubLinkErrorMsg("");
-      return true;
+      return true; // there is no error
     }
   };
 
@@ -102,8 +100,10 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
     setDisplayName(author.displayName);
     setGithubLink(author.github);
 
-    const isDisplayNameValid = validateDisplayName(author.displayName || "");
-    const isGithubLinkValid = validateGithubLink(author.github || "");
+    const isDisplayNameValid = validateDisplayName(displayName);
+    setIsDisplayNameValid(isDisplayNameValid);
+    const isGithubLinkValid = validateGithubLink(githubLink);
+    setIsGithubLinkValid(isGithubLinkValid);
     setIsSubmitDisabled(!isDisplayNameValid || !isGithubLinkValid);
   }, [author, isOpen]);
 
@@ -111,18 +111,19 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
     const value = e.target.value;
     setDisplayName(value);
     const isDisplayNameValid = validateDisplayName(value);
-    setIsSubmitDisabled(!isDisplayNameValid || isGithubLinkError);
+    setIsDisplayNameValid(isDisplayNameValid);
+    setIsSubmitDisabled(!isDisplayNameValid || !isGithubLinkValid);
   };
 
   const handleGithubLinkChange = (e) => {
     const value = e.target.value;
     setGithubLink(value);
     const isGithubLinkValid = validateGithubLink(value);
-    setIsSubmitDisabled(!isGithubLinkValid || !isDisplayNameError);
+    setIsGithubLinkValid(isGithubLinkValid);
+    setIsSubmitDisabled(!isDisplayNameValid || !isGithubLinkValid);
   };
 
   const handleSave = () => {
-    console.log(`Saving profile data: ${displayName}, ${githubLink}`);
     onSave({ displayName, githubLink });
     onClose(); // close modal
   };
