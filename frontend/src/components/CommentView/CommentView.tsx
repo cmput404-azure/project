@@ -10,7 +10,7 @@ import { Comment } from "@mui/icons-material";
 // need to style field like this otherwise stylings may reset and not appear properly
 const StyledCommentInputField = styled(TextField)({
   "& label": {
-    color: "white !important",
+    color: "#70ffaf !important",
   },
 
   "& input": {
