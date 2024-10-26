@@ -143,16 +143,6 @@ function PostCard({
               <i className="fas fa-heart icon" onClick={handleClickLike}></i>
               <span>{formatCount(likeCount)}</span>
             </div>
-            {/* <div
-              className={styles.icon}
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("Save");
-              }}
-            >
-              <i className="fas fa-bookmark"></i>
-              <span>{formatCount(saveCount)}</span>
-            </div> */}
             <div className={styles.icon} onClick={onCommentButtonClick}>
               <i className="fas fa-comment"></i>
               <span>{formatCount(post_obj.comments.length)}</span>
