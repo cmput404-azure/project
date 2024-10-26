@@ -76,23 +76,25 @@ const EditUserProfile: React.FC<EditProfileModalProps> = ({
   };
 
   const validateGithubLink = (value) => {
-    if (value.length === 0) {
-      setIsGithubLinkError(true);
-      setGithubLinkErrorMsg("Github link cannot be empty");
-      return false; // there is an error
-    }
-    // From chatGPT, "regex statement to check if the link starts with `https://github.com/`", Downloaded 2024-10-25
-    // check if the link starts with https://github.com/
-    else if (!value.match(/^https:\/\/github\.com\//)) {
-      setIsGithubLinkError(true);
-      setGithubLinkErrorMsg(
-        `Invalid Github link, link must begin with "https://github.com/"`
-      );
-      return false; // there is an error
-    } else {
-      setIsGithubLinkError(false);
-      setGithubLinkErrorMsg("");
-      return true; // there is no error
+    if (value) {
+      if (value.length === 0) {
+        setIsGithubLinkError(true);
+        setGithubLinkErrorMsg("Github link cannot be empty");
+        return false; // there is an error
+      }
+      // From chatGPT, "regex statement to check if the link starts with `https://github.com/`", Downloaded 2024-10-25
+      // check if the link starts with https://github.com/
+      else if (!value.match(/^https:\/\/github\.com\//)) {
+        setIsGithubLinkError(true);
+        setGithubLinkErrorMsg(
+          `Invalid Github link, link must begin with "https://github.com/"`
+        );
+        return false; // there is an error
+      } else {
+        setIsGithubLinkError(false);
+        setGithubLinkErrorMsg("");
+        return true; // there is no error
+      }
     }
   };
 

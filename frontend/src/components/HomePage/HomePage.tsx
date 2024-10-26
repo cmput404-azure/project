@@ -12,6 +12,8 @@ import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
 import { api } from "../../service/config";
 
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
+
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
 
@@ -59,8 +61,8 @@ const HomePage = () => {
         const publicPosts = await stream.getStream();
         const privatePosts = await stream.getStream(true);
 
-        setNonPublicPosts(privatePosts as any[]);
-        setPublicPosts(publicPosts as any[]);
+        setNonPublicPosts(decodeBase64ToUrl(privatePosts as any[]));
+      setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
         setIsLoading(false);
       } catch (err) {
         console.log(err);
@@ -149,7 +151,7 @@ const HomePage = () => {
             userName={post.author.displayName}
             postTime={new Date(post.published).toLocaleString()}
             postContent={post.content}
-            postImage={post.has_image ? post.image : ""}
+            // postImage={post.has_image ? post.image : ""}
             likeCount={post.likes.length}
             saveCount={0}
             commentCount={post.comments.length}
@@ -189,7 +191,7 @@ const HomePage = () => {
               userName={selectedPost.author.displayName}
               postTime={new Date(selectedPost.published).toLocaleString()}
               postContent={selectedPost.content}
-              postImage={""}
+              // postImage={""}
               likeCount={0}
               saveCount={0}
               commentCount={0}

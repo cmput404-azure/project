@@ -17,15 +17,16 @@ type IconType = "public" | "friends" | "unlisted";
 
 // Max character limits
 const TITLE_MAX_LENGTH = 200;
-const CONTENT_MAX_LENGTH = 2000;
 
 const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
-
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
   const [title, setTitle] = useState("");
   const [showDetail, setShowDetail] = useState(false);
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [contentType, setContentType] = useState("");
 
   const authProvider = useAuth();
 
@@ -48,8 +49,36 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
   ) => setDescription(event.target.value);
 
   const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (event.target.value.length <= CONTENT_MAX_LENGTH) {
-      setContent(event.target.value);
+    // if (event.target.value.length <= CONTENT_MAX_LENGTH) {
+    //   setContent(event.target.value);
+    // }
+    setContent(event.target.value);
+    if (imageBase64) {
+      setImageBase64(null); // Clear image base64 if user types text
+    }
+  };
+
+  // file to base64 conversion
+  // https://stackoverflow.com/questions/36280818/how-to-convert-file-to-base64-in-javascript by Dmitri Pavlutin
+  // referenced on October 25-26, 2024
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // dataURL format commonly looks like this --> data:[<mediatype>][;base64],<data>
+        // remove metadata from the result, so we can get the base64-encoded data (the <data> part above).
+        const base64String = reader.result?.toString().replace(/^data:.+;base64,/, "") || "";
+        setImageBase64(base64String);
+        setContent("");
+        setFileName(file.name);
+        console.log("Uploaded Image in Base64:", base64String);
+
+        file.type === "image/png" ? setContentType("image/png;base64") :
+        file.type === "image/jpeg" ? setContentType("image/jpeg;base64") :
+        setContentType("application/base64");
+      };
+      reader.readAsDataURL(file); // Convert to base64
     }
   };
 
@@ -70,11 +99,13 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
         type: "post",
         title: title,
         description: description,
-        contentType: "text/plain",
-        content: content,
+        contentType: imageBase64 ? contentType : "text/plain", // or markdown
+        content: imageBase64 || content,
         published: new Date().toISOString(),
         visibility: visibilityNumber,
       };
+
+      console.log("Need to know what newPost is: ", newPost);
 
       const postResponse = await api.post<Post>(
         `/api/authors/${authProvider.user.uuid}/posts/`,
@@ -153,13 +184,14 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
       setTitle("")
       setDescription("")
       setContent("")
+      setImageBase64(null); // Clear image base64 on post submission
 
     } catch (error) {
       console.error("Error in combined request flow:", error);
     }
   };
 
-  const isPostDisabled = title.length === 0 || content.length === 0;
+  const isPostDisabled = title.length === 0 || (!content && !imageBase64);
 
   if (!authProvider.isAuthenticated) {
     return <></>;
@@ -190,10 +222,17 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
         </span>
         <button
           className={styles["add-button"]}
-          onClick={() => console.log("Add button clicked")}
+          onClick={() => document.getElementById("image-upload")?.click()}
         >
           <span>+</span>
         </button>
+        <input
+          type="file"
+          accept="image/png, image/jpeg"
+          id="image-upload"
+          style={{ display: "none" }}
+          onChange={handleFileUpload}
+        />
       </section>
 
       {showDetail && (
@@ -206,16 +245,26 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
             onChange={handleDescriptionChange}
           />
 
-          <label className={styles["input-label"]}>Content</label>
-          <textarea
-            className={styles["content-input"]}
-            placeholder="Write your post content here..."
-            value={content}
-            onChange={handleContentChange}
-          />
-          <span className={styles["char-counter"]}>
-            {content.length} / {CONTENT_MAX_LENGTH}
-          </span>
+          {imageBase64 ? (
+            <div className={styles["image-preview"]}>
+              <p>Uploaded: {fileName}</p>
+              <img
+                src={`data:image/png;base64,${imageBase64}`}
+                alt="Preview"
+                className={styles["uploaded-image"]}
+              />
+            </div>
+          ) : (
+            <>
+              <label className={styles["input-label"]}>Content</label>
+              <textarea
+                className={styles["content-input"]}
+                placeholder="Write your post content here..."
+                value={content}
+                onChange={handleContentChange}
+              />
+            </>
+          )}
         </div>
       )}
 
