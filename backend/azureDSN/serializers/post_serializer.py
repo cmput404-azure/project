@@ -4,6 +4,7 @@ from .user_serializer import UserSerializer
 from .comment_serializer import CommentSerializer
 from .like_serializer import LikeSerializer
 from rest_framework.response import Response
+import base64
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -16,6 +17,8 @@ class PostSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
+
+    # content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
     
     class Meta:
         model = Post
@@ -39,6 +42,19 @@ class PostSerializer(serializers.ModelSerializer):
             return Response({"message": "error, unauthorized"},status=403)
         
         user = User.objects.get(uuid=author_data['uuid'])
+
+        # content_type = validated_data.get('content_type')
+
+        # if content_type in ['image/png;base64', 'image/jpeg;base64', 'application/base64']:
+        #     try:
+        #         image = validated_data['content']
+        #         base64.b64encode(image)
+        #     except (ValueError, TypeError):
+        #         raise serializers.ValidationError("Cannot be encoded into base64.")
+        #     validated_data['has_image'] = True
+        # else:
+        #     validated_data['has_image'] = False
+
         post = Post.objects.create(user=user, **validated_data)
         return post
     
@@ -65,6 +81,8 @@ class CreatePostSerializer(serializers.ModelSerializer):
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
 
+    content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
+
     class Meta:
         model = Post
         fields = (
@@ -79,11 +97,27 @@ class CreatePostSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
+        print(f"In create of CreatePostSerializer: {validated_data}")
         author_data = validated_data.pop('user')
 
         if not User.objects.filter(uuid=author_data['uuid']).exists():
             return Response({"message": "error, unauthorized"},status=403)
         
         user = User.objects.get(uuid=author_data['uuid'])
+
+        content_type = validated_data.get('content_type')
+        
+
+        if content_type in ['image/png;base64', 'image/jpeg;base64', 'application/base64']:
+            try:
+                content = validated_data.get('content')
+                decoded_image = base64.b64decode(content)  # Decode to check if it's valid?
+                validated_data['has_image'] = True
+            except (ValueError, TypeError):
+                raise serializers.ValidationError("Cannot be encoded into base64.")
+            validated_data['has_image'] = True
+        else:
+            validated_data['has_image'] = False
+
         post = Post.objects.create(user=user, **validated_data)
         return post
