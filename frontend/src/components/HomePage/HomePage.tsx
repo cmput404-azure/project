@@ -26,17 +26,38 @@ const HomePage = () => {
   const [user, setUser] = useState<any>(null);
   const authProvider = useAuth();
 
+  const [isUserLoading, setIsUserLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const publicPosts = await stream.getStream();
-        const privatePosts = await stream.getStream(true);
+    const fetchUser = async () => {
+      if (!authProvider.user) {
+        setIsUserLoading(false); // user not authenticated
+        return;
+      }
 
+      try {
         const authorReq = await api.get(
           `/api/authors/${authProvider.user.uuid}/`
         );
         setUser(authorReq.data);
+        setIsUserLoading(false);
+      } catch (err) {
+        console.log(err);
+        setError("Failed to fetch user data.");
+        setIsUserLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [authProvider.user]); // This effect runs when authProvider.user changes
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (isUserLoading) return; // Wait until user data is loaded
+
+      try {
+        const publicPosts = await stream.getStream();
+        const privatePosts = await stream.getStream(true);
 
         setNonPublicPosts(privatePosts as any[]);
         setPublicPosts(publicPosts as any[]);
@@ -47,7 +68,7 @@ const HomePage = () => {
       }
     };
     fetchPosts();
-  }, []);
+  }, [isUserLoading]); // Run when user loading state changes
 
   const handleAddClick = () => {
     console.log("Add button clicked");
