@@ -2,8 +2,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.contenttypes.models import ContentType
-from urllib.parse import urlparse
 
 from ..serializers import *
 from ..models import *
@@ -95,3 +93,29 @@ class SingleCommentView(APIView):
         return Response(serialized_comment, status=200)
     
     
+class CreateCommentView(APIView):
+    """
+    Handle POST requests to the author's inbox.
+    Allows remote or local comments to be added to the post.
+    """
+    def post(self, request, author_serial):
+        # Deserialize the incoming request data
+        serializer = CommentSerializer(data=request.data)
+        print("@@@@@@@")
+        print(request.data)
+        if serializer.is_valid():
+            print("#######")
+            print(serializer.validated_data)
+            post_fqid = serializer.validated_data.get('post')
+            post_id = post_fqid.split('/')[-1]  # Extract the post UUID from the FQID
+            
+            # Fetch the post object using the extracted ID
+            post = get_object_or_404(Post, uuid=post_id)
+
+            # Save the comment with the validated data
+            serializer.save(post=post)
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        # If data is invalid, return errors
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -57,6 +57,16 @@ class MultipleCommentsViewTest(APITestCase):
         self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/posts/{self.post.uuid}/comments")
         self.assertEqual(response.data['page'], f"http://testserver/api/authors/{self.user.uuid}/posts/{self.post.uuid}")
 
+
+
+
+
+
+
+
+
+
+
     # def test_get_comments_by_post_fqid(self):
     #     post_fqid = f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}"
     #     url = reverse('comments_by_fqid', kwargs={'post_fqid': post_fqid})
