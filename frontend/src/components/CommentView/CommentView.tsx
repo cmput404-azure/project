@@ -10,7 +10,7 @@ import { Comment } from "@mui/icons-material";
 // need to style field like this otherwise stylings may reset and not appear properly
 const StyledCommentInputField = styled(TextField)({
   "& label": {
-    color: "white !important",
+    color: "#70ffaf !important",
   },
 
   "& input": {
@@ -169,7 +169,7 @@ const CommentView: React.FC<CommentViewProps> = ({
         <div className={styles.commentsSection}>
           {/* Comment Input Field */}
           {!(author == null) && (
-            <CommentInputField authorDisplayName={author.username} />
+            <CommentInputField authorDisplayName={author.displayName} />
           )}
 
           {comments.map((comment) => (
