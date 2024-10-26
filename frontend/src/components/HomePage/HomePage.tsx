@@ -10,6 +10,7 @@ import logo from "../../images/dog_icon.png";
 import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
+import { api } from "../../service/config";
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
