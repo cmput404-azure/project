@@ -178,12 +178,7 @@ const HomePage = () => {
           ) : null
         }
         comments={comments}
-        author={
-          selectedPost &&
-          displayedPosts.find((post) => post.id === selectedPost.id)
-            ? selectedPost.author
-            : null
-        }
+        author={user}
       />
     </div>
   );
