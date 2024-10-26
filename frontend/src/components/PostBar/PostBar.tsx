@@ -58,6 +58,9 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
     }
   };
 
+  // file to base64 conversion
+  // https://stackoverflow.com/questions/36280818/how-to-convert-file-to-base64-in-javascript by Dmitri Pavlutin
+  // referenced on October 25-26, 2024
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
