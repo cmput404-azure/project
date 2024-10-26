@@ -27,12 +27,12 @@ class InboxService{
                visibility: number - the new status of the post  
         @returns: message: string 
     */
-    public async UpdateInboxPost(
+    public async updateInboxPost(
         uuid: string,
         post_id: string,
         title: string,
         content: string,
-        visibility: string
+        visibility: number
     ): Promise<string> {
         try {
             const response = await api.put<{ message: string }>(`/api/authors/${uuid}/inbox/`, {
@@ -55,7 +55,7 @@ class InboxService{
                post_id: string - the uuid of the post
         @returns: message: string
     */
-    public async DeleteInboxPost(uuid: string, post_id: string): Promise<string> {
+    public async deleteInboxPost(uuid: string, post_id: string): Promise<string> {
         try {
             const config = {
                 headers: {},
@@ -81,7 +81,7 @@ class InboxService{
                id: string - follow request id
         @returns: items: InboxItem[] - list of inbox items remaining in the user's inbox
     */
-    public async DeleteInboxFollowRequest(uuid: string, id: string): Promise<InboxItem[]> {
+    public async deleteInboxFollowRequest(uuid: string, id: string): Promise<InboxItem[]> {
         try {
             const config = {
                 headers: {},
