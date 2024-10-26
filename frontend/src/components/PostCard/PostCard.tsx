@@ -41,7 +41,7 @@ function PostCard({
           alt={`${userName}'s profile`}
         />
         <div className={styles.headerText}>
-          <Link to={`/author/${userID}`}>{userName}</Link>
+          <Link to={`/authors/${userID}`}>{userName}</Link>
           <span className={styles.postTime}>{postTime}</span>
         </div>
         <div className={styles.icon}>
