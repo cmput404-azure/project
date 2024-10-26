@@ -21,6 +21,7 @@ const PostBar: React.FC<PostBarProps> = ({
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
   const [title, setTitle] = useState("");
   const [showDetail, setShowDetail] = useState(false);
+  const [activeCommonMark, setActiveCommonMark] = useState(false);
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
 
@@ -191,6 +192,7 @@ const PostBar: React.FC<PostBarProps> = ({
 
       {(showDetail) && (
         <section className={styles["button-bar"]}>
+
           <div className={styles["icon-bar"]}>
             <div
               className={`${styles["icon-section"]} ${activeIcon === "public" ? styles.active : ""
@@ -214,6 +216,12 @@ const PostBar: React.FC<PostBarProps> = ({
               <i className={`${styles.icon} ${styles["link-icon"]}`}></i>
             </div>
           </div>
+          <button
+      className={`${styles["mark-button"]} ${activeCommonMark ? styles.active : ""}`}
+      onClick={() => setActiveCommonMark(!activeCommonMark)}
+    >
+      CommonMark
+    </button>
           <button
             className={styles["post-button"]}
             onClick={handleCombinedClick}
