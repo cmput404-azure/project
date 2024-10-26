@@ -30,6 +30,7 @@ const HomePage = () => {
       try {
         const publicPosts = await stream.getStream();
         const privatePosts = await stream.getStream(true);
+        // Get a list of all posts liked by this user and assigned to likeList
 
         setNonPublicPosts(privatePosts as any[]);
         setPublicPosts(publicPosts as any[]);
