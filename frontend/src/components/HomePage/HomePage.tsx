@@ -23,6 +23,7 @@ const HomePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  const [user, setUser] = useState<any>(null);
   const authProvider = useAuth();
 
   useEffect(() => {
@@ -33,6 +34,11 @@ const HomePage = () => {
 
         const otherReq = await api.get("/api/stream/auth");
         const privatePosts = otherReq.data;
+
+        const authorReq = await api.get(
+          `/api/authors/${authProvider.user.uuid}/`
+        );
+        setUser(authorReq.data);
 
         setNonPublicPosts(privatePosts as any[]);
         setPublicPosts(publicPosts as any[]);
@@ -93,7 +99,7 @@ const HomePage = () => {
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar showButtonBar={false} />
+        <PostBar showButtonBar={false} author={user} />
         {authProvider.isAuthenticated && (
           <div className={styles["icon-bar"]}>
             <div
