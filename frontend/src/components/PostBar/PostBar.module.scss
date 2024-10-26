@@ -57,8 +57,8 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 32px;
-        height: 32px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
         background-color: #a0a0a0;
         color: white;
@@ -106,7 +106,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 98%;
+    width: 100%;
 
     .icon-bar {
       display: flex;
@@ -152,11 +152,13 @@
     .post-button {
       background-color: #555;
       color: white;
-      padding: 8px 16px;
+      height: 100%;
+      width: 12%;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       transition: background-color 0.3s ease;
+      font-size: medium;
 
       &:hover {
         background-color: #70ffaf;

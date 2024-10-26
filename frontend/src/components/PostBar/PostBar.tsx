@@ -32,7 +32,7 @@ const PostBar: React.FC<PostBarProps> = ({
   };
 
   // Input handlers with validation
-  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTitleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (event.target.value.length <= TITLE_MAX_LENGTH) {
       setTitle(event.target.value);
     }
@@ -40,14 +40,9 @@ const PostBar: React.FC<PostBarProps> = ({
 
   const handleInputClick = () => setShowDetail(true);
 
-  const handleDescriptionChange = (
-    event: React.ChangeEvent<HTMLTextAreaElement>
-  ) => setDescription(event.target.value);
+  const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(event.target.value);
 
-  const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (event.target.value.length <= CONTENT_MAX_LENGTH) {
-      setContent(event.target.value);
-    }
+  const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {if (event.target.value.length <= CONTENT_MAX_LENGTH) {setContent(event.target.value);}
   };
 
   const handleCombinedClick = async () => {
@@ -147,20 +142,12 @@ const PostBar: React.FC<PostBarProps> = ({
 
   return (
     <div className={styles.container}>
-      <section className={styles["post-bar"]}>
+      <section className={styles["post-bar"]} onClick={handleInputClick} >
         <img src={authProvider.user.profileImage ?? `https://ui-avatars.com/api/?background=random&name=${authProvider.user.username}`} alt="User" className={styles["user-image"]} />
         <div className={styles["vertical-divider"]}></div>
-        <input
-          type="text"
-          placeholder="Start your post with a title "
+        <span
           className={styles["post-input"]}
-          value={title}
-          onChange={handleTitleChange}
-          onClick={handleInputClick}
-        />
-        <span className={styles["char-counter"]}>
-          {title.length} / {TITLE_MAX_LENGTH}
-        </span>
+        > Click To Start Your Post</span>
         <button
           className={styles["add-button"]}
           onClick={() => console.log("Add button clicked")}
@@ -173,6 +160,13 @@ const PostBar: React.FC<PostBarProps> = ({
 
       {showDetail && (
         <div className={styles["detail-container"]}>
+          <label className={styles["input-label"]}>Title</label>
+          <textarea
+            className={styles["description-input"]}
+            placeholder="Start your post with a title"
+            value={title}
+            onChange={handleTitleChange}
+          />
           <label className={styles["input-label"]}>Description</label>
           <textarea
             className={styles["description-input"]}
@@ -195,7 +189,7 @@ const PostBar: React.FC<PostBarProps> = ({
       )}
 
 
-      {(showButtonBar || showDetail) && (
+      {(showDetail) && (
         <section className={styles["button-bar"]}>
           <div className={styles["icon-bar"]}>
             <div
@@ -205,7 +199,6 @@ const PostBar: React.FC<PostBarProps> = ({
             >
               <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
             </div>
-            <div className={styles["vertical-divider"]}></div>
             <div
               className={`${styles["icon-section"]} ${activeIcon === "friends" ? styles.active : ""
                 }`}
@@ -213,7 +206,6 @@ const PostBar: React.FC<PostBarProps> = ({
             >
               <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
             </div>
-            <div className={styles["vertical-divider"]}></div>
             <div
               className={`${styles["icon-section"]} ${activeIcon === "unlisted" ? styles.active : ""
                 }`}
