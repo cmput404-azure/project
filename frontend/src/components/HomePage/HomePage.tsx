@@ -62,7 +62,7 @@ const HomePage = () => {
         const privatePosts = await stream.getStream(true);
 
         setNonPublicPosts(decodeBase64ToUrl(privatePosts as any[]));
-      setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
+        setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
         setIsLoading(false);
       } catch (err) {
         console.log(err);
@@ -147,6 +147,7 @@ const HomePage = () => {
         {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
+            userID={post.author.id}
             profilePic={post.author.profileImage}
             userName={post.author.displayName}
             postTime={new Date(post.published).toLocaleString()}
@@ -184,6 +185,7 @@ const HomePage = () => {
             // pass in the selected post for the modal to display
             <PostCard
               key={selectedPost.id}
+              userID={selectedPost.author.id}
               profilePic={
                 selectedPost.author?.profileImage ||
                 `https://ui-avatars.com/api/?background=random&name=${selectedPost.author?.displayName}`

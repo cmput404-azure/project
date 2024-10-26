@@ -8,6 +8,7 @@ import NavigationBar from "./components/NavigationBar/NavigationBar";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
+import OtherUserProfile from "./components/OtherUserProfile/OtherUserProfile";
 import { checkAuth } from "./util/auth/checkauth";
 import styles from "./App.module.scss";
 import { useAuth } from "./state";
@@ -29,19 +30,16 @@ export default function App() {
 
       <div className={styles.content}>
         <Routes>
-          <Route path="/" element={<HomePage/>} />
-          <Route path="/home" element={<HomePage/>} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/settings" element={<Root />} />
           <Route path="/login" element={<Auth />} />
-          <Route
-            element={
-              <ProtectedRoute />
-            }
-          >
+          <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/author/:userID" element={<OtherUserProfile />} />
             <Route path="/logout" element={<Logout />} />
           </Route>
-   
+
           <Route path="*" element={<ErrorPage />} />
         </Routes>
       </div>

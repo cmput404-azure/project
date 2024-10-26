@@ -1,4 +1,5 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import { Link } from "react-router-dom";
 
 import { formatCount } from "../../util/formatting/formatCount";
 import styles from "./PostCard.module.scss";
@@ -11,6 +12,7 @@ interface PostCardProps {
   likeCount: number;
   saveCount: number;
   commentCount: number;
+  userID: string;
   onCommentButtonClick?: () => void; // optional
   onClick?: () => void;
 }
@@ -25,6 +27,7 @@ function PostCard({
   commentCount,
   onCommentButtonClick,
   onClick,
+  userID,
 }: PostCardProps) {
   return (
     <div className={styles.card} onClick={onClick}>
@@ -38,7 +41,7 @@ function PostCard({
           alt={`${userName}'s profile`}
         />
         <div className={styles.headerText}>
-          <span className={styles.userName}>{userName}</span>
+          <Link to={`/author/${userID}`}>{userName}</Link>
           <span className={styles.postTime}>{postTime}</span>
         </div>
         <div className={styles.icon}>
@@ -76,12 +79,12 @@ function PostCard({
           </div>
         </div>
         <div className={styles.cardContent}>
-              {postContent.startsWith('data:') ? (
+          {postContent.startsWith("data:") ? (
             <div className={styles.imgContainer}>
-            <img
-              src={postContent} // data url as the src to render the image
-              alt="Post Content"
-            />
+              <img
+                src={postContent} // data url as the src to render the image
+                alt="Post Content"
+              />
             </div>
           ) : (
             <div className={styles.postText}>{postContent}</div>
