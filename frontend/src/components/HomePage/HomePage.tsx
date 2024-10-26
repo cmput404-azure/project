@@ -172,7 +172,12 @@ const HomePage = () => {
           ) : null
         }
         comments={comments}
-        author={authProvider.isAuthenticated ? authProvider.user : null}
+        author={
+          selectedPost &&
+          displayedPosts.find((post) => post.id === selectedPost.id)
+            ? selectedPost.author
+            : null
+        }
       />
     </div>
   );
