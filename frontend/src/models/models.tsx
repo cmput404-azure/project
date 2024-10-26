@@ -38,6 +38,7 @@ export interface Follower {
     id: string; // use the host and id to get the foreign fqid
     page: string;
     type: string;
+    profileImage?: string | null;
 }
 export interface Like {
     type: string;
