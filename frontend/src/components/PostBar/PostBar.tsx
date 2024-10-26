@@ -78,31 +78,22 @@ const PostBar: React.FC<PostBarProps> = ({
       );
       console.log("Post successfully created:", postResponse.data);
 
-      // Get friends and followers list
+      // Get friends and followers list, followers inlcude both friends and followers
       const followers = await follow.getFollowers(authProvider.user.uuid);
       const friends =  await follow.getFriends(authProvider.user.uuid);
-
-      // Now friends and followers may be duplicated, we have to go through and remove
-      // one from the follower list if it also exist in friend
-      // Create a Set of friend IDs for quick lookup and filter out followers that are also friends
-      const friendIds = new Set(friends.map((friend) => friend.id));
-      const uniqueFollowers = followers.filter(
-        (follower) => !friendIds.has(follower.id)
-      );
 
       // send to followers if post is public or unlisted
       // always send to friends for all type of posts
       if (visibilityNumber === 1 || visibilityNumber === 3) {
-        for (const follower of uniqueFollowers) {
+        for (const follower of followers) {
           const inboxResponse = await inbox.sendPostToInbox(follower.id, postResponse.data);
         }
+      } else {
+        for (const friend of friends) {
+          const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
+        }
       }
-
-      // Friends receive inbox on all type of post
-      for (const friend of friends) {
-        const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
-      }
-
+     
       // Close the input modal and reset input fields
       setShowDetail(false)
       setTitle("")
