@@ -131,7 +131,17 @@ const HomePage = () => {
         ))}
       </div>
 
-
+      {/* Second Section: Author Post */}
+      <div className={styles.authorSection}>
+        <h2 className={styles.recommendedTitle}>Recommended Author</h2>
+        <AuthorPost
+          authorImage={logo}
+          authorName="Kyle Quach"
+          userName="tmquach.meomeo"
+          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
+          onAddClick={handleAddClick}
+        />
+      </div>
 
       {/* Comment Modal */}
       <CommentView
