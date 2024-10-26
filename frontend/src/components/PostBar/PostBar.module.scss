@@ -148,7 +148,25 @@
         }
       }
     }
-
+    .mark-button {
+      background-color: #555;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      height: 100%;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: medium;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+  
+      &:hover {
+        background-color: #306d4f;
+      }
+  
+      &.active {
+        background-color: #4caf50;
+      }
+    }
     .post-button {
       background-color: #555;
       color: white;
