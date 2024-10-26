@@ -60,16 +60,17 @@ export interface Comment {
 
 export interface Post {
     type?: string | "post";
-    title: string;
+    title?: string;
     id: string;
-    description: string;
-    content: string;
+    description?: string;
+    content?: string;
     author: Author;
     contentType: ContentType;
     comments?: Comment[] | null;
     likes?: Like[] | null;
     published: string;
     visibility: number;
+    image
 }
 
 // This might be one of the four: post, like, comment and request so I simply store all the possible variables
