@@ -362,9 +362,11 @@ class AuthorPostsAllView(APIView):
         request.data["author"] = author_data
 
         serializer = CreatePostSerializer(data=request.data, partial=True)
+
         if serializer.is_valid():
+
             instance = serializer.save()
-            
+
             # Serialize the response
             response = CreatePostSerializer(instance).data
 

@@ -8,7 +8,6 @@ interface PostCardProps {
   userName: string;
   postTime: string;
   postContent: string;
-  postImage?: string; // optional
   likeCount: number;
   saveCount: number;
   commentCount: number;
@@ -21,7 +20,6 @@ function PostCard({
   userName,
   postTime,
   postContent,
-  postImage,
   likeCount,
   saveCount,
   commentCount,
@@ -78,19 +76,15 @@ function PostCard({
           </div>
         </div>
         <div className={styles.cardContent}>
-          <div className={styles.postText}>{postContent}</div>
-          {postImage ? (
+              {postContent.startsWith('data:') ? (
             <div className={styles.imgContainer}>
-              <img
-                className={styles.postImage}
-                src={postImage}
-                alt="Post content"
-              />
+            <img
+              src={postContent} // data url as the src to render the image
+              alt="Post Content"
+            />
             </div>
           ) : (
-            <div
-              className={styles.imgPlaceholder}
-            ></div> /* Placeholder for layout consistency */
+            <div className={styles.postText}>{postContent}</div>
           )}
         </div>
       </div>

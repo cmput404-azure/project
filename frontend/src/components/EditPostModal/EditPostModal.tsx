@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
-
+import styled from "@mui/material/styles/styled";
 import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Modal from "react-modal";
+
 import styles from "./EditPostModal.module.scss";
 
 interface EditPostModalProps {
@@ -22,6 +23,21 @@ interface EditPostModalProps {
     visibility: number;
   }) => void;
 }
+
+const StyledFormControl = styled(FormControl)({
+  "& .MuiInputLabel-root": {
+    color: "#70ffaf !important",
+  },
+  "& .MuiSelect-root": {
+    color: "white !important",
+  },
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "white !important",
+  },
+  "& .MuiSvgIcon-root": {
+    color: "#70ffaf",
+  },
+});
 
 export default function EditPostModal({
   isOpen,
@@ -68,24 +84,22 @@ export default function EditPostModal({
       <h2 className={styles.title}>Edit Post</h2>
       <form>
         <div className={styles.formGroup}>
-          <label htmlFor="postTitle">Title</label>
+          <label>Title</label>
           <input
-            id="postTitle"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
         <div className={styles.formGroup}>
-          <label htmlFor="postContent">Content</label>
+          <label>Content</label>
           <textarea
-            id="postContent"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
         </div>
         <div className={styles.formGroup}>
-          <FormControl fullWidth>
+          <StyledFormControl fullWidth>
             <InputLabel className={styles.visibilitySelectLabelTitle}>
               Visibility
             </InputLabel>
@@ -100,7 +114,7 @@ export default function EditPostModal({
               <MenuItem value={2}>Friends-Only</MenuItem>
               <MenuItem value={3}>Unlisted</MenuItem>
             </Select>
-          </FormControl>
+          </StyledFormControl>
         </div>
         <div className={styles.buttonGroup}>
           <button

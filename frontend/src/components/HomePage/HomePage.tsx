@@ -10,6 +10,9 @@ import logo from "../../images/dog_icon.png";
 import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
+import { api } from "../../service/config";
+
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 
 // Modal needs this to be set so it knows where to put the modal in the DOM
 Modal.setAppElement("#root");
@@ -22,17 +25,44 @@ const HomePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  const [user, setUser] = useState<any>(null);
   const authProvider = useAuth();
 
+  const [isUserLoading, setIsUserLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!authProvider.user) {
+        setIsUserLoading(false); // user not authenticated
+        return;
+      }
+
+      try {
+        const authorReq = await api.get(
+          `/api/authors/${authProvider.user.uuid}/`
+        );
+        setUser(authorReq.data);
+        setIsUserLoading(false);
+      } catch (err) {
+        console.log(err);
+        setError("Failed to fetch user data.");
+        setIsUserLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [authProvider.user]); // This effect runs when authProvider.user changes
 
   useEffect(() => {
     const fetchPosts = async () => {
+      if (isUserLoading) return; // Wait until user data is loaded
+
       try {
         const publicPosts = await stream.getStream();
         const privatePosts = await stream.getStream(true);
 
-        setNonPublicPosts(privatePosts as any[]);
-        setPublicPosts(publicPosts as any[]);
+        setNonPublicPosts(decodeBase64ToUrl(privatePosts as any[]));
+      setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
         setIsLoading(false);
       } catch (err) {
         console.log(err);
@@ -40,7 +70,7 @@ const HomePage = () => {
       }
     };
     fetchPosts();
-  }, []);
+  }, [isUserLoading]); // Run when user loading state changes
 
   const handleAddClick = () => {
     console.log("Add button clicked");
@@ -90,7 +120,7 @@ const HomePage = () => {
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar showButtonBar={false} />
+        <PostBar showButtonBar={false} author={user} />
         {authProvider.isAuthenticated && (
           <div className={styles["icon-bar"]}>
             <div
@@ -121,7 +151,7 @@ const HomePage = () => {
             userName={post.author.displayName}
             postTime={new Date(post.published).toLocaleString()}
             postContent={post.content}
-            postImage={post.has_image ? post.image : ""}
+            // postImage={post.has_image ? post.image : ""}
             likeCount={post.likes.length}
             saveCount={0}
             commentCount={post.comments.length}
@@ -161,7 +191,7 @@ const HomePage = () => {
               userName={selectedPost.author.displayName}
               postTime={new Date(selectedPost.published).toLocaleString()}
               postContent={selectedPost.content}
-              postImage={""}
+              // postImage={""}
               likeCount={0}
               saveCount={0}
               commentCount={0}
@@ -169,7 +199,7 @@ const HomePage = () => {
           ) : null
         }
         comments={comments}
-        author={authProvider.isAuthenticated ? authProvider.user : null}
+        author={user}
       />
     </div>
   );

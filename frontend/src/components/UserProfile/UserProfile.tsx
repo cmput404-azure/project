@@ -1,6 +1,7 @@
 import { Author, Post } from "../../models/models";
 import { useEffect, useState } from "react";
 
+import EditProfileModal from "../EditProfileModal/EditProfileModal";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import EditPostModal from "../EditPostModal/EditPostModal";
 import FollowList from "../FollowList/FollowList";
@@ -19,45 +20,34 @@ interface AuthorPostsResponse {
 }
 
 export default function UserProfile() {
+  // Author data
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
+  // Edit profile
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  // Delete post
   const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [visibilityNumber, setVisibilityNumber] = useState<number | null>(null);
-
+  // Edit post
   const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
   const [postToEdit, setPostToEdit] = useState<Post[]>([]);
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState<string>("");
 
-  const authProvider = useAuth();
+  const handleEditProfileButtonClicked = () => {
+    setIsEditingProfile(true);
+  };
 
-  async function fetchAuthorPosts() {
-    try {
-      if (authProvider.user) {
-        const response = await api.get<AuthorPostsResponse>(
-          `/api/authors/${authProvider.user.uuid}/posts/`
-        );
-        setAuthorPosts(response.data.results.reverse());
-      }
-    } catch (error) {
-      console.error("Error fetching the author posts", error);
-    }
-  }
-
-  async function fetchAuthorData() {
-    try {
-      if (authProvider.user) {
-        const response = await api.get(
-          `/api/authors/${authProvider.user.uuid}/`
-        );
-        setAuthorData(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching the author data", error);
-    }
-  }
+  const handleSaveEditProfileButtonClicked = (data) => {
+    let tempAuthorData = authorData;
+    tempAuthorData.displayName = data.displayName;
+    tempAuthorData.github = data.githubLink;
+    updateUserInfo(tempAuthorData);
+    console.log(data);
+    setIsEditingProfile(false);
+  };
 
   const handleDeletePostButtonClicked = (
     postId: string,
@@ -82,6 +72,75 @@ export default function UserProfile() {
   function handleEditPostModalClose() {
     setIsEditPostModalOpen(false);
     setPostToEdit([]);
+  }
+
+  function openFollowers() {
+    setShowFollowerList("follower");
+    setIsFollowerListModalOpen(true);
+  }
+
+  function openFollowing() {
+    setShowFollowerList("following");
+    setIsFollowerListModalOpen(true);
+  }
+  function openFriends() {
+    setShowFollowerList("friend");
+    setIsFollowerListModalOpen(true);
+  }
+
+  // authentication
+  const authProvider = useAuth();
+
+  useEffect(() => {
+    if (authProvider.user) {
+      fetchAuthorData();
+      fetchAuthorPosts();
+    }
+  }, [authProvider.user]);
+
+  // function to get the info of the user who is currently logged in
+  async function fetchAuthorData() {
+    try {
+      if (authProvider.user) {
+        const response = await api.get(
+          `/api/authors/${authProvider.user.uuid}/`
+        );
+        setAuthorData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching the author data", error);
+    }
+  }
+
+  // function to update an Authors data
+  async function updateUserInfo(data) {
+    try {
+      if (authProvider.user) {
+        const response = await api.put(
+          `/api/authors/${authProvider.user.uuid}/`,
+          data
+        );
+        console.log("User info updated successfully:", response.data);
+        fetchAuthorData();
+        fetchAuthorPosts();
+      }
+    } catch (error) {
+      console.error("Error updating user info", error);
+    }
+  }
+
+  // function to get all the authors posts, used to refresh after save
+  async function fetchAuthorPosts() {
+    try {
+      if (authProvider.user) {
+        const response = await api.get<AuthorPostsResponse>(
+          `/api/authors/${authProvider.user.uuid}/posts/`
+        );
+        setAuthorPosts(response.data.results.reverse());
+      }
+    } catch (error) {
+      console.error("Error fetching the author posts", error);
+    }
   }
 
   // Function to handle updating the post
@@ -284,27 +343,6 @@ export default function UserProfile() {
     }
   }
 
-  function openFollowers() {
-    setShowFollowerList("follower");
-    setIsFollowerListModalOpen(true);
-  }
-
-  function openFollowing() {
-    setShowFollowerList("following");
-    setIsFollowerListModalOpen(true);
-  }
-  function openFriends() {
-    setShowFollowerList("friend");
-    setIsFollowerListModalOpen(true);
-  }
-
-  useEffect(() => {
-    if (authProvider.user) {
-      fetchAuthorData();
-      fetchAuthorPosts();
-    }
-  }, [authProvider.user]);
-
   if (!authorData) {
     return <div>Loading...</div>;
   }
@@ -323,7 +361,12 @@ export default function UserProfile() {
               <span className={styles.userName}>{authorData.displayName}</span>
             </section>
             <section className={styles.buttonContainer}>
-              <button className={styles.followButton}>Follow</button>
+              <button
+                className={styles.followButton}
+                onClick={handleEditProfileButtonClicked}
+              >
+                Edit Profile
+              </button>
               <IconButton
                 onClick={() => window.open(authorData.github, "_blank")}
               >
@@ -332,9 +375,9 @@ export default function UserProfile() {
             </section>
           </section>
 
-          <span className={styles.userHandle}>
+          {/* {          <span className={styles.userHandle}>
             @{authorData.displayName.toLowerCase().replace(" ", "_")}
-          </span>
+          </span>} */}
 
           <section className={styles.userStats}>
             <span>
@@ -397,6 +440,13 @@ export default function UserProfile() {
           ))}
         </section>
       </section>
+      <EditProfileModal
+        isOpen={isEditingProfile}
+        onSave={handleSaveEditProfileButtonClicked}
+        onClose={() => setIsEditingProfile(false)}
+        author={authorData}
+      />
+
       <DeletePostModal
         isOpen={isPostDeleteModalOpen}
         onRequestClose={handleDeletePostModalClose}
