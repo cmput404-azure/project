@@ -1,5 +1,6 @@
 import { Author, Post } from "../../models/models";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 import EditProfileModal from "../EditProfileModal/EditProfileModal";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
@@ -12,6 +13,14 @@ import { api } from "../../service/config";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 
+interface UserProfileProps {
+  /*
+  isViewing = false means the user is viewing their own profile, 
+  isViewing = true means the user is viewing someone else's profile
+  */
+  isViewing?: boolean;
+}
+
 interface AuthorPostsResponse {
   count: number;
   next: string | null;
@@ -19,10 +28,15 @@ interface AuthorPostsResponse {
   results: Post[];
 }
 
-export default function UserProfile() {
+// by default isViewing is false which means the user is viewing their own profile
+export default function UserProfile({ isViewing = false }: UserProfileProps) {
   // Author data
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
+  // Get the userID from the URL, used for viewing other users profile
+  const { userID } = useParams<{ userID: string }>();
+  const [userToGet, setUserToGet] = useState<string | null>(null);
+
   // Edit profile
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   // Delete post
@@ -92,19 +106,32 @@ export default function UserProfile() {
   const authProvider = useAuth();
 
   useEffect(() => {
-    if (authProvider.user) {
+    console.log("isViewing:", isViewing);
+    console.log("userID:", userID);
+    console.log("authProvider.user.uuid:", authProvider.user.uuid);
+
+    // Set the userToGet based on the viewing condition
+    if (isViewing) {
+      setUserToGet(userID);
+    } else if (authProvider.user) {
+      setUserToGet(authProvider.user.uuid);
+    }
+    console.log("userToGet:", userToGet);
+  }, [isViewing, userID, authProvider.user]);
+
+  useEffect(() => {
+    // Only fetch data if userToGet is defined
+    if (userToGet) {
       fetchAuthorData();
       fetchAuthorPosts();
     }
-  }, [authProvider.user]);
+  }, [userToGet]);
 
   // function to get the info of the user who is currently logged in
   async function fetchAuthorData() {
     try {
       if (authProvider.user) {
-        const response = await api.get(
-          `/api/authors/${authProvider.user.uuid}/`
-        );
+        const response = await api.get(`/api/authors/${userToGet}/`);
         setAuthorData(response.data);
       }
     } catch (error) {
@@ -132,9 +159,9 @@ export default function UserProfile() {
   // function to get all the authors posts, used to refresh after save
   async function fetchAuthorPosts() {
     try {
-      if (authProvider.user) {
+      if (authProvider.user || isViewing) {
         const response = await api.get<AuthorPostsResponse>(
-          `/api/authors/${authProvider.user.uuid}/posts/`
+          `/api/authors/${userToGet}/posts/`
         );
         setAuthorPosts(response.data.results.reverse());
       }
@@ -361,12 +388,17 @@ export default function UserProfile() {
               <span className={styles.userName}>{authorData.displayName}</span>
             </section>
             <section className={styles.buttonContainer}>
-              <button
-                className={styles.followButton}
-                onClick={handleEditProfileButtonClicked}
-              >
-                Edit Profile
-              </button>
+              {isViewing ? (
+                <button className={styles.followButton}>Follow</button>
+              ) : (
+                <button
+                  className={styles.followButton}
+                  onClick={handleEditProfileButtonClicked}
+                >
+                  Edit Profile
+                </button>
+              )}
+
               <IconButton
                 onClick={() => window.open(authorData.github, "_blank")}
               >
@@ -430,11 +462,11 @@ export default function UserProfile() {
               likes={1523382}
               saves={250}
               comments={10000}
-              canDelete={true}
+              canDelete={!isViewing}
               handleDelete={() =>
                 handleDeletePostButtonClicked(post.id, post.visibility)
               }
-              canEdit={true}
+              canEdit={!isViewing}
               handleEdit={() => handleEditPostButtonClicked(post.id)}
             />
           ))}

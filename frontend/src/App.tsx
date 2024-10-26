@@ -36,7 +36,10 @@ export default function App() {
           <Route path="/login" element={<Auth />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/authors/:userID" element={<OtherUserProfile />} />
+            <Route
+              path="/authors/:userID"
+              element={<UserProfile isViewing={true} />}
+            />
             <Route path="/logout" element={<Logout />} />
           </Route>
 
