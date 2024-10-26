@@ -163,7 +163,7 @@ function PostCard({
               />
             </div>
           ) : (
-            <div className={styles.postText}>{postContent}</div>
+            <div className={styles.postText}>{post_obj.content}</div>
           )}
         </div>
       </div>
