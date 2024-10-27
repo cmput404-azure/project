@@ -86,9 +86,14 @@ export default function UserProfile() {
   // From https://devsarticles.com/react-copy-to-clipboard, Downloaded on 2024-10-26
   async function handleGetProfileLinkButtonClicked() {
     console.log("Get Profile Link button clicked");
+    console.log(window.location.href);
 
-    // TODO: chanhe "localhost:3000" to the proper host domain, not hardcoded
-    const content = `http://localhost:3000/#/authors/${authorData.id}`;
+    // From https://stackoverflow.com/questions/39823681/read-the-current-full-url-with-react, Downloaded on 2024-10-27
+    let url = window.location.href;
+    let parse = url.split("/");
+    let hostDomain = parse.slice(0, 3).join("/") + "/";
+
+    const content = `${hostDomain}#/authors/${authorData.id}`;
 
     try {
       await navigator.clipboard.writeText(content);
