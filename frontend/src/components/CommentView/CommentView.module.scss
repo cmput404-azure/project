@@ -100,7 +100,7 @@
 .commentDisplay {
   display: flex;
   flex-direction: row;
-  padding: 0px 10px;
+  padding: 0px 0px;
   padding-top: 5px;
   .userImageContainer {
     display: flex;
@@ -120,8 +120,9 @@
 
 .commentButtonContainer {
   display: flex;
-  justify-content: space-between;
-  padding: 0px 10px;
+  justify-content: end;
+  gap: 10px;
+  padding: 0px 0px;
 }
 
 .cancelButton {

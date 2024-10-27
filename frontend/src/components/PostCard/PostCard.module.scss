@@ -1,121 +1,125 @@
 .card {
-    width: 800px;
-    border-radius: 10px;
-    padding: 20px;
-    margin: 20px auto;
-    min-height: max-content;
-    background-color: rgb(123, 123, 123);
-    color: white; // Default text color for the whole card
+  width: 800px;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px auto;
+  min-height: max-content;
+  background-color: rgb(123, 123, 123);
+  color: white; // Default text color for the whole card
 
-    &:hover{
-        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
-        transition: box-shadow 0.3s ease-in-out;
-        cursor: pointer;
-    }
+  &:hover {
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+    transition: box-shadow 0.3s ease-in-out;
+    cursor: pointer;
+  }
 }
 
 .grid {
-    display: grid;
-    grid-template-columns: auto 15fr 1fr;
-    align-items: center;
-    gap: 15px;
+  display: grid;
+  grid-template-columns: auto 15fr 1fr;
+  align-items: center;
+  gap: 15px;
 }
 
 .imgPlaceholder {
-    width: 100%;
-    height: 200px;
-    background-color: rgba(255, 255, 255, 0.2); // Optional: Light background to match the theme
+  width: 100%;
+  height: 200px;
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.2
+  ); // Optional: Light background to match the theme
 }
 
 .profilePic {
-    height: 50px;
-    width: 50px;
-    border-radius: 50%;
-    object-fit: cover;
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .headerText {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .userName {
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: white; // Ensures userName text is white
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: white; // Ensures userName text is white
 }
 
 .postTime {
-    font-size: 0.9rem;
-    color: white; // Ensures post time text is white
+  font-size: 0.9rem;
+  color: white; // Ensures post time text is white
 }
 
 .cardFooter {
-    height: 95%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  height: 95%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .essentials {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .icon {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 1.2rem;
-    color: white; // Ensures icons are white
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 1.2rem;
+  color: white; // Ensures icons are white
 }
 
 .icon i {
-    display: inline-block;
-    cursor: pointer;
-    color: white; // Icon color set to white
+  display: inline-block;
+  cursor: pointer;
+  color: white; // Icon color set to white
 }
 
 .cardFooter span {
-    font-size: 0.9rem;
-    color: white; // Changed from #333 to white for footer text
-    font-weight: 500;
+  font-size: 0.9rem;
+  color: white; // Changed from #333 to white for footer text
+  font-weight: 500;
 }
 
 .cardContent {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .postText {
-    font-size: 1rem;
-    color: white; // Changed from #333 to white for post content
-    line-height: 1.5;
-    text-align: justify;
+  font-size: 1rem;
+  color: white; // Changed from #333 to white for post content
+  line-height: 1.5;
+  text-align: justify;
 }
 
 .imgContainer {
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center; // Center image both horizontally and vertically
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center; // Center image both horizontally and vertically
 }
 
 .imgContainer img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
 }
 
 .liked i {
-    color: #f65b5b;
+  color: #f65b5b;
 }
-  
+
 .shared i {
-    color: #70ffaf;
+  color: #70ffaf;
 }
-  
