@@ -110,10 +110,6 @@ export default function UserProfile({
   const authProvider = useAuth();
 
   useEffect(() => {
-    console.log("isViewing:", isViewing);
-    console.log("userID:", userID);
-    console.log("authProvider.user.uuid:", authProvider.user.uuid);
-
     // Set the userToGet based on the viewing condition
     if (isViewing && userID == authProvider.user.uuid) {
       setUserToGet(authProvider.user.uuid);
@@ -123,7 +119,6 @@ export default function UserProfile({
     } else if (authProvider.user) {
       setUserToGet(authProvider.user.uuid);
     }
-    console.log("userToGet:", userToGet);
   }, [isViewing, userID, authProvider.user]);
 
   useEffect(() => {
