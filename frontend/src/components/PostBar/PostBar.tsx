@@ -1,14 +1,17 @@
 import { Author, Post } from "../../models/models";
-import React, { useState } from "react";
-import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
 import inbox from "../../service/inbox";
 import follow from "../../service/follow";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  VisibilityChoices,
+  getVisibilityNumber,
+} from "../../models/modelTypes";
+
 import { api } from "../../service/config";
 import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
 
 interface PostBarProps {
-  showButtonBar?: boolean;
   author?: any;
 }
 type IconType = "public" | "friends" | "unlisted";
@@ -16,7 +19,7 @@ type IconType = "public" | "friends" | "unlisted";
 // Max character limits
 const TITLE_MAX_LENGTH = 200;
 
-const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
+const PostBar: React.FC<PostBarProps> = ({ author }) => {
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
   const [title, setTitle] = useState("");
   const [showDetail, setShowDetail] = useState(false);
@@ -26,8 +29,22 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [contentType, setContentType] = useState("");
-
   const authProvider = useAuth();
+
+  const postBarRef = useRef<HTMLDivElement>(null); // Ref for the component
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (postBarRef.current && !postBarRef.current.contains(event.target as Node)) {
+        setShowDetail(false); // Hide details when clicking outside
+      }
+    };
+  
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+  
 
   // To update the activeIcon
   const handleIconClick = (icon: IconType) => {
@@ -35,7 +52,7 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
   };
 
   // To update the title
-  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTitleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (event.target.value.length <= TITLE_MAX_LENGTH) {
       setTitle(event.target.value);
     }
@@ -147,8 +164,8 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
   }
 
   return (
-    <div className={styles.container}>
-      <section className={styles["post-bar"]}>
+    <div className={styles.container} ref={postBarRef}>
+      <section className={styles["post-bar"]} onClick={handleInputClick}>
         <img
           src={
             authProvider.user.profileImage ??
@@ -158,17 +175,9 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
           className={styles["user-image"]}
         />
         <div className={styles["vertical-divider"]}></div>
-        <input
-          type="text"
-          placeholder="Start your post with a title "
-          className={styles["post-input"]}
-          value={title}
-          onChange={handleTitleChange}
-          onClick={handleInputClick}
-        />
-        <span className={styles["char-counter"]}>
-          {title.length} / {TITLE_MAX_LENGTH}
-        </span>
+        <span
+         className={styles["post-input"]}
+       > Click To Start Your Post</span>
         <button
           className={styles["add-button"]}
           onClick={() => document.getElementById("image-upload")?.click()}
@@ -184,8 +193,16 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
         />
       </section>
 
-      {showDetail && (
+      {(showDetail) && (
         <div className={styles["detail-container"]}>
+         <label className={styles["input-label"]}>Title</label>
+         <textarea
+           className={styles["description-input"]}
+           placeholder="Start your post with a title"
+           value={title}
+           onChange={handleTitleChange}
+         />
+
           <label className={styles["input-label"]}>Description</label>
           <textarea
             className={styles["description-input"]}
@@ -217,9 +234,9 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
         </div>
       )}
 
-      {(showButtonBar || showDetail) && (
+      {(showDetail) && (
         <section className={styles["button-bar"]}>
-
+          <div className={styles["left-bar"]}>
           <div className={styles["icon-bar"]}>
             <div
               className={`${styles["icon-section"]} ${
@@ -248,12 +265,10 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
               <i className={`${styles.icon} ${styles["link-icon"]}`}></i>
             </div>
           </div>
-          <button
-      className={`${styles["mark-button"]} ${activeCommonMark ? styles.active : ""}`}
-      onClick={() => setActiveCommonMark(!activeCommonMark)}
-    >
-      CommonMark
-    </button>
+          <button className={`${styles["mark-button"]} ${activeCommonMark ? styles.active : ""}`} onClick={() => setActiveCommonMark(!activeCommonMark)}>
+              Markdown
+          </button>
+          </div>
           <button
             className={styles["post-button"]}
             onClick={handleCombinedClick}
