@@ -30,7 +30,6 @@ export default function UserProfile() {
   const { userID } = useParams<{ userID: string }>();
   const [userToGet, setUserToGet] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-
   // Edit profile
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   // Delete post
@@ -43,6 +42,8 @@ export default function UserProfile() {
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState<string>("");
+  // Profile Link
+  const [hasCopiedProfileLink, setHasCopiedProfileLink] = useState(false);
 
   const handleEditProfileButtonClicked = () => {
     setIsEditingProfile(true);
@@ -86,11 +87,13 @@ export default function UserProfile() {
   async function handleGetProfileLinkButtonClicked() {
     console.log("Get Profile Link button clicked");
 
+    // TODO: chanhe "localhost:3000" to the proper host domain, not hardcoded
     const content = `http://localhost:3000/#/authors/${authorData.id}`;
 
     try {
       await navigator.clipboard.writeText(content);
       console.log("Copied to clipboard:", content);
+      setHasCopiedProfileLink(true);
     } catch (error) {
       console.error("Unable to copy to clipboard:", error);
     }
@@ -120,6 +123,7 @@ export default function UserProfile() {
   const authProvider = useAuth();
 
   useEffect(() => {
+    setHasCopiedProfileLink(false);
     // Set the userToGet based on the viewing condition
     // if the user is viewing from the /profile path
     if (userID == null && authProvider.user) {
@@ -484,10 +488,12 @@ export default function UserProfile() {
 
         <section className={styles.userProfileLink}>
           <button
-            className={styles.followButton}
+            className={
+              hasCopiedProfileLink ? styles.linkCopied : styles.followButton
+            }
             onClick={handleGetProfileLinkButtonClicked}
           >
-            Get Profile Link
+            {hasCopiedProfileLink ? "Link Copied" : "Get Profile Link"}
           </button>
         </section>
       </section>
