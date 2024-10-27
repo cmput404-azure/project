@@ -92,6 +92,12 @@ export default function UserProfile({
     setPostToEdit([]);
   }
 
+  function handleFollowButtonClicked() {
+    console.log("Follow button clicked");
+    // TODO: Implement follow functionality
+    // addFollower();
+  }
+
   function openFollowers() {
     setShowFollowerList("follower");
     setIsFollowerListModalOpen(true);
@@ -372,6 +378,20 @@ export default function UserProfile({
     }
   }
 
+  // not used yet
+  // const addFollower = async () => {
+  //   const encodedHost = encodeURIComponent(authorData.host);
+  //   const encodedId = encodeURIComponent(authorData.id);
+
+  //   const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
+  //   // Add actor as follower
+  //   const response = await api.put(
+  //     `/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`
+  //   );
+
+  //   const data = response.data;
+  // };
+
   if (!authorData) {
     return <div>Loading...</div>;
   }
@@ -391,7 +411,12 @@ export default function UserProfile({
             </section>
             <section className={styles.buttonContainer}>
               {isViewing ? (
-                <button className={styles.followButton}>Follow</button>
+                <button
+                  className={styles.followButton}
+                  onClick={handleFollowButtonClicked}
+                >
+                  Follow
+                </button>
               ) : (
                 <button
                   className={styles.followButton}
