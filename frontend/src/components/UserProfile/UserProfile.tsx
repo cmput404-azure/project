@@ -14,14 +14,6 @@ import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import auth from "../../service/auth";
 
-interface UserProfileProps {
-  /*
-  isViewing = false means the user is viewing their own profile, 
-  isViewing = true means the user is viewing someone else's profile
-  */
-  initialIsViewing?: boolean;
-}
-
 interface AuthorPostsResponse {
   count: number;
   next: string | null;
@@ -30,16 +22,14 @@ interface AuthorPostsResponse {
 }
 
 // by default isViewing is false which means the user is viewing their own profile
-export default function UserProfile({
-  initialIsViewing = false,
-}: UserProfileProps) {
+export default function UserProfile() {
   // Author data
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
   // Get the userID from the URL, used for viewing other users profile
   const { userID } = useParams<{ userID: string }>();
   const [userToGet, setUserToGet] = useState<string | null>(null);
-  const [isViewing, setIsViewing] = useState(initialIsViewing);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Edit profile
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -131,15 +121,22 @@ export default function UserProfile({
 
   useEffect(() => {
     // Set the userToGet based on the viewing condition
-    if (isViewing && userID == authProvider.user.uuid) {
+    // if the user is viewing from the /profile path
+    if (userID == null && authProvider.user) {
       setUserToGet(authProvider.user.uuid);
-      setIsViewing(false);
-    } else if (isViewing) {
-      setUserToGet(userID);
-    } else if (authProvider.user) {
-      setUserToGet(authProvider.user.uuid);
+      setIsEditing(true);
     }
-  }, [isViewing, userID, authProvider.user]);
+    // if the user is viewing from the /authors/:userID path and the user their viewing is themselves
+    else if (userID != null && userID == authProvider.user.uuid) {
+      setUserToGet(userID);
+      setIsEditing(true);
+    }
+    // if the user is viewing from the /authors/:userID path and the user their viewing is someone else
+    else if (userID != null && userID !== authProvider.user.uuid) {
+      setUserToGet(userID);
+      setIsEditing(false);
+    }
+  }, [userID, authProvider.user]);
 
   useEffect(() => {
     // Only fetch data if userToGet is defined
@@ -182,7 +179,7 @@ export default function UserProfile({
   // function to get all the authors posts, used to refresh after save
   async function fetchAuthorPosts() {
     try {
-      if (authProvider.user || isViewing) {
+      if (authProvider.user) {
         const response = await api.get<AuthorPostsResponse>(
           `/api/authors/${userToGet}/posts/`
         );
@@ -425,19 +422,19 @@ export default function UserProfile({
               <span className={styles.userName}>{authorData.displayName}</span>
             </section>
             <section className={styles.buttonContainer}>
-              {isViewing ? (
-                <button
-                  className={styles.followButton}
-                  onClick={handleFollowButtonClicked}
-                >
-                  Follow
-                </button>
-              ) : (
+              {isEditing ? (
                 <button
                   className={styles.followButton}
                   onClick={handleEditProfileButtonClicked}
                 >
                   Edit Profile
+                </button>
+              ) : (
+                <button
+                  className={styles.followButton}
+                  onClick={handleFollowButtonClicked}
+                >
+                  Follow
                 </button>
               )}
 
@@ -509,11 +506,11 @@ export default function UserProfile({
               likes={1523382}
               saves={250}
               comments={10000}
-              canDelete={!isViewing}
+              canDelete={isEditing}
               handleDelete={() =>
                 handleDeletePostButtonClicked(post.id, post.visibility)
               }
-              canEdit={!isViewing}
+              canEdit={isEditing}
               handleEdit={() => handleEditPostButtonClicked(post.id)}
             />
           ))}
