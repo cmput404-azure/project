@@ -10,7 +10,7 @@ class CommentSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Comment
-        fields = ['type', 'user', 'comment', 'contentType','published','id','post','likes']
+        fields = ['type', 'user', 'comment', 'contentType','published','id','post']
     
     # This method gets the custom uuid value and maps it to'id'
     def get_id(self, obj):
