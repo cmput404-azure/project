@@ -22,6 +22,7 @@ interface ListItemProps {
         type: string;
         profileImage: string | null;
     };
+    onRefresh: () => void;
 }
 
 export default function ListItem({
@@ -31,7 +32,8 @@ export default function ListItem({
     isFollowerList,
     isUserList,
     notif_id,
-    user
+    user,
+    onRefresh
 }: ListItemProps) {
     const authProvider = useAuth();
     const [isRequested, setIsRequested] = useState(false);
@@ -87,8 +89,7 @@ export default function ListItem({
     };
 
     const declineFollower = async () => {
-        deleteFollowRequest();
-
+       await deleteFollowRequest();
     }
 
     const addFollower = async () => {
@@ -101,7 +102,7 @@ export default function ListItem({
 
         const data = response.data;
 
-        // TODO:Delete from inbox after
+        // Delete from inbox
         await deleteFollowRequest();
 
     }
@@ -113,17 +114,15 @@ export default function ListItem({
         };
 
         const deleteResponse = await api.delete(`/api/authors/${authProvider.user.uuid}/inbox/`, { data: deletefollowRequest });
+        onRefresh();
 
     }
 
     let additionalText = "";
 
-    if (isFollowerList) {
-        additionalText = "accepted your follow request";
-    } else if (isRequest) {
+    if (isRequest) {
         additionalText = "wants to follow you";
-    }
-    else if (isLike) {
+    }else if (isLike) {
         additionalText = "liked your post";
     } else if (isPost) {
         additionalText = "shared a post with you";
@@ -140,7 +139,7 @@ export default function ListItem({
                 </div>
 
                 {isFollowerList ? <button onClick={unFollow}>Unfollow</button> : null}
-                {isUserList ? <button onClick={sendFollowerRequest}>{isRequested ? "Requested" : "Follow"}</button> : null}
+                {isUserList ? <button onClick={sendFollowerRequest} disabled = {isRequested || user.has_requested}>{isRequested ? "Requested" : user.has_requested ? "Requested" : "Follow"}</button> : null}
 
                 {isRequest ? <span><button onClick={addFollower}>Accept</button> <button onClick={declineFollower}>Decline</button></span> : null}
                 {isPost ? <img className={styles.listImgPost} src={user.profileImage ?? `https://ui-avatars.com/api/?background=random&name=${user.displayName}`}  alt='pfp' /> : null}

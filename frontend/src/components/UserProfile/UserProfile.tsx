@@ -75,16 +75,16 @@ export default function UserProfile() {
   }
 
   function openFollowers() {
-    setShowFollowerList("follower");
+    setShowFollowerList("Follower");
     setIsFollowerListModalOpen(true);
   }
 
   function openFollowing() {
-    setShowFollowerList("following");
+    setShowFollowerList("Following");
     setIsFollowerListModalOpen(true);
   }
   function openFriends() {
-    setShowFollowerList("friend");
+    setShowFollowerList("Friends");
     setIsFollowerListModalOpen(true);
   }
 

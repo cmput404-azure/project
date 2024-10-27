@@ -3,6 +3,7 @@
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import React, { useEffect, useState } from 'react';
+import { useAuth } from "../../state";
 
 import ListItem from '../ListItem/ListItem';
 import { api } from "../../service/config";
@@ -13,6 +14,7 @@ export default function UserSearch() {
     const [results, setResults] = useState<any[]>([]); // Change 'any' to the appropriate type based on your API response
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const authProvider = useAuth();
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(event.target.value);
@@ -29,8 +31,11 @@ export default function UserSearch() {
             setLoading(true);
             setError(null);
             try {
-                const response = await api.get(`/api/authors/all/`); 
-                setResults(response.data); // Adjust based on your API response structure
+                const response = await api.get(`/api/authors/all/`,{
+                    params: { user: authProvider.user.uuid }
+                }); 
+                console.log("RESPONSE", response.data);
+                setResults(response.data); 
             } catch (err) {
                 console.error('Error fetching users:', err);
                 setError('Failed to fetch users');
@@ -73,7 +78,7 @@ export default function UserSearch() {
                     ))}
                 </ul>
             ) : (
-                searchTerm && <p>No users found</p> // Show message when there are no matches
+                searchTerm && <p>No users found</p> 
             )}
         </div>
     );

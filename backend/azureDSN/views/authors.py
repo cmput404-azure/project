@@ -2,8 +2,10 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from ..models import User, Post
-from ..serializers import UserSerializer, PostSerializer
+from django.db.models import Case, When,Value, BooleanField,F
+
+from ..models import User, Post, FollowRequest
+from ..serializers import UserSerializer, PostSerializer, FollowRequestSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework import status
 from uuid import UUID
@@ -255,7 +257,39 @@ class AuthorsCompleteView(APIView):
         """
         Gets all the author in our local node.
         """
-        authors = User.objects.all()
-        serializer = UserSerializer(authors, many=True)
-        return Response(serializer.data, status=200)
+        user_uuid = request.query_params.get('user')
+        # # Query all users except the current user
+
+        users = User.objects.exclude(uuid=user_uuid)
+        formatted_uuid = str(UUID(user_uuid))
+        # Query FollowRequest to check if the current user has sent a request
+        follow_requests = FollowRequest.objects.filter(
+            actor__id=formatted_uuid
+        ).values_list('object_id', flat=True)
+
+        # Annotate users with `has_requested` based on follow request existence
+        users = users.annotate(
+            has_requested=Case(
+                When(uuid__in=follow_requests, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            ),
+            id=F('uuid'),
+            displayName=F('display_name'),  # Rename displayName to display_name
+            profileImage=F('profile_image')  # Rename profile_image to profileImage
+        )
+
+        # # Serialize the users
+        # serializer = UserSerializer(users, many=True)
+        user_data = users.values(
+            'id',
+            'host',
+            'displayName',  # Rename the field
+            'github',
+            'page',
+            'profileImage', 
+            'has_requested'
+        )     
+
+        return Response(list(user_data), status=200)
 

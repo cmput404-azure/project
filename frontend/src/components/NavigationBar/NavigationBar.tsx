@@ -121,8 +121,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ onClick, isLoggedIn }) =>
         isOpen={isSearchOpen}
         onRequestClose={() => setIsSearchOpen(false)}
         contentLabel="User Search"
-        className={styles.ModalContent}
-        overlayClassName={styles.Modal}
+        className={styles.modalContent}
+        overlayClassName={styles.modalOverlay}
       >
         <button className={styles.closeModalButton} onClick={() => setIsSearchOpen(false)}>Close</button>
         <UserSearch />
@@ -131,8 +131,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ onClick, isLoggedIn }) =>
         isOpen={isNotificationOpen}
         onRequestClose={() => setIsNotificationOpen(false)}
         contentLabel="Notifications"
-        className={styles.ModalContent}
-        overlayClassName={styles.Modal}
+        className={styles.modalContent}
+        overlayClassName={styles.modalOverlay}
       >
         <button className={styles.closeModalButton} onClick={() => setIsNotificationOpen(false)}>Close</button>
         <NotificationList />

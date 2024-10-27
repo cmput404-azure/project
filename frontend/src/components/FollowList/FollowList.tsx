@@ -27,7 +27,7 @@ interface FollowerListProps {
 
 Modal.setAppElement('#root');
 
-export default function FollowList({ isOpen, onClose, isFollowerList }: FollowerListProps) {
+export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerListProps) {
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,10 +35,10 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
 
   useEffect(() => {
     if (isOpen) {
-      if (isFollowerList === 'follower') {
+      if (isFollowerList === 'Follower') {
         fetchFollowers(); // Fetch followers only when the modal is open
         return;
-      } else if (isFollowerList === 'following') {
+      } else if (isFollowerList === 'Following') {
         fetchFollowing();
       } else {
         fetchFriends();
@@ -86,12 +86,11 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
       isOpen={isOpen}
       onRequestClose={onClose}
       contentLabel="Follower List"
-      style={{
-        content: { width: '400px', margin: 'auto', padding: '20px', borderRadius: '10px' },
-        overlay: { backgroundColor: 'rgba(0, 0, 0, 0.5)' }
-      }}
+      className={styles.modalContent}
+      overlayClassName={styles.modalOverlay}
     >
       <button onClick={onClose} style={{ float: 'right' }}>Close</button>
+      <h2 className={styles.h2}>{isFollowerList}</h2>
       {loading ? (
         <p>Loading...</p>
       ) : error ? (
@@ -106,7 +105,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
                 isRequest={false}
                 isPost={false}
                 isLike={false}
-                isFollowerList={isFollowerList === "following"}
+                isFollowerList={isFollowerList === "Following"}
                 isUserList={false}
                 user={follower}
               />
