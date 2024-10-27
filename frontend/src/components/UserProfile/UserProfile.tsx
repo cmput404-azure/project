@@ -92,6 +92,20 @@ export default function UserProfile({
     setPostToEdit([]);
   }
 
+  // From https://devsarticles.com/react-copy-to-clipboard, Downloaded on 2024-10-26
+  async function handleGetProfileLinkButtonClicked() {
+    console.log("Get Profile Link button clicked");
+
+    const content = `http://localhost:3000/#/authors/${authorData.id}`;
+
+    try {
+      await navigator.clipboard.writeText(content);
+      console.log("Copied to clipboard:", content);
+    } catch (error) {
+      console.error("Unable to copy to clipboard:", error);
+    }
+  }
+
   function handleFollowButtonClicked() {
     console.log("Follow button clicked");
     // TODO: Implement follow functionality
@@ -140,6 +154,7 @@ export default function UserProfile({
     try {
       if (authProvider.user) {
         const response = await api.get(`/api/authors/${userToGet}/`);
+        console.log("Author data fetched successfully:", response.data);
         setAuthorData(response.data);
       }
     } catch (error) {
@@ -471,7 +486,12 @@ export default function UserProfile({
         </section>
 
         <section className={styles.userProfileLink}>
-          <button className={styles.followButton}>Get Profile Link</button>
+          <button
+            className={styles.followButton}
+            onClick={handleGetProfileLinkButtonClicked}
+          >
+            Get Profile Link
+          </button>
         </section>
       </section>
 
