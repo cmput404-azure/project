@@ -1,6 +1,7 @@
 import { Author, Post } from "../../models/models";
 import { useEffect, useState } from "react";
-
+import follow from "../../service/follow";
+import inbox from "../../service/inbox";
 import EditProfileModal from "../EditProfileModal/EditProfileModal";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import EditPostModal from "../EditPostModal/EditPostModal";
@@ -163,78 +164,29 @@ export default function UserProfile() {
           }
         );
 
-        // Second request: Get the followers
-        const followersResponse = await api.get<{
-          type: string;
-          followers: Author[];
-        }>(`/api/authors/${authProvider.user.uuid}/followers/`);
-        const followers = followersResponse.data["followers"];
-        console.log("Followers retrieved:", followers);
+        // Get friends and followers list
+        const followers = await follow.getFollowers(authProvider.user.uuid);
+        const friends =  await follow.getFriends(authProvider.user.uuid);
 
-        // Third request: Get the friends
-        const friendsResponse = await api.get<Author[]>(
-          `/api/authors/${authProvider.user.uuid}/following/?action=friends`
-        );
-        const friends = friendsResponse.data;
-        console.log("Friends retrieved:", friends);
-
-        // Now friends and followers may be duplicated, we have to go through and remove
-        // one from the follower list if it also exist in friend
-        // Create a Set of friend IDs for quick lookup
-        const friendIds = new Set(friends.map((friend) => friend.id));
-
-        // Filter out followers that are also friends
-        const uniqueFollowers = followers.filter(
-          (follower) => !friendIds.has(follower.id)
-        );
-        console.log("Filtered followers (excluding friends):", uniqueFollowers);
-
-        // send to followers if post is public or unlisted
-        // always send to friends for all type of posts
-        const payload = {
-          id: postId,
-          title: updatedPost.title,
-          content: updatedPost.content,
-          visibility: updatedPost.visibility,
-        };
-
+        // followers already include all followers and friends
+        // public/unlisted=> send to followers and friends
         if (postToEdit[0].visibility === 1 || postToEdit[0].visibility === 3) {
-          for (const follower of uniqueFollowers) {
-            const inboxUrl = `/api/authors/${follower.id}/inbox/`;
-            try {
-              const inboxResponse = await api.put<{ message: string }>(
-                inboxUrl,
-                payload
-              );
-              console.log(inboxResponse.data);
-            } catch (error) {
-              console.error(
-                `Error sending post to inbox of ${follower.id}:`,
-                error
-              );
-            }
+          for (const follower of followers) {
+            const inboxResponse = await inbox.updateInboxPost(follower.id, postId, 
+                                                              updatedPost.title, 
+                                                              updatedPost.content, 
+                                                              updatedPost.visibility);
           }
-          console.log(
-            "Error sending noti on updated posts to followers' inboxes."
-          );
+        } else { 
+          for (const friend of friends) {
+            const inboxResponse = await inbox.updateInboxPost(friend.id, postId, 
+                                                              updatedPost.title, 
+                                                              updatedPost.content, 
+                                                              updatedPost.visibility);
+          }
         }
 
-        // Friends receive inbox on all type of post
-        for (const friend of friends) {
-          const inboxUrl = `/api/authors/${friend.id}/inbox/`;
-          try {
-            const inboxResponse = await api.put<{ message: string }>(
-              inboxUrl,
-              payload
-            );
-            console.log(inboxResponse.data);
-          } catch (error) {
-            console.error(
-              `Error sending noti on updated posts to ${friend.id}:`,
-              error
-            );
-          }
-        }
+
 
         console.log("Post updated successfully:", response.data);
 
@@ -256,80 +208,22 @@ export default function UserProfile() {
           `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
         );
 
-        // Second request: Get the followers
-        const followersResponse = await api.get<{
-          type: string;
-          followers: Author[];
-        }>(`/api/authors/${authProvider.user.uuid}/followers/`);
-        const followers = followersResponse.data["followers"];
-        console.log("Followers retrieved:", followers);
+        // Get friends and followers list
+        const followers = await follow.getFollowers(authProvider.user.uuid);
+        const friends =  await follow.getFriends(authProvider.user.uuid);
 
-        // Third request: Get the friends
-        const friendsResponse = await api.get<Author[]>(
-          `/api/authors/${authProvider.user.uuid}/following/?action=friends`
-        );
-        const friends = friendsResponse.data;
-        console.log("Friends retrieved:", friends);
-
-        // Now friends and followers may be duplicated, we have to go through and remove
-        // one from the follower list if it also exist in friend
-        // Create a Set of friend IDs for quick lookup
-        const friendIds = new Set(friends.map((friend) => friend.id));
-
-        // Filter out followers that are also friends
-        const uniqueFollowers = followers.filter(
-          (follower) => !friendIds.has(follower.id)
-        );
-        console.log("Filtered followers (excluding friends):", uniqueFollowers);
-
-        // send to followers if post is public or unlisted
-        // always send to friends for all type of posts
-        const config2 = {
-          headers: {},
-          data: {
-            id: `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
-            type: "post",
-          },
-        };
-
+        // followers already include friends and followers
         if (visibilityNumber === 1 || visibilityNumber === 3) {
-          for (const follower of uniqueFollowers) {
-            const inboxUrl = `/api/authors/${follower.id}/inbox/`;
-            try {
-              const inboxResponse = await api.delete<{ message: string }>(
-                inboxUrl,
-                config2
-              );
-              console.log(inboxResponse.data);
-            } catch (error) {
-              console.error(
-                `Error sending post to inbox of ${follower.id}:`,
-                error
-              );
-            }
+          for (const follower of followers) {
+            const inboxResponse = await inbox.deleteInboxPost(follower.id, postToDelete);
           }
-          console.log(
-            "Error sending noti on deleted posts to followers' inboxes."
-          );
-        }
-
-        // Friends receive inbox on all type of post
-        for (const friend of friends) {
-          const inboxUrl = `/api/authors/${friend.id}/inbox/`;
-          try {
-            const inboxResponse = await api.delete<{ message: string }>(
-              inboxUrl,
-              config2
-            );
-            console.log(inboxResponse.data);
-          } catch (error) {
-            console.error(
-              `Error sending noti on deleted posts to ${friend.id}:`,
-              error
-            );
+        } else {
+          // Friends receive inbox on all type of post
+          for (const friend of friends) {
+            const inboxResponse = await inbox.deleteInboxPost(friend.id, postToDelete);
           }
         }
-
+        
         // Refresh the posts after successful deletion
         await fetchAuthorPosts();
 

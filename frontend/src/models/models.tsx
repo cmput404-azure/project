@@ -38,6 +38,7 @@ export interface Follower {
     id: string; // use the host and id to get the foreign fqid
     page: string;
     type: string;
+    profileImage?: string | null;
 }
 export interface Like {
     type: string;
@@ -69,33 +70,26 @@ export interface Post {
     likes?: Like[] | null;
     published: string;
     visibility: number;
+    image
 }
 
 // This might be one of the four: post, like, comment and request so I simply store all the possible variables
 export interface InboxItem {
     type: string;
-    title: string;
     id: string;
-    description: string;
-    author: Author;
-    contentType: ContentType;
-    comments: Comment[];
-    likes: Like[];
-    published: string;
-    visibility: number;
-    comment: string;
-    post: string;
-    object: string | Author;
-    summary: string;
-    actor: {
-        type: string;
-        id: string;
-        host: string;
-        displayName: string;
-        github: string;
-        profileImage: string;
-        page: string;
-    }
+    title?: string;
+    description?: string;
+    author?: Author;
+    contentType?: ContentType;
+    comments?: Comment[];
+    likes?: Like[];
+    published?: string;
+    visibility?: number;
+    comment?: string;
+    post?: string;
+    object?: string | Author;
+    summary?: string;
+    actor?: Author;
 }
 
 export interface Inbox {

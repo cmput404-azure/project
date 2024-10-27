@@ -1,4 +1,6 @@
 import { Author, Post } from "../../models/models";
+import inbox from "../../service/inbox";
+import follow from "../../service/follow";
 import React, { useState, useEffect, useRef } from "react";
 import {
   VisibilityChoices,
@@ -127,72 +129,22 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
       );
       console.log("Post successfully created:", postResponse.data);
 
-      // Second request: Get the followers
-      const followersResponse = await api.get<{
-        type: string;
-        followers: Author[];
-      }>(`/api/authors/${authProvider.user.uuid}/followers/`);
-      const followers = followersResponse.data["followers"];
-      console.log("Followers retrieved:", followers);
-
-      // Third request: Get the friends
-      const friendsResponse = await api.get<Author[]>(
-        `/api/authors/${authProvider.user.uuid}/following/?action=friends`
-      );
-      const friends = friendsResponse.data;
-      console.log("Friends retrieved:", friends);
-
-      // Now friends and followers may be duplicated, we have to go through and remove
-      // one from the follower list if it also exist in friend
-      // Create a Set of friend IDs for quick lookup
-      const friendIds = new Set(friends.map((friend) => friend.id));
-
-      // Filter out followers that are also friends
-      const uniqueFollowers = followers.filter(
-        (follower) => !friendIds.has(follower.id)
-      );
-      console.log("Filtered followers (excluding friends):", uniqueFollowers);
+      // Get friends and followers list, followers inlcude both friends and followers
+      const followers = await follow.getFollowers(authProvider.user.uuid);
+      const friends =  await follow.getFriends(authProvider.user.uuid);
 
       // send to followers if post is public or unlisted
       // always send to friends for all type of posts
       if (visibilityNumber === 1 || visibilityNumber === 3) {
-        for (const follower of uniqueFollowers) {
-          const inboxUrl = `/api/authors/${follower.id}/inbox/`;
-          try {
-            const inboxResponse = await api.post<{ message: string }>(
-              inboxUrl,
-              postResponse.data
-            );
-            console.log(inboxResponse.data);
-          } catch (error) {
-            console.error(
-              `Error sending post to inbox of ${follower.id}:`,
-              error
-            );
-          }
+        for (const follower of followers) {
+          const inboxResponse = await inbox.sendPostToInbox(follower.id, postResponse.data);
         }
-        console.log("All posts sent to followers' inboxes.");
-      }
-
-      // Friends receive inbox on all type of post
-      for (const friend of friends) {
-        const inboxUrl = `/api/authors/${friend.id}/inbox/`;
-        try {
-          const inboxResponse = await api.post<{ message: string }>(
-            inboxUrl,
-            postResponse.data
-          );
-          console.log(inboxResponse.data);
-        } catch (error) {
-          console.error(
-            `Error sending post to friend's inbox of ${friend.id}:`,
-            error
-          );
+      } else {
+        for (const friend of friends) {
+          const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
         }
       }
-      console.log("All posts sent to followers/friends' inboxes.");
-
-
+     
       // Close the input modal and reset input fields
       setShowDetail(false)
       setTitle("")

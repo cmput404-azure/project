@@ -58,6 +58,7 @@ const HomePage = () => {
       try {
         const publicPosts = await stream.getStream();
         const privatePosts = await stream.getStream(true);
+        // Get a list of all posts liked by this user and assigned to likeList
 
         setNonPublicPosts(decodeBase64ToUrl(privatePosts as any[]));
       setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
@@ -149,16 +150,9 @@ const HomePage = () => {
         {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
-            profilePic={post.author.profileImage}
-            userName={post.author.displayName}
-            postTime={new Date(post.published).toLocaleString()}
-            postContent={post.content}
-            // postImage={post.has_image ? post.image : ""}
-            likeCount={post.likes.length}
-            saveCount={0}
-            commentCount={post.comments.length}
+            post_obj = {post}
             onCommentButtonClick={() => handleCommentButtonClick(post)}
-            onClick={() => handleCommentButtonClick(post)}
+            // onClick={() => handleCommentButtonClick(post)}
           />
         ))}
       </div>
@@ -186,17 +180,7 @@ const HomePage = () => {
             // pass in the selected post for the modal to display
             <PostCard
               key={selectedPost.id}
-              profilePic={
-                selectedPost.author?.profileImage ||
-                `https://ui-avatars.com/api/?background=random&name=${selectedPost.author?.displayName}`
-              }
-              userName={selectedPost.author.displayName}
-              postTime={new Date(selectedPost.published).toLocaleString()}
-              postContent={selectedPost.content}
-              // postImage={""}
-              likeCount={0}
-              saveCount={0}
-              commentCount={0}
+              post_obj = {selectedPost}
             />
           ) : null
         }
