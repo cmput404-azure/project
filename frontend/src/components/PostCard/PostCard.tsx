@@ -32,16 +32,20 @@ function PostCard({
   return (
     <div className={styles.card} onClick={onClick}>
       <div className={styles.grid}>
-        <img
-          className={styles.profilePic}
-          src={
-            profilePic ??
-            `https://ui-avatars.com/api/?background=random&name=${userName}`
-          }
-          alt={`${userName}'s profile`}
-        />
+        <Link to={`/authors/${userID}`}>
+          <img
+            className={styles.profilePic}
+            src={
+              profilePic ??
+              `https://ui-avatars.com/api/?background=random&name=${userName}`
+            }
+            alt={`${userName}'s profile`}
+          />
+        </Link>
         <div className={styles.headerText}>
-          <Link to={`/authors/${userID}`}>{userName}</Link>
+          <Link className={styles.userName} to={`/authors/${userID}`}>
+            {userName}
+          </Link>
           <span className={styles.postTime}>{postTime}</span>
         </div>
         <div className={styles.icon}>
