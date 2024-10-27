@@ -155,7 +155,6 @@ export default function UserProfile() {
     try {
       if (authProvider.user) {
         const response = await api.get(`/api/authors/${userToGet}/`);
-        console.log("Author data fetched successfully:", response.data);
         setAuthorData(response.data);
       }
     } catch (error) {
