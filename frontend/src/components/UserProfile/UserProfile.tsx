@@ -12,13 +12,14 @@ import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import { api } from "../../service/config";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
+import auth from "../../service/auth";
 
 interface UserProfileProps {
   /*
   isViewing = false means the user is viewing their own profile, 
   isViewing = true means the user is viewing someone else's profile
   */
-  isViewing?: boolean;
+  initialIsViewing?: boolean;
 }
 
 interface AuthorPostsResponse {
@@ -29,13 +30,16 @@ interface AuthorPostsResponse {
 }
 
 // by default isViewing is false which means the user is viewing their own profile
-export default function UserProfile({ isViewing = false }: UserProfileProps) {
+export default function UserProfile({
+  initialIsViewing = false,
+}: UserProfileProps) {
   // Author data
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
   // Get the userID from the URL, used for viewing other users profile
   const { userID } = useParams<{ userID: string }>();
   const [userToGet, setUserToGet] = useState<string | null>(null);
+  const [isViewing, setIsViewing] = useState(initialIsViewing);
 
   // Edit profile
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -111,7 +115,10 @@ export default function UserProfile({ isViewing = false }: UserProfileProps) {
     console.log("authProvider.user.uuid:", authProvider.user.uuid);
 
     // Set the userToGet based on the viewing condition
-    if (isViewing) {
+    if (isViewing && userID == authProvider.user.uuid) {
+      setUserToGet(authProvider.user.uuid);
+      setIsViewing(false);
+    } else if (isViewing) {
       setUserToGet(userID);
     } else if (authProvider.user) {
       setUserToGet(authProvider.user.uuid);

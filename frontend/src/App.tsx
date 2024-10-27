@@ -37,7 +37,7 @@ export default function App() {
             <Route path="/profile" element={<UserProfile />} />
             <Route
               path="/authors/:userID"
-              element={<UserProfile isViewing={true} />}
+              element={<UserProfile initialIsViewing={true} />}
             />
             <Route path="/logout" element={<Logout />} />
           </Route>
