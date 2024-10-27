@@ -11,6 +11,7 @@ import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import { api } from "../../service/config";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
+import follow from "../../service/follow";
 
 interface AuthorPostsResponse {
   count: number;
@@ -35,9 +36,40 @@ export default function UserProfile() {
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState<string>("");
+    
+  const [friendsCount, setFriendsCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const handleEditProfileButtonClicked = () => {
     setIsEditingProfile(true);
+  };
+
+  const fetchFriendsCount = async () => {
+    try {
+      const data = await follow.getFriends(authProvider.user.uuid);
+      setFriendsCount(data.length);
+    } catch (error) {
+      console.error('Fetch error (friends):', error);
+    }
+  };
+
+  const fetchFollowersCount = async () => {
+    try {
+      const data = await follow.getFollowers(authProvider.user.uuid);
+      setFollowersCount(data.length);
+    } catch (error) {
+      console.error('Fetch error (followers):', error);
+    }
+  };
+
+  const fetchFollowingCount = async () => {
+    try {
+      const data = await follow.getFollowing(authProvider.user.uuid);
+      setFollowingCount(data.length);
+    } catch (error) {
+      console.error('Fetch error (following):', error);
+    }
   };
 
   const handleSaveEditProfileButtonClicked = (data) => {
@@ -92,6 +124,11 @@ export default function UserProfile() {
   const authProvider = useAuth();
 
   useEffect(() => {
+    const fetchCounts = async () => {
+      await Promise.all([fetchFriendsCount(), fetchFollowersCount(), fetchFollowingCount()]);
+    };
+
+    fetchCounts();
     if (authProvider.user) {
       fetchAuthorData();
       fetchAuthorPosts();
@@ -384,23 +421,13 @@ export default function UserProfile() {
               <p className={styles.count}>100</p> <p>posts</p>
             </span>
             <span onClick={openFollowers} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>100</p> <p>followers</p>
+              <p className={styles.count}>{followersCount}</p> <p>followers</p>
             </span>
-            <FollowList
-              isOpen={isFollowerListModalOpen}
-              onClose={() => setIsFollowerListModalOpen(false)}
-              isFollowerList={showFollowerList}
-            />
             <span onClick={openFollowing} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>100</p> <p>following</p>
+              <p className={styles.count}>{followingCount}</p> <p>following</p>
             </span>
-            <FollowList
-              isOpen={isFollowerListModalOpen}
-              onClose={() => setIsFollowerListModalOpen(false)}
-              isFollowerList={showFollowerList}
-            />
             <span onClick={openFriends} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>10</p>
+              <p className={styles.count}>{friendsCount}</p>
               <p>friends</p>
             </span>
             <FollowList

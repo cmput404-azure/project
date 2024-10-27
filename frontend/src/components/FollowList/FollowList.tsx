@@ -29,6 +29,7 @@ Modal.setAppElement('#root');
 
 export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerListProps) {
   const [followers, setFollowers] = useState<Follower[]>([]);
+
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const authProvider = useAuth();
@@ -58,11 +59,11 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
     }
   };
 
-
   const fetchFollowers = async () => {
     try {
       const data = await follow.getFollowers(authProvider.user.uuid);
       setFollowers(data);
+
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
