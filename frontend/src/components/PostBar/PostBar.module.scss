@@ -39,6 +39,7 @@
       padding: 8px;
       font-size: 14px;
       color: white;
+      cursor: pointer;
 
       &::placeholder {
         color: #d3d3d3;
@@ -74,13 +75,14 @@
 
   .detail-container {
     width: 100%;
-    margin-top: 10px;
+    margin-top: 15px;
 
     .input-label {
       margin-top: 10px;
       font-size: 16px;
       color: white;
       margin-left: 2%;
+      font-weight: 500;
     }
 
     .description-input,
@@ -89,11 +91,12 @@
       margin: 5px 2%;
       padding: 10px;
       font-size: 14px;
-      border: 1px solid #ccc;
+      border: 1px solid #65ea8b;
       border-radius: 5px;
       resize: none;
       background-color: #444;
       color: white;
+
 
       &::placeholder {
         color: #d3d3d3;
@@ -106,11 +109,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 98%;
-
+    width: 100%;
+    .left-bar{
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      height: 100%;
     .icon-bar {
       display: flex;
-      width: 20%;
       justify-content: space-between;
       background-color: #555;
       border-radius: 10px;
@@ -150,30 +156,34 @@
     }
     .mark-button {
       background-color: #555;
-      color: white;
+      color: rgb(0, 0, 0);
       padding: 10px 20px;
       border: none;
       height: 100%;
-      border-radius: 4px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: medium;
       transition: background-color 0.3s ease, transform 0.2s ease;
+
   
       &:hover {
-        background-color: #306d4f;
+        background-color: rgb(98, 183, 123);
       }
   
       &.active {
-        background-color: #4caf50;
+        background-color: #70ffaf;
       }
     }
+  }
     .post-button {
       background-color: #555;
       color: white;
-      padding: 8px 16px;
+      font-size: medium;
+      padding: 10px 20px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      height: 100%;
       transition: background-color 0.3s ease;
 
       &:hover {
