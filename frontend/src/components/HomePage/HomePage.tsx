@@ -1,9 +1,8 @@
 // HomePage.jsx
-import { useEffect,  useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import AuthorPost from "../AuthorPost/AuthorPost";
 import CommentView from "../CommentView/CommentView";
-import Modal from "react-modal";
 import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
 import logo from "../../images/dog_icon.png";
@@ -14,8 +13,7 @@ import { api } from "../../service/config";
 
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 
-// Modal needs this to be set so it knows where to put the modal in the DOM
-Modal.setAppElement("#root");
+
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
@@ -116,12 +114,15 @@ const HomePage = () => {
   const displayedPosts =
     activeFilterPost === "all" ? publicPosts : nonPublicPosts;
 
+
+
+
+  
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-
-        <PostBar showButtonBar={false} author={user} />
+        <PostBar author={user} />
         {authProvider.isAuthenticated && (
           <div className={styles["icon-bar"]}>
             <div
@@ -207,3 +208,5 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
+
