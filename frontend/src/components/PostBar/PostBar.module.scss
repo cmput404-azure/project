@@ -107,11 +107,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 98%;
-
+    width: 100%;
+    .left-bar{
+      display: flex;
+      gap: 15px;
+      align-items: center;
     .icon-bar {
       display: flex;
-      width: 20%;
       justify-content: space-between;
       background-color: #555;
       border-radius: 10px;
@@ -151,7 +153,7 @@
     }
     .mark-button {
       background-color: #555;
-      color: white;
+      color: rgb(0, 0, 0);
       padding: 10px 20px;
       border: none;
       height: 100%;
@@ -159,22 +161,26 @@
       cursor: pointer;
       font-size: medium;
       transition: background-color 0.3s ease, transform 0.2s ease;
+
   
       &:hover {
-        background-color: #306d4f;
+        background-color: #3c8962;
       }
   
       &.active {
-        background-color: #4caf50;
+        background-color: #70ffaf;
       }
     }
+  }
     .post-button {
       background-color: #555;
       color: white;
+      font-size: medium;
       padding: 8px 16px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      height: 100%;
       transition: background-color 0.3s ease;
 
       &:hover {

@@ -1,5 +1,5 @@
 // HomePage.jsx
-import { useEffect, useState } from "react";
+import { useEffect,  useState } from "react";
 
 import AuthorPost from "../AuthorPost/AuthorPost";
 import CommentView from "../CommentView/CommentView";
@@ -120,6 +120,7 @@ const HomePage = () => {
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
+
         <PostBar showButtonBar={false} author={user} />
         {authProvider.isAuthenticated && (
           <div className={styles["icon-bar"]}>

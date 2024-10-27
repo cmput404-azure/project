@@ -228,7 +228,7 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
         />
       </section>
 
-      {showDetail && (
+      {(showButtonBar || showDetail) && (
         <div className={styles["detail-container"]}>
          <label className={styles["input-label"]}>Title</label>
          <textarea
@@ -271,7 +271,7 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
 
       {(showButtonBar || showDetail) && (
         <section className={styles["button-bar"]}>
-
+          <div className={styles["left-bar"]}>
           <div className={styles["icon-bar"]}>
             <div
               className={`${styles["icon-section"]} ${
@@ -300,12 +300,10 @@ const PostBar: React.FC<PostBarProps> = ({ showButtonBar = true, author }) => {
               <i className={`${styles.icon} ${styles["link-icon"]}`}></i>
             </div>
           </div>
-          <button
-      className={`${styles["mark-button"]} ${activeCommonMark ? styles.active : ""}`}
-      onClick={() => setActiveCommonMark(!activeCommonMark)}
-    >
-      CommonMark
-    </button>
+          <button className={`${styles["mark-button"]} ${activeCommonMark ? styles.active : ""}`} onClick={() => setActiveCommonMark(!activeCommonMark)}>
+              Markdown
+          </button>
+          </div>
           <button
             className={styles["post-button"]}
             onClick={handleCombinedClick}
