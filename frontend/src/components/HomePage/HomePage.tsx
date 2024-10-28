@@ -61,7 +61,7 @@ const HomePage = () => {
         // Get a list of all posts liked by this user and assigned to likeList
 
         setNonPublicPosts(decodeBase64ToUrl(privatePosts as any[]));
-      setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
+        setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
         setIsLoading(false);
       } catch (err) {
         console.log(err);
@@ -156,7 +156,6 @@ const HomePage = () => {
           />
         ))}
       </div>
-
 
       {/* Comment Modal */}
       <CommentView

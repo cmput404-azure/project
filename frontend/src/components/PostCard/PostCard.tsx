@@ -1,4 +1,5 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import { Link } from "react-router-dom";
 
 import { formatCount } from "../../util/formatting/formatCount";
 import styles from "./PostCard.module.scss";
