@@ -1,5 +1,6 @@
 import { Author, Post } from "../../models/models";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import follow from "../../service/follow";
 import inbox from "../../service/inbox";
 import EditProfileModal from "../EditProfileModal/EditProfileModal";
@@ -12,6 +13,7 @@ import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import { api } from "../../service/config";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
+import auth from "../../service/auth";
 
 interface AuthorPostsResponse {
   count: number;
@@ -20,10 +22,15 @@ interface AuthorPostsResponse {
   results: Post[];
 }
 
+// by default isViewing is false which means the user is viewing their own profile
 export default function UserProfile() {
   // Author data
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
+  // Get the userID from the URL, used for viewing other users profile
+  const { userID } = useParams<{ userID: string }>();
+  const [userToGet, setUserToGet] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   // Edit profile
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   // Delete post
@@ -36,6 +43,8 @@ export default function UserProfile() {
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState<string>("");
+  // Profile Link
+  const [hasCopiedProfileLink, setHasCopiedProfileLink] = useState(false);
 
   const handleEditProfileButtonClicked = () => {
     setIsEditingProfile(true);
@@ -75,6 +84,33 @@ export default function UserProfile() {
     setPostToEdit([]);
   }
 
+  // From https://devsarticles.com/react-copy-to-clipboard, Downloaded on 2024-10-26
+  async function handleGetProfileLinkButtonClicked() {
+    console.log("Get Profile Link button clicked");
+    console.log(window.location.href);
+
+    // From https://stackoverflow.com/questions/39823681/read-the-current-full-url-with-react, Downloaded on 2024-10-27
+    let url = window.location.href;
+    let parse = url.split("/");
+    let hostDomain = parse.slice(0, 3).join("/") + "/";
+
+    const content = `${hostDomain}#/authors/${authorData.id}`;
+
+    try {
+      await navigator.clipboard.writeText(content);
+      console.log("Copied to clipboard:", content);
+      setHasCopiedProfileLink(true);
+    } catch (error) {
+      console.error("Unable to copy to clipboard:", error);
+    }
+  }
+
+  function handleFollowButtonClicked() {
+    console.log("Follow button clicked");
+    // TODO: Implement follow functionality
+    // addFollower();
+  }
+
   function openFollowers() {
     setShowFollowerList("follower");
     setIsFollowerListModalOpen(true);
@@ -93,19 +129,38 @@ export default function UserProfile() {
   const authProvider = useAuth();
 
   useEffect(() => {
-    if (authProvider.user) {
+    setHasCopiedProfileLink(false);
+    // Set the userToGet based on the viewing condition
+    // if the user is viewing from the /profile path
+    if (userID == null && authProvider.user) {
+      setUserToGet(authProvider.user.uuid);
+      setIsEditing(true);
+    }
+    // if the user is viewing from the /authors/:userID path and the user their viewing is themselves
+    else if (userID != null && userID == authProvider.user.uuid) {
+      setUserToGet(userID);
+      setIsEditing(true);
+    }
+    // if the user is viewing from the /authors/:userID path and the user their viewing is someone else
+    else if (userID != null && userID !== authProvider.user.uuid) {
+      setUserToGet(userID);
+      setIsEditing(false);
+    }
+  }, [userID, authProvider.user]);
+
+  useEffect(() => {
+    // Only fetch data if userToGet is defined
+    if (userToGet) {
       fetchAuthorData();
       fetchAuthorPosts();
     }
-  }, [authProvider.user]);
+  }, [userToGet]);
 
   // function to get the info of the user who is currently logged in
   async function fetchAuthorData() {
     try {
       if (authProvider.user) {
-        const response = await api.get(
-          `/api/authors/${authProvider.user.uuid}/`
-        );
+        const response = await api.get(`/api/authors/${userToGet}/`);
         setAuthorData(response.data);
       }
     } catch (error) {
@@ -135,7 +190,7 @@ export default function UserProfile() {
     try {
       if (authProvider.user) {
         const response = await api.get<AuthorPostsResponse>(
-          `/api/authors/${authProvider.user.uuid}/posts/`
+          `/api/authors/${userToGet}/posts/`
         );
         setAuthorPosts(response.data.results.reverse());
       }
@@ -237,6 +292,20 @@ export default function UserProfile() {
     }
   }
 
+  // not used yet
+  // const addFollower = async () => {
+  //   const encodedHost = encodeURIComponent(authorData.host);
+  //   const encodedId = encodeURIComponent(authorData.id);
+
+  //   const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
+  //   // Add actor as follower
+  //   const response = await api.put(
+  //     `/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`
+  //   );
+
+  //   const data = response.data;
+  // };
+
   if (!authorData) {
     return <div>Loading...</div>;
   }
@@ -255,12 +324,22 @@ export default function UserProfile() {
               <span className={styles.userName}>{authorData.displayName}</span>
             </section>
             <section className={styles.buttonContainer}>
-              <button
-                className={styles.followButton}
-                onClick={handleEditProfileButtonClicked}
-              >
-                Edit Profile
-              </button>
+              {isEditing ? (
+                <button
+                  className={styles.followButton}
+                  onClick={handleEditProfileButtonClicked}
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <button
+                  className={styles.followButton}
+                  onClick={handleFollowButtonClicked}
+                >
+                  Follow
+                </button>
+              )}
+
               <IconButton
                 onClick={() => window.open(authorData.github, "_blank")}
               >
@@ -306,7 +385,14 @@ export default function UserProfile() {
         </section>
 
         <section className={styles.userProfileLink}>
-          <button className={styles.followButton}>Get Profile Link</button>
+          <button
+            className={
+              hasCopiedProfileLink ? styles.linkCopied : styles.followButton
+            }
+            onClick={handleGetProfileLinkButtonClicked}
+          >
+            {hasCopiedProfileLink ? "Link Copied" : "Get Profile Link"}
+          </button>
         </section>
       </section>
 
@@ -324,11 +410,11 @@ export default function UserProfile() {
               likes={1523382}
               saves={250}
               comments={10000}
-              canDelete={true}
+              canDelete={isEditing}
               handleDelete={() =>
                 handleDeletePostButtonClicked(post.id, post.visibility)
               }
-              canEdit={true}
+              canEdit={isEditing}
               handleEdit={() => handleEditPostButtonClicked(post.id)}
             />
           ))}

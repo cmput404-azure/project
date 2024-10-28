@@ -29,19 +29,16 @@ export default function App() {
 
       <div className={styles.content}>
         <Routes>
-          <Route path="/" element={<HomePage/>} />
-          <Route path="/home" element={<HomePage/>} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/settings" element={<Root />} />
           <Route path="/login" element={<Auth />} />
-          <Route
-            element={
-              <ProtectedRoute />
-            }
-          >
+          <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/authors/:userID" element={<UserProfile />} />
             <Route path="/logout" element={<Logout />} />
           </Route>
-   
+
           <Route path="*" element={<ErrorPage />} />
         </Routes>
       </div>
