@@ -67,5 +67,10 @@ button {
 }
 
 button:hover {
-  background-color: #ccc; // button hover effect
+  background-color: #ccc; 
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 5px; 
 }

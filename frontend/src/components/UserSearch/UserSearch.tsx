@@ -2,11 +2,14 @@
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
+import { useAuth } from "../../state";
+
 
 import ListItem from "../ListItem/ListItem";
 import { api } from "../../service/config";
 import styles from "./UserSearch.module.scss";
+
 
 interface userSearchProps {
   closeModal?: () => void;
@@ -17,31 +20,35 @@ export default function UserSearch({ closeModal }: userSearchProps) {
   const [results, setResults] = useState<any[]>([]); // Change 'any' to the appropriate type based on your API response
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const authProvider = useAuth();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
-  // Filter results based on the search term
+    // Filter results based on the search term
   const filteredResults = results.filter((user) =>
     user.displayName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  );   
 
   // Fetch users when the search term changes
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await api.get(`/api/authors/all/`);
-        setResults(response.data); // Adjust based on your API response structure
-      } catch (err) {
-        console.error("Error fetching users:", err);
-        setError("Failed to fetch users");
-      } finally {
-        setLoading(false);
-      }
-    };
+ useEffect(() => {
+        const fetchUsers = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await api.get(`/api/authors/all/`,{
+                    params: { user: authProvider.user.uuid }
+                }); 
+                console.log("RESPONSE", response.data);
+                setResults(response.data); 
+            } catch (err) {
+                console.error('Error fetching users:', err);
+                setError('Failed to fetch users');
+            } finally {
+                setLoading(false);
+            }
+        };
 
     fetchUsers();
   }, []);
@@ -58,6 +65,7 @@ export default function UserSearch({ closeModal }: userSearchProps) {
           onChange={handleInputChange}
         />
       </div>
+
 
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}

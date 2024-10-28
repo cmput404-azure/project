@@ -13,6 +13,7 @@ import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import { api } from "../../service/config";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
+import followService from "../../service/follow";
 import auth from "../../service/auth";
 
 interface AuthorPostsResponse {
@@ -43,11 +44,42 @@ export default function UserProfile() {
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState<string>("");
+    
+  const [friendsCount, setFriendsCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   // Profile Link
   const [hasCopiedProfileLink, setHasCopiedProfileLink] = useState(false);
 
   const handleEditProfileButtonClicked = () => {
     setIsEditingProfile(true);
+  };
+
+  const fetchFriendsCount = async () => {
+    try {
+      const data = await followService.getFriends(authProvider.user.uuid);
+      setFriendsCount(data.length);
+    } catch (error) {
+      console.error('Fetch error (friends):', error);
+    }
+  };
+
+  const fetchFollowersCount = async () => {
+    try {
+      const data = await followService.getFollowers(authProvider.user.uuid);
+      setFollowersCount(data.length);
+    } catch (error) {
+      console.error('Fetch error (followers):', error);
+    }
+  };
+
+  const fetchFollowingCount = async () => {
+    try {
+      const data = await followService.getFollowing(authProvider.user.uuid);
+      setFollowingCount(data.length);
+    } catch (error) {
+      console.error('Fetch error (following):', error);
+    }
   };
 
   const handleSaveEditProfileButtonClicked = (data) => {
@@ -112,16 +144,16 @@ export default function UserProfile() {
   }
 
   function openFollowers() {
-    setShowFollowerList("follower");
+    setShowFollowerList("Follower");
     setIsFollowerListModalOpen(true);
   }
 
   function openFollowing() {
-    setShowFollowerList("following");
+    setShowFollowerList("Following");
     setIsFollowerListModalOpen(true);
   }
   function openFriends() {
-    setShowFollowerList("friend");
+    setShowFollowerList("Friends");
     setIsFollowerListModalOpen(true);
   }
 
@@ -129,25 +161,30 @@ export default function UserProfile() {
   const authProvider = useAuth();
 
   useEffect(() => {
-    setHasCopiedProfileLink(false);
-    // Set the userToGet based on the viewing condition
-    // if the user is viewing from the /profile path
-    if (userID == null && authProvider.user) {
-      setUserToGet(authProvider.user.uuid);
-      setIsEditing(true);
-    }
-    // if the user is viewing from the /authors/:userID path and the user their viewing is themselves
-    else if (userID != null && userID == authProvider.user.uuid) {
-      setUserToGet(userID);
-      setIsEditing(true);
-    }
-    // if the user is viewing from the /authors/:userID path and the user their viewing is someone else
-    else if (userID != null && userID !== authProvider.user.uuid) {
-      setUserToGet(userID);
-      setIsEditing(false);
-    }
-  }, [userID, authProvider.user]);
+    const fetchCounts = async () => {
+      try {
+        await Promise.all([fetchFriendsCount(), fetchFollowersCount(), fetchFollowingCount()]);
+      } catch (error) {
+        console.error("Failed to fetch counts:", error);
+      }
+    };
 
+    if (authProvider.user) {
+      fetchCounts();
+      setHasCopiedProfileLink(false);
+
+      if (userID == null) {
+        setUserToGet(authProvider.user.uuid);
+        setIsEditing(true);
+      } else if (userID === authProvider.user.uuid) {
+        setUserToGet(userID);
+        setIsEditing(true);
+      } else {
+        setUserToGet(userID);
+        setIsEditing(false);
+      }
+    }
+  }, [userID, authProvider.user]); 
   useEffect(() => {
     // Only fetch data if userToGet is defined
     if (userToGet) {
@@ -357,23 +394,13 @@ export default function UserProfile() {
               <p className={styles.count}>100</p> <p>posts</p>
             </span>
             <span onClick={openFollowers} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>100</p> <p>followers</p>
+              <p className={styles.count}>{followersCount}</p> <p>followers</p>
             </span>
-            <FollowList
-              isOpen={isFollowerListModalOpen}
-              onClose={() => setIsFollowerListModalOpen(false)}
-              isFollowerList={showFollowerList}
-            />
             <span onClick={openFollowing} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>100</p> <p>following</p>
+              <p className={styles.count}>{followingCount}</p> <p>following</p>
             </span>
-            <FollowList
-              isOpen={isFollowerListModalOpen}
-              onClose={() => setIsFollowerListModalOpen(false)}
-              isFollowerList={showFollowerList}
-            />
             <span onClick={openFriends} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>10</p>
+              <p className={styles.count}>{friendsCount}</p>
               <p>friends</p>
             </span>
             <FollowList
