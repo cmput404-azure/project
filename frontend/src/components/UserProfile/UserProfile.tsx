@@ -162,30 +162,29 @@ export default function UserProfile() {
 
   useEffect(() => {
     const fetchCounts = async () => {
-      await Promise.all([fetchFriendsCount(), fetchFollowersCount(), fetchFollowingCount()]);
+      try {
+        await Promise.all([fetchFriendsCount(), fetchFollowersCount(), fetchFollowingCount()]);
+      } catch (error) {
+        console.error("Failed to fetch counts:", error);
+      }
     };
 
-    fetchCounts();
     if (authProvider.user) {
-    setHasCopiedProfileLink(false);
-    // Set the userToGet based on the viewing condition
-    // if the user is viewing from the /profile path
-    if (userID == null && authProvider.user) {
-      setUserToGet(authProvider.user.uuid);
-      setIsEditing(true);
-    }
-    // if the user is viewing from the /authors/:userID path and the user their viewing is themselves
-    else if (userID != null && userID == authProvider.user.uuid) {
-      setUserToGet(userID);
-      setIsEditing(true);
-    }
-    // if the user is viewing from the /authors/:userID path and the user their viewing is someone else
-    else if (userID != null && userID !== authProvider.user.uuid) {
-      setUserToGet(userID);
-      setIsEditing(false);
-    }
-  }, [userID, authProvider.user]);
+      fetchCounts();
+      setHasCopiedProfileLink(false);
 
+      if (userID == null) {
+        setUserToGet(authProvider.user.uuid);
+        setIsEditing(true);
+      } else if (userID === authProvider.user.uuid) {
+        setUserToGet(userID);
+        setIsEditing(true);
+      } else {
+        setUserToGet(userID);
+        setIsEditing(false);
+      }
+    }
+  }, [userID, authProvider.user]); 
   useEffect(() => {
     // Only fetch data if userToGet is defined
     if (userToGet) {

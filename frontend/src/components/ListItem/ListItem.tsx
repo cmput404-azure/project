@@ -1,31 +1,30 @@
 // @ts-nocheck
 
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../service/config";
 import styles from "./ListItem.module.scss";
 import { useAuth } from "../../state";
 
 interface ListItemProps {
-    isRequest: boolean;
-    isPost: boolean;
-    isLike: boolean;
-    isFollowerList: boolean;
-    isUserList: boolean;
-    notif_id?: string;
-    user: {
-        displayName: string;
-        github: string;
-        host: string;
-        id: string; // use the host and id to get the foreign fqid
-        page: string;
-        type: string;
-        profileImage: string | null;
-    };
-    closeModal?: () => void;
-    onRefresh: () => void;
+  isRequest: boolean;
+  isPost: boolean;
+  isLike: boolean;
+  isFollowerList: boolean;
+  isUserList: boolean;
+  notif_id?: string;
+  user: {
+    displayName: string;
+    github: string;
+    host: string;
+    id: string; // use the host and id to get the foreign fqid
+    page: string;
+    type: string;
+    profileImage: string | null;
+    has_requested?: boolean;
+  };
+  closeModal?: () => void;
+  onRefresh: () => void;
 }
 
 export default function ListItem({
@@ -37,37 +36,32 @@ export default function ListItem({
   notif_id,
   user,
   closeModal,
-  onRefresh
+  onRefresh,
 }: ListItemProps) {
   const authProvider = useAuth();
   const [isRequested, setIsRequested] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // TODO: NEED TO CHECK IF USER HAS REQUESTED ALREADY
+    // TODO: Check if the user has already sent a request.
   }, [isRequested]);
 
   const unFollow = async () => {
-    const encodedHost = encodeURIComponent(user.host); // TODO: host is the same for now change later for the current authenticated user
+    const encodedHost = encodeURIComponent(user.host);
     const encodedId = encodeURIComponent(authProvider.user.uuid);
-
     const url = `${encodedHost}/api/authors/${encodedId}`;
     const encodedUrl = encodeURIComponent(url);
 
-    const declineFollower = async () => {
-       await deleteFollowRequest();
+    await deleteFollowRequest();
   };
 
   const sendFollowerRequest = async () => {
     const encodedHost = encodeURIComponent(user.host);
     const encodedId = encodeURIComponent(user.id);
-
     const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
 
     try {
-      // Get the current user info
-      const userResponse = await api.get(
-        `/api/authors/${authProvider.user.uuid}/`
-      );
+      const userResponse = await api.get(`/api/authors/${authProvider.user.uuid}/`);
       const userInfo = userResponse.data;
 
       const followRequest = {
@@ -82,6 +76,7 @@ export default function ListItem({
           page: `${userInfo.page}`,
         },
       };
+
       await api.post(`/api/authors/${user.id}/inbox/`, followRequest);
       setIsRequested(true);
     } catch (error) {
@@ -89,69 +84,42 @@ export default function ListItem({
     }
   };
 
+  const addFollower = async () => {
+    const encodedHost = encodeURIComponent(user.host);
+    const encodedId = encodeURIComponent(user.id);
+    const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
 
-    const addFollower = async () => {
-        const encodedHost = encodeURIComponent(user.host);
-        const encodedId = encodeURIComponent(user.id);
-
-        const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
-        // Add actor as follower
-        const response = await api.put(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
-
-        const data = response.data;
-
-        // Delete from inbox
-        await deleteFollowRequest();
-
+    try {
+      await api.put(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
+      await deleteFollowRequest();
+    } catch (error) {
+      console.error("Add follower error:", error);
     }
-
-    const deleteFollowRequest = async () => {
-        const deletefollowRequest = {
-            "type": "follow",
-            "id": notif_id
-        };
-
-        const deleteResponse = await api.delete(`/api/authors/${authProvider.user.uuid}/inbox/`, { data: deletefollowRequest });
-        onRefresh();
-
-    }
-
-    // TODO:Delete from inbox after
-    await deleteFollowRequest();
   };
 
   const deleteFollowRequest = async () => {
-    const deletefollowRequest = {
-      type: "follow",
-      id: notif_id,
-    };
-     const deleteResponse = await api.delete(`/api/authors/${authProvider.user.uuid}/inbox/`, { data: deletefollowRequest });
-        onRefresh();
+    try {
+      const deleteRequest = { type: "follow", id: notif_id };
+      await api.delete(`/api/authors/${authProvider.user.uuid}/inbox/`, { data: deleteRequest });
+      onRefresh();
+    } catch (error) {
+      console.error("Delete follow request error:", error);
+    }
+  };
 
-  }
-
-  const navigate = useNavigate();
   const navigateToProfile = () => {
-    closeModal();
+    closeModal?.();
   };
 
   let additionalText = "";
+  if (isRequest) additionalText = "wants to follow you";
+  else if (isLike) additionalText = "liked your post";
+  else if (isPost) additionalText = "shared a post with you";
 
-  if (isRequest) {
-    additionalText = "wants to follow you";
-  } else if (isLike) {
-    additionalText = "liked your post";
-  } else if (isPost) {
-    additionalText = "shared a post with you";
-  }
   return (
     <div className={styles.ListItemContainer}>
       <div className={styles.container}>
-        <Link
-          to={`/authors/${user.id}`}
-          className={styles.profileLink}
-          onClick={navigateToProfile}
-        >
+        <Link to={`/authors/${user.id}`} className={styles.profileLink} onClick={navigateToProfile}>
           <img
             className={styles.listImg}
             src={
@@ -160,7 +128,6 @@ export default function ListItem({
             }
             alt="pfp"
           />
-
           <div className={styles.text}>
             <h1>
               {user.displayName}
@@ -170,17 +137,25 @@ export default function ListItem({
           </div>
         </Link>
 
-        {isFollowerList ? <button onClick={unFollow}>Unfollow</button> : null}
-       {isUserList ? <button onClick={sendFollowerRequest} disabled = {isRequested || user.has_requested}>{isRequested ? "Requested" : user.has_requested ? "Requested" : "Follow"}</button> : null}
+        {isFollowerList && <button onClick={unFollow}>Unfollow</button>}
 
+        {isUserList && (
+          <button
+            onClick={sendFollowerRequest}
+            disabled={isRequested || user.has_requested}
+          >
+            {isRequested || user.has_requested ? "Requested" : "Follow"}
+          </button>
+        )}
 
-        {isRequest ? (
-          <span>
+        {isRequest && (
+        <div className={styles.buttonGroup}>
             <button onClick={addFollower}>Accept</button>{" "}
-            <button onClick={declineFollower}>Decline</button>
-          </span>
-        ) : null}
-        {isPost ? (
+            <button onClick={deleteFollowRequest}>Decline</button>
+          </div>
+        )}
+
+        {isPost && (
           <img
             className={styles.listImgPost}
             src={
@@ -189,7 +164,7 @@ export default function ListItem({
             }
             alt="pfp"
           />
-        ) : null}
+        )}
       </div>
     </div>
   );
