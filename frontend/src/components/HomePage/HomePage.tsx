@@ -13,6 +13,8 @@ import { api } from "../../service/config";
 
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 
+
+
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
   const [publicPosts, setPublicPosts] = useState<any[]>([]);
@@ -113,6 +115,10 @@ const HomePage = () => {
   const displayedPosts =
     activeFilterPost === "all" ? publicPosts : nonPublicPosts;
 
+
+
+
+  
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
@@ -144,7 +150,7 @@ const HomePage = () => {
         {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
-            post_obj={post}
+            post_obj = {post}
             onCommentButtonClick={() => handleCommentButtonClick(post)}
             // onClick={() => handleCommentButtonClick(post)}
           />
@@ -160,7 +166,10 @@ const HomePage = () => {
           selectedPost &&
           displayedPosts.find((post) => post.id === selectedPost.id) ? (
             // pass in the selected post for the modal to display
-            <PostCard key={selectedPost.id} post_obj={selectedPost} />
+            <PostCard
+              key={selectedPost.id}
+              post_obj = {selectedPost}
+            />
           ) : null
         }
         comments={comments}
@@ -172,11 +181,11 @@ const HomePage = () => {
 
 export default HomePage;
 
-{
-  /* Second Section: Author Post */
-}
-{
-  /* <div className={styles.authorSection}>
+
+
+
+      {/* Second Section: Author Post */}
+      {/* <div className={styles.authorSection}>
         <h2 className={styles.recommendedTitle}>Recommended Author</h2>
         <AuthorPost
           authorImage={logo}
@@ -185,5 +194,4 @@ export default HomePage;
           postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
           onAddClick={handleAddClick}
         />
-      </div> */
-}
+      </div> */}

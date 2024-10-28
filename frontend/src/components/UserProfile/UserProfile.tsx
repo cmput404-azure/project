@@ -221,31 +221,27 @@ export default function UserProfile() {
 
         // Get friends and followers list
         const followers = await follow.getFollowers(authProvider.user.uuid);
-        const friends = await follow.getFriends(authProvider.user.uuid);
+        const friends =  await follow.getFriends(authProvider.user.uuid);
 
         // followers already include all followers and friends
         // public/unlisted=> send to followers and friends
         if (postToEdit[0].visibility === 1 || postToEdit[0].visibility === 3) {
           for (const follower of followers) {
-            const inboxResponse = await inbox.updateInboxPost(
-              follower.id,
-              postId,
-              updatedPost.title,
-              updatedPost.content,
-              updatedPost.visibility
-            );
+            const inboxResponse = await inbox.updateInboxPost(follower.id, postId, 
+                                                              updatedPost.title, 
+                                                              updatedPost.content, 
+                                                              updatedPost.visibility);
           }
-        } else {
+        } else { 
           for (const friend of friends) {
-            const inboxResponse = await inbox.updateInboxPost(
-              friend.id,
-              postId,
-              updatedPost.title,
-              updatedPost.content,
-              updatedPost.visibility
-            );
+            const inboxResponse = await inbox.updateInboxPost(friend.id, postId, 
+                                                              updatedPost.title, 
+                                                              updatedPost.content, 
+                                                              updatedPost.visibility);
           }
         }
+
+
 
         console.log("Post updated successfully:", response.data);
 
@@ -269,26 +265,20 @@ export default function UserProfile() {
 
         // Get friends and followers list
         const followers = await follow.getFollowers(authProvider.user.uuid);
-        const friends = await follow.getFriends(authProvider.user.uuid);
+        const friends =  await follow.getFriends(authProvider.user.uuid);
 
         // followers already include friends and followers
         if (visibilityNumber === 1 || visibilityNumber === 3) {
           for (const follower of followers) {
-            const inboxResponse = await inbox.deleteInboxPost(
-              follower.id,
-              postToDelete
-            );
+            const inboxResponse = await inbox.deleteInboxPost(follower.id, postToDelete);
           }
         } else {
           // Friends receive inbox on all type of post
           for (const friend of friends) {
-            const inboxResponse = await inbox.deleteInboxPost(
-              friend.id,
-              postToDelete
-            );
+            const inboxResponse = await inbox.deleteInboxPost(friend.id, postToDelete);
           }
         }
-
+        
         // Refresh the posts after successful deletion
         await fetchAuthorPosts();
 
