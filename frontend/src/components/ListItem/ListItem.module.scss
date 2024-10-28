@@ -1,62 +1,71 @@
-.listImg{
-    width:50px;
-    height:50px;
-    object-fit:cover;
-    object-position:30% 0;
-    border-radius:50%;
-    margin-right:5px;
+.listImg {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  object-position: 30% 0;
+  border-radius: 50%;
+  margin-right: 5px;
 }
 
-.listImgPost{
-    width:50px;
-    height:50px;
-    object-fit:cover;
-    object-position:30% 0;
-    border-radius:10%;
-    margin-right:20px;
+.listImgPost {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  object-position: 30% 0;
+  border-radius: 10%;
+  margin-right: 20px;
 }
 
 .container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%; 
-    padding: 5px; 
-    border-bottom: 2px solid #333;
-    border-top:none;
-    border-left:none;
-    border-right:none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 5px;
+  border-bottom: 2px solid #333;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.profileLink {
+  display: flex;
+  align-items: start;
+  gap: 5px;
+  text-decoration: none;
+  color: #333;
+  width: 100%;
 }
 
 .text {
-    flex-grow: 1; 
-    text-align:left;
+  flex-grow: 1;
+  text-align: left;
 }
 
-h1{
-    margin: 0;
-    font-weight: bold;
-    font-size:14px;
+h1 {
+  margin: 0;
+  font-weight: bold;
+  font-size: 14px;
 }
 .additionalText {
-    font-size: 14px;
-    font-weight:normal;
-    margin-left: 3px;
-  }
+  font-size: 14px;
+  font-weight: normal;
+  margin-left: 3px;
+}
 p {
-    font-size:12px;
-    margin: 0;
+  font-size: 12px;
+  margin: 0;
 }
 
 button {
-    border: none;
-    padding: 5px 10px;
-    border-radius: 16px;
-    cursor: pointer;
-    font-size: 12px;
-    color: #333;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #333;
 }
 
 button:hover {
-    background-color: #ccc; // button hover effect
+  background-color: #ccc; // button hover effect
 }

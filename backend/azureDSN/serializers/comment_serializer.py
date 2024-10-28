@@ -5,12 +5,12 @@ from ..models import Comment, Post
 class CommentSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField(source='uuid')
     published = serializers.DateTimeField(source="created_at", required=False)
-    author = serializers.JSONField()
+    user = serializers.JSONField()
     post = serializers.CharField()
     
     class Meta:
         model = Comment
-        fields = ['type', 'author', 'comment', 'contentType','published','id','post','likes']
+        fields = ['type', 'user', 'comment', 'contentType','published','id','post']
     
     # This method gets the custom uuid value and maps it to'id'
     def get_id(self, obj):
@@ -37,9 +37,6 @@ class CommentSerializer(serializers.ModelSerializer):
         print(validated_data)
         if validated_data.get("published"):
             validated_data["created_at"] = validated_data.pop("published")
-        user_json = validated_data.pop('author') # json/dict object
-        post_id = validated_data["post"].uuid
-        post_obj = Post.objects.get(uuid=post_id)
 
         comment_obj = Comment.objects.create(
             **validated_data

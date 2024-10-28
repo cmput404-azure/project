@@ -1,9 +1,8 @@
 // HomePage.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import AuthorPost from "../AuthorPost/AuthorPost";
 import CommentView from "../CommentView/CommentView";
-import Modal from "react-modal";
 import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
 import logo from "../../images/dog_icon.png";
@@ -14,8 +13,7 @@ import { api } from "../../service/config";
 
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 
-// Modal needs this to be set so it knows where to put the modal in the DOM
-Modal.setAppElement("#root");
+
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
@@ -60,9 +58,10 @@ const HomePage = () => {
       try {
         const publicPosts = await stream.getStream();
         const privatePosts = await stream.getStream(true);
+        // Get a list of all posts liked by this user and assigned to likeList
 
         setNonPublicPosts(decodeBase64ToUrl(privatePosts as any[]));
-      setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
+        setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
         setIsLoading(false);
       } catch (err) {
         console.log(err);
@@ -116,11 +115,15 @@ const HomePage = () => {
   const displayedPosts =
     activeFilterPost === "all" ? publicPosts : nonPublicPosts;
 
+
+
+
+  
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar showButtonBar={false} author={user} />
+        <PostBar author={user} />
         {authProvider.isAuthenticated && (
           <div className={styles["icon-bar"]}>
             <div
@@ -147,30 +150,11 @@ const HomePage = () => {
         {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
-            profilePic={post.author.profileImage}
-            userName={post.author.displayName}
-            postTime={new Date(post.published).toLocaleString()}
-            postContent={post.content}
-            // postImage={post.has_image ? post.image : ""}
-            likeCount={post.likes.length}
-            saveCount={0}
-            commentCount={post.comments.length}
+            post_obj = {post}
             onCommentButtonClick={() => handleCommentButtonClick(post)}
-            onClick={() => handleCommentButtonClick(post)}
+            // onClick={() => handleCommentButtonClick(post)}
           />
         ))}
-      </div>
-
-      {/* Second Section: Author Post */}
-      <div className={styles.authorSection}>
-        <h2 className={styles.recommendedTitle}>Recommended Author</h2>
-        <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
       </div>
 
       {/* Comment Modal */}
@@ -184,17 +168,7 @@ const HomePage = () => {
             // pass in the selected post for the modal to display
             <PostCard
               key={selectedPost.id}
-              profilePic={
-                selectedPost.author?.profileImage ||
-                `https://ui-avatars.com/api/?background=random&name=${selectedPost.author?.displayName}`
-              }
-              userName={selectedPost.author.displayName}
-              postTime={new Date(selectedPost.published).toLocaleString()}
-              postContent={selectedPost.content}
-              // postImage={""}
-              likeCount={0}
-              saveCount={0}
-              commentCount={0}
+              post_obj = {selectedPost}
             />
           ) : null
         }
@@ -206,3 +180,18 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
+
+
+
+      {/* Second Section: Author Post */}
+      {/* <div className={styles.authorSection}>
+        <h2 className={styles.recommendedTitle}>Recommended Author</h2>
+        <AuthorPost
+          authorImage={logo}
+          authorName="Kyle Quach"
+          userName="tmquach.meomeo"
+          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
+          onAddClick={handleAddClick}
+        />
+      </div> */}

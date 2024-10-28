@@ -94,6 +94,27 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.linkCopied {
+  background-color: #70ffaf;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  color: #000;
+  cursor: pointer;
+  font-weight: bold;
+  height: 30px;
+  padding: 7px 30px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    // go a bit lighter green
+    background-color: #8affbd;
+    color: #000;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+  }
+}
+
 .followButton:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
   transform: scale(1.1);

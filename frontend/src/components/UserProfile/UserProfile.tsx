@@ -1,6 +1,8 @@
 import { Author, Post } from "../../models/models";
 import { useEffect, useState } from "react";
-
+import { useParams } from "react-router-dom";
+import follow from "../../service/follow";
+import inbox from "../../service/inbox";
 import EditProfileModal from "../EditProfileModal/EditProfileModal";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import EditPostModal from "../EditPostModal/EditPostModal";
@@ -12,6 +14,7 @@ import { api } from "../../service/config";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import followService from "../../service/follow";
+import auth from "../../service/auth";
 
 interface AuthorPostsResponse {
   count: number;
@@ -20,10 +23,15 @@ interface AuthorPostsResponse {
   results: Post[];
 }
 
+// by default isViewing is false which means the user is viewing their own profile
 export default function UserProfile() {
   // Author data
   const [authorData, setAuthorData] = useState(null);
   const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
+  // Get the userID from the URL, used for viewing other users profile
+  const { userID } = useParams<{ userID: string }>();
+  const [userToGet, setUserToGet] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   // Edit profile
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   // Delete post
@@ -40,6 +48,8 @@ export default function UserProfile() {
   const [friendsCount, setFriendsCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  // Profile Link
+  const [hasCopiedProfileLink, setHasCopiedProfileLink] = useState(false);
 
   const handleEditProfileButtonClicked = () => {
     setIsEditingProfile(true);
@@ -106,6 +116,33 @@ export default function UserProfile() {
     setPostToEdit([]);
   }
 
+  // From https://devsarticles.com/react-copy-to-clipboard, Downloaded on 2024-10-26
+  async function handleGetProfileLinkButtonClicked() {
+    console.log("Get Profile Link button clicked");
+    console.log(window.location.href);
+
+    // From https://stackoverflow.com/questions/39823681/read-the-current-full-url-with-react, Downloaded on 2024-10-27
+    let url = window.location.href;
+    let parse = url.split("/");
+    let hostDomain = parse.slice(0, 3).join("/") + "/";
+
+    const content = `${hostDomain}#/authors/${authorData.id}`;
+
+    try {
+      await navigator.clipboard.writeText(content);
+      console.log("Copied to clipboard:", content);
+      setHasCopiedProfileLink(true);
+    } catch (error) {
+      console.error("Unable to copy to clipboard:", error);
+    }
+  }
+
+  function handleFollowButtonClicked() {
+    console.log("Follow button clicked");
+    // TODO: Implement follow functionality
+    // addFollower();
+  }
+
   function openFollowers() {
     setShowFollowerList("Follower");
     setIsFollowerListModalOpen(true);
@@ -130,18 +167,38 @@ export default function UserProfile() {
 
     fetchCounts();
     if (authProvider.user) {
+    setHasCopiedProfileLink(false);
+    // Set the userToGet based on the viewing condition
+    // if the user is viewing from the /profile path
+    if (userID == null && authProvider.user) {
+      setUserToGet(authProvider.user.uuid);
+      setIsEditing(true);
+    }
+    // if the user is viewing from the /authors/:userID path and the user their viewing is themselves
+    else if (userID != null && userID == authProvider.user.uuid) {
+      setUserToGet(userID);
+      setIsEditing(true);
+    }
+    // if the user is viewing from the /authors/:userID path and the user their viewing is someone else
+    else if (userID != null && userID !== authProvider.user.uuid) {
+      setUserToGet(userID);
+      setIsEditing(false);
+    }
+  }, [userID, authProvider.user]);
+
+  useEffect(() => {
+    // Only fetch data if userToGet is defined
+    if (userToGet) {
       fetchAuthorData();
       fetchAuthorPosts();
     }
-  }, [authProvider.user]);
+  }, [userToGet]);
 
   // function to get the info of the user who is currently logged in
   async function fetchAuthorData() {
     try {
       if (authProvider.user) {
-        const response = await api.get(
-          `/api/authors/${authProvider.user.uuid}/`
-        );
+        const response = await api.get(`/api/authors/${userToGet}/`);
         setAuthorData(response.data);
       }
     } catch (error) {
@@ -171,7 +228,7 @@ export default function UserProfile() {
     try {
       if (authProvider.user) {
         const response = await api.get<AuthorPostsResponse>(
-          `/api/authors/${authProvider.user.uuid}/posts/`
+          `/api/authors/${userToGet}/posts/`
         );
         setAuthorPosts(response.data.results.reverse());
       }
@@ -200,78 +257,29 @@ export default function UserProfile() {
           }
         );
 
-        // Second request: Get the followers
-        const followersResponse = await api.get<{
-          type: string;
-          followers: Author[];
-        }>(`/api/authors/${authProvider.user.uuid}/followers/`);
-        const followers = followersResponse.data["followers"];
-        console.log("Followers retrieved:", followers);
+        // Get friends and followers list
+        const followers = await follow.getFollowers(authProvider.user.uuid);
+        const friends =  await follow.getFriends(authProvider.user.uuid);
 
-        // Third request: Get the friends
-        const friendsResponse = await api.get<Author[]>(
-          `/api/authors/${authProvider.user.uuid}/following/?action=friends`
-        );
-        const friends = friendsResponse.data;
-        console.log("Friends retrieved:", friends);
-
-        // Now friends and followers may be duplicated, we have to go through and remove
-        // one from the follower list if it also exist in friend
-        // Create a Set of friend IDs for quick lookup
-        const friendIds = new Set(friends.map((friend) => friend.id));
-
-        // Filter out followers that are also friends
-        const uniqueFollowers = followers.filter(
-          (follower) => !friendIds.has(follower.id)
-        );
-        console.log("Filtered followers (excluding friends):", uniqueFollowers);
-
-        // send to followers if post is public or unlisted
-        // always send to friends for all type of posts
-        const payload = {
-          id: postId,
-          title: updatedPost.title,
-          content: updatedPost.content,
-          visibility: updatedPost.visibility,
-        };
-
+        // followers already include all followers and friends
+        // public/unlisted=> send to followers and friends
         if (postToEdit[0].visibility === 1 || postToEdit[0].visibility === 3) {
-          for (const follower of uniqueFollowers) {
-            const inboxUrl = `/api/authors/${follower.id}/inbox/`;
-            try {
-              const inboxResponse = await api.put<{ message: string }>(
-                inboxUrl,
-                payload
-              );
-              console.log(inboxResponse.data);
-            } catch (error) {
-              console.error(
-                `Error sending post to inbox of ${follower.id}:`,
-                error
-              );
-            }
+          for (const follower of followers) {
+            const inboxResponse = await inbox.updateInboxPost(follower.id, postId, 
+                                                              updatedPost.title, 
+                                                              updatedPost.content, 
+                                                              updatedPost.visibility);
           }
-          console.log(
-            "Error sending noti on updated posts to followers' inboxes."
-          );
+        } else { 
+          for (const friend of friends) {
+            const inboxResponse = await inbox.updateInboxPost(friend.id, postId, 
+                                                              updatedPost.title, 
+                                                              updatedPost.content, 
+                                                              updatedPost.visibility);
+          }
         }
 
-        // Friends receive inbox on all type of post
-        for (const friend of friends) {
-          const inboxUrl = `/api/authors/${friend.id}/inbox/`;
-          try {
-            const inboxResponse = await api.put<{ message: string }>(
-              inboxUrl,
-              payload
-            );
-            console.log(inboxResponse.data);
-          } catch (error) {
-            console.error(
-              `Error sending noti on updated posts to ${friend.id}:`,
-              error
-            );
-          }
-        }
+
 
         console.log("Post updated successfully:", response.data);
 
@@ -293,80 +301,22 @@ export default function UserProfile() {
           `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
         );
 
-        // Second request: Get the followers
-        const followersResponse = await api.get<{
-          type: string;
-          followers: Author[];
-        }>(`/api/authors/${authProvider.user.uuid}/followers/`);
-        const followers = followersResponse.data["followers"];
-        console.log("Followers retrieved:", followers);
+        // Get friends and followers list
+        const followers = await follow.getFollowers(authProvider.user.uuid);
+        const friends =  await follow.getFriends(authProvider.user.uuid);
 
-        // Third request: Get the friends
-        const friendsResponse = await api.get<Author[]>(
-          `/api/authors/${authProvider.user.uuid}/following/?action=friends`
-        );
-        const friends = friendsResponse.data;
-        console.log("Friends retrieved:", friends);
-
-        // Now friends and followers may be duplicated, we have to go through and remove
-        // one from the follower list if it also exist in friend
-        // Create a Set of friend IDs for quick lookup
-        const friendIds = new Set(friends.map((friend) => friend.id));
-
-        // Filter out followers that are also friends
-        const uniqueFollowers = followers.filter(
-          (follower) => !friendIds.has(follower.id)
-        );
-        console.log("Filtered followers (excluding friends):", uniqueFollowers);
-
-        // send to followers if post is public or unlisted
-        // always send to friends for all type of posts
-        const config2 = {
-          headers: {},
-          data: {
-            id: `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
-            type: "post",
-          },
-        };
-
+        // followers already include friends and followers
         if (visibilityNumber === 1 || visibilityNumber === 3) {
-          for (const follower of uniqueFollowers) {
-            const inboxUrl = `/api/authors/${follower.id}/inbox/`;
-            try {
-              const inboxResponse = await api.delete<{ message: string }>(
-                inboxUrl,
-                config2
-              );
-              console.log(inboxResponse.data);
-            } catch (error) {
-              console.error(
-                `Error sending post to inbox of ${follower.id}:`,
-                error
-              );
-            }
+          for (const follower of followers) {
+            const inboxResponse = await inbox.deleteInboxPost(follower.id, postToDelete);
           }
-          console.log(
-            "Error sending noti on deleted posts to followers' inboxes."
-          );
-        }
-
-        // Friends receive inbox on all type of post
-        for (const friend of friends) {
-          const inboxUrl = `/api/authors/${friend.id}/inbox/`;
-          try {
-            const inboxResponse = await api.delete<{ message: string }>(
-              inboxUrl,
-              config2
-            );
-            console.log(inboxResponse.data);
-          } catch (error) {
-            console.error(
-              `Error sending noti on deleted posts to ${friend.id}:`,
-              error
-            );
+        } else {
+          // Friends receive inbox on all type of post
+          for (const friend of friends) {
+            const inboxResponse = await inbox.deleteInboxPost(friend.id, postToDelete);
           }
         }
-
+        
         // Refresh the posts after successful deletion
         await fetchAuthorPosts();
 
@@ -379,6 +329,20 @@ export default function UserProfile() {
       }
     }
   }
+
+  // not used yet
+  // const addFollower = async () => {
+  //   const encodedHost = encodeURIComponent(authorData.host);
+  //   const encodedId = encodeURIComponent(authorData.id);
+
+  //   const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
+  //   // Add actor as follower
+  //   const response = await api.put(
+  //     `/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`
+  //   );
+
+  //   const data = response.data;
+  // };
 
   if (!authorData) {
     return <div>Loading...</div>;
@@ -398,12 +362,22 @@ export default function UserProfile() {
               <span className={styles.userName}>{authorData.displayName}</span>
             </section>
             <section className={styles.buttonContainer}>
-              <button
-                className={styles.followButton}
-                onClick={handleEditProfileButtonClicked}
-              >
-                Edit Profile
-              </button>
+              {isEditing ? (
+                <button
+                  className={styles.followButton}
+                  onClick={handleEditProfileButtonClicked}
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <button
+                  className={styles.followButton}
+                  onClick={handleFollowButtonClicked}
+                >
+                  Follow
+                </button>
+              )}
+
               <IconButton
                 onClick={() => window.open(authorData.github, "_blank")}
               >
@@ -439,7 +413,14 @@ export default function UserProfile() {
         </section>
 
         <section className={styles.userProfileLink}>
-          <button className={styles.followButton}>Get Profile Link</button>
+          <button
+            className={
+              hasCopiedProfileLink ? styles.linkCopied : styles.followButton
+            }
+            onClick={handleGetProfileLinkButtonClicked}
+          >
+            {hasCopiedProfileLink ? "Link Copied" : "Get Profile Link"}
+          </button>
         </section>
       </section>
 
@@ -457,11 +438,11 @@ export default function UserProfile() {
               likes={1523382}
               saves={250}
               comments={10000}
-              canDelete={true}
+              canDelete={isEditing}
               handleDelete={() =>
                 handleDeletePostButtonClicked(post.id, post.visibility)
               }
-              canEdit={true}
+              canEdit={isEditing}
               handleEdit={() => handleEditPostButtonClicked(post.id)}
             />
           ))}
