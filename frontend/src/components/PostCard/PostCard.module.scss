@@ -61,6 +61,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 20px;
 }
 
 .essentials {
@@ -117,10 +118,9 @@
 }
 
 .liked i {
-    color: #f65b5b;
+  color: #f65b5b;
 }
-  
+
 .shared i {
-    color: #70ffaf;
+  color: #70ffaf;
 }
-  
