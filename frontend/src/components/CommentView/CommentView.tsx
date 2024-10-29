@@ -1,16 +1,16 @@
+import { Comment } from "@mui/icons-material";
 import Modal from "react-modal";
 import React from "react";
-import styles from "./CommentView.module.scss";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
 import styled from "@mui/material/styles/styled";
-import { Comment } from "@mui/icons-material";
+import styles from "./CommentView.module.scss";
+import { useState } from "react";
 
 // Styling inspired from https://medium.com/@irwantoalvin/how-to-style-your-material-ui-textfield-integrate-it-with-react-hook-form-and-make-it-reusable-0f3050a90e9a, Downloaded 2024-10-24
 // need to style field like this otherwise stylings may reset and not appear properly
 const StyledCommentInputField = styled(TextField)({
   "& label": {
-    color: "#70ffaf !important",
+    color: "#ffffff !important",
   },
 
   "& input": {
@@ -28,11 +28,11 @@ const StyledCommentInputField = styled(TextField)({
 
   // style helper text
   "& .MuiFormHelperText-root": {
-    color: "#70ffaf",
+    color: "#ffffff",
 
     // style error helper text
     "&.Mui-error": {
-      color: "#ff7070",
+      color: "#dc3545",
     },
   },
 });

@@ -95,6 +95,12 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  height: 100%;
+}
+
+.postTitle{
+  font-size: 1.25rem;
+  color: white;
 }
 
 .postText {

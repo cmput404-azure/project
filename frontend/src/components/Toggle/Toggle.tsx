@@ -1,5 +1,8 @@
-import styles from './Toggle.module.scss';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+
+import PeopleIcon from '@mui/icons-material/People';
+import PublicIcon from '@mui/icons-material/Public';
+import styles from './Toggle.module.scss';
 
 export default function Toggle() {
     return (
@@ -7,8 +10,12 @@ export default function Toggle() {
         <input type="checkbox" id="toggle" className={styles.toggleInput} />
         <label htmlFor="toggle" className={styles.toggleLabel}>
           <div className={styles.iconContainer}>
-            <div className={`${styles.icon} ${styles.globe}`}><i className="fa-solid fa-earth-americas"></i></div>
-            <div className={`${styles.icon} ${styles.users}`}><i className="fa-solid fa-user-group"></i></div>
+            <div className={styles.icon}>
+              <PublicIcon />
+            </div>
+            <div className={styles.icon}>
+              <PeopleIcon />
+            </div>
           </div>
         </label>
       </div>

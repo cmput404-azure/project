@@ -9,11 +9,8 @@ class Post(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200, null=True)
-    # content = models.CharField(max_length=2000, null=True)
+    description = models.TextField(null=True)
     
-    
-    # image = models.BinaryField(blank=True)
-    # content_type = models.TextField(default='text/plain')  # e.g., 'text/plain', 'text/markdown', etc.
     has_image = models.BooleanField(default=False)
     content_type = models.CharField(
         choices=[
