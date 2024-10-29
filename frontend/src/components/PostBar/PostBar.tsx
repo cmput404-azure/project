@@ -40,13 +40,16 @@ const PostTextField = styled(TextField)({
 
   "& .MuiOutlinedInput-root": {
     "& fieldset": {
-      borderColor: "white !important",
+      border: "none",
+      boxShadow:"0 4px 7px rgba(0, 0, 0, 0.45)",
     },
     "&:hover fieldset": {
+      border: "1px solid",
       borderColor: "white !important",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "white !important",
+      border: "1px solid",
+      borderColor: "#70ffaf !important",
     },
   },
 
