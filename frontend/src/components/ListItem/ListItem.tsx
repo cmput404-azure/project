@@ -157,7 +157,7 @@ export default function ListItem({
           </div>
         )}
 
-        {isPost && (
+        {isPost || isLike && (
           <img
             className={styles.listImgPost}
             src={

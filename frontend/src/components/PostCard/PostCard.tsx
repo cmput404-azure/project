@@ -7,12 +7,12 @@ import inbox from "../../service/inbox";
 import follow from "../../service/follow";
 import { useAuth } from "../../state";
 import { Author, Post, Follower } from "../../models/models";
-import { post } from "axios";
 import { useState } from "react";
 import { ContentType } from "../../models/modelTypes";
 import Tooltip from '@mui/material/Tooltip';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import { api } from "../../service/config";
 
 interface PostCardProps {
   post_obj: Post
@@ -58,28 +58,33 @@ function PostCard({
 
   const handleClickLike = async () => {
     if (hasLiked) return;
+    console.log(authProvider.user.uuid);
+    const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
     const like_obj =  {
       type: "like",
-      author: post_obj.author,
+      author: currentUser.data,
       published: new Date(post_obj.published).toISOString(),
       object: post_obj.id
     }
+  
+    const inboxResponse = await inbox.sendPostToInbox(post_obj.author.id, like_obj);
 
     // Get friends and followers list, followers inlcude both friends and followers
-    const followers = await follow.getFollowers(authProvider.user.uuid);
-    const friends =  await follow.getFriends(authProvider.user.uuid);
+    // const followers = await follow.getFollowers(authProvider.user.uuid);
+    // const friends =  await follow.getFriends(authProvider.user.uuid);
 
     // send to followers if post is public or unlisted
     // always send to friends for all type of posts
-    if (post_obj.visibility === 1 || post_obj.visibility === 3) {
-      for (const follower of followers) {
-        const inboxResponse = await inbox.sendPostToInbox(follower.id, like_obj);
-      }
-    } else {
-      for (const friend of friends) {
-        const inboxResponse = await inbox.sendPostToInbox(friend.id, like_obj);
-      }
-    } 
+
+    // if (post_obj.visibility === 1 || post_obj.visibility === 3) {
+    //   for (const follower of followers) {
+    //     const inboxResponse = await inbox.sendPostToInbox(follower.id, like_obj);
+    //   }
+    // } else {
+    //   for (const friend of friends) {
+    //     const inboxResponse = await inbox.sendPostToInbox(friend.id, like_obj);
+    //   }
+    // } 
 
     setLikeCount(likeCount + 1);
     setHasLiked(true);
