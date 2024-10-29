@@ -28,6 +28,7 @@ class PostSerializer(serializers.ModelSerializer):
             'id',
             'contentType',
             'content',
+            'description',
             'author',
             'comments',
             'likes',
@@ -80,7 +81,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
-
+    description = serializers.CharField(required=False)
     content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
 
     class Meta:
@@ -91,6 +92,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
             'id',
             'contentType',
             'content',
+            'description',
             'author',
             'published',
             'visibility',
