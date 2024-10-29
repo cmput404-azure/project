@@ -362,17 +362,19 @@ class AuthorPostsAllView(APIView):
         author_data = UserSerializer(author).data
         request.data["author"] = author_data
 
+        print(request.data)
         serializer = CreatePostSerializer(data=request.data, partial=True)
 
         if serializer.is_valid():
-
             instance = serializer.save()
 
             # Serialize the response
             response = CreatePostSerializer(instance).data
 
             return Response(response, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=400)
+        if not serializer.is_valid():
+            print("Validation Errors:", serializer.errors)  # Print errors
+            return Response(serializer.errors, status=400)
 
 class PostView(APIView):
     """
