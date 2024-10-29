@@ -1,19 +1,16 @@
 // HomePage.jsx
 import { useEffect, useRef, useState } from "react";
 
-import AuthorPost from "../AuthorPost/AuthorPost";
 import CommentView from "../CommentView/CommentView";
+import PeopleIcon from '@mui/icons-material/People';
 import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
-import logo from "../../images/dog_icon.png";
+import PublicIcon from '@mui/icons-material/Public';
+import { api } from "../../service/config";
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
-import { api } from "../../service/config";
-
-import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
-
-
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
@@ -125,25 +122,24 @@ const HomePage = () => {
       <div className={styles.postSection}>
         <PostBar author={user} />
         {authProvider.isAuthenticated && (
-          <div className={styles["icon-bar"]}>
+          <div className={styles.icon_bar}>
             <div
-              className={`${styles["icon-section"]} ${
+              className={`${styles.icon_section} ${
                 activeFilterPost === "all" ? styles.active : ""
               }`}
               onClick={() => handleFilterPost("all")}
             >
-              <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+              <PublicIcon className={styles.icon}/>
             </div>
-            <div className={styles["vertical-divider"]}></div>
             <div
-              className={`${styles["icon-section"]} ${
+              className={`${styles.icon_section} ${
                 activeFilterPost === "unlisted_friends-only"
                   ? styles.active
                   : ""
               }`}
               onClick={() => handleFilterPost("unlisted_friends-only")}
             >
-              <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
+              <PeopleIcon className={styles.icon}/>
             </div>
           </div>
         )}

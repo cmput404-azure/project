@@ -1,18 +1,17 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import { Link } from "react-router-dom";
 
-import { formatCount } from "../../util/formatting/formatCount";
-import styles from "./PostCard.module.scss";
-import inbox from "../../service/inbox";
-import follow from "../../service/follow";
-import { useAuth } from "../../state";
-import { Author, Post, Follower } from "../../models/models";
-import { post } from "axios";
-import { useState } from "react";
-import { ContentType } from "../../models/modelTypes";
-import Tooltip from '@mui/material/Tooltip';
-import Snackbar from '@mui/material/Snackbar';
+import { Author, Follower, Post } from "../../models/models";
+
 import Alert from '@mui/material/Alert';
+import { ContentType } from "../../models/modelTypes";
+import Snackbar from '@mui/material/Snackbar';
+import Tooltip from '@mui/material/Tooltip';
+import follow from "../../service/follow";
+import { formatCount } from "../../util/formatting/formatCount";
+import inbox from "../../service/inbox";
+import styles from "./PostCard.module.scss";
+import { useAuth } from "../../state";
+import { useState } from "react";
 
 interface PostCardProps {
   post_obj: Post
@@ -159,7 +158,7 @@ function PostCard({
               <img
                 className={styles.postImage}
                 src={post_obj.content}
-                alt="Post content"
+                alt={post_obj.description}
               />
             </div>
           ) : (
