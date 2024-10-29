@@ -3,10 +3,10 @@ import React, { useEffect, useState,useCallback } from "react";
 
 import ListItem from "../ListItem/ListItem";
 import Modal from "react-modal";
-import axios from "axios";
 import styles from "./NotificationList.module.scss";
 import { useAuth } from "../../state";
 import { api } from "../../service/config";
+import inbox from "../../service/inbox";
 
 interface FollowerResponse {
   followers: Follower[];
@@ -22,18 +22,14 @@ export default function NotificationList() {
 
   const authProvider = useAuth();
 
-  axios.defaults.withCredentials = true;
-  axios.defaults.xsrfCookieName = "csrftoken";
-  axios.defaults.xsrfHeaderName = "x-csrftoken";
-
   const fetchNotifications = useCallback(async () => {
     try {
-      const userResponse = await api.get(
-        `/api/authors/${authProvider.user.uuid}/inbox/`
-      );
+      const userResponse = await inbox.getInbox(authProvider.user.uuid);
+
+      console.log(userResponse);
 
       const notificationsWithUsers = await Promise.all(
-        userResponse.data.items
+        userResponse
           .filter((item: any) => item.type === "follow")
           .map(async (item: any) => {
             const user = await fetchUser(item.actor.id);
