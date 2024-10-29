@@ -70,7 +70,6 @@ export interface Post {
     likes?: Like[] | null;
     published: string;
     visibility: number;
-    image
 }
 
 // This might be one of the four: post, like, comment and request so I simply store all the possible variables

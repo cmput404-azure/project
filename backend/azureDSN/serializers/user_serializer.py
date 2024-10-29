@@ -51,10 +51,10 @@ class UserSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source='uuid')
     host = serializers.URLField()
     displayName = serializers.CharField(source='display_name')
-    github = serializers.URLField()
+    github = serializers.URLField(required=False, allow_null=True, allow_blank=True)
+    page = serializers.URLField(required=False, allow_null=True, allow_blank=True)
     # profileImage = serializers.ImageField(source='profile_image', use_url=True)
     profileImage = serializers.SerializerMethodField(source='profile_image')
-    page = serializers.URLField()
 
     class Meta:
         model = User
