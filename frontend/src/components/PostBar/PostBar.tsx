@@ -1,13 +1,19 @@
 import { Author, Post } from "../../models/models";
-import inbox from "../../service/inbox";
-import follow from "../../service/follow";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { TextField, TextareaAutosize } from "@mui/material";
 import {
   VisibilityChoices,
   getVisibilityNumber,
 } from "../../models/modelTypes";
 
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import LinkIcon from '@mui/icons-material/Link';
+import PeopleIcon from '@mui/icons-material/People';
+import PublicIcon from '@mui/icons-material/Public';
 import { api } from "../../service/config";
+import follow from "../../service/follow";
+import inbox from "../../service/inbox";
+import styled from "@mui/material/styles/styled";
 import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
 
@@ -18,6 +24,65 @@ type IconType = "public" | "friends" | "unlisted";
 
 // Max character limits
 const TITLE_MAX_LENGTH = 200;
+
+const PostTextField = styled(TextField)({
+  "& label": {
+    color: "#ffffff !important",
+  },
+
+  "& input": {
+    color: "white !important",
+  },
+
+  "& textarea": {
+    color: "white !important",
+  },
+
+  "& .MuiOutlinedInput-root": {
+    "& fieldset": {
+      borderColor: "white !important",
+    },
+    "&:hover fieldset": {
+      borderColor: "white !important",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "white !important",
+    },
+  },
+
+  "& .MuiFormHelperText-root": {
+    color: "#ffffff",
+    "&.Mui-error": {
+      color: "#dc3545",
+    },
+  },
+});
+
+const PostTitleField = styled(TextField)({
+  "& label": {
+    color: "#ffffff !important",
+  },
+
+  "& input": {
+    color: "white !important",
+  },
+
+  "& .MuiInput-underline:before": {
+    borderBottomColor: "white !important",
+  },
+
+  "& .MuiInput-underline:after": {
+    borderBottomColor: "#70ffaf !important",
+  },
+
+  "& .MuiFormHelperText-root": {
+    color: "#ffffff",
+
+    "&.Mui-error": {
+      color: "#dc3545",
+    },
+  },
+});
 
 const PostBar: React.FC<PostBarProps> = ({ author }) => {
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
@@ -38,13 +103,13 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
         setShowDetail(false); // Hide details when clicking outside
       }
     };
-  
+
     document.addEventListener("mousedown", handleOutsideClick);
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, []);
-  
+
 
   // To update the activeIcon
   const handleIconClick = (icon: IconType) => {
@@ -91,8 +156,8 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
         console.log("Uploaded Image in Base64:", base64String);
 
         file.type === "image/png" ? setContentType("image/png;base64") :
-        file.type === "image/jpeg" ? setContentType("image/jpeg;base64") :
-        setContentType("application/base64");
+          file.type === "image/jpeg" ? setContentType("image/jpeg;base64") :
+            setContentType("application/base64");
       };
       reader.readAsDataURL(file); // Convert to base64
     }
@@ -131,7 +196,7 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
 
       // Get friends and followers list, followers inlcude both friends and followers
       const followers = await follow.getFollowers(authProvider.user.uuid);
-      const friends =  await follow.getFriends(authProvider.user.uuid);
+      const friends = await follow.getFriends(authProvider.user.uuid);
 
       // send to followers if post is public or unlisted
       // always send to friends for all type of posts
@@ -144,7 +209,7 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
           const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
         }
       }
-     
+
       // Close the input modal and reset input fields
       setShowDetail(false)
       setTitle("")
@@ -164,22 +229,29 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
   }
 
   return (
-    <div className={styles.container} ref={postBarRef}>
-      <section className={styles["post-bar"]} onClick={handleInputClick}>
+    <div className={styles.container} ref={postBarRef} style={{ backgroundColor: showDetail ? "#777" : "transparent" }}>
+      <section className={styles.post_bar} onClick={handleInputClick}>
         <img
           src={
             authProvider.user.profileImage ??
             `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
           }
           alt="User"
-          className={styles["user-image"]}
+          className={styles.user_image}
         />
-        <div className={styles["vertical-divider"]}></div>
-        <span
-         className={styles["post-input"]}
-       > Click To Start Your Post</span>
+        <div className={styles.vertical_divider}></div>
+        <PostTitleField
+          className={styles.post__input}
+          fullWidth
+          variant="standard"
+          size="small"
+          placeholder="Start typing..."
+          value={title}
+          onChange={handleTitleChange}
+          autoComplete='off'
+        />
         <button
-          className={styles["add-button"]}
+          className={styles.add_button}
           onClick={() => document.getElementById("image-upload")?.click()}
         >
           <span>+</span>
@@ -194,37 +266,32 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
       </section>
 
       {(showDetail) && (
-        <div className={styles["detail-container"]}>
-         <label className={styles["input-label"]}>Title</label>
-         <textarea
-           className={styles["description-input"]}
-           placeholder="Start your post with a title"
-           value={title}
-           onChange={handleTitleChange}
-         />
-
-          <label className={styles["input-label"]}>Description</label>
-          <textarea
-            className={styles["description-input"]}
+        <div className={styles.detail_container}>
+          <PostTextField
+            className={styles.description_input}
             placeholder="Add a brief description..."
+            multiline
+            fullWidth
             value={description}
             onChange={handleDescriptionChange}
+            
           />
 
           {imageBase64 ? (
-            <div className={styles["image-preview"]}>
+            <div className={styles.image_preview}>
               <p>Uploaded: {fileName}</p>
               <img
                 src={`data:image/png;base64,${imageBase64}`}
                 alt="Preview"
-                className={styles["uploaded-image"]}
+                className={styles.uploaded_image}
               />
             </div>
           ) : (
             <>
-              <label className={styles["input-label"]}>Content</label>
-              <textarea
-                className={styles["content-input"]}
+              <PostTextField
+                className={styles.content_input}
+                multiline
+                fullWidth
                 placeholder="Write your post content here..."
                 value={content}
                 onChange={handleContentChange}
@@ -235,42 +302,39 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
       )}
 
       {(showDetail) && (
-        <section className={styles["button-bar"]}>
-          <div className={styles["left-bar"]}>
-          <div className={styles["icon-bar"]}>
-            <div
-              className={`${styles["icon-section"]} ${
-                activeIcon === "public" ? styles.active : ""
-              }`}
-              onClick={() => handleIconClick("public")}
-            >
-              <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+        <section className={styles.button_bar}>
+          <div className={styles.left_bar}>
+            <div className={styles.icon_bar}>
+              <div
+                className={`${styles.icon_section} ${activeIcon === "public" ? styles.active : ""
+                  }`}
+                onClick={() => handleIconClick("public")}
+              >
+                <PublicIcon className={styles.icon}/>
+              </div>
+              <div className={styles.vertical_divider}></div>
+              <div
+                className={`${styles.icon_section} ${activeIcon === "friends" ? styles.active : ""
+                  }`}
+                onClick={() => handleIconClick("friends")}
+              >
+                <PeopleIcon className={styles.icon}/>
+              </div>
+              <div className={styles.vertical_divider}></div>
+              <div
+                className={`${styles.icon_section} ${activeIcon === "unlisted" ? styles.active : ""
+                  }`}
+                onClick={() => handleIconClick("unlisted")}
+              >
+                <LinkIcon className={styles.icon}/>
+              </div>
             </div>
-            <div className={styles["vertical-divider"]}></div>
-            <div
-              className={`${styles["icon-section"]} ${
-                activeIcon === "friends" ? styles.active : ""
-              }`}
-              onClick={() => handleIconClick("friends")}
-            >
-              <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
-            </div>
-            <div className={styles["vertical-divider"]}></div>
-            <div
-              className={`${styles["icon-section"]} ${
-                activeIcon === "unlisted" ? styles.active : ""
-              }`}
-              onClick={() => handleIconClick("unlisted")}
-            >
-              <i className={`${styles.icon} ${styles["link-icon"]}`}></i>
-            </div>
-          </div>
-          <button className={`${styles["mark-button"]} ${activeCommonMark ? styles.active : ""}`} onClick={() => setActiveCommonMark(!activeCommonMark)}>
-              Markdown
-          </button>
+            <button className={`${styles.mark_button} ${activeCommonMark ? styles.active : ""}`} onClick={() => setActiveCommonMark(!activeCommonMark)}>
+              <EditNoteIcon className={styles.icon}/>
+            </button>
           </div>
           <button
-            className={styles["post-button"]}
+            className={styles.post_button}
             onClick={handleCombinedClick}
             disabled={isPostDisabled}
           >
@@ -281,5 +345,7 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
     </div>
   );
 };
+
+
 
 export default PostBar;
