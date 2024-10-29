@@ -154,8 +154,7 @@ function PostCard({
           </div>
         </div>
         <div className={styles.cardContent}>
-          <div className={styles.postText}>{post_obj.content}</div>
-          {(post_obj.contentType != ContentType.MARKDOWN && post_obj.contentType != ContentType.PLAIN)? (
+          {(post_obj.contentType !== ContentType.MARKDOWN && post_obj.contentType !== ContentType.PLAIN)? (
             <div className={styles.imgContainer}>
               <img
                 className={styles.postImage}
