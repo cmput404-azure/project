@@ -48,29 +48,26 @@ const HomePage = () => {
     fetchUser();
   }, [authProvider.user]); // This effect runs when authProvider.user changes
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      if (isUserLoading) return; // Wait until user data is loaded
-
-      try {
-        const publicPosts = await stream.getStream();
-        const privatePosts = await stream.getStream(true);
-        // Get a list of all posts liked by this user and assigned to likeList
-
-        setNonPublicPosts(decodeBase64ToUrl(privatePosts as any[]));
-        setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
-        setIsLoading(false);
-      } catch (err) {
-        console.log(err);
-        setError("Failed to fetch posts. Please try again.");
-      }
-    };
-    fetchPosts();
-  }, [isUserLoading]); // Run when user loading state changes
-
-  const handleAddClick = () => {
-    console.log("Add button clicked");
+  const fetchPosts = async () => { 
+    if (isUserLoading) return;
+    console.log("Fetch post called");
+    try { 
+      const publicPosts = await stream.getStream();
+      const privatePosts = await stream.getStream(true);
+      setPublicPosts(decodeBase64ToUrl(publicPosts));
+      setNonPublicPosts(decodeBase64ToUrl(privatePosts));
+      setIsLoading(false); }
+    catch (err) { 
+      console.log(err);
+      setError("Failed to fetch posts. Please try again.");
+    }
   };
+
+  useEffect(() => {
+    fetchPosts();
+    const interval = setInterval(fetchPosts, 60000);
+    return () => clearInterval(interval); // Clean up the interval on component unmount
+    }, [isUserLoading]);
 
   // handle when the comment button is clicked
   const handleCommentButtonClick = (post: any) => {
@@ -112,15 +109,11 @@ const HomePage = () => {
   const displayedPosts =
     activeFilterPost === "all" ? publicPosts : nonPublicPosts;
 
-
-
-
-  
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar author={user} />
+        <PostBar fetchPosts={fetchPosts} author={user} />
         {authProvider.isAuthenticated && (
           <div className={styles.icon_bar}>
             <div
@@ -148,7 +141,6 @@ const HomePage = () => {
             key={post.id}
             post_obj = {post}
             onCommentButtonClick={() => handleCommentButtonClick(post)}
-            // onClick={() => handleCommentButtonClick(post)}
           />
         ))}
       </div>

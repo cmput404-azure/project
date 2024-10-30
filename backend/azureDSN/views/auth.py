@@ -1,18 +1,45 @@
+# from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from ..models.site_config import SiteConfiguration
 
 
 class LoginView(APIView):
     def post(self, request):
+        print("trying to login here")
         username = request.data.get('username')
         password = request.data.get('password')
+
+        try:
+            user = User.objects.get(username=username)
+            site_config = SiteConfiguration.objects.first()
+
+            # If approval is no longer required, activate the user automatically
+            if not site_config.require_approval and not user.is_active:
+                print("Auto-activating user as approval is no longer required")
+                user.is_active = True
+                user.save()
+
+            # by default set to not active when they registered their account while the requires_approval setting is active
+            elif site_config.require_approval and not user.is_active:
+                return Response(
+                    {'message': 'Your account is pending approval.'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+        except User.DoesNotExist:
+            return Response(
+                {'message': 'Login failed. Please check your credentials.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
         user = authenticate(username=username, password=password)
+
         if user:
             login(request, user)
-
             response = Response({
                 'is_authenticated': True,
                 'user': {
@@ -24,7 +51,8 @@ class LoginView(APIView):
             response.set_cookie('sessionid', request.session.session_key, samesite='lax')
 
             return response
-        return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        return Response({'message': 'Login failed. Please check your credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
     
 
 User = get_user_model()
@@ -37,14 +65,19 @@ class RegisterView(APIView):
         email = data.get('email')
         name = data.get('name')
         host = data.get('host')
+        config = SiteConfiguration.objects.first()
+        is_active = not config.require_approval
 
         # username should be unique but display name (name) can be non-unique
         if User.objects.filter(username=username).exists():
             return Response({"error": "Username already taken."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Create new user
-        user = User.objects.create_user(username=username, password=password, email=email, display_name=name, host=host)
-        return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
+        user = User.objects.create_user(username=username, password=password, email=email, display_name=name, host=host, is_active=is_active)
+        if is_active:
+            return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message": "Registration pending approval."}, status=status.HTTP_201_CREATED)
     
 class LogoutView(APIView):
     def get(self, request):

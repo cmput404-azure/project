@@ -64,7 +64,7 @@ function Auth() {
          })
          .catch((error) => {
             console.log(error);
-            setError("Login failed. Please check your credentials.");
+            setError(error.response.data.message);
          });
       }
 
