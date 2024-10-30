@@ -1,20 +1,20 @@
 import { Author, Post } from "../../models/models";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import follow from "../../service/follow";
-import inbox from "../../service/inbox";
-import EditProfileModal from "../EditProfileModal/EditProfileModal";
+
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import EditPostModal from "../EditPostModal/EditPostModal";
+import EditProfileModal from "../EditProfileModal/EditProfileModal";
 import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import { api } from "../../service/config";
+import follow from "../../service/follow";
+import followService from "../../service/follow";
+import inbox from "../../service/inbox";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
-import followService from "../../service/follow";
-import auth from "../../service/auth";
+import { useParams } from "react-router-dom";
 
 interface AuthorPostsResponse {
   count: number;
@@ -169,22 +169,20 @@ export default function UserProfile() {
       }
     };
 
-    if (authProvider.user) {
+    if(userID){
+      console.log(userID)
+      setUserToGet(userID);
+      setIsEditing(false);
+    }
+    else if (authProvider.user) {
       fetchCounts();
       setHasCopiedProfileLink(false);
 
-      if (userID == null) {
-        setUserToGet(authProvider.user.uuid);
-        setIsEditing(true);
-      } else if (userID === authProvider.user.uuid) {
-        setUserToGet(userID);
-        setIsEditing(true);
-      } else {
-        setUserToGet(userID);
-        setIsEditing(false);
-      }
+      setUserToGet(authProvider.user.uuid);
+      setIsEditing(true);
     }
   }, [userID, authProvider.user]); 
+
   useEffect(() => {
     // Only fetch data if userToGet is defined
     if (userToGet) {
@@ -196,7 +194,7 @@ export default function UserProfile() {
   // function to get the info of the user who is currently logged in
   async function fetchAuthorData() {
     try {
-      if (authProvider.user) {
+      if (userToGet) {
         const response = await api.get(`/api/authors/${userToGet}/`);
         setAuthorData(response.data);
       }
@@ -277,8 +275,6 @@ export default function UserProfile() {
                                                               updatedPost.visibility);
           }
         }
-
-
 
         console.log("Post updated successfully:", response.data);
 
