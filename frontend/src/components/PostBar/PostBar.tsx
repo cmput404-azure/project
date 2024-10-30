@@ -16,9 +16,11 @@ import inbox from "../../service/inbox";
 import styled from "@mui/material/styles/styled";
 import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
+import stream from "../../service/stream";
 
 interface PostBarProps {
   author?: any;
+  fetchPosts: any;
 }
 type IconType = "public" | "friends" | "unlisted";
 
@@ -87,7 +89,7 @@ const PostTitleField = styled(TextField)({
   },
 });
 
-const PostBar: React.FC<PostBarProps> = ({ author }) => {
+const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
   const [title, setTitle] = useState("");
   const [showDetail, setShowDetail] = useState(false);
@@ -212,6 +214,10 @@ const PostBar: React.FC<PostBarProps> = ({ author }) => {
           const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
         }
       }
+
+      // re-fetch stream
+      fetchPosts();
+      
 
       // Close the input modal and reset input fields
       setShowDetail(false)
