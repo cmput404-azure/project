@@ -84,7 +84,13 @@ function PostCard({
   };
 
   const handleGetLink = () => {
-    navigator.clipboard.writeText(post.id)
+    const domain = window.location.host;
+    const postId = post.id.split("/").pop();
+    const path = `/#/post/${postId}`;
+
+    const link = `${domain}${path}`;
+
+    navigator.clipboard.writeText(link)
       .then(() => {
         setOpenSnackbar(true);
       })

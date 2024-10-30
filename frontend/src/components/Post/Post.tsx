@@ -75,7 +75,12 @@ export default function Post() {
 
    const handleCopyLink = () => {
       if (post) {
-         navigator.clipboard.writeText(post.id).then(
+         const domain = window.location.host;
+         const postId = post.id.split("/").pop();
+         const path = `/#/post/${postId}`;
+
+         const link = `${domain}${path}`;
+         navigator.clipboard.writeText(link).then(
             () => setOpenSnackbar(true),
             (err) => console.error('Could not copy link: ', err)
          );
