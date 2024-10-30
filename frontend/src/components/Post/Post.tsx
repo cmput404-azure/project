@@ -25,6 +25,8 @@ export default function Post() {
    const [openSnackbar, setOpenSnackbar] = useState(false);
    const [isCommentOpen, setIsCommentOpen] = useState(false);
 
+   // TODO: need to check if its friends only post, if so then redirect to home if user is not a friend
+
    useEffect(() => {
       const fetchPost = async () => {
          try {
