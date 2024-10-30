@@ -1,0 +1,82 @@
+.wrapper{
+    align-items: center;
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    justify-content: center;
+}
+
+.container{
+    background-color: #555;
+    border-radius: 1rem;
+    display: flex;
+    flex-flow: column;
+    padding: 1rem;
+
+    .header{
+        align-items: center;
+        display: flex;
+        flex-flow: row;
+        justify-content: flex-start;
+        width: 100%;
+
+        .info{
+            align-items: flex-start;
+            display: flex;
+            flex-flow: row;
+            width: 100%;
+            justify-content: space-between;
+
+            .icon{
+                margin-right: 1rem;
+            }
+
+            .user{
+                width: 100%;
+                align-self: flex-start;
+
+                .user__main{
+                    align-items: center;
+                    display: flex;
+                    flex-flow: row;
+                    justify-content: flex-start;
+
+                    .display__name{
+                        font-size: 1.5rem;
+                        font-weight: 700;
+                        margin-right: 1rem;
+                        text-align: start;
+                    }
+                    
+                }
+
+                .user__secondary{
+                    align-items: center;
+                    display: flex;
+                    flex-flow: row;
+                    justify-content: flex-start;
+                    color: white;
+                    .username{
+                        color: #ffffff3d;
+                        font-size: 0.85rem;
+                        font-weight: 400;
+                        text-align: start;
+                    }
+
+                    .follows{
+                        display: flex;
+                        flex-flow: row;
+                        
+                        p{
+                            margin-left: 1rem;
+                        }
+                    }
+                }
+                
+            }
+            .footer{
+                justify-self: flex-end;
+            }
+        }
+    }
+}
