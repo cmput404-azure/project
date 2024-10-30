@@ -1,5 +1,5 @@
+import { Alert, Avatar, Button, Icon, IconButton, Snackbar } from "@mui/material";
 import { Author, Post } from "../../models/models";
-import { Avatar, Button, Icon, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 
 import FollowList from "../FollowList/FollowList";
@@ -11,14 +11,28 @@ import followService from "../../service/follow";
 import styles from "./PublicProfile.module.scss";
 import { useParams } from "react-router-dom";
 
+const FollowerModalTypes = {
+   follower: "Follower",
+   following: "Following",
+   friends: "Friends",
+};
+
+interface FollowersModal{
+   open: boolean;
+   type: string;
+}
+
 export default function PublicProfile() {
    const [authorData, setAuthorData] = useState<Author | null>(null);
    const [posts, setPosts] = useState<Post[]>([]);
    const [isFollowing, setIsFollowing] = useState<boolean>(false);
+   const [followersModal, setfollowersModal] = useState<FollowersModal>({ open: false, type: "follower" });
    const [friendsCount, setFriendsCount] = useState(0);
    const [followersCount, setFollowersCount] = useState(0);
    const [followingCount, setFollowingCount] = useState(0);
+   const [openSnackbar, setOpenSnackbar] = useState(false);
 
+   // TODO: make the follow button change to unfollow if the user is already following the author, or hidden if the user is the author
 
    const { userID } = useParams<{ userID: string }>();
 
@@ -53,6 +67,12 @@ export default function PublicProfile() {
       fetchCounts();
    }, [userID]);
 
+   function getLink(){
+      const currentURL = window.location.href;
+      navigator.clipboard.writeText(currentURL);
+      setOpenSnackbar(true);
+   }
+
    if (!authorData) return <div>Loading...</div>;
 
    return (
@@ -74,7 +94,9 @@ export default function PublicProfile() {
                            {isFollowing ? "Unfollow" : "Follow"}
                         </Button>
                         {authorData.github &&
-                           <IconButton onClick={() => window.open(authorData.github, "_blank")}>
+                           <IconButton className={styles.icon__button} 
+                              size="small" 
+                              onClick={() => window.open(authorData.github, "_blank")}>
                               <GitHub />
                            </IconButton>
                         }
@@ -83,23 +105,28 @@ export default function PublicProfile() {
                         <p className={styles.username}>@{authorData.username}</p>
 
                         <div className={styles.follows}>
-                           <p className={styles.posts__count}>
+                           <p className={styles.posts__count} >
                               <b>{posts.length}</b> {posts.length === 1 ? "post" : "posts"}
                            </p>
-                           <p className={styles.followers__count}>
+                           <p className={styles.followers__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.follower })}>
                               <b>{followersCount}</b> {followersCount === 1 ? "follower" : "followers"}
                            </p>
-                           <p className={styles.following__count}>
+                           <p className={styles.following__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.following })}>
                               <b>{followingCount}</b> following
                            </p>
-                           <p className={styles.friends__count}>
+                           <p className={styles.friends__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.friends })}>
                               <b>{friendsCount}</b> {friendsCount === 1 ? "friend" : "friends"}
                            </p>
+                           <FollowList
+                              isOpen={followersModal.open}
+                              onClose={() => setfollowersModal({ open: false, type: "follower" })}
+                              isFollowerList={followersModal.type}
+                           />
                         </div>
                      </div>
                   </div>
                   <div className={styles.footer}>
-                     <IconButton>
+                     <IconButton className={styles.icon__button} size="small" onClick={getLink}>
                         <LinkIcon />
                      </IconButton>
                   </div>
@@ -115,6 +142,17 @@ export default function PublicProfile() {
                ))}
             </section>
          </div>
+
+         <Snackbar
+            open={openSnackbar}
+            autoHideDuration={2000} // auto close after 2s
+            onClose={() => setOpenSnackbar(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            <Alert onClose={() => setOpenSnackbar(false)} severity="success" sx={{ width: '100%' }}>
+              Link copied to clipboard!
+            </Alert>
+          </Snackbar>
       </div>
    );
 }

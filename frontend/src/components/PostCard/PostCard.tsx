@@ -123,7 +123,7 @@ function PostCard({
             open={openSnackbar}
             autoHideDuration={2000} // auto close after 2s
             onClose={handleCloseSnackbar}
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
           >
             <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
               Link copied to clipboard!

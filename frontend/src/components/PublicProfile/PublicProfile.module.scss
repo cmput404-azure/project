@@ -74,6 +74,7 @@
                         
                         p{
                             margin-left: 1rem;
+                            cursor: pointer;
                         }
                     }
                 }
@@ -110,4 +111,9 @@
         padding: 2rem 0 0 0;
         border-top: #ccc 1px solid;
     }
+}
+
+.icon__button{
+    background-color: #666666 !important;
+    margin-left: 1rem;
 }
