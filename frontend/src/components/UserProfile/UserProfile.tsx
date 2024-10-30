@@ -1,4 +1,4 @@
-import { Author, Post } from "../../models/models";
+import { Author, PostData as Post } from "../../models/models";
 import { useEffect, useState } from "react";
 
 import DeletePostModal from "../DeletePostModal/DeletePostModal";

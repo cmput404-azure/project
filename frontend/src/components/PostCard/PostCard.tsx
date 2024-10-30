@@ -2,7 +2,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 
 import Alert from '@mui/material/Alert';
 import { ContentType } from "../../models/modelTypes";
-import { Post } from "../../models/models";
+import { PostData as Post } from "../../models/models";
 import Snackbar from '@mui/material/Snackbar';
 import Tooltip from '@mui/material/Tooltip';
 import follow from "../../service/follow";

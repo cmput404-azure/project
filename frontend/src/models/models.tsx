@@ -60,15 +60,15 @@ export interface Comment {
     post: string;
 }
 
-export interface Post {
+export interface PostData {
     type?: string | "post";
     title: string;
     id: string;
-    description: string;
+    contentType: string;
     content: string;
+    description: string;
     author: Author;
-    contentType: ContentType;
-    comments?: Comment[] | null;
+    comments: Comment[] | null;
     likes?: Like[] | null;
     published: string;
     visibility: number;
@@ -103,5 +103,5 @@ export interface AuthorPostsResponse {
     count: number;
     next: string | null;
     previous: string | null;
-    results: Post[];
+    results: PostData[];
 }

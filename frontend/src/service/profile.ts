@@ -1,13 +1,13 @@
-import { Author, Post } from "../models/models";
+import { Author, PostData as Post } from "../models/models";
 
 import { AuthorPostsResponse } from "../models/models";
 import { api } from "./config";
 
 class ProfileService {
-   /* 
-      Fetch author data from backend
-      @param userId: string - the id of the user to fetch
-      @returns: Author - the author data or null if error
+   /**
+   *  Fetch author data from backend
+   * @param userId: string - the id of the user to fetch
+   * @returns: Author - the author data or null if error
    */
    public async fetchAuthorData(userId: string): Promise<Author | null> {
       try {
@@ -19,7 +19,7 @@ class ProfileService {
       }
    }
 
-   /*
+   /**
       Update user info
       @param userId: string - the id of the user to update
       @param data: Author - the data to update
@@ -34,7 +34,7 @@ class ProfileService {
       }
    }
 
-   /*
+   /**
       Fetch author posts from backend
       @param userId: string - the id of the user to fetch
       @returns: Post[] - the author posts or null if error
@@ -49,7 +49,7 @@ class ProfileService {
       }
    }
 
-   /* 
+   /**
       Delete a specific post
       @param userId: string - the id of the user to delete post from
       @param postId: string - the id of the post to delete
@@ -64,7 +64,7 @@ class ProfileService {
       }
    }
 
-   /*
+   /**
       Update a specific post
       @param userId: string - the id of the user to update post from
       @param postId: string - the id of the post to update

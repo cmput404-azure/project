@@ -1,4 +1,4 @@
-import { Author, Post } from "../../models/models";
+import { Author, PostData as Post } from "../../models/models";
 import React, { useEffect, useRef, useState } from "react";
 import { TextField, TextareaAutosize } from "@mui/material";
 import {
@@ -13,10 +13,10 @@ import PublicIcon from '@mui/icons-material/Public';
 import { api } from "../../service/config";
 import follow from "../../service/follow";
 import inbox from "../../service/inbox";
+import stream from "../../service/stream";
 import styled from "@mui/material/styles/styled";
 import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
-import stream from "../../service/stream";
 
 interface PostBarProps {
   author?: any;
