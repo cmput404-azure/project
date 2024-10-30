@@ -97,3 +97,9 @@ export interface Inbox {
     items: InboxItem[]
 }
 
+export interface AuthorPostsResponse {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: Post[];
+}
