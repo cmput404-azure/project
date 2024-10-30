@@ -218,7 +218,6 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       // re-fetch stream
       fetchPosts();
       
-
       // Close the input modal and reset input fields
       setShowDetail(false)
       setTitle("")

@@ -69,29 +69,6 @@ const HomePage = () => {
     return () => clearInterval(interval); // Clean up the interval on component unmount
     }, [isUserLoading]);
 
-  // useEffect(() => {
-  //   const fetchPosts = async () => {
-  //     if (isUserLoading) return; // Wait until user data is loaded
-  //     console.log("Fetch post called")
-  //     try {
-  //       const publicPosts = await stream.getStream();
-  //       const privatePosts = await stream.getStream(true);
-  //       setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
-  //       setNonPublicPosts(decodeBase64ToUrl(privatePosts as any[]));
-  //       setIsLoading(false);
-  //     } catch (err) {
-  //       console.log(err);
-  //       setError("Failed to fetch posts. Please try again.");
-  //     }
-  //   };
-  
-  //   fetchPosts();
-  //   const interval = setInterval(fetchPosts, 60000); // Call fetch every 60 seconds
-    
-  //   // Clean up the interval on component unmount
-  //   return () => clearInterval(interval);
-  // }, [isUserLoading]);
-
   // handle when the comment button is clicked
   const handleCommentButtonClick = (post: any) => {
     setIsCommentModalOpen(true);
@@ -132,10 +109,6 @@ const HomePage = () => {
   const displayedPosts =
     activeFilterPost === "all" ? publicPosts : nonPublicPosts;
 
-
-
-
-  
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
@@ -168,7 +141,6 @@ const HomePage = () => {
             key={post.id}
             post_obj = {post}
             onCommentButtonClick={() => handleCommentButtonClick(post)}
-            // onClick={() => handleCommentButtonClick(post)}
           />
         ))}
       </div>
