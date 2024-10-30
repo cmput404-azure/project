@@ -139,7 +139,7 @@ const HomePage = () => {
         {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
-            post_obj = {post}
+            post = {post}
             onCommentButtonClick={() => handleCommentButtonClick(post)}
           />
         ))}
@@ -156,7 +156,7 @@ const HomePage = () => {
             // pass in the selected post for the modal to display
             <PostCard
               key={selectedPost.id}
-              post_obj = {selectedPost}
+              post = {selectedPost}
             />
           ) : null
         }

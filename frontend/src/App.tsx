@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import ErrorPage from "./error-page";
 import HomePage from "./components/HomePage/HomePage";
 import NavigationBar from "./components/NavigationBar/NavigationBar";
+import Post from "./components/Post/Post";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import PublicProfile from "./components/PublicProfile/PublicProfile";
 import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
 import { checkAuth } from "./util/auth/checkauth";
@@ -35,10 +37,10 @@ export default function App() {
           <Route path="/login" element={<Auth />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/authors/:userID" element={<UserProfile />} />
             <Route path="/logout" element={<Logout />} />
           </Route>
-
+          <Route path="/post/:postID" element={<Post />} />
+          <Route path="/authors/:userID" element={<PublicProfile />} />
           <Route path="*" element={<ErrorPage />} />
         </Routes>
       </div>

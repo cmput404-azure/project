@@ -5,6 +5,8 @@ export interface Author {
     id: string;
     host: string;
     displayName: string;
+    username: string;
+    bio?: string | null;
     github?: string | null;
     profileImage?: string | null;
     page: string;
@@ -58,15 +60,15 @@ export interface Comment {
     post: string;
 }
 
-export interface Post {
+export interface PostData {
     type?: string | "post";
     title: string;
     id: string;
-    description: string;
+    contentType: string;
     content: string;
+    description: string;
     author: Author;
-    contentType: ContentType;
-    comments?: Comment[] | null;
+    comments: Comment[] | null;
     likes?: Like[] | null;
     published: string;
     visibility: number;
@@ -97,3 +99,9 @@ export interface Inbox {
     items: InboxItem[]
 }
 
+export interface AuthorPostsResponse {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: PostData[];
+}
