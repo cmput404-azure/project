@@ -70,7 +70,7 @@ export default function PublicProfile() {
                   <div className={styles.user}>
                      <div className={styles.user__main}>
                         <h2 className={styles.display__name}>{authorData.displayName}</h2>
-                        <Button variant="contained" color="primary">
+                        <Button variant="contained" color="primary" size="small">
                            {isFollowing ? "Unfollow" : "Follow"}
                         </Button>
                         {authorData.github &&
@@ -104,11 +104,12 @@ export default function PublicProfile() {
                      </IconButton>
                   </div>
                </div>
-
-
+               <div className={styles.bio}>
+                  <p className={styles.bio__text}>{authorData.bio}</p>
+               </div>
             </section>
 
-            <section>
+            <section className={styles.posts}>
                {posts.map(post => (
                   <PostCard key={post.id} post={post} />
                ))}

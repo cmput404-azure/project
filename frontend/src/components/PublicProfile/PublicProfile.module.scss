@@ -3,20 +3,25 @@
     display: flex;
     flex-flow: column;
     height: 100%;
-    justify-content: center;
+    justify-content: flex-end;
+    width: 100%;
 }
 
 .container{
     background-color: #555;
-    border-radius: 1rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
     display: flex;
     flex-flow: column;
-    padding: 1rem;
+    padding: 2rem;
+    box-sizing: border-box;
+    height: 90vh;
+    width: 80%;
 
     .header{
         align-items: center;
         display: flex;
-        flex-flow: row;
+        flex-flow: column;
         justify-content: flex-start;
         width: 100%;
 
@@ -24,16 +29,16 @@
             align-items: flex-start;
             display: flex;
             flex-flow: row;
-            width: 100%;
             justify-content: space-between;
+            width: 100%;
 
             .icon{
                 margin-right: 1rem;
             }
 
             .user{
-                width: 100%;
                 align-self: flex-start;
+                width: 100%;
 
                 .user__main{
                     align-items: center;
@@ -52,12 +57,12 @@
 
                 .user__secondary{
                     align-items: center;
+                    color: white;
                     display: flex;
                     flex-flow: row;
                     justify-content: flex-start;
-                    color: white;
                     .username{
-                        color: #ffffff3d;
+                        color: #ffffff59;
                         font-size: 0.85rem;
                         font-weight: 400;
                         text-align: start;
@@ -78,5 +83,31 @@
                 justify-self: flex-end;
             }
         }
+
+        .bio{
+            align-items: flex-start;
+            display: flex;
+            width: 100%;
+            .bio__text{
+                font-size: 0.85rem;
+                font-weight: 400;
+                margin-top: 2rem;
+                text-align: left;
+                margin-left: 3rem;
+                color: white;
+            }
+        }
+    }
+    
+    .posts{
+        display: flex;
+        flex-flow: column;
+        height: 100%;
+        width: 90%;
+        align-items: center;
+        overflow-y: scroll;
+        margin: 2rem auto 0 auto;
+        padding: 2rem 0 0 0;
+        border-top: #ccc 1px solid;
     }
 }

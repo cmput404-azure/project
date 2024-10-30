@@ -6,6 +6,7 @@ export interface Author {
     host: string;
     displayName: string;
     username: string;
+    bio?: string | null;
     github?: string | null;
     profileImage?: string | null;
     page: string;
