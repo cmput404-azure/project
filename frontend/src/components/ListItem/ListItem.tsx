@@ -119,9 +119,9 @@ export default function ListItem({
 
   let additionalText = "";
   if (isRequest) additionalText = "wants to follow you";
-  else if (isLike) additionalText = `liked your post titled ${postTitle}`;
+  else if (isLike) additionalText = `liked your post titled: ${postTitle}`;
   else if (isPost) additionalText = "shared a post with you";
-  else if (isComment) additionalText = `commented on your post titled ${postTitle}`;
+  else if (isComment) additionalText = `commented on your post titled: ${postTitle}`;
 
   return (
     <div className={styles.ListItemContainer}>
