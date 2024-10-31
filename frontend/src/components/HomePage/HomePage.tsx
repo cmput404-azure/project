@@ -1,6 +1,7 @@
 // HomePage.jsx
 import { useEffect, useRef, useState } from "react";
 
+import { CircularProgress } from "@mui/material";
 import CommentView from "../CommentView/CommentView";
 import PeopleIcon from '@mui/icons-material/People';
 import PostBar from "../PostBar/PostBar";
@@ -103,7 +104,7 @@ const HomePage = () => {
     setActiveFilterPost(icon);
   }
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <div className={"loading"}><CircularProgress/></div>;
   if (error) return <p>{error}</p>;
 
   const displayedPosts =

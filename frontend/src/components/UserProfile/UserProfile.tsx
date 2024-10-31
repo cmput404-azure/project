@@ -1,4 +1,5 @@
 import { Author, PostData as Post } from "../../models/models";
+import { CircularProgress, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 
 import { AuthorPostsResponse } from "../../models/models";
@@ -7,7 +8,6 @@ import EditPostModal from "../EditPostModal/EditPostModal";
 import EditProfileModal from "../EditProfileModal/EditProfileModal";
 import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import { api } from "../../service/config";
 import follow from "../../service/follow";
@@ -334,7 +334,7 @@ export default function UserProfile() {
   // };
 
   if (!authorData) {
-    return <div>Loading...</div>;
+    return <div className={"loading"}><CircularProgress/></div>;
   }
 
   return (

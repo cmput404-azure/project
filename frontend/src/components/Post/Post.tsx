@@ -1,6 +1,6 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-import { Alert, Snackbar, Tooltip } from '@mui/material';
+import { Alert, CircularProgress, Snackbar, Tooltip } from '@mui/material';
 import { useEffect, useState } from "react";
 
 import { ContentType } from "../../models/modelTypes";
@@ -93,7 +93,7 @@ export default function Post() {
       if (reason !== 'clickaway') setOpenSnackbar(false);
    };
 
-   if (!post) return <div>Loading...</div>;
+   if (!post) return <div><CircularProgress/></div>;
 
    return (
       <div className={styles.card}>

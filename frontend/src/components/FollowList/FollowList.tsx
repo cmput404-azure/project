@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios, { get } from 'axios';
 import follow, { getFollowers, getFollowing, getFriends } from "../../service/follow";
 
+import { CircularProgress } from "@mui/material";
 import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
 import { api } from "../../service/config";
@@ -93,7 +94,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
       <button onClick={onClose} style={{ float: 'right' }}>Close</button>
       <h2 className={styles.h2}>{isFollowerList}</h2>
       {loading ? (
-        <p>Loading...</p>
+        <div className={"loading_component"}><CircularProgress/></div>
       ) : error ? (
         <p>{error}</p>
       ) : (

@@ -1,4 +1,4 @@
-import { Alert, Avatar, Button, IconButton, Snackbar } from "@mui/material";
+import { Alert, Avatar, Button, CircularProgress, IconButton, Snackbar } from "@mui/material";
 import { Author, PostData as Post } from "../../models/models";
 import { useEffect, useState } from "react";
 
@@ -73,7 +73,7 @@ export default function PublicProfile() {
       setOpenSnackbar(true);
    }
 
-   if (!authorData) return <div>Loading...</div>;
+   if (!authorData) return <div className="loading"><CircularProgress/></div>;
 
    return (
       <div className={styles.wrapper}>

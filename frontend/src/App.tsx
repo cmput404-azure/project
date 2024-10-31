@@ -2,6 +2,7 @@ import Auth, { Logout } from "./components/Auth/Auth";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+import { CircularProgress } from "@mui/material";
 import ErrorPage from "./error-page";
 import HomePage from "./components/HomePage/HomePage";
 import NavigationBar from "./components/NavigationBar/NavigationBar";
@@ -10,7 +11,6 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicProfile from "./components/PublicProfile/PublicProfile";
 import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
-import { checkAuth } from "./util/auth/checkauth";
 import styles from "./App.module.scss";
 import { useAuth } from "./state";
 
@@ -19,7 +19,7 @@ export default function App() {
   const authProvider = useAuth();
 
   if (authProvider.loading) {
-    return <div className={styles.App}>Loading...</div>;
+    return <div className={"loading"}><CircularProgress/></div>;
   }
 
   return (

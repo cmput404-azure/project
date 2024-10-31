@@ -403,24 +403,131 @@ class AuthorPostsAllView(APIView):
 
         if response.status_code == 200:
             events = response.json()
-            print(events)
 
         for event in events:
             if(not Post.objects.filter(github_id=event["id"]).exists()):
-                event_post = {
-                    "author": author,
-                    "title": f"GitHub {event['type']}",
-                    "description": f"GitHub {event['type']}",
-                    "content": event['payload']['commits'][0]['message'],
-                    "visibility": 1,
-                    "github_id": event['id'],
-                    "published": event['created_at']
-                }
+                event_post = self.generate_post_data(event)
+                event_post["author"] = UserSerializer(author).data
 
                 serializer = CreatePostSerializer(data=event_post)
                 if serializer.is_valid():
                     print("Saving post...")
                     serializer.save()
+                else:
+                    print("Error saving post:", serializer.errors)
+    
+    def generate_post_data(self, event):
+        """
+        Generate post data from GitHub event data.
+        """
+        event_type = event['type']
+        actor = event['actor']['login']
+        repo_name = event['repo']['name']
+        created_at = event['created_at']
+        
+        title, description, content = "Github Event", "Github Event", "Github Event"
+
+        if event_type == "CommitCommentEvent":
+            comment = event['payload']['comment']
+            title = f"{actor} commented on a commit in {repo_name}"
+            description = f"Comment by {actor} on commit."
+            content = comment.get("body", "")
+
+        elif event_type == "CreateEvent":
+            ref_type = event['payload'].get('ref_type', 'repository')
+            ref = event['payload'].get('ref', '')
+            title = f"Created a new {ref_type} in {repo_name}"
+            description = f"{actor} created a {ref_type} named {ref}."
+            content = f"{actor} created a {ref_type} '{ref}' in repository '{repo_name}'."
+
+        elif event_type == "DeleteEvent":
+            ref_type = event['payload'].get('ref_type', 'repository')
+            ref = event['payload'].get('ref', '')
+            title = f"Deleted a {ref_type} in {repo_name}"
+            description = f"{actor} deleted a {ref_type} named {ref}."
+            content = f"The {ref_type} '{ref}' in '{repo_name}' was deleted."
+
+        elif event_type == "ForkEvent":
+            forkee = event['payload'].get('forkee', {}).get('name', 'forked repo')
+            title = f"Forked {repo_name}"
+            description = f"{actor} forked the repository {repo_name}."
+            content = f"{actor} created a fork of '{repo_name}', resulting in '{forkee}'."
+
+        elif event_type == "GollumEvent":
+            pages = event['payload']['pages']
+            title = f"{actor} edited wiki pages in {repo_name}"
+            description = f"{actor} updated wiki pages in {repo_name}."
+            content = "\n".join([f"{page['action'].capitalize()} wiki page: {page['title']}" for page in pages])
+
+        elif event_type == "IssueCommentEvent":
+            action = event['payload']['action']
+            issue = event['payload']['issue']['title']
+            title = f"{actor} {action} a comment on an issue in {repo_name}"
+            description = f"Issue '{issue}' has a new comment by {actor}."
+            content = event['payload']['comment'].get('body', "")
+
+        elif event_type == "IssuesEvent":
+            action = event['payload']['action']
+            issue = event['payload']['issue']['title']
+            title = f"Issue '{issue}' {action} in {repo_name} by {actor}"
+            description = f"{actor} {action} issue '{issue}' in {repo_name}."
+            content = f"Issue details: {issue}\nAction taken: {action}."
+
+        elif event_type == "MemberEvent":
+            action = event['payload']['action']
+            member = event['payload']['member']['login']
+            title = f"{actor} {action} {member} to {repo_name}"
+            description = f"{member} was {action} by {actor} in {repo_name}."
+            content = f"User '{member}' was {action} as a collaborator."
+
+        elif event_type == "PublicEvent":
+            title = f"{repo_name} is now public!"
+            description = f"{actor} made {repo_name} public."
+            content = f"The repository '{repo_name}' was made public."
+
+        elif event_type == "PullRequestEvent":
+            action = event['payload']['action']
+            pr_number = event['payload']['number']
+            title = f"Pull request #{pr_number} {action} in {repo_name}"
+            description = f"Pull request #{pr_number} was {action} by {actor}."
+            content = f"Details of pull request: #{pr_number}."
+
+        elif event_type == "PushEvent":
+            commits = event['payload']['commits']
+            title = f"{actor} pushed {len(commits)} commit(s) to {repo_name}"
+            description = f"New commits pushed by {actor} to {repo_name}."
+            content = "\n".join([f"- {commit['message']}" for commit in commits])
+
+        elif event_type == "ReleaseEvent":
+            action = event['payload']['action']
+            release = event['payload']['release']['name']
+            title = f"Release '{release}' {action} in {repo_name}"
+            description = f"{actor} {action} release '{release}' in {repo_name}."
+            content = f"Release details: {release}"
+
+        elif event_type == "SponsorshipEvent":
+            action = event['payload']['action']
+            title = f"Sponsorship {action} by {actor}"
+            description = f"{actor} {action} a sponsorship."
+            content = f"Sponsorship details: {event['payload']}"
+
+        elif event_type == "WatchEvent":
+            title = f"{actor} starred {repo_name}"
+            description = f"{actor} starred the repository {repo_name}."
+            content = f"User {actor} starred {repo_name}."
+
+        return {
+            "title": title,
+            "description": description,
+            "content": content,
+            "created_at": created_at,
+            "event_type": event_type,
+            "actor": actor,
+            "repository": repo_name,
+            "contentType": "text/plain",
+            "published": created_at,
+            "github_id": event["id"],
+        }
 
 class PostView(APIView):
     """
