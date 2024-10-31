@@ -5,12 +5,12 @@ from ..models import Comment, Post
 class CommentSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField(source='uuid')
     published = serializers.DateTimeField(source="created_at", required=False)
-    user = serializers.JSONField()
-    post = serializers.CharField()
+    author = serializers.JSONField(source='user')
+    post = SerializerMethodField("get_post_FQID")
     
     class Meta:
         model = Comment
-        fields = ['type', 'user', 'comment', 'contentType','published','id','post']
+        fields = ['type', 'author', 'comment', 'contentType','published','id','post']
     
     # This method gets the custom uuid value and maps it to'id'
     def get_id(self, obj):
@@ -29,6 +29,9 @@ class CommentSerializer(serializers.ModelSerializer):
         post = str(obj)
         return post.split('/')[-1]
     
+    def get_post_FQID(self, obj):
+        post = obj.post
+        return f"{post.user.host}api/authors/{post.user.uuid}/posts/{post.uuid}"
     '''
     Create new comment object
     '''
