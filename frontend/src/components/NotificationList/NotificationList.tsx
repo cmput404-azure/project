@@ -6,6 +6,7 @@ import ListItem from "../ListItem/ListItem";
 import Modal from "react-modal";
 import { api } from "../../service/config";
 import inbox from "../../service/inbox";
+import PostService from "../../service/post"
 import styles from "./NotificationList.module.scss";
 import { useAuth } from "../../state";
 
@@ -26,16 +27,25 @@ export default function NotificationList() {
   const fetchNotifications = useCallback(async () => {
     try {
       const userResponse = await inbox.getInbox(authProvider.user.uuid);
-
       const notificationsWithUsers = await Promise.all(
         userResponse.map(async (item: any) => {
           let user = null;
+          let post_obj = null;
           if (item.type === "follow") {
             user = await fetchUser(item.actor.id);
-          } else if (item.type === "like" || item.type==="comment") {
+          } else if (item.type === "like") {
             user = await fetchUser(item.author.id);
+            //TODO: this might break bc host might not be the expected format
+            // Expected format for host: http://host/
+            // Expected format for object: api/authors/author_id/posts/post_id
+            let post_resp = await api.get(`${item.author.host}${item.object}`);
+            post_obj = post_resp.data;
+          }else if (item.type === "comment"){
+            user = await fetchUser(item.author.id);
+            let post_resp = await api.get(item.post);
+            post_obj = post_resp.data;
           }
-          return { ...item, user };
+          return { ...item, user, post_obj };
         })
       );
       setNotifications(notificationsWithUsers);
@@ -99,6 +109,7 @@ export default function NotificationList() {
                     isFollowerList={false}
                     isUserList={false}
                     notif_id={item.id}
+                    postTitle = {item.post_obj.title}
                     user={item.user}
                     onRefresh={handleRefresh}
                   />
@@ -114,6 +125,7 @@ export default function NotificationList() {
                     isFollowerList={false}
                     isUserList={false}
                     notif_id={item.id}
+                    postTitle = {item.post_obj.title}
                     user={item.user}
                     onRefresh={handleRefresh}
                   />
