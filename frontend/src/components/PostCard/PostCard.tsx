@@ -1,5 +1,4 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
-
 import Alert from '@mui/material/Alert';
 import { ContentType } from "../../models/modelTypes";
 import { PostData as Post } from "../../models/models";
@@ -11,9 +10,9 @@ import inbox from "../../service/inbox";
 import styles from "./PostCard.module.scss";
 import { useAuth } from "../../state";
 import { Author,  Follower } from "../../models/models";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
-import gfm from 'remark-gfm';
+import remarkGfm from 'remark-gfm';
 
 import { api } from "../../service/config";
 
@@ -34,6 +33,7 @@ function PostCard({
   const [commentCount, setCommentCount] = useState<number>(post.comments.length);
   const [hasLiked, setHasLiked] = useState<boolean>(false);
   const [hasShared, setHasShared] = useState<boolean>(false);
+  const [imageSrc, setImageSrc] = useState<string>('');
 
   const authProvider = useAuth();
 
@@ -124,9 +124,45 @@ function PostCard({
     // might need to add logic for remote users in the future
  };
 
-  // const parseMarkdown = (content) => {
-  //   return marked(content);
-  // };
+  useEffect(() => {
+    const fetchImage = async () => {
+      if (post.contentType === ContentType.MARKDOWN) {
+          const imageRegex = /!\[.*?\]\((.*?)\)/; // Regex to find the image URL in the Markdown
+          const match = post.content.match(imageRegex);
+          if (match) {
+              const imageUrl = match[1]; // Get the URL from the Markdown
+              console.log("imageURL: ", imageUrl);
+              
+              // Check if the imageUrl is a data URL
+              if (imageUrl.startsWith("data:")) {
+                  // Directly set the src to the data URL
+                  setImageSrc(imageUrl);
+              } else {
+                  // If it's not a data URL, fetch from the endpoint
+                  try {
+                      const response = await fetch(imageUrl);
+                      console.log(response);
+                      if (response.ok) {
+                          const jsonResponse = await response.json();
+                          const imageData = jsonResponse.image;
+                          setImageSrc(imageData);
+                      } else {
+                          console.error("Error fetching image:", response.statusText);
+                      }
+                  } catch (error) {
+                      console.error("Error fetching image:", error);
+                  }
+              }
+          }
+      }
+  };
+
+    fetchImage();
+}, [post.content, post.contentType]);
+
+const transformImageUri = (src: string, alt: string, title: string) => {
+    return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
+};
  
   return (
     <div className={styles.card} onClick={onClick}>
@@ -194,7 +230,13 @@ function PostCard({
             // <div className={styles.postText}>{post.content}</div>
             <div className={styles.postText}>
               {post.contentType === ContentType.MARKDOWN ? (
-                  <ReactMarkdown remarkPlugins={[gfm]}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                    img: ({ src, alt, title }) => {
+                      return (
+                          <img src={transformImageUri(src, alt, title)} alt={alt} title={title} />
+                      );
+                  }
+                }}>
                       {post.content}
                   </ReactMarkdown>
               ) : (
