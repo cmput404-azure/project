@@ -16,6 +16,7 @@ function Auth() {
    const [name, setName] = useState("");
    const [email, setEmail] = useState("");
    const [confirmPassword, setConfirmPassword] = useState("");
+   const [githubUsername, setGithubUsername] = useState("");
    const [error, setError] = useState("");
    const navigate = useNavigate();
    const authProvider = useAuth();
@@ -46,7 +47,7 @@ function Auth() {
       }
 
       if (isRegister) {
-         const response = await authService.register({ username, password, email, name });
+         const response = await authService.register({ username, password, email, name, githubUsername });
 
          if (response) {
             alert("Registration successful! Please log in.");
@@ -75,6 +76,7 @@ function Auth() {
       setUsername("");
       setPassword("");
       setName("");
+      setGithubUsername("");
       setEmail("");
       setConfirmPassword("");
    };
@@ -111,6 +113,25 @@ function Auth() {
                required
                />
             )}
+            {isRegister && (
+               <TextField
+               label="Email"
+               variant="outlined"
+               size="small"
+               value={email}
+               onChange={(e) => setEmail(e.target.value)}
+               required
+               />
+            )}
+            {isRegister && (
+               <TextField
+               label="GitHub Username"
+               variant="outlined"
+               size="small"
+               value={githubUsername}
+               onChange={(e) => setGithubUsername(e.target.value)}
+               />
+            )}
             <TextField
                label="Password"
                variant="outlined"
@@ -128,17 +149,6 @@ function Auth() {
                type="password"
                value={confirmPassword}
                onChange={(e) => setConfirmPassword(e.target.value)}
-               required
-               />
-            )}
-            {isRegister && (
-               <TextField
-               label="Email"
-               variant="outlined"
-               size="small"
-               type="email"
-               value={email}
-               onChange={(e) => setEmail(e.target.value)}
                required
                />
             )}
