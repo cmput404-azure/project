@@ -10,6 +10,7 @@ interface ListItemProps {
   isRequest: boolean;
   isPost: boolean;
   isLike: boolean;
+  isComment?:boolean;
   isFollowerList: boolean;
   isUserList: boolean;
   notif_id?: string;
@@ -31,6 +32,7 @@ export default function ListItem({
   isRequest,
   isPost,
   isLike,
+  isComment,
   isFollowerList,
   isUserList,
   notif_id,
@@ -117,6 +119,7 @@ export default function ListItem({
   if (isRequest) additionalText = "wants to follow you";
   else if (isLike) additionalText = "liked your post";
   else if (isPost) additionalText = "shared a post with you";
+  else if (isComment) additionalText = "commented on your post";
 
   return (
     <div className={styles.ListItemContainer}>
@@ -157,7 +160,7 @@ export default function ListItem({
           </div>
         )}
 
-        {isPost || isLike && (
+        {isPost || isLike || isComment && (
           <img
             className={styles.listImgPost}
             src={

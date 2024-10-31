@@ -31,7 +31,7 @@ export default function NotificationList() {
           let user = null;
           if (item.type === "follow") {
             user = await fetchUser(item.actor.id);
-          } else if (item.type === "like") {
+          } else if (item.type === "like" || item.type==="comment") {
             user = await fetchUser(item.author.id);
           }
           return { ...item, user };
@@ -107,8 +107,9 @@ export default function NotificationList() {
                   <ListItem
                     key={index}
                     isRequest={false}
-                    isPost={true} 
+                    isPost={false} 
                     isLike={false}
+                    isComment={true}
                     isFollowerList={false}
                     isUserList={false}
                     notif_id={item.id}
