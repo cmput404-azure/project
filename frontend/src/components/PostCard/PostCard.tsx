@@ -114,6 +114,14 @@ function PostCard({
     setOpenSnackbar(false);
   };
 
+  const redirectToAuthorProfile = () => {
+    // right now this works locally, other teams might not have the same url format
+    const localUserURL = `${post.author.host}/#/authors/${post.author.id}`;
+    window.location.assign(localUserURL);
+
+    // might need to add logic for remote users in the future
+ };
+ 
   return (
     <div className={styles.card} onClick={onClick}>
       <div className={styles.grid}>
@@ -124,9 +132,10 @@ function PostCard({
             `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
           }
           alt={`${post.author.displayName}'s profile`}
+          onClick={redirectToAuthorProfile}
         />
         <div className={styles.headerText}>
-          <span className={styles.userName}>{post.author.displayName}</span>
+          <span className={styles.userName} onClick={redirectToAuthorProfile}>{post.author.displayName}</span>
           <span className={styles.postTime}>{new Date(post.published).toLocaleString()}</span>
         </div>
         <div className={styles.icon}>
