@@ -2,16 +2,34 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 
 from ..serializers import *
 from ..models import *
 from ..utils import *
+
+class CommentsPagination(PageNumberPagination):
+    page_size=5
+    page_size_query_param='size'
+    max_page_size=100
+
+    def get_paginated_response(self, data):
+        return Response({
+            "type": "comments",
+            "id": self.request.build_absolute_uri(),
+            "page": self.request.build_absolute_uri(),
+            "page_number": self.page.number,
+            "size": self.page.paginator.per_page,
+            "count": self.page.paginator.count,
+            "src": data,
+        })
 
 '''
 Handle retrieval of all the comments in a post
 Both case return a comments object which is a list of comment object
 '''
 class MultipleCommentsView(APIView):
+    pagination_provider = CommentsPagination
     def get(self, request, author_serial=None, post_serial=None, post_fqid=None):
         if (author_serial):
             '''
@@ -31,24 +49,14 @@ class MultipleCommentsView(APIView):
             post_id = post_fqid.split('/')[-1]
             post_obj = get_object_or_404(Post, uuid=post_id)
             author_id = post_obj.user.uuid
-            
+
         comments = Comment.objects.filter(post=post_obj)
-        serialized_comments = CommentSerializer(comments, many=True).data
-        uri = request.build_absolute_uri("/")
-        
-        response = {
-            "type": "comments",
-            "page": f"{uri}api/authors/{author_id}/posts/{post_id}",
-            "id": f"{uri}api/authors/{author_id}/posts/{post_id}/comments",
-            "page_number": 1,
-            "size": 10,
-            "count": len(serialized_comments),
-            "src": serialized_comments[:10],  # Limit to first 10 comments
-        }        
-        return Response(response, status.HTTP_200_OK)
 
+        pagination = self.pagination_provider()
+        page = pagination.paginate_queryset(comments, request)
 
-
+        serialized_comments = CommentSerializer(page, many=True).data
+        return pagination.get_paginated_response(serialized_comments)
 
 '''
 URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
