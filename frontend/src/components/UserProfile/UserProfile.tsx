@@ -1,12 +1,13 @@
 import { Author, PostData as Post } from "../../models/models";
+import { CircularProgress, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 
+import { AuthorPostsResponse } from "../../models/models";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import EditPostModal from "../EditPostModal/EditPostModal";
 import EditProfileModal from "../EditProfileModal/EditProfileModal";
 import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import { IconButton } from "@mui/material";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import { api } from "../../service/config";
 import follow from "../../service/follow";
@@ -15,13 +16,6 @@ import inbox from "../../service/inbox";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import { useParams } from "react-router-dom";
-
-interface AuthorPostsResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Post[];
-}
 
 // by default isViewing is false which means the user is viewing their own profile
 export default function UserProfile() {
@@ -227,7 +221,7 @@ export default function UserProfile() {
         const response = await api.get<AuthorPostsResponse>(
           `/api/authors/${userToGet}/posts/`
         );
-        setAuthorPosts(response.data.results.reverse());
+        setAuthorPosts(response.data.src.reverse());
       }
     } catch (error) {
       console.error("Error fetching the author posts", error);
@@ -340,7 +334,7 @@ export default function UserProfile() {
   // };
 
   if (!authorData) {
-    return <div>Loading...</div>;
+    return <div className={"loading"}><CircularProgress/></div>;
   }
 
   return (

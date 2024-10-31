@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+import { CircularProgress } from "@mui/material";
 import { useAuth } from "../state";
 
 export default function ProtectedRoute() {
@@ -15,7 +16,7 @@ export default function ProtectedRoute() {
    }, [authProvider.loading]);
 
    if (!loaded || authProvider.loading) {
-      return <div>Loading...</div>;
+      return <div className={"loading"}><CircularProgress/></div>;
    }
 
    if (loaded && !authProvider.isAuthenticated) {

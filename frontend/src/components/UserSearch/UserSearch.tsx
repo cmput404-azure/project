@@ -3,13 +3,12 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 import React, { useEffect, useState } from 'react';
-import { useAuth } from "../../state";
 
-
+import { CircularProgress } from "@mui/material";
 import ListItem from "../ListItem/ListItem";
 import { api } from "../../service/config";
 import styles from "./UserSearch.module.scss";
-
+import { useAuth } from "../../state";
 
 interface userSearchProps {
   closeModal?: () => void;
@@ -67,7 +66,7 @@ export default function UserSearch({ closeModal }: userSearchProps) {
       </div>
 
 
-      {loading && <p>Loading...</p>}
+      {loading && <div className={"loading_component"}><CircularProgress/></div>}
       {error && <p>{error}</p>}
       {filteredResults.length > 0 ? (
         <ul className={styles.ul}>

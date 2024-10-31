@@ -1,12 +1,13 @@
 // @ts-nocheck
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
+import { CircularProgress } from "@mui/material";
 import ListItem from "../ListItem/ListItem";
 import Modal from "react-modal";
-import styles from "./NotificationList.module.scss";
-import { useAuth } from "../../state";
 import { api } from "../../service/config";
 import inbox from "../../service/inbox";
+import styles from "./NotificationList.module.scss";
+import { useAuth } from "../../state";
 
 interface FollowerResponse {
   followers: Follower[];
@@ -67,7 +68,7 @@ export default function NotificationList() {
     <div>
       <h2 className={styles.h2}>Notifications</h2>
       {loading ? (
-        <p>Loading...</p>
+        <div className={"loading_component"}><CircularProgress/></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
