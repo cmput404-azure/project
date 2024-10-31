@@ -1,19 +1,16 @@
 // HomePage.jsx
 import { useEffect, useRef, useState } from "react";
 
-import AuthorPost from "../AuthorPost/AuthorPost";
 import CommentView from "../CommentView/CommentView";
+import PeopleIcon from '@mui/icons-material/People';
 import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
-import logo from "../../images/dog_icon.png";
+import PublicIcon from '@mui/icons-material/Public';
+import { api } from "../../service/config";
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
-import { api } from "../../service/config";
-
-import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
-
-
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
@@ -51,29 +48,26 @@ const HomePage = () => {
     fetchUser();
   }, [authProvider.user]); // This effect runs when authProvider.user changes
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      if (isUserLoading) return; // Wait until user data is loaded
-
-      try {
-        const publicPosts = await stream.getStream();
-        const privatePosts = await stream.getStream(true);
-        // Get a list of all posts liked by this user and assigned to likeList
-
-        setNonPublicPosts(decodeBase64ToUrl(privatePosts as any[]));
-        setPublicPosts(decodeBase64ToUrl(publicPosts as any[]));
-        setIsLoading(false);
-      } catch (err) {
-        console.log(err);
-        setError("Failed to fetch posts. Please try again.");
-      }
-    };
-    fetchPosts();
-  }, [isUserLoading]); // Run when user loading state changes
-
-  const handleAddClick = () => {
-    console.log("Add button clicked");
+  const fetchPosts = async () => { 
+    if (isUserLoading) return;
+    console.log("Fetch post called");
+    try { 
+      const publicPosts = await stream.getStream();
+      const privatePosts = await stream.getStream(true);
+      setPublicPosts(decodeBase64ToUrl(publicPosts));
+      setNonPublicPosts(decodeBase64ToUrl(privatePosts));
+      setIsLoading(false); }
+    catch (err) { 
+      console.log(err);
+      setError("Failed to fetch posts. Please try again.");
+    }
   };
+
+  useEffect(() => {
+    fetchPosts();
+    const interval = setInterval(fetchPosts, 60000);
+    return () => clearInterval(interval); // Clean up the interval on component unmount
+    }, [isUserLoading]);
 
   // handle when the comment button is clicked
   const handleCommentButtonClick = (post: any) => {
@@ -115,44 +109,38 @@ const HomePage = () => {
   const displayedPosts =
     activeFilterPost === "all" ? publicPosts : nonPublicPosts;
 
-
-
-
-  
   return (
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar author={user} />
+        <PostBar fetchPosts={fetchPosts} author={user} />
         {authProvider.isAuthenticated && (
-          <div className={styles["icon-bar"]}>
+          <div className={styles.icon_bar}>
             <div
-              className={`${styles["icon-section"]} ${
+              className={`${styles.icon_section} ${
                 activeFilterPost === "all" ? styles.active : ""
               }`}
               onClick={() => handleFilterPost("all")}
             >
-              <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+              <PublicIcon className={styles.icon}/>
             </div>
-            <div className={styles["vertical-divider"]}></div>
             <div
-              className={`${styles["icon-section"]} ${
+              className={`${styles.icon_section} ${
                 activeFilterPost === "unlisted_friends-only"
                   ? styles.active
                   : ""
               }`}
               onClick={() => handleFilterPost("unlisted_friends-only")}
             >
-              <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
+              <PeopleIcon className={styles.icon}/>
             </div>
           </div>
         )}
         {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
-            post_obj = {post}
+            post = {post}
             onCommentButtonClick={() => handleCommentButtonClick(post)}
-            // onClick={() => handleCommentButtonClick(post)}
           />
         ))}
       </div>
@@ -168,7 +156,7 @@ const HomePage = () => {
             // pass in the selected post for the modal to display
             <PostCard
               key={selectedPost.id}
-              post_obj = {selectedPost}
+              post = {selectedPost}
             />
           ) : null
         }

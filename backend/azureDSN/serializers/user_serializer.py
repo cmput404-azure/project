@@ -51,15 +51,17 @@ class UserSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source='uuid')
     host = serializers.URLField()
     displayName = serializers.CharField(source='display_name')
-    github = serializers.URLField()
+    username = serializers.CharField()
+    bio = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    github = serializers.URLField(required=False, allow_null=True, allow_blank=True)
+    page = serializers.URLField(required=False, allow_null=True, allow_blank=True)
     # profileImage = serializers.ImageField(source='profile_image', use_url=True)
     profileImage = serializers.SerializerMethodField(source='profile_image')
-    page = serializers.URLField()
 
     class Meta:
         model = User
         # TODO: MIGHT NEED TO ADD IMAGE LATER
-        fields = ('type', 'id', 'host', 'displayName', 'github', 'page', 'profileImage')
+        fields = ('type', 'id', 'host', 'displayName', 'username', 'bio', 'github', 'page', 'profileImage')
     
     def get_profileImage(self, obj):
         if obj.profile_image:  # if the image exists

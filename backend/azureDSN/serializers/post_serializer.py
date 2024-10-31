@@ -5,7 +5,8 @@ from .comment_serializer import CommentSerializer
 from .like_serializer import LikeSerializer
 from rest_framework.response import Response
 import base64
-
+from django.conf import settings
+from urllib.parse import urljoin
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
@@ -28,13 +29,24 @@ class PostSerializer(serializers.ModelSerializer):
             'id',
             'contentType',
             'content',
+            'description',
             'author',
             'comments',
             'likes',
             'published',
             'visibility',
         )
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
 
+        # Build the full URL for the id field
+        author_uuid = representation['author']['id']
+        post_uuid = str(instance.uuid)
+        base_url = settings.BASE_URL
+        post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
+        representation['id'] = urljoin(base_url, post_url)
+        return representation
+    
     def create(self, validated_data):
         author_data = validated_data.pop('user')
 
@@ -80,7 +92,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
-
+    description = serializers.CharField(required=False)
     content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
 
     class Meta:
@@ -91,6 +103,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
             'id',
             'contentType',
             'content',
+            'description',
             'author',
             'published',
             'visibility',

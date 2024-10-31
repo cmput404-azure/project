@@ -1,59 +1,60 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import { Link } from "react-router-dom";
 
-import { formatCount } from "../../util/formatting/formatCount";
-import styles from "./PostCard.module.scss";
-import inbox from "../../service/inbox";
-import follow from "../../service/follow";
-import { useAuth } from "../../state";
-import { Author, Post, Follower } from "../../models/models";
-import { useState } from "react";
-import { ContentType } from "../../models/modelTypes";
-import Tooltip from '@mui/material/Tooltip';
-import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import { ContentType } from "../../models/modelTypes";
+import { PostData as Post } from "../../models/models";
+import Snackbar from '@mui/material/Snackbar';
+import Tooltip from '@mui/material/Tooltip';
+import follow from "../../service/follow";
+import { formatCount } from "../../util/formatting/formatCount";
+import inbox from "../../service/inbox";
+import styles from "./PostCard.module.scss";
+import { useAuth } from "../../state";
+import { Author,  Follower } from "../../models/models";
+import { useState } from "react";
+
 import { api } from "../../service/config";
 
 interface PostCardProps {
-  post_obj: Post
+  post: Post
   onCommentButtonClick?: () => void; // optional
   onClick?: () => void;
 }
 
 function PostCard({
-  post_obj,
+  post,
   onCommentButtonClick,
   onClick,
 }: PostCardProps) {
-  const [open, setOpen] = useState<boolean> (false);
+  const [open, setOpen] = useState<boolean>(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [likeCount, setLikeCount] = useState<number> (post_obj.likes.length);
-  const [commentCount, setCommentCount] = useState<number> (post_obj.comments.length);
+  const [likeCount, setLikeCount] = useState<number>(post.likes.length);
+  const [commentCount, setCommentCount] = useState<number>(post.comments.length);
   const [hasLiked, setHasLiked] = useState<boolean>(false);
   const [hasShared, setHasShared] = useState<boolean>(false);
 
   const authProvider = useAuth();
-  
+
   const handleClickShare = async () => {
     if (hasShared) return;
 
     // Get friends and followers list, followers inlcude both friends and followers
     const followers = await follow.getFollowers(authProvider.user.uuid);
-    const friends =  await follow.getFriends(authProvider.user.uuid);
+    const friends = await follow.getFriends(authProvider.user.uuid);
 
     // send to followers if post is public or unlisted
     // always send to friends for all type of posts
-    if (post_obj.visibility === 1 || post_obj.visibility === 3) {
+    if (post.visibility === 1 || post.visibility === 3) {
       for (const follower of followers) {
-        const inboxResponse = await inbox.sendPostToInbox(follower.id, post_obj);
+        const inboxResponse = await inbox.sendPostToInbox(follower.id, post);
       }
     } else {
       for (const friend of friends) {
-        const inboxResponse = await inbox.sendPostToInbox(friend.id, post_obj);
+        const inboxResponse = await inbox.sendPostToInbox(friend.id, post);
       }
     }
 
-    setHasShared(true); 
+    setHasShared(true);
   };
 
   const handleClickLike = async () => {
@@ -63,11 +64,11 @@ function PostCard({
     const like_obj =  {
       type: "like",
       author: currentUser.data,
-      published: new Date(post_obj.published).toISOString(),
-      object: post_obj.id
+      published: new Date(post.published).toISOString(),
+      object: post.id
     }
   
-    const inboxResponse = await inbox.sendPostToInbox(post_obj.author.id, like_obj);
+    const inboxResponse = await inbox.sendPostToInbox(post.author.id, like_obj);
 
     // Get friends and followers list, followers inlcude both friends and followers
     // const followers = await follow.getFollowers(authProvider.user.uuid);
@@ -91,7 +92,13 @@ function PostCard({
   };
 
   const handleGetLink = () => {
-    navigator.clipboard.writeText(post_obj.id)
+    const domain = window.location.host;
+    const postId = post.id.split("/").pop();
+    const path = `/#/post/${postId}`;
+
+    const link = `${domain}${path}`;
+
+    navigator.clipboard.writeText(link)
       .then(() => {
         setOpenSnackbar(true);
       })
@@ -113,14 +120,14 @@ function PostCard({
         <img
           className={styles.profilePic}
           src={
-            post_obj.author.profileImage ??
-            `https://ui-avatars.com/api/?background=random&name=${post_obj.author.displayName}`
+            post.author.profileImage ??
+            `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
           }
-          alt={`${post_obj.author.displayName}'s profile`}
+          alt={`${post.author.displayName}'s profile`}
         />
         <div className={styles.headerText}>
-          <span className={styles.userName}>{post_obj.author.displayName}</span>
-          <span className={styles.postTime}>{new Date(post_obj.published).toLocaleString()}</span>
+          <span className={styles.userName}>{post.author.displayName}</span>
+          <span className={styles.postTime}>{new Date(post.published).toLocaleString()}</span>
         </div>
         <div className={styles.icon}>
           <Tooltip title="copy link">
@@ -130,7 +137,7 @@ function PostCard({
             open={openSnackbar}
             autoHideDuration={2000} // auto close after 2s
             onClose={handleCloseSnackbar}
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
           >
             <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
               Link copied to clipboard!
@@ -151,7 +158,7 @@ function PostCard({
             </div>
             <div className={styles.icon} onClick={onCommentButtonClick}>
               <i className="fas fa-comment"></i>
-              <span>{formatCount(post_obj.comments.length)}</span>
+              <span>{formatCount(post.comments.length)}</span>
             </div>
           </div>
           <div className={`${styles.icon} ${hasShared ? styles.shared : ""}`} onClick={handleClickShare}>
@@ -159,17 +166,17 @@ function PostCard({
           </div>
         </div>
         <div className={styles.cardContent}>
-          <div className={styles.postText}>{post_obj.content}</div>
-          {(post_obj.contentType != ContentType.MARKDOWN && post_obj.contentType != ContentType.PLAIN)? (
+          <div className={styles.postTitle}>{post.title}</div>
+          {(post.contentType !== ContentType.MARKDOWN && post.contentType !== ContentType.PLAIN) ? (
             <div className={styles.imgContainer}>
               <img
                 className={styles.postImage}
-                src={post_obj.content}
-                alt="Post content"
+                src={post.content}
+                alt={post.description}
               />
             </div>
           ) : (
-            <div className={styles.postText}>{post_obj.content}</div>
+            <div className={styles.postText}>{post.content}</div>
           )}
         </div>
       </div>

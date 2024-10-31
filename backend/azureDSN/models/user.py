@@ -40,6 +40,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     host = models.URLField(null=True) # The full API URL for the author's node (e.g. http://nodeaaaa/api/)
     username = models.CharField(max_length=20, unique=True)
     display_name = models.CharField(max_length=20)
+    bio = models.TextField(null=True)
     github = models.URLField(null=True) # e.g. "http://github.com/gjohnson"
     page = models.URLField(null=True) # e.g. "http://nodebbbb/authors/222"
     profile_image = models.ImageField(upload_to='profile_pictures/', null=True, blank=True) # should be saved under BASE_DIR/azureDNS/media/profile_pictures/<filename>.jpg

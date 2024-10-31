@@ -151,6 +151,7 @@ class AuthorPostView(APIView):
             # update the post fields with request data (fallback to current values if not provided)
             post.title = request.data.get('title', post.title)
             post.content = request.data.get('content', post.content)
+            post.description = request.data.get('description', post.description)
             post.visibility = request.data.get('visibility', post.visibility)
             post.modified_at = request.data.get('modified_at', post.modified_at)
             post.modified_at = timezone.now()  # update the modified time
@@ -229,6 +230,15 @@ class PostsPagination(PageNumberPagination):
     page_size = 5
     page_size_query_param = 'size'
     max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response({
+            "type": "posts",
+            "page_number": self.page.number,
+            "size": self.page.paginator.per_page,
+            "count": self.page.paginator.count,
+            "src": data,
+        })
 
 
 class AuthorPostsAllView(APIView):
@@ -361,17 +371,19 @@ class AuthorPostsAllView(APIView):
         author_data = UserSerializer(author).data
         request.data["author"] = author_data
 
+        print(request.data)
         serializer = CreatePostSerializer(data=request.data, partial=True)
 
         if serializer.is_valid():
-
             instance = serializer.save()
 
             # Serialize the response
             response = CreatePostSerializer(instance).data
 
             return Response(response, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=400)
+        if not serializer.is_valid():
+            print("Validation Errors:", serializer.errors)  # Print errors
+            return Response(serializer.errors, status=400)
 
 class PostView(APIView):
     """
