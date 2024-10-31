@@ -26,8 +26,6 @@ export default function NotificationList() {
     try {
       const userResponse = await inbox.getInbox(authProvider.user.uuid);
 
-      console.log(userResponse);
-
       const notificationsWithUsers = await Promise.all(
         userResponse.map(async (item: any) => {
           let user = null;
@@ -39,7 +37,6 @@ export default function NotificationList() {
           return { ...item, user };
         })
       );
-      console.log("NOTIFICATIONS", notificationsWithUsers);
       setNotifications(notificationsWithUsers);
       setLoading(false);
     } catch (err) {
