@@ -12,6 +12,8 @@ import styles from "./PostCard.module.scss";
 import { useAuth } from "../../state";
 import { Author,  Follower } from "../../models/models";
 import { useState } from "react";
+import ReactMarkdown from 'react-markdown';
+import gfm from 'remark-gfm';
 
 import { api } from "../../service/config";
 
@@ -121,6 +123,10 @@ function PostCard({
 
     // might need to add logic for remote users in the future
  };
+
+  // const parseMarkdown = (content) => {
+  //   return marked(content);
+  // };
  
   return (
     <div className={styles.card} onClick={onClick}>
@@ -185,7 +191,16 @@ function PostCard({
               />
             </div>
           ) : (
-            <div className={styles.postText}>{post.content}</div>
+            // <div className={styles.postText}>{post.content}</div>
+            <div className={styles.postText}>
+              {post.contentType === ContentType.MARKDOWN ? (
+                  <ReactMarkdown remarkPlugins={[gfm]}>
+                      {post.content}
+                  </ReactMarkdown>
+              ) : (
+                  post.content
+              )}
+            </div>
           )}
         </div>
       </div>
