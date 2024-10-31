@@ -87,13 +87,15 @@ class PostSerializer(serializers.ModelSerializer):
         post.delete()
         return post
     
+
 class CreatePostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
     description = serializers.CharField(required=False)
-    content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
+    content = serializers.CharField(required=True, allow_blank=False)  # Must contain content (text or base64 image)
+    github_id = serializers.CharField(required=False, allow_null=True)
 
     class Meta:
         model = Post
@@ -107,30 +109,34 @@ class CreatePostSerializer(serializers.ModelSerializer):
             'author',
             'published',
             'visibility',
+            'github_id',
         )
 
     def create(self, validated_data):
-        print(f"In create of CreatePostSerializer: {validated_data}")
         author_data = validated_data.pop('user')
 
         if not User.objects.filter(uuid=author_data['uuid']).exists():
-            return Response({"message": "error, unauthorized"},status=403)
-        
+            raise serializers.ValidationError("Error, unauthorized.")
+
         user = User.objects.get(uuid=author_data['uuid'])
-
-        content_type = validated_data.get('content_type')
         
-
+        content_type = validated_data.get('content_type')
         if content_type in ['image/png;base64', 'image/jpeg;base64', 'application/base64']:
             try:
                 content = validated_data.get('content')
-                decoded_image = base64.b64decode(content)  # Decode to check if it's valid?
+                base64.b64decode(content)
                 validated_data['has_image'] = True
             except (ValueError, TypeError):
-                raise serializers.ValidationError("Cannot be encoded into base64.")
+                raise serializers.ValidationError("Content cannot be decoded from base64.")
             validated_data['has_image'] = True
         else:
             validated_data['has_image'] = False
 
+        # Check GitHub ID to prevent duplicates
+        github_id = validated_data.get('github_id')
+        if github_id:
+            if Post.objects.filter(github_id=github_id).exists():
+                raise serializers.ValidationError("This GitHub activity has already been retrieved.")
+        
         post = Post.objects.create(user=user, **validated_data)
         return post

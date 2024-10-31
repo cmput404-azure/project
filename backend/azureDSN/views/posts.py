@@ -6,10 +6,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
 from django.utils import timezone
-from django.contrib.sessions.models import Session
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
+import requests
 
 class AuthorPostView(APIView):
     """
@@ -300,6 +300,9 @@ class AuthorPostsAllView(APIView):
         # make sure the author exists
         author = get_object_or_404(User, uuid=author_serial)
 
+        # check for github activity
+        self.fetch_github_activity(author)
+
         # retrieve all posts by the author
         posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3])
 
@@ -384,6 +387,40 @@ class AuthorPostsAllView(APIView):
         if not serializer.is_valid():
             print("Validation Errors:", serializer.errors)  # Print errors
             return Response(serializer.errors, status=400)
+        
+    def fetch_github_activity(self, author):
+        """
+        Fetch GitHub activity for a user and turns it into a post, only if the activity is not already in the database as a post.
+        """
+        if(not author.github):
+            return
+        
+        author_github_username = author.github.split("/")[-1]
+
+        api = f"https://api.github.com/users/{author_github_username}/events"
+        response = requests.get(api)
+        events = []
+
+        if response.status_code == 200:
+            events = response.json()
+            print(events)
+
+        for event in events:
+            if(not Post.objects.filter(github_id=event["id"]).exists()):
+                event_post = {
+                    "author": author,
+                    "title": f"GitHub {event['type']}",
+                    "description": f"GitHub {event['type']}",
+                    "content": event['payload']['commits'][0]['message'],
+                    "visibility": 1,
+                    "github_id": event['id'],
+                    "published": event['created_at']
+                }
+
+                serializer = CreatePostSerializer(data=event_post)
+                if serializer.is_valid():
+                    print("Saving post...")
+                    serializer.save()
 
 class PostView(APIView):
     """
