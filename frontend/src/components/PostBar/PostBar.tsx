@@ -185,7 +185,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
         type: "post",
         title: title,
         description: description,
-        contentType: imageBase64 ? contentType : "text/plain", // or markdown
+        contentType: imageBase64 ? contentType : activeCommonMark ? "text/markdown" : "text/plain",
         content: imageBase64 || content,
         published: new Date().toISOString(),
         visibility: visibilityNumber,
