@@ -6,6 +6,7 @@ interface RegisterData {
     password: string;
     email: string;
     name: string;
+    githubUsername: string;
 }
 
 interface RegisterResponse {

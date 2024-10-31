@@ -65,6 +65,8 @@ class RegisterView(APIView):
         email = data.get('email')
         name = data.get('name')
         host = data.get('host')
+        githubUsername = data.get('githubUsername')
+        githubUrl = f"https://github.com/{githubUsername if githubUsername else 'login'}"
         config = SiteConfiguration.objects.first()
         is_active = not config.require_approval
 
@@ -73,7 +75,16 @@ class RegisterView(APIView):
             return Response({"error": "Username already taken."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Create new user
-        user = User.objects.create_user(username=username, password=password, email=email, display_name=name, host=host, is_active=is_active)
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            email=email,
+            display_name=name,
+            github=githubUrl,
+            host=host,
+            is_active=is_active
+        )
+        
         if is_active:
             return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
         else:
