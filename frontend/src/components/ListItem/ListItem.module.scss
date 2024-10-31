@@ -40,22 +40,26 @@
 .text {
   flex-grow: 1;
   text-align: left;
+
+  h1 {
+    margin: 0;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  p {
+    font-size: 12px;
+    margin: 0;
+  }
 }
 
-h1 {
-  margin: 0;
-  font-weight: bold;
-  font-size: 14px;
-}
 .additionalText {
   font-size: 14px;
   font-weight: normal;
   margin-left: 3px;
 }
-p {
-  font-size: 12px;
-  margin: 0;
-}
+
+
 
 button {
   border: none;
