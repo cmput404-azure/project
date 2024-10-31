@@ -50,8 +50,6 @@ class MultipleCommentsView(APIView):
             post_obj = get_object_or_404(Post, uuid=post_id)
             author_id = post_obj.user.uuid
 
-        
-            
         comments = Comment.objects.filter(post=post_obj)
 
         pagination = self.pagination_provider()
@@ -59,22 +57,6 @@ class MultipleCommentsView(APIView):
 
         serialized_comments = CommentSerializer(page, many=True).data
         return pagination.get_paginated_response(serialized_comments)
-
-        # uri = request.build_absolute_uri("/")
-        
-        # response = {
-        #     "type": "comments",
-        #     "page": f"{uri}api/authors/{author_id}/posts/{post_id}",
-        #     "id": f"{uri}api/authors/{author_id}/posts/{post_id}/comments",
-        #     "page_number": 1,
-        #     "size": 10,
-        #     "count": len(serialized_comments),
-        #     "src": serialized_comments[:10],  # Limit to first 10 comments
-        # }        
-        # return Response(response, status.HTTP_200_OK)
-
-
-
 
 '''
 URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
