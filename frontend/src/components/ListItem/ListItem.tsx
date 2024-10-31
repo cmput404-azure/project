@@ -10,6 +10,7 @@ interface ListItemProps {
   isRequest: boolean;
   isPost: boolean;
   isLike: boolean;
+  isComment?:boolean;
   isFollowerList: boolean;
   isUserList: boolean;
   notif_id?: string;
@@ -31,6 +32,7 @@ export default function ListItem({
   isRequest,
   isPost,
   isLike,
+  isComment,
   isFollowerList,
   isUserList,
   notif_id,
@@ -42,17 +44,18 @@ export default function ListItem({
   const [isRequested, setIsRequested] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // TODO: Check if the user has already sent a request.
-  }, [isRequested]);
-
   const unFollow = async () => {
     const encodedHost = encodeURIComponent(user.host);
     const encodedId = encodeURIComponent(authProvider.user.uuid);
     const url = `${encodedHost}/api/authors/${encodedId}`;
     const encodedUrl = encodeURIComponent(url);
 
-    await deleteFollowRequest();
+    try {
+      const response = await api.delete(`/api/authors/${user.id}/followers/${encodedUrl}/`);
+      const data = response.data;
+    } catch (error) {
+      console.error('Fetch error:', error);
+    }
   };
 
   const sendFollowerRequest = async () => {
@@ -100,6 +103,7 @@ export default function ListItem({
   const deleteFollowRequest = async () => {
     try {
       const deleteRequest = { type: "follow", id: notif_id };
+      console.log(deleteRequest);
       await api.delete(`/api/authors/${authProvider.user.uuid}/inbox/`, { data: deleteRequest });
       onRefresh();
     } catch (error) {
@@ -115,6 +119,7 @@ export default function ListItem({
   if (isRequest) additionalText = "wants to follow you";
   else if (isLike) additionalText = "liked your post";
   else if (isPost) additionalText = "shared a post with you";
+  else if (isComment) additionalText = "commented on your post";
 
   return (
     <div className={styles.ListItemContainer}>
@@ -123,7 +128,7 @@ export default function ListItem({
           <img
             className={styles.listImg}
             src={
-              user.profileImage ??
+              user.profileImage ? user.profileImage.trim() :
               `https://ui-avatars.com/api/?background=random&name=${user.displayName}`
             }
             alt="pfp"
@@ -149,13 +154,13 @@ export default function ListItem({
         )}
 
         {isRequest && (
-        <div className={styles.buttonGroup}>
+          <div className={styles.buttonGroup}>
             <button onClick={addFollower}>Accept</button>{" "}
             <button onClick={deleteFollowRequest}>Decline</button>
           </div>
         )}
 
-        {isPost && (
+        {isPost || isLike || isComment && (
           <img
             className={styles.listImgPost}
             src={

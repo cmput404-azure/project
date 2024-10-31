@@ -10,7 +10,10 @@ import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
 import styles from "./PostCard.module.scss";
 import { useAuth } from "../../state";
+import { Author,  Follower } from "../../models/models";
 import { useState } from "react";
+
+import { api } from "../../service/config";
 
 interface PostCardProps {
   post: Post
@@ -56,28 +59,33 @@ function PostCard({
 
   const handleClickLike = async () => {
     if (hasLiked) return;
-    const like_obj = {
+    console.log(authProvider.user.uuid);
+    const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
+    const like_obj =  {
       type: "like",
-      author: post.author,
+      author: currentUser.data,
       published: new Date(post.published).toISOString(),
       object: post.id
     }
+  
+    const inboxResponse = await inbox.sendPostToInbox(post.author.id, like_obj);
 
     // Get friends and followers list, followers inlcude both friends and followers
-    const followers = await follow.getFollowers(authProvider.user.uuid);
-    const friends = await follow.getFriends(authProvider.user.uuid);
+    // const followers = await follow.getFollowers(authProvider.user.uuid);
+    // const friends =  await follow.getFriends(authProvider.user.uuid);
 
     // send to followers if post is public or unlisted
     // always send to friends for all type of posts
-    if (post.visibility === 1 || post.visibility === 3) {
-      for (const follower of followers) {
-        const inboxResponse = await inbox.sendPostToInbox(follower.id, like_obj);
-      }
-    } else {
-      for (const friend of friends) {
-        const inboxResponse = await inbox.sendPostToInbox(friend.id, like_obj);
-      }
-    }
+
+    // if (post_obj.visibility === 1 || post_obj.visibility === 3) {
+    //   for (const follower of followers) {
+    //     const inboxResponse = await inbox.sendPostToInbox(follower.id, like_obj);
+    //   }
+    // } else {
+    //   for (const friend of friends) {
+    //     const inboxResponse = await inbox.sendPostToInbox(friend.id, like_obj);
+    //   }
+    // } 
 
     setLikeCount(likeCount + 1);
     setHasLiked(true);
