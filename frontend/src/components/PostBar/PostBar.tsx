@@ -1,6 +1,6 @@
 import { Author, PostData as Post } from "../../models/models";
 import React, { useEffect, useRef, useState } from "react";
-import { TextField, TextareaAutosize } from "@mui/material";
+import { TextField, TextareaAutosize, Tooltip } from "@mui/material";
 import {
   VisibilityChoices,
   getVisibilityNumber,
@@ -337,9 +337,11 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
                 <LinkIcon className={styles.icon}/>
               </div>
             </div>
-            <button className={`${styles.mark_button} ${activeCommonMark ? styles.active : ""}`} onClick={() => setActiveCommonMark(!activeCommonMark)}>
-              <EditNoteIcon className={styles.icon}/>
-            </button>
+            <Tooltip title="toggle markdown">
+              <button className={`${styles.mark_button} ${activeCommonMark ? styles.active : ""}`} onClick={() => setActiveCommonMark(!activeCommonMark)}>
+                <EditNoteIcon className={styles.icon}/>
+              </button>
+            </Tooltip>
           </div>
           <button
             className={styles.post_button}
