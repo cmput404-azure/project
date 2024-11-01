@@ -69,7 +69,7 @@ export default function UserSearch({ closeModal }: userSearchProps) {
       {loading && <div className={"loading_component"}><CircularProgress/></div>}
       {error && <p>{error}</p>}
       {filteredResults.length > 0 ? (
-        <ul className={styles.ul}>
+        <ul className={styles.customList}>
           {filteredResults.map((user) => (
             <ListItem
               key={user.id}

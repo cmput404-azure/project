@@ -31,7 +31,7 @@ class LikeSerializer(serializers.ModelSerializer):
         user_data = obj.user  # This should be a dictionary
         return {
             "type": "author",
-            "id": user_data.get("id"),  # Ensure this key exists in the JSON
+            "id": f'{user_data.get("host")}api/authors/{user_data.get("id")}',  # Ensure this key exists in the JSON
             "host": user_data.get("host"),
             "displayName": user_data.get("displayName"),
             "github": user_data.get("github"),

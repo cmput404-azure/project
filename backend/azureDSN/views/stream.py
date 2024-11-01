@@ -32,7 +32,7 @@ class PublicStreamView(APIView):
 
         # Serialize and return the posts
         serializer = PostSerializer(public_posts, many=True)
-        print(serializer.data)
+        # print(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class AuthStreamView(APIView):
@@ -114,7 +114,7 @@ class AuthStreamView(APIView):
             combined_data = {post['id']: post for post in (unlisted_and_friends_serializer.data + relevant_serializer.data)}
             combined_data_list = list(combined_data.values())  # Convert back to list
 
-            print(combined_data)
+            # print(combined_data)
 
             combined_data_sorted = sorted(combined_data_list, key=lambda post: post.get('published'), reverse=True)
             # combined_data_sorted = sorted(combined_data, key=lambda post: post.created_at, reverse=True)

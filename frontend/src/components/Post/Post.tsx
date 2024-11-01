@@ -33,8 +33,8 @@ export default function Post() {
             if (postID) {
                const postData = await postService.getPost(`api/posts/${postID}`);
                setPost(postData);
-               setLikeCount(postData.likes.length);
-               setCommentCount(postData.comments.length);
+               setLikeCount(Array.isArray(post.likes) ? 0 : post.likes.count);
+               setCommentCount(Array.isArray(post.comments) ? 0 : post.comments.count);
             }
          } catch (error) {
             console.error("Error fetching post data:", error);

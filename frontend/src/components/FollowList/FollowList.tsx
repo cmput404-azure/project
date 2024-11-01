@@ -98,7 +98,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
       ) : error ? (
         <p>{error}</p>
       ) : (
-        <ul className={styles.ul}>
+        <ul className={styles.customList}>
 
           {followers.map((follower, index) => (
             <div key={index}>

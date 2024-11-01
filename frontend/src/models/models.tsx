@@ -68,10 +68,30 @@ export interface PostData {
     content: string;
     description: string;
     author: Author;
-    comments: Comment[] | null;
-    likes?: Like[] | null;
+    comments: PostComment | [];
+    likes: PostLike | [];
     published: string;
     visibility: number;
+}
+
+export interface PostLike {
+    type: string;
+    id: string;
+    page: string;
+    page_number: number;
+    size: number;
+    count: number;
+    src: Like[];
+}
+
+export interface PostComment {
+    type: string;
+    id: string;
+    page: string;
+    page_number: number;
+    size: number;
+    count: number;
+    src: Comment[];
 }
 
 // This might be one of the four: post, like, comment and request so I simply store all the possible variables
