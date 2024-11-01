@@ -26,33 +26,35 @@ function PostCard({
   onCommentButtonClick,
   onClick,
 }: PostCardProps) {
+  const authProvider = useAuth();
   const [open, setOpen] = useState<boolean>(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [likeCount, setLikeCount] = useState<number>(post.likes.length);
-  const [commentCount, setCommentCount] = useState<number>(post.comments.length);
-  const [hasLiked, setHasLiked] = useState<boolean>(false);
+  const [likeCount, setLikeCount] = useState<number>(Array.isArray(post.likes) ? 0 : post.likes.count);
+  const [commentCount, setCommentCount] = useState<number>(Array.isArray(post.comments) ? 0 : post.comments.count);
+  const [hasLiked, setHasLiked] = useState<boolean>(Array.isArray(post.likes) 
+                                                          ? false 
+                                                          : post.likes.src.some((like) => like.author.id === authProvider.user.uuid)
+                                                    );
   const [hasShared, setHasShared] = useState<boolean>(false);
-
-  const authProvider = useAuth();
 
   const handleClickShare = async () => {
     if (hasShared) return;
 
     // Get friends and followers list, followers inlcude both friends and followers
-    const followers = await follow.getFollowers(authProvider.user.uuid);
-    const friends = await follow.getFriends(authProvider.user.uuid);
+    // const followers = await follow.getFollowers(authProvider.user.uuid);
+    // const friends = await follow.getFriends(authProvider.user.uuid);
 
     // send to followers if post is public or unlisted
     // always send to friends for all type of posts
-    if (post.visibility === 1 || post.visibility === 3) {
-      for (const follower of followers) {
-        const inboxResponse = await inbox.sendPostToInbox(follower.id, post);
-      }
-    } else {
-      for (const friend of friends) {
-        const inboxResponse = await inbox.sendPostToInbox(friend.id, post);
-      }
-    }
+    // if (post.visibility === 1 || post.visibility === 3) {
+    //   for (const follower of followers) {
+    //     const inboxResponse = await inbox.sendPostToInbox(follower.id, post);
+    //   }
+    // } else {
+    //   for (const friend of friends) {
+    //     const inboxResponse = await inbox.sendPostToInbox(friend.id, post);
+    //   }
+    // }
 
     setHasShared(true);
   };
@@ -69,23 +71,6 @@ function PostCard({
     }
   
     const inboxResponse = await inbox.sendPostToInbox(post.author.id, like_obj);
-
-    // Get friends and followers list, followers inlcude both friends and followers
-    // const followers = await follow.getFollowers(authProvider.user.uuid);
-    // const friends =  await follow.getFriends(authProvider.user.uuid);
-
-    // send to followers if post is public or unlisted
-    // always send to friends for all type of posts
-
-    // if (post_obj.visibility === 1 || post_obj.visibility === 3) {
-    //   for (const follower of followers) {
-    //     const inboxResponse = await inbox.sendPostToInbox(follower.id, like_obj);
-    //   }
-    // } else {
-    //   for (const friend of friends) {
-    //     const inboxResponse = await inbox.sendPostToInbox(friend.id, like_obj);
-    //   }
-    // } 
 
     setLikeCount(likeCount + 1);
     setHasLiked(true);
@@ -158,7 +143,7 @@ function PostCard({
             </div>
             <div className={styles.icon} onClick={onCommentButtonClick}>
               <i className="fas fa-comment"></i>
-              <span>{formatCount(post.comments.length)}</span>
+              <span>{formatCount(commentCount)}</span>
             </div>
           </div>
           <div className={`${styles.icon} ${hasShared ? styles.shared : ""}`} onClick={handleClickShare}>
