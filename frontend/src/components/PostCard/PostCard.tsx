@@ -1,5 +1,4 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
-
 import Alert from '@mui/material/Alert';
 import { ContentType } from "../../models/modelTypes";
 import { PostData as Post } from "../../models/models";
@@ -11,7 +10,10 @@ import inbox from "../../service/inbox";
 import styles from "./PostCard.module.scss";
 import { useAuth } from "../../state";
 import { Author,  Follower } from "../../models/models";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { useNavigate } from 'react-router-dom';
 
 import { api } from "../../service/config";
 
@@ -26,33 +28,37 @@ function PostCard({
   onCommentButtonClick,
   onClick,
 }: PostCardProps) {
+  const authProvider = useAuth();
   const [open, setOpen] = useState<boolean>(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [likeCount, setLikeCount] = useState<number>(post.likes.length);
-  const [commentCount, setCommentCount] = useState<number>(post.comments.length);
-  const [hasLiked, setHasLiked] = useState<boolean>(false);
+  const [likeCount, setLikeCount] = useState<number>(Array.isArray(post.likes) ? 0 : post.likes.count);
+  const [commentCount, setCommentCount] = useState<number>(Array.isArray(post.comments) ? 0 : post.comments.count);
+  const [hasLiked, setHasLiked] = useState<boolean>(Array.isArray(post.likes) 
+                                                          ? false 
+                                                          : post.likes.src.some((like) => like.author.id.split('/').pop() === authProvider.user.uuid)
+                                                    );
   const [hasShared, setHasShared] = useState<boolean>(false);
-
-  const authProvider = useAuth();
+  const [imageSrc, setImageSrc] = useState<string>('');
+  const navigate = useNavigate();
 
   const handleClickShare = async () => {
     if (hasShared) return;
 
     // Get friends and followers list, followers inlcude both friends and followers
-    const followers = await follow.getFollowers(authProvider.user.uuid);
-    const friends = await follow.getFriends(authProvider.user.uuid);
+    // const followers = await follow.getFollowers(authProvider.user.uuid);
+    // const friends = await follow.getFriends(authProvider.user.uuid);
 
     // send to followers if post is public or unlisted
     // always send to friends for all type of posts
-    if (post.visibility === 1 || post.visibility === 3) {
-      for (const follower of followers) {
-        const inboxResponse = await inbox.sendPostToInbox(follower.id, post);
-      }
-    } else {
-      for (const friend of friends) {
-        const inboxResponse = await inbox.sendPostToInbox(friend.id, post);
-      }
-    }
+    // if (post.visibility === 1 || post.visibility === 3) {
+    //   for (const follower of followers) {
+    //     const inboxResponse = await inbox.sendPostToInbox(follower.id, post);
+    //   }
+    // } else {
+    //   for (const friend of friends) {
+    //     const inboxResponse = await inbox.sendPostToInbox(friend.id, post);
+    //   }
+    // }
 
     setHasShared(true);
   };
@@ -69,23 +75,6 @@ function PostCard({
     }
   
     const inboxResponse = await inbox.sendPostToInbox(post.author.id, like_obj);
-
-    // Get friends and followers list, followers inlcude both friends and followers
-    // const followers = await follow.getFollowers(authProvider.user.uuid);
-    // const friends =  await follow.getFriends(authProvider.user.uuid);
-
-    // send to followers if post is public or unlisted
-    // always send to friends for all type of posts
-
-    // if (post_obj.visibility === 1 || post_obj.visibility === 3) {
-    //   for (const follower of followers) {
-    //     const inboxResponse = await inbox.sendPostToInbox(follower.id, like_obj);
-    //   }
-    // } else {
-    //   for (const friend of friends) {
-    //     const inboxResponse = await inbox.sendPostToInbox(friend.id, like_obj);
-    //   }
-    // } 
 
     setLikeCount(likeCount + 1);
     setHasLiked(true);
@@ -114,6 +103,58 @@ function PostCard({
     setOpenSnackbar(false);
   };
 
+  const redirectToAuthorProfile = () => {
+    const isExternalLink = !post.author.host.includes(window.location.hostname);
+
+    if (isExternalLink) {
+      // Later when able to connect to other nodes, fetch the remote author info using FQID
+      // Then display the remote user info in our layout
+    } else {
+      const authorURL = `/authors/${post.author.id}`;
+      navigate(authorURL);
+    }
+ };
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      if (post.contentType === ContentType.MARKDOWN) {
+          const imageRegex = /!\[.*?\]\((.*?)\)/; // Regex to find the image URL in the Markdown
+          const match = post.content.match(imageRegex);
+          if (match) {
+              const imageUrl = match[1]; // Get the URL from the Markdown
+              console.log("imageURL: ", imageUrl);
+              
+              // Check if the imageUrl is a data URL
+              if (imageUrl.startsWith("data:")) {
+                  // Directly set the src to the data URL
+                  setImageSrc(imageUrl);
+              } else {
+                  // If it's not a data URL, fetch from the endpoint
+                  try {
+                      const response = await fetch(imageUrl);
+                      console.log(response);
+                      if (response.ok) {
+                          const jsonResponse = await response.json();
+                          const imageData = jsonResponse.image;
+                          setImageSrc(imageData);
+                      } else {
+                          console.error("Error fetching image:", response.statusText);
+                      }
+                  } catch (error) {
+                      console.error("Error fetching image:", error);
+                  }
+              }
+          }
+      }
+  };
+
+    fetchImage();
+}, [post.content, post.contentType]);
+
+const transformImageUri = (src: string, alt: string, title: string) => {
+    return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
+};
+ 
   return (
     <div className={styles.card} onClick={onClick}>
       <div className={styles.grid}>
@@ -124,9 +165,10 @@ function PostCard({
             `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
           }
           alt={`${post.author.displayName}'s profile`}
+          onClick={redirectToAuthorProfile}
         />
         <div className={styles.headerText}>
-          <span className={styles.userName}>{post.author.displayName}</span>
+          <span className={styles.userName} onClick={redirectToAuthorProfile}>{post.author.displayName}</span>
           <span className={styles.postTime}>{new Date(post.published).toLocaleString()}</span>
         </div>
         <div className={styles.icon}>
@@ -158,7 +200,7 @@ function PostCard({
             </div>
             <div className={styles.icon} onClick={onCommentButtonClick}>
               <i className="fas fa-comment"></i>
-              <span>{formatCount(post.comments.length)}</span>
+              <span>{formatCount(commentCount)}</span>
             </div>
           </div>
           <div className={`${styles.icon} ${hasShared ? styles.shared : ""}`} onClick={handleClickShare}>
@@ -176,7 +218,22 @@ function PostCard({
               />
             </div>
           ) : (
-            <div className={styles.postText}>{post.content}</div>
+            // <div className={styles.postText}>{post.content}</div>
+            <div className={styles.postText}>
+              {post.contentType === ContentType.MARKDOWN ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                    img: ({ src, alt, title }) => {
+                      return (
+                          <img src={transformImageUri(src, alt, title)} alt={alt} title={title} />
+                      );
+                  }
+                }}>
+                      {post.content}
+                  </ReactMarkdown>
+              ) : (
+                  post.content
+              )}
+            </div>
           )}
         </div>
       </div>
