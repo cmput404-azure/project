@@ -13,6 +13,7 @@ import { Author,  Follower } from "../../models/models";
 import { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useNavigate } from 'react-router-dom';
 
 import { api } from "../../service/config";
 
@@ -34,6 +35,7 @@ function PostCard({
   const [hasLiked, setHasLiked] = useState<boolean>(false);
   const [hasShared, setHasShared] = useState<boolean>(false);
   const [imageSrc, setImageSrc] = useState<string>('');
+  const navigate = useNavigate();
 
   const authProvider = useAuth();
 
@@ -117,11 +119,14 @@ function PostCard({
   };
 
   const redirectToAuthorProfile = () => {
-    // right now this works locally, other teams might not have the same url format
-    const localUserURL = `${post.author.host}/#/authors/${post.author.id}`;
-    window.location.assign(localUserURL);
+    const isExternalLink = !post.author.host.includes(window.location.hostname);
 
-    // might need to add logic for remote users in the future
+    if (isExternalLink) {
+      window.location.assign(`${post.author.host}/authors/${post.author.id}`);
+    } else {
+      const authorURL = `/authors/${post.author.id}`;
+      navigate(authorURL);
+    }
  };
 
   useEffect(() => {
