@@ -3,7 +3,7 @@ import { Author, PostData as Post } from "../../models/models";
 import { useEffect, useState } from "react";
 
 import FollowList from "../FollowList/FollowList";
-import { GitHub } from "@mui/icons-material";
+import { Check, GitHub } from "@mui/icons-material";
 import LinkIcon from '@mui/icons-material/Link';
 import PostCard from "../PostCard/PostCard";
 import ProfileService from "../../service/profile";
@@ -50,6 +50,7 @@ export default function PublicProfile() {
    }, [userID]);
 
    useEffect(() => {
+      
       async function fetchCounts() {
          try {
             const friends = await followService.getFollowers(userID);

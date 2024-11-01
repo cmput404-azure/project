@@ -7,3 +7,4 @@ from .comments import MultipleCommentsView, SingleCommentView
 from .likes import LikeView, AuthorLikesView, LikesView
 from .auth import LoginView, LogoutView, RegisterView, CheckAuthView
 from .stream import PublicStreamView, AuthStreamView
+from .share import ShareView
