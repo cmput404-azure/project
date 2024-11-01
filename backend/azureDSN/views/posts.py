@@ -372,9 +372,11 @@ class AuthorPostsAllView(APIView):
         
         author = User.objects.get(uuid=author_serial)
         author_data = UserSerializer(author).data
+        print(f"Passed UserSerializer: {author_data}")
+        author_data["id"] = author.uuid
         request.data["author"] = author_data
 
-        print(request.data)
+        # print(request.data)
         serializer = CreatePostSerializer(data=request.data, partial=True)
 
         if serializer.is_valid():

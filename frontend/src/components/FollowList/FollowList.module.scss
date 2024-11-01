@@ -1,6 +1,8 @@
-ul{
-    padding-left:0
+.customList {
+    padding-left:0;
+    width: 100%;
 }
+
 .modalOverlay {
     position: fixed;
     top: 0;
@@ -23,6 +25,6 @@ ul{
     padding: 20px;
   }
 
-.h2{
+.h2 {
     color:black;
 }
