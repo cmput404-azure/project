@@ -42,7 +42,7 @@ class PostSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         # Build the full URL for the id field
-        author_uuid = representation['author']['id']
+        author_uuid = instance.user.uuid
         post_uuid = str(instance.uuid)
         base_url = settings.BASE_URL
         post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
