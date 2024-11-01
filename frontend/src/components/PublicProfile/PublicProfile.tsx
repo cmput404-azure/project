@@ -9,7 +9,8 @@ import PostCard from "../PostCard/PostCard";
 import ProfileService from "../../service/profile";
 import followService from "../../service/follow";
 import styles from "./PublicProfile.module.scss";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../state";
 
 const FollowerModalTypes = {
    follower: "Follower",
@@ -31,8 +32,11 @@ export default function PublicProfile() {
    const [followersCount, setFollowersCount] = useState(0);
    const [followingCount, setFollowingCount] = useState(0);
    const [openSnackbar, setOpenSnackbar] = useState(false);
+   const [isAuthenticated, setIsAuthenticated]=useState(true);
+   const navigate = useNavigate();
 
    // TODO: make the follow button change to unfollow if the user is already following the author, or hidden if the user is the author
+   const authProvider = useAuth();
 
    const { userID } = useParams<{ userID: string }>();
 
@@ -50,7 +54,11 @@ export default function PublicProfile() {
    }, [userID]);
 
    useEffect(() => {
-      
+      if (authProvider.isAuthenticated === false){
+         setIsAuthenticated(false);
+      }else{
+         console.log(authorData);
+      }
       async function fetchCounts() {
          try {
             const friends = await followService.getFollowers(userID);
@@ -74,6 +82,11 @@ export default function PublicProfile() {
       setOpenSnackbar(true);
    }
 
+   function handleButtonClick(){
+      if (isAuthenticated=== false){
+         navigate('/login');
+      }
+   }
    if (!authorData) return <div className="loading"><CircularProgress/></div>;
 
    return (
@@ -91,7 +104,7 @@ export default function PublicProfile() {
                   <div className={styles.user}>
                      <div className={styles.user__main}>
                         <h2 className={styles.display__name}>{authorData.displayName}</h2>
-                        <Button variant="contained" color="primary" size="small">
+                        <Button variant="contained" color="primary" size="small" onClick = {handleButtonClick}>
                            {isFollowing ? "Unfollow" : "Follow"}
                         </Button>
                         {authorData.github &&

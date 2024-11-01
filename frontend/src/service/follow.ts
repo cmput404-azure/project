@@ -74,6 +74,17 @@ class FollowService{
          return [];
       }
    }
+
+   public async checkFollowing(uuid: string, follower_url:string): Promise<Boolean> {
+      try {
+         const response = await api.get<Boolean>(`/api/authors/${uuid}/followers/${follower_url}/`);
+         return response.data;
+      } 
+      catch (error) {
+         console.error('Fetch following error:', error);
+         return false;
+      }
+   }
 }
 
 // Create default instance of the service
