@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Post, User
+from ..models import Post, User, Like
 from .user_serializer import UserSerializer
 from .comment_serializer import CommentSerializer
 from .like_serializer import LikeSerializer
@@ -7,6 +7,8 @@ from rest_framework.response import Response
 import base64
 from django.conf import settings
 from urllib.parse import urljoin
+from ..views.likes import LikesView
+from rest_framework.test import APIRequestFactory
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
@@ -45,6 +47,21 @@ class PostSerializer(serializers.ModelSerializer):
         base_url = settings.BASE_URL
         post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
+        
+        # Create an internal request to the LikesView with the required params
+        likeFactory = APIRequestFactory()
+        likeRequest = likeFactory.get(f'/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes')
+        likeView = LikesView.as_view()
+        
+        # Call LikesView and capture the response
+        response = likeView(likeRequest, author_serial=instance.user.uuid, post_serial=instance.uuid)
+
+        # Ensure the response is successful and set likes data
+        if response.status_code == 200:
+            representation['likes'] = response.data
+        else:
+            representation['likes'] = []
+        
         return representation
     
     def create(self, validated_data):
