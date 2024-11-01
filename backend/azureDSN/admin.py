@@ -34,6 +34,7 @@ class UserAdmin(BaseUserAdmin):
         queryset.update(is_active=True)
     approve_users.short_description = "Approve selected users"
 
+    
 
 # Register your models here.
 admin.site.register(User, UserAdmin)

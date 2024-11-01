@@ -35,10 +35,10 @@ export default function NotificationList() {
             user = await fetchUser(item.actor.id);
           } else if (item.type === "like") {
             user = await fetchUser(item.author.id);
-            //TODO: this might break bc host might not be the expected format
-            // Expected format for host: http://host/
+            // Expected format for host: http://host/api/
             // Expected format for object: api/authors/author_id/posts/post_id
-            let post_resp = await api.get(`${item.author.host}${item.object}`);
+            const objectPath = item.object.startsWith("api/") ? item.object.slice(4) : item.object;
+            let post_resp = await api.get(`${item.author.host}${objectPath}`);
             post_obj = post_resp.data;
           }else if (item.type === "comment"){
             user = await fetchUser(item.author.id);

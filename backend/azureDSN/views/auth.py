@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from ..models.site_config import SiteConfiguration
-
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 class LoginView(APIView):
     def post(self, request):
@@ -69,6 +70,16 @@ class RegisterView(APIView):
         githubUrl = f"https://github.com/{githubUsername if githubUsername else 'login'}"
         config = SiteConfiguration.objects.first()
         is_active = not config.require_approval
+
+        validate_url = URLValidator()
+        try:
+            validate_url(host)
+        except ValidationError:
+            return Response({"error": "Invalid URL format for host."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure host ends with /api/
+        if not host.endswith('/api/'):
+            host = host.rstrip('/') + '/api/'
 
         # username should be unique but display name (name) can be non-unique
         if User.objects.filter(username=username).exists():
