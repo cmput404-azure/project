@@ -33,7 +33,7 @@ function PostCard({
   const [commentCount, setCommentCount] = useState<number>(Array.isArray(post.comments) ? 0 : post.comments.count);
   const [hasLiked, setHasLiked] = useState<boolean>(Array.isArray(post.likes) 
                                                           ? false 
-                                                          : post.likes.src.some((like) => like.author.id === authProvider.user.uuid)
+                                                          : post.likes.src.some((like) => like.author.id.split('/').pop() === authProvider.user.uuid)
                                                     );
   const [hasShared, setHasShared] = useState<boolean>(false);
 
