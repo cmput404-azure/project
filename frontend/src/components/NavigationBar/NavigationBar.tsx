@@ -31,10 +31,10 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   const commonNavigationItems = [
     { icon: <i className="fa-solid fa-house" />, label: "home" },
     { icon: <i className="fa-solid fa-magnifying-glass" />, label: "search" },
-    { icon: <i className="fa-regular fa-bell" />, label: "notifications" },
   ];
 
   const loggedInNavigationItems = [
+    { icon: <i className="fa-regular fa-bell" />, label: "notifications" },
     { icon: <i className="fa-solid fa-heart" />, label: "likes" },
     { icon: <i className="fa-solid fa-comment-dots" />, label: "messages" },
     { icon: <i className="fa-solid fa-sign-out" />, label: "logout" },
@@ -101,8 +101,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   e.preventDefault();
                   if (item.label === "search") {
                     handleSearchClick();
-                  } else if (item.label === "notifications") {
-                    handleNotificationsClick(); // New handler for notifications
                   } else if (item.label === "logout") {
                     logout();
                   } else {
@@ -118,7 +116,14 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 <div
                   key={item.label}
                   className={styles.navigationItem}
-                  onClick={() => onClick(item.label)}
+                  onClick={() => {
+                    if (item.label === "notifications") {
+                      handleNotificationsClick();
+                    } else {
+                      onClick(item.label);
+                    }
+                  }
+                  }
                 >
                   {item.icon}
                 </div>

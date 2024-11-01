@@ -8,7 +8,7 @@ from drf_spectacular.utils import inline_serializer
 from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework import status
-
+from django.conf import settings
 from ..serializers.follow_serializer import FollowSerializer
 from ..serializers.user_serializer import UserSerializer
 from ..models import Follow
@@ -346,7 +346,7 @@ class FollowView(APIView):
         
         # TODO: Replace with node name after
         follower_local = False
-        if follower_host.find('127.0.0.1')!=-1:
+        if follower_host.find(settings.BASE_URL)!=-1:
             follower_local = True
 
         # Check if this follow relationship already exists

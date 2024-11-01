@@ -9,6 +9,7 @@ import { useAuth } from "../../state";
 interface ListItemProps {
   isRequest: boolean;
   isPost: boolean;
+  postTitle?: string;
   isLike: boolean;
   isComment?:boolean;
   isFollowerList: boolean;
@@ -31,6 +32,7 @@ interface ListItemProps {
 export default function ListItem({
   isRequest,
   isPost,
+  postTitle,
   isLike,
   isComment,
   isFollowerList,
@@ -117,9 +119,9 @@ export default function ListItem({
 
   let additionalText = "";
   if (isRequest) additionalText = "wants to follow you";
-  else if (isLike) additionalText = "liked your post";
+  else if (isLike) additionalText = `liked your post titled: ${postTitle}`;
   else if (isPost) additionalText = "shared a post with you";
-  else if (isComment) additionalText = "commented on your post";
+  else if (isComment) additionalText = `commented on your post titled: ${postTitle}`;
 
   return (
     <div className={styles.ListItemContainer}>
@@ -160,7 +162,7 @@ export default function ListItem({
           </div>
         )}
 
-        {isPost || isLike || isComment && (
+        {isPost && (
           <img
             className={styles.listImgPost}
             src={
