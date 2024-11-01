@@ -2,10 +2,7 @@ import uuid
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from unittest.mock import patch
 from ..models import Follow, User
-from ..serializers import UserSerializer, FollowSerializer
-from uuid import uuid4
 from urllib.parse import quote
 from django.conf import settings
 
