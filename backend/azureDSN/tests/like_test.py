@@ -11,8 +11,8 @@ class LikesAPITest(APITestCase):
         self.user = User.objects.create(
             display_name="Test User",
             username="Test User",
-            host="http://localhost:8000/",
-            github="http://github.com/testuser",
+            host="http://localhost:8000/api/",
+            github="https://github.com/testuser",
             page="http://localhost:8000/authors/testuser",
             profile_image=None
         )
@@ -20,8 +20,7 @@ class LikesAPITest(APITestCase):
         self.post = Post.objects.create(
             title="Test Post",
             content="This is a test post.",
-            user=self.user,
-            image=None
+            user=self.user
         )
 
         self.like = Like.objects.create(
