@@ -122,7 +122,8 @@ function PostCard({
     const isExternalLink = !post.author.host.includes(window.location.hostname);
 
     if (isExternalLink) {
-      window.location.assign(`${post.author.host}/authors/${post.author.id}`);
+      // Later when able to connect to other nodes, fetch the remote author info using FQID
+      // Then display the remote user info in our layout
     } else {
       const authorURL = `/authors/${post.author.id}`;
       navigate(authorURL);
