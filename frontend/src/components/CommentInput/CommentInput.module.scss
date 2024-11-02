@@ -1,0 +1,90 @@
+.commentInput {
+  display: flex;
+  flex-direction: column;
+}
+
+.commentDisplay {
+  display: flex;
+  flex-direction: row;
+  padding: 0px 0px;
+  padding-top: 5px;
+  .userImageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .textFieldContainer {
+    width: 100%;
+    padding-bottom: 10px;
+  }
+}
+
+.userImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.commentInputField {
+  color: white;
+  width: 100%;
+}
+
+.commentText {
+  color: #d0d0d0;
+}
+
+.commentButtonContainer {
+  display: flex;
+  justify-content: end;
+  gap: 10px;
+  padding: 0px 0px;
+}
+
+.cancelButton {
+  padding: 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    background-color: #ff4d4d;
+    color: #555;
+  }
+}
+
+.commentButton {
+  padding: 10px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    background-color: #70ffaf;
+    color: #555;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: #888;
+    color: #ccc;
+
+    &:hover {
+      background-color: #888;
+      color: #ccc;
+    }
+  }
+}
+
+.comment {
+  display: flex;
+  flex-direction: center;
+  padding: 8px 0;
+}
