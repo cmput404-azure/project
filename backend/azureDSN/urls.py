@@ -33,9 +33,6 @@ urlpatterns = [
     # SingleCommentView
     path('api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/<uuid:comment_serial>/',SingleCommentView.as_view(),name='comment_by_serial'),
     path('api/comments/<path:comment_fqid>/',SingleCommentView.as_view(),name='comment_by_fqid'),
-  
-    # CreateCommentView
-    path('api/authors/<uuid:author_serial>/inbox', CreateCommentView.as_view(), name='inbox'),
 
     # Image API
     path('api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/image/', ImageView.as_view(), name="get_image_by_serial"),
