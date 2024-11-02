@@ -174,7 +174,7 @@ class AuthorsSpecificView(APIView):
         """
         if(author_serial):
             author = get_object_or_404(User, uuid=author_serial)
-            serializer = UserSerializer(author, data=request.data) # Send the whole JSON object everytime so partial won't be True
+            serializer = UserSerializer(author, data=request.data, partial=True)
 
             if serializer.is_valid():
                 serializer.save()
@@ -183,7 +183,7 @@ class AuthorsSpecificView(APIView):
             author_serial = author_fqid.split('/')[-1]
             UUID(author_serial)
             author = get_object_or_404(User, uuid=author_serial)
-            serializer = UserSerializer(author, data=request.data) # Send the whole JSON object everytime so partial won't be True
+            serializer = UserSerializer(author, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=200)

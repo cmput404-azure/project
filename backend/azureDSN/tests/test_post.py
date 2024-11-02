@@ -136,7 +136,7 @@ class PostTests(APITestCase):
         url = reverse('create_post', kwargs={'author_serial': self.test_author.uuid})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreater(len(response.data['results']), 0)
+        self.assertGreater(len(response.data['src']), 0)
         
     def test_get_all_posts_authenticated_as_author(self):
         """Test retrieving all posts when authenticated as the author."""
@@ -149,8 +149,8 @@ class PostTests(APITestCase):
         
         # check that we actually got all two posts, the second one is friends-only so it
         # should be included in the response
-        self.assertEqual(len(response.data['results']), 2)
-        post_titles = [post['title'] for post in response.data['results']]
+        self.assertEqual(len(response.data['src']), 2)
+        post_titles = [post['title'] for post in response.data['src']]
         self.assertIn(self.test_post1.title, post_titles)
         self.assertIn(self.test_post2.title, post_titles)
 
