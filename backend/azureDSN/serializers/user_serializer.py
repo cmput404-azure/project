@@ -66,7 +66,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     # This method gets the custom uuid value and maps it to'id'
     def get_id(self, obj):
-        return f"{obj.host}api/authors/{obj.uuid}"  
+        return f"{obj.host}authors/{obj.uuid}"  
 
     # The returned id field is the value stored in the uuid
     def to_representation(self, instance):
@@ -77,7 +77,7 @@ class UserSerializer(serializers.ModelSerializer):
     def get_profileImage(self, obj):
         if obj.profile_image:  # if the image exists
             return f"{settings.MEDIA_URL}{obj.profile_image}"
-        return None
+
 
     def create(self, validated_data):
         return User.objects.create(**validated_data)

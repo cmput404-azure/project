@@ -49,11 +49,18 @@ export default function ListItem({
   const unFollow = async () => {
     const encodedHost = encodeURIComponent(user.host);
     const encodedId = encodeURIComponent(authProvider.user.uuid);
-    const url = `${encodedHost}/api/authors/${encodedId}`;
+    const url = `${encodedHost}authors/${encodedId}`;
     const encodedUrl = encodeURIComponent(url);
 
+    let userId = user.id;
+    // Check if userId contains a '/' (indicating it's a URL)
+    if (userId.includes('/')) {
+        // Split the URL by '/' and take the last part as the ID
+        userId = userId.replace(/\/+$/, '').split('/').pop() || userId;
+    }
+
     try {
-      const response = await api.delete(`/api/authors/${user.id}/followers/${encodedUrl}/`);
+      const response = await api.delete(`/api/authors/${userId}/followers/${encodedUrl}/`);
       const data = response.data;
     } catch (error) {
       console.error('Fetch error:', error);
@@ -63,7 +70,7 @@ export default function ListItem({
   const sendFollowerRequest = async () => {
     const encodedHost = encodeURIComponent(user.host);
     const encodedId = encodeURIComponent(user.id);
-    const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
+    const encodedUrl = `${encodedHost}authors/${encodedId}`;
 
     try {
       const userResponse = await api.get(`/api/authors/${authProvider.user.uuid}/`);
@@ -91,9 +98,16 @@ export default function ListItem({
 
   const addFollower = async () => {
     const encodedHost = encodeURIComponent(user.host);
-    const encodedId = encodeURIComponent(user.id);
-    const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
 
+    let userId = user.id;
+    // Check if userId contains a '/' (indicating it's a URL)
+    if (userId.includes('/')) {
+        // Split the URL by '/' and take the last part as the ID
+        userId = userId.replace(/\/+$/, '').split('/').pop() || userId;
+    }
+    const encodedId = encodeURIComponent(userId);
+
+    const encodedUrl = `${encodedHost}authors/${encodedId}`;
     try {
       await api.put(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
       await deleteFollowRequest();
