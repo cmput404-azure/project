@@ -37,7 +37,7 @@ function PostCard({
   const [commentCount, setCommentCount] = useState<number>(Array.isArray(post.comments) ? 0 : post.comments.count);
   const [hasLiked, setHasLiked] = useState<boolean>(Array.isArray(post.likes) 
                                                           ? false 
-                                                          : post.likes.src.some((like) => like.author.id.split('/').pop() === authProvider.user.uuid)
+                                                          : authProvider.user && post.likes.src.some((like) => like.author.id.split('/').pop() === authProvider.user.uuid)
                                                     );
   const [imageSrc, setImageSrc] = useState<string>('');
   const navigate = useNavigate();
