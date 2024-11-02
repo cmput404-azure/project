@@ -253,7 +253,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
           fullWidth
           variant="standard"
           size="small"
-          placeholder="Start typing..."
+          placeholder="Enter a title for your new post..."
           value={title}
           onChange={handleTitleChange}
           autoComplete='off'
