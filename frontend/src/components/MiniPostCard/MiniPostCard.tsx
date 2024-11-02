@@ -22,15 +22,14 @@ interface MiniPostCardProps {
 
 
 function MiniPostCard({ post, authorUUID }: MiniPostCardProps) {
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 
-  // Toggle modals
-  const openEditModal = () => setIsEditModalOpen(true);
-  const closeEditModal = () => setIsEditModalOpen(false);
-  const openDeleteModal = () => setIsDeleteModalOpen(true);
-  const closeDeleteModal = () => setIsDeleteModalOpen(false);
+  const openEditModal = () => setEditModal(true);
+  const closeEditModal = () => setEditModal(false);
+  const openDeleteModal = () => setDeleteModal(true);
+  const closeDeleteModal = () => setDeleteModal(false);
 
   // Handle image extraction for Markdown content
   useEffect(() => {
@@ -79,8 +78,8 @@ function MiniPostCard({ post, authorUUID }: MiniPostCardProps) {
       const postId = extractUUID(post.id);
       await api.put(`/api/authors/${extractUUID(authorUUID)}/posts/${postId}/`, updatedPost);
 
-      const followers = await follow.getFollowers(authorUUID);
-      const friends = await follow.getFriends(authorUUID);
+      const followers = await follow.getFollowers(extractUUID(authorUUID));
+      const friends = await follow.getFriends(extractUUID(authorUUID));
       const target = updatedPost.visibility === 1 || updatedPost.visibility === 3 ? followers : friends;
       for (const recipient of target) {
         await inbox.updateInboxPost(
@@ -98,10 +97,10 @@ function MiniPostCard({ post, authorUUID }: MiniPostCardProps) {
   async function handleDeletePost() {
     try {
       const postId = extractUUID(post.id);
-      await api.delete(`/api/authors/${authorUUID}/posts/${postId}/`);
+      await api.delete(`/api/authors/${extractUUID(authorUUID)}/posts/${postId}/`);
 
-      const followers = await follow.getFollowers(authorUUID);
-      const friends = await follow.getFriends(authorUUID);
+      const followers = await follow.getFollowers(extractUUID(authorUUID));
+      const friends = await follow.getFriends(extractUUID(authorUUID));
       const target = post.visibility === 1 || post.visibility === 3 ? followers : friends;
       for (const recipient of target) {
         await inbox.deleteInboxPost(recipient.id, postId);
@@ -139,33 +138,35 @@ function MiniPostCard({ post, authorUUID }: MiniPostCardProps) {
           <i className="fas fa-trash-alt" onClick={openDeleteModal}></i>
         </div>
       </div>
+      <div className={styles.cardContent}>
+        <div className={styles.postTitle}>{post.title}</div>
 
-      {(post.contentType !== ContentType.MARKDOWN && post.contentType !== ContentType.PLAIN) ? (
-        <div className={styles.cardImage}>
-          <img className={styles.postImage} src={"data:image/png;base64,"+post.content} alt={post.description} />
-        </div>
-      )
-        : (
-          <>
-            <div className={styles.cardSummary}>{post.title}</div>
-            <div className={styles.cardContent}>
-              {post.contentType === ContentType.MARKDOWN ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-                  img: ({ src, alt, title }) => {
-                    return (
-                      <img src={transformImageUri(src, alt, title)} alt={alt} title={title} />
-                    );
-                  }
-                }}>
-                  {post.content}
-                </ReactMarkdown>
-              ) : (
-                post.content
-              )}
-            </div>
-          </>
+        {(post.contentType !== ContentType.MARKDOWN && post.contentType !== ContentType.PLAIN) ? (
+          <div className={styles.cardImage}>
+            <img className={styles.postImage} src={"data:image/png;base64," + post.content} alt={post.description} />
+          </div>
         )
-      }
+          : (
+            <>
+              <div className={styles.cardContent}>
+                {post.contentType === ContentType.MARKDOWN ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                    img: ({ src, alt, title }) => {
+                      return (
+                        <img src={transformImageUri(src, alt, title)} alt={alt} title={title} />
+                      );
+                    }
+                  }}>
+                    {post.content}
+                  </ReactMarkdown>
+                ) : (
+                  post.content
+                )}
+              </div>
+            </>
+          )
+        }
+      </div>
 
 
 
@@ -186,14 +187,14 @@ function MiniPostCard({ post, authorUUID }: MiniPostCardProps) {
       </div>
 
       <EditPostModal
-        isOpen={isEditModalOpen}
+        isOpen={editModal}
         onRequestClose={closeEditModal}
         post={post}
         onSubmit={handleUpdatePost}
       />
 
       <DeletePostModal
-        isOpen={isDeleteModalOpen}
+        isOpen={deleteModal}
         onRequestClose={closeDeleteModal}
         onDelete={handleDeletePost}
       />

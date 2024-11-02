@@ -52,6 +52,18 @@ i {
   cursor: pointer;
 }
 
+.cardContent {
+  margin-top: 10px;
+  display: flex;
+  flex-flow: column;
+
+  .postTitle{
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+}
+
 .cardImage {
   margin-top: 10px;
   overflow: hidden;
