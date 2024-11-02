@@ -131,10 +131,10 @@ const CommentInputField = ({ authorDisplayName }) => {
 
 interface Comment {
   id: number;
-  image: string;
   author: string;
-  timePosted: string;
-  text: string;
+  comment: string;
+  contentType: string;
+  published: string;
 }
 
 interface CommentViewProps {
@@ -176,17 +176,22 @@ const CommentView: React.FC<CommentViewProps> = ({
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
                 <img
-                  src={comment.image}
-                  alt={comment.author}
+                  src={
+                    author.profileImage
+                      ? author.profileImage
+                      : `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+                  }
                   className={styles.userImage}
                 />
               </div>
               <div className={styles.commentContent}>
                 <div className={styles.authorTime}>
-                  <div className={styles.commentAuthor}>{comment.author}</div>
-                  <div className={styles.timePosted}>{comment.timePosted}</div>
+                  <div className={styles.commentAuthor}>
+                    {author.displayName}
+                  </div>
+                  <div className={styles.timePosted}>{comment.published}</div>
                 </div>
-                <div className={styles.commentText}>{comment.text}</div>
+                <div className={styles.commentText}>{comment.comment}</div>
               </div>
             </div>
           ))}
