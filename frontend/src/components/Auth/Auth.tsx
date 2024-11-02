@@ -9,6 +9,13 @@ import styles from "./Auth.module.scss";
 import { useAuth } from "../../state";
 import authService from "../../service/auth";
 import styled from "@mui/material/styles/styled";
+import { InputAdornment } from "@mui/material";
+import AccountCircle from "@mui/icons-material/AccountCircle";
+import { Email } from "@mui/icons-material";
+import { GitHub } from "@mui/icons-material";
+import Lock from "@mui/icons-material/Lock";
+import { IconButton } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const StyledTextField = styled(TextField)({
   "& label": {
@@ -38,6 +45,17 @@ const StyledTextField = styled(TextField)({
       border: "1px solid",
       borderColor: "#70ffaf !important",
     },
+    // style the slotPropr input icon color
+    "& .MuiSvgIcon-root": {
+      color: "#fff",
+    },
+    // style the slotProps end adornment icon button
+    "& .MuiIconButton-root": {
+      color: "#fff",
+      backgroundColor: "#2b2b2b",
+      width: "40px",
+      height: "40px",
+    },
   },
 
   "& .MuiFormHelperText-root": {
@@ -52,6 +70,8 @@ function Auth() {
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -125,6 +145,22 @@ function Auth() {
     setConfirmPassword("");
   };
 
+  const handleClickShowPassword = (isConfirm) => {
+    if (isConfirm) {
+      setShowPasswordConfirm(!showPasswordConfirm);
+    } else {
+      setShowPassword(!showPassword);
+    }
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
+  const handleMouseUpPassword = (event) => {
+    event.preventDefault();
+  };
+
   return (
     <div className={styles.auth}>
       <div className={styles.auth__container}>
@@ -140,6 +176,15 @@ function Auth() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AccountCircle />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
           {isRegister && (
             <StyledTextField
@@ -149,6 +194,15 @@ function Auth() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AccountCircle />
+                    </InputAdornment>
+                  ),
+                },
+              }}
             />
           )}
           {isRegister && (
@@ -159,6 +213,15 @@ function Auth() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Email />
+                    </InputAdornment>
+                  ),
+                },
+              }}
             />
           )}
           {isRegister && (
@@ -168,26 +231,87 @@ function Auth() {
               size="small"
               value={githubUsername}
               onChange={(e) => setGithubUsername(e.target.value)}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <GitHub />
+                    </InputAdornment>
+                  ),
+                },
+              }}
             />
           )}
           <StyledTextField
             label="Password"
             variant="outlined"
             size="small"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={
+                        showPassword
+                          ? "hide the password"
+                          : "display the password"
+                      }
+                      onClick={() => handleClickShowPassword(false)}
+                      onMouseDown={handleMouseDownPassword}
+                      onMouseUp={handleMouseUpPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
           {isRegister && (
             <StyledTextField
               label="Confirm Password"
               variant="outlined"
               size="small"
-              type="password"
+              type={showPasswordConfirm ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={
+                          showPassword
+                            ? "hide the password"
+                            : "display the password"
+                        }
+                        onClick={() => handleClickShowPassword(true)}
+                        onMouseDown={handleMouseDownPassword}
+                        onMouseUp={handleMouseUpPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
             />
           )}
           <div className={styles.auth__container__footer}>
