@@ -11,3 +11,4 @@ from .follow_request import FollowRequest
 from .inbox import Inbox
 from .inbox_item import InboxItem
 from .site_config import SiteConfiguration
+from .share import Share

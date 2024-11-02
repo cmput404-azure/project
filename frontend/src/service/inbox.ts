@@ -20,7 +20,7 @@ class InboxService{
 
     /* 
         Update the post in inbox
-        @param uuid: string - the uuid of the user
+        @param uuid: string - the fqid of the user
                post_id: string - the fqid of the post
                title: string - the new title of the post
                content: string - the new content of the post
@@ -36,6 +36,7 @@ class InboxService{
     ): Promise<string> {
         try {
             post_id = post_id.split('/').pop()
+            uuid = uuid.split('/').pop()
             const response = await api.put<{ message: string }>(`/api/authors/${uuid}/inbox/`, {
                 id: post_id,
                 title,
@@ -59,6 +60,7 @@ class InboxService{
     public async deleteInboxPost(uuid: string, post_id: string): Promise<string> {
         try {
             post_id = post_id.split('/').pop()
+            uuid = uuid.split('/').pop()
             const config = {
                 headers: {},
                 data: {
@@ -102,11 +104,12 @@ class InboxService{
 
     /* 
     Send a inbox item to the inbox of a user
-    @param uuid: string - the uuid of the user
+    @param uuid: string - the fqid of the user
            inbox_item: object - the inbox item to be sent
     @returns: message: string 
     */
     public async sendPostToInbox(uuid: string, inbox_item: object): Promise<string> {
+        uuid = uuid.split('/').pop()
         try {
             const inboxResponse = await api.post<{ message: string }>(`/api/authors/${uuid}/inbox/`, inbox_item);
             return inboxResponse.data.message;
