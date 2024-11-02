@@ -1,7 +1,6 @@
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from ..models import Post, User, Follow
-from rest_framework.authtoken.models import Token
 
 class StreamViewTest(APITestCase):
     def setUp(self):
@@ -16,8 +15,6 @@ class StreamViewTest(APITestCase):
             page="http://localhost:8000/authors/testuser",
             profile_image=None
         ) # originally unauthenticated
-
-        self.token= Token.objects.get_or_create(user=self.user)
 
         self.friend_user = User.objects.create_user(
             display_name="Friend User",
