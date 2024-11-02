@@ -126,7 +126,7 @@ class InboxView(APIView):
             return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_200_OK)
         
         if "type" not in payload:
-            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_400_BAD_REQUEST)
         
         if payload["type"].lower() == "post":
             return self.delete_post(user_obj, payload, request)
@@ -281,7 +281,7 @@ class InboxView(APIView):
         payload = request.data
        
         if "type" not in payload:
-            return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
 
         if payload["type"].lower() == "post":
             return self.create_post(user_obj, payload, request)
@@ -291,6 +291,8 @@ class InboxView(APIView):
             return self.create_comment(user_obj, payload, request)
         elif payload["type"].lower() == "like":
             return self.create_like(user_obj, payload, request)
+        elif payload["type"].lower() == "share":
+            return self.create_share(user_obj, payload, request)
         else:
             return Response(
                 {"detail": "Invalid type or unhandled type in request."},
@@ -393,13 +395,25 @@ class InboxView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
     
 
+    '''
+    We add into the receiver's inbox as well as create share object in the share model
+    payload is a share object
+    payload = {
+                post: is fqid of shared post
+                user: is fqid of sender 
+               }
+    '''
     def create_share(self, user_object, payload, request):
-        
-        return Response({"message": "Notice's your followers about your post successfully"}, status=status.HTTP_200_OK)
-        
-
-
-
+        serializer = ShareSerializer(data=payload)
+        # post_author = payload["post"].split('/')[-3]
+        # post_author_obj = User.objects.get(uuid = post_author)
+        if serializer.is_valid():
+            share_obj = serializer.save()
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, share_obj)
+            return Response({"message": "Notice post's owner about your share successfully"}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
     
 '''
 This create an inbox item referenced to one of the four model except from case where a post make by a remote user
