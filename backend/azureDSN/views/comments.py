@@ -1,3 +1,4 @@
+import uuid
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -87,18 +88,22 @@ class MultipleCommentsView(APIView):
             GET [local, remote]: the comments on the post
             '''
             post_id = post_serial
-            author_id = author_serial
-            post_obj = get_object_or_404(Post, uuid=post_id)
+            post_obj = get_object_or_404(Post, uuid=post_serial, user__uuid=author_serial)
         else:
             '''
             URL: ://service/api/posts/{POST_FQID}/comments
             vd:POST_FQID: http://nodebbbb/api/authors/222/posts/249
             GET [local, remote]: the comments on the post (that our server knows about)    
             '''
-            print(post_fqid)
             post_id = post_fqid.split('/')[-1]
+
+            # Validate if `post_id` is a valid UUID
+            try:
+                uuid.UUID(post_id)
+            except ValueError:
+                return Response({"detail": "Invalid post FQID."}, status=status.HTTP_400_BAD_REQUEST)
+
             post_obj = get_object_or_404(Post, uuid=post_id)
-            author_id = post_obj.user.uuid
 
         comments = Comment.objects.filter(post=post_obj)
 
@@ -175,16 +180,22 @@ class SingleCommentView(APIView):
             )
         else:
             # Case: Retrieve comment using comment FQID.
+            # try:
+            #     # TODO splitting and getting the last item is wrong as per the requirements
+            #     # we need to make sure that we execute an http request against the fqid since its
+            #     # a valid path and since its foreign we shouldn't be trying to retrieve from our database directly
+            #     # it all should be done via an http request
+            #     comment_id = comment_fqid.split('/')[-1]
+            # except IndexError:
+            #     return Response(
+            #         {"detail": "Invalid comment FQID."}, status=400
+            #     )
             try:
-                # TODO splitting and getting the last item is wrong as per the requirements
-                # we need to make sure that we execute an http request against the fqid since its
-                # a valid path and since its foreign we shouldn't be trying to retrieve from our database directly
-                # it all should be done via an http request
+                # Validate that comment_fqid is a valid UUID
                 comment_id = comment_fqid.split('/')[-1]
-            except IndexError:
-                return Response(
-                    {"detail": "Invalid comment FQID."}, status=400
-                )
+                uuid.UUID(comment_id)  # Raises ValueError if invalid
+            except (IndexError, ValueError):
+                return Response({"detail": "Invalid comment FQID."}, status=status.HTTP_400_BAD_REQUEST)
             comment = get_object_or_404(Comment, uuid=comment_id)
 
         # Serialize the comment object.
