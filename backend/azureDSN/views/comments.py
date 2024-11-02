@@ -3,7 +3,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
-
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes
+from drf_spectacular.utils import inline_serializer
+from rest_framework import serializers
 from ..serializers import *
 from ..models import *
 from ..utils import *
@@ -30,6 +32,54 @@ Both case return a comments object which is a list of comment object
 '''
 class MultipleCommentsView(APIView):
     pagination_provider = CommentsPagination
+
+
+    @extend_schema(
+        summary="Retrieve Comments for a Post",
+        description="Fetches all comments on a specific post, optionally filtered by author.",
+        parameters=[
+            OpenApiParameter(
+                name="author_serial",
+                description="UUID of the author of the post.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="post_serial",
+                description="UUID of the post to retrieve comments for.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="post_fqid",
+                description="Full qualified identifier (FQID) of the post to retrieve comments for.",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=inline_serializer(
+                    name="PaginatedCommentsResponse",
+                    fields={
+                        "type": serializers.CharField(),
+                        "id": serializers.CharField(),
+                        "page": serializers.CharField(),
+                        "page_number": serializers.IntegerField(),
+                        "size": serializers.IntegerField(),
+                        "count": serializers.IntegerField(),
+                        "src": CommentSerializer(many=True),
+                    }
+                ),
+                description="Paginated list of comments for the specified post."
+            ),
+            404: OpenApiResponse(description="Post or author not found.")
+        }
+    )
+
     def get(self, request, author_serial=None, post_serial=None, post_fqid=None):
         if (author_serial):
             '''
@@ -64,7 +114,48 @@ GET [local, remote] get the comment
 '''  
 class SingleCommentView(APIView):
     """Handle retrieval of a single comment."""
-
+    @extend_schema(
+        summary="Retrieve a Single Comment",
+        description="Fetch a single comment by either a local identifier or a fully qualified identifier (FQID).",
+        parameters=[
+            OpenApiParameter(
+                name="author_serial",
+                description="UUID of the author of the post containing the comment.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="post_serial",
+                description="UUID of the post containing the comment.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="comment_serial",
+                description="UUID of the comment itself.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="comment_fqid",
+                description="Fully qualified identifier (FQID) of the comment.",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=CommentSerializer,
+                description="Details of the requested comment."
+            ),
+            400: OpenApiResponse(description="Invalid comment FQID."),
+            404: OpenApiResponse(description="Comment not found.")
+        }
+    )
     def get(self, request, comment_fqid=None, author_serial=None, post_serial=None, comment_serial=None):
         """
         URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
