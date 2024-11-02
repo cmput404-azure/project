@@ -1,8 +1,8 @@
 from rest_framework import serializers
-from ..models import Post, User, Like
+from ..models import Post, User
 from .user_serializer import UserSerializer
-from .comment_serializer import CommentSerializer
-from .like_serializer import LikeSerializer
+# from .comment_serializer import CommentSerializer
+# from .like_serializer import LikeSerializer
 from rest_framework.response import Response
 import base64
 from django.conf import settings
