@@ -38,6 +38,10 @@ export default function UserProfile2() {
       }
    };
 
+   function onDeletePost(postId: string) {
+      setPosts(posts.filter((post) => post.id !== postId));
+   }
+
    useEffect(() => {
       fetchProfileData();
    }, [auth.user.uuid]);
@@ -131,7 +135,7 @@ export default function UserProfile2() {
 
             <section className={styles.posts}>
                {posts.map(post => (
-                  <MiniPostCard key={post.id} post={post} authorUUID={authorData.id} />
+                  <MiniPostCard key={post.id} post={post} authorUUID={authorData.id} onDelete={onDeletePost} />
                ))}
             </section>
          </div>
