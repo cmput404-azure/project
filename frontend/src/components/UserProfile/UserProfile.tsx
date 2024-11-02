@@ -16,6 +16,8 @@ import inbox from "../../service/inbox";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import { useParams } from "react-router-dom";
+import { extractUUID } from "../../util/formatting/extractUUID";
+
 
 // by default isViewing is false which means the user is viewing their own profile
 export default function UserProfile() {
@@ -89,7 +91,7 @@ export default function UserProfile() {
     postId: string,
     visibilityNumber: number
   ) => {
-    setPostToDelete(postId);
+    setPostToDelete(extractUUID(postId));
     setVisibilityNumber(visibilityNumber);
     setIsPostDeleteModalOpen(true);
   };
@@ -120,7 +122,7 @@ export default function UserProfile() {
     let parse = url.split("/");
     let hostDomain = parse.slice(0, 3).join("/") + "/";
 
-    const content = `${hostDomain}#/authors/${authorData.id}`;
+    const content = `${hostDomain}#/authors/${extractUUID(authorData.id)}`;
 
     try {
       await navigator.clipboard.writeText(content);
@@ -236,7 +238,7 @@ export default function UserProfile() {
   }) {
     if (postToEdit.length > 0 && authProvider.user) {
       try {
-        const postId = postToEdit[0].id;
+        const postId = extractUUID(postToEdit[0].id);
 
         // PUT request to update the post
         const response = await api.put(

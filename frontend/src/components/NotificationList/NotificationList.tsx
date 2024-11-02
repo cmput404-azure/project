@@ -83,7 +83,7 @@ export default function NotificationList() {
         <p>{error}</p>
       ) : (
         <div>
-          <ul className={styles.ul}>
+          <ul className={styles.customList}>
             {notifications.map((item, index) => {
               if (item.type === "follow") {
                 return (

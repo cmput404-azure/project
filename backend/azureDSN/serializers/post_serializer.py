@@ -1,14 +1,13 @@
 from rest_framework import serializers
-from ..models import Post, User, Like
+from ..models import Post, User
 from .user_serializer import UserSerializer
-from .comment_serializer import CommentSerializer
-from .like_serializer import LikeSerializer
+# from .comment_serializer import CommentSerializer
+# from .like_serializer import LikeSerializer
 from rest_framework.response import Response
 import base64
 from django.conf import settings
 from urllib.parse import urljoin
-from ..views.likes import LikesView
-from rest_framework.test import APIRequestFactory
+import requests
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
@@ -48,21 +47,32 @@ class PostSerializer(serializers.ModelSerializer):
         post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
         
-        # Create an internal request to the LikesView with the required params
-        likeFactory = APIRequestFactory()
-        likeRequest = likeFactory.get(f'/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes')
-        likeView = LikesView.as_view()
+        # Fetch all likes of the post
+        like_url = f"{settings.BASE_URL}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
         
-        # Call LikesView and capture the response
-        response = likeView(likeRequest, author_serial=instance.user.uuid, post_serial=instance.uuid)
-
-        # Ensure the response is successful and set likes data
-        if response.status_code == 200:
-            representation['likes'] = response.data
-        else:
+        try:
+            response = requests.get(like_url)
+            if response.status_code == 200:
+                representation['likes'] = response.json()
+            else:
+                representation['likes'] = []
+        except requests.RequestException as e:
             representation['likes'] = []
+            
+        # Fetch all comments of the post
+        comment_url = f"{settings.BASE_URL}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
+        
+        try:
+            response = requests.get(comment_url)
+            if response.status_code == 200:
+                representation['comments'] = response.json()
+            else:
+                representation['comments'] = []
+        except requests.RequestException as e:
+            representation['comments'] = []
         
         return representation
+    
     
     def create(self, validated_data):
         author_data = validated_data.pop('user')
@@ -104,15 +114,13 @@ class PostSerializer(serializers.ModelSerializer):
         post.delete()
         return post
     
-
 class CreatePostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
     description = serializers.CharField(required=False)
-    content = serializers.CharField(required=True, allow_blank=False)  # Must contain content (text or base64 image)
-    github_id = serializers.CharField(required=False, allow_null=True)
+    content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
 
     class Meta:
         model = Post
@@ -126,34 +134,30 @@ class CreatePostSerializer(serializers.ModelSerializer):
             'author',
             'published',
             'visibility',
-            'github_id',
         )
 
     def create(self, validated_data):
+        print(f"In create of CreatePostSerializer: {validated_data}")
         author_data = validated_data.pop('user')
 
         if not User.objects.filter(uuid=author_data['uuid']).exists():
-            raise serializers.ValidationError("Error, unauthorized.")
-
-        user = User.objects.get(uuid=author_data['uuid'])
+            return Response({"message": "error, unauthorized"},status=403)
         
+        user = User.objects.get(uuid=author_data['uuid'])
+
         content_type = validated_data.get('content_type')
+        
+
         if content_type in ['image/png;base64', 'image/jpeg;base64', 'application/base64']:
             try:
                 content = validated_data.get('content')
-                base64.b64decode(content)
+                decoded_image = base64.b64decode(content)  # Decode to check if it's valid?
                 validated_data['has_image'] = True
             except (ValueError, TypeError):
-                raise serializers.ValidationError("Content cannot be decoded from base64.")
+                raise serializers.ValidationError("Cannot be encoded into base64.")
             validated_data['has_image'] = True
         else:
             validated_data['has_image'] = False
 
-        # Check GitHub ID to prevent duplicates
-        github_id = validated_data.get('github_id')
-        if github_id:
-            if Post.objects.filter(github_id=github_id).exists():
-                raise serializers.ValidationError("This GitHub activity has already been retrieved.")
-        
         post = Post.objects.create(user=user, **validated_data)
         return post

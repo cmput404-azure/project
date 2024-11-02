@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from ..models import Share
+
 class ShareSerializer(serializers.ModelSerializer):
     class Meta:
         model = Share
@@ -11,5 +12,10 @@ class ShareSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Share.objects.create(**validated_data)
-
+    
+    
+    
+    
+    
+    
     

@@ -224,6 +224,8 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       setDescription("")
       setContent("")
       setImageBase64(null); // Clear image base64 on post submission
+      setActiveCommonMark(false);
+      setActiveIcon("public");
 
     } catch (error) {
       console.error("Error in combined request flow:", error);
@@ -253,7 +255,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
           fullWidth
           variant="standard"
           size="small"
-          placeholder="Start typing..."
+          placeholder="Enter a title for your new post..."
           value={title}
           onChange={handleTitleChange}
           autoComplete='off'

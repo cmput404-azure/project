@@ -2,7 +2,6 @@ import uuid
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from django.contrib.auth import get_user_model
 from ..models import Like, Post, User
 
 class LikesAPITest(APITestCase):
@@ -111,7 +110,7 @@ class LikesAPITest(APITestCase):
         self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/liked/")
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(len(response.data['src']), 1)
-        self.assertEqual(response.data['src'][0]['author']['id'], f"{self.user.uuid}")
+        self.assertEqual(response.data['src'][0]['author']['id'].split('/')[-1], f"{self.user.uuid}")
 
     def test_get_author_likes_invalid_serial(self):
         # Test calling the endpoint using an invalid author serial (does not exist), should return 404
@@ -134,7 +133,7 @@ class LikesAPITest(APITestCase):
         self.assertEqual(response.data['type'], f"likes")
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(len(response.data['src']), 1)
-        self.assertEqual(response.data['src'][0]['author']['id'], f"{self.user.uuid}")
+        self.assertEqual(response.data['src'][0]['author']['id'].split('/')[-1], f"{self.user.uuid}")
 
     def test_get_author_likes_invalid_fqid(self):
         # Test calling the endpoint with an invalid author serial that invalidates the FQID
@@ -180,7 +179,7 @@ class LikesAPITest(APITestCase):
         self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/posts/{self.post.uuid}/likes/")
         self.assertEqual(response.data['count'], 2)
         self.assertEqual(len(response.data['src']), 2)
-        self.assertEqual(response.data['src'][0]['author']['id'], f"{self.user2.uuid}") # the latest one is on top
+        self.assertEqual(response.data['src'][0]['author']['id'].split('/')[-1], f"{self.user2.uuid}") # the latest one is on top
 
     def test_get_post_likes_invalid_serial(self):
         # Test calling the endpoint using an invalid author or post serial, should return 404
@@ -212,7 +211,7 @@ class LikesAPITest(APITestCase):
         self.assertEqual(response.data['type'], f"likes")
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(len(response.data['src']), 1)
-        self.assertEqual(response.data['src'][0]['author']['id'], f"{self.user.uuid}")
+        self.assertEqual(response.data['src'][0]['author']['id'].split('/')[-1], f"{self.user.uuid}")
 
     def test_get_post_likes_invalid_fqid(self):
         # Test calling the endpoint using an invvalid post fqid that invalidates the fqid, should return 400
