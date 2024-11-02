@@ -178,12 +178,16 @@ class FollowCustomView(APIView):
         for followee_id in all_followee_ids:
             remote_follower_q |= Q(remote_follower__endswith=f"/{followee_id}")  # Check if the remote_follower URL ends with the followee_id
 
-        print(remote_follower_q)
         # Now query mutual followers considering both local and remote
-        mutual_followers = Follow.objects.filter(
-            (Q(local_followee_id=user_id) & Q(local_follower_id__in=all_followee_ids)) | 
-            (remote_follower_q & Q(local_followee_id=user_id))
-        )
+        if remote_follower_q:
+            mutual_followers = Follow.objects.filter(
+                (Q(local_followee_id=user_id) & Q(local_follower_id__in=all_followee_ids)) | 
+                (remote_follower_q & Q(local_followee_id=user_id))
+            )
+        else:
+            mutual_followers = Follow.objects.filter(
+                Q(local_followee_id=user_id) & Q(local_follower_id__in=all_followee_ids)
+            )
         combined_friends = []
 
 
@@ -191,7 +195,7 @@ class FollowCustomView(APIView):
         local_friend_ids = mutual_followers.values_list('local_follower_id', flat=True)
 
         remote_friend_ids = mutual_followers.values_list('remote_follower', flat = True)
-        print(remote_friend_ids)
+        print("REMOTE_FRIENDS", remote_friend_ids)
         # remote
         for remote_friend in remote_friend_ids:
             remote_follower_data = fetch_remote_follower_data(remote_friend)
@@ -445,7 +449,11 @@ class FollowView(APIView):
         
         """
         # remote follower
-        follower = Follow.objects.filter(local_followee_id = user_id, remote_follower=follower_url)
+        decoded_url = unquote(follower_url)
+        parts = decoded_url.strip("/").split("/")
+        follower_id = parts[-1]
+   
+        follower = Follow.objects.filter(local_followee_id = user_id, remote_follower__contains=follower_id)
 
         # local follower
         if not follower:
@@ -453,8 +461,9 @@ class FollowView(APIView):
             parts = decoded_url.strip("/").split("/")
             follower_id = parts[-1]
             follower = Follow.objects.filter(local_followee_id = user_id, local_follower_id=follower_id)
-
-        if not follower:  # neither local nor remote
-            return Response(status=404)
         else:
-            return Response(status=200)
+            return Response({"is_follower": True}, status=200)
+        if not follower:  # neither local nor remote
+            return Response({"is_follower": False}, status=200)
+        else:
+            return Response({"is_follower": True},status=200)

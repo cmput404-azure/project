@@ -1,4 +1,4 @@
-import { Follower } from "../models/models";
+import { Follower, Author, User } from "../models/models";
 import { api } from "./config";
 
 export interface FollowerResponse {
@@ -75,14 +75,40 @@ class FollowService{
       }
    }
 
-   public async checkFollowing(uuid: string, follower_url:string): Promise<Boolean> {
+   public async checkFollowing(uuid: string, follower_url:string): Promise<boolean> {
       try {
-         const response = await api.get<Boolean>(`/api/authors/${uuid}/followers/${follower_url}/`);
-         return response.data;
+         const response = await api.get<{ is_follower: boolean }>(`/api/authors/${uuid}/followers/${follower_url}/`);
+         return response.data.is_follower;;
       } 
       catch (error) {
          console.error('Fetch following error:', error);
          return false;
+      }
+   }
+
+   public async unFollow(userId:string, follower:User){
+      //follower is the logged in user, user is the user profile we're viewing
+      const userResponse = await api.get<Author>(`/api/authors/${follower.uuid}/`);
+      const encodedUrl = encodeURIComponent(userResponse.data.id);
+
+      if (userId.includes('/')) {
+         // Split the URL by '/' and take the last part as the ID
+         userId = userId.replace(/\/+$/, '').split('/').pop() || userId;
+     }
+ 
+      try {
+         console.log(`/api/authors/${userId}/followers/${encodedUrl}/`)
+         await api.delete(`/api/authors/${userId}/followers/${encodedUrl}/`);
+      } catch (error) {
+         console.error('Fetch error:', error);
+      }
+   }
+
+   public async addFolower(userId:string, follower_url:string){ 
+      try {
+         await api.put(`/api/authors/${userId}/followers/${follower_url}/`);
+      } catch (error) {
+         console.error('Fetch error:', error);
       }
    }
 }

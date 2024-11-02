@@ -1,16 +1,17 @@
 import { Alert, Avatar, Button, CircularProgress, IconButton, Snackbar } from "@mui/material";
 import { Author, PostData as Post } from "../../models/models";
 import { useEffect, useState } from "react";
-
 import FollowList from "../FollowList/FollowList";
 import { Check, GitHub } from "@mui/icons-material";
 import LinkIcon from '@mui/icons-material/Link';
 import PostCard from "../PostCard/PostCard";
 import ProfileService from "../../service/profile";
-import followService from "../../service/follow";
+import FollowService from "../../service/follow";
+import InboxService from "../../service/inbox";
 import styles from "./PublicProfile.module.scss";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../state";
+import { api } from "../../service/config";
 
 const FollowerModalTypes = {
    follower: "Follower",
@@ -18,7 +19,7 @@ const FollowerModalTypes = {
    friends: "Friends",
 };
 
-interface FollowersModal{
+interface FollowersModal {
    open: boolean;
    type: string;
 }
@@ -32,7 +33,7 @@ export default function PublicProfile() {
    const [followersCount, setFollowersCount] = useState(0);
    const [followingCount, setFollowingCount] = useState(0);
    const [openSnackbar, setOpenSnackbar] = useState(false);
-   const [isAuthenticated, setIsAuthenticated]=useState(true);
+   const [isAuthenticated, setIsAuthenticated] = useState(true);
    const navigate = useNavigate();
 
    // TODO: make the follow button change to unfollow if the user is already following the author, or hidden if the user is the author
@@ -54,17 +55,11 @@ export default function PublicProfile() {
    }, [userID]);
 
    useEffect(() => {
-      if (authProvider.isAuthenticated === false){
-         setIsAuthenticated(false);
-      }else{
-         console.log(authorData);
-      }
       async function fetchCounts() {
          try {
-            const friends = await followService.getFollowers(userID);
-            const followers = await followService.getFollowers(userID);
-            const following = await followService.getFollowing(userID);
-
+            const friends = await FollowService.getFollowers(userID);
+            const followers = await FollowService.getFollowers(userID);
+            const following = await FollowService.getFollowing(userID);
             setFriendsCount(friends.length);
             setFollowersCount(followers.length);
             setFollowingCount(following.length);
@@ -72,22 +67,62 @@ export default function PublicProfile() {
             console.error("Failed to fetch counts:", error);
          }
       }
+      async function checkFollowing(){
+         console.log("CHECK FOLLOWING");
+         const authUser = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
+         let url = `${authUser.data.host}authors/${authProvider.user.uuid}`;
+         const encodedUrl = encodeURIComponent(url);
+         const is_following = await FollowService.checkFollowing(userID, encodedUrl);
+         setIsFollowing(is_following);
+      }
 
       fetchCounts();
+      if (authProvider.isAuthenticated === false) {
+         console.log("FALSE");
+         setIsAuthenticated(false);
+      }else{
+         checkFollowing();
+      }
    }, [userID]);
 
-   function getLink(){
+   
+
+   function getLink() {
       const currentURL = window.location.href;
       navigator.clipboard.writeText(currentURL);
       setOpenSnackbar(true);
    }
 
-   function handleButtonClick(){
-      if (isAuthenticated=== false){
-         navigate('/login');
+   async function handleButtonClick() {
+      if (isFollowing) {
+         // Displaying unfollow button
+         await FollowService.unFollow(userID,authProvider.user);
+      }else{
+         // Displaying follow button, send follower request
+            const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
+            const userInfo = userResponse.data;
+      
+            const followRequest = {
+               type: "follow",
+               summary: `${userInfo.displayName} wants to follow ${authorData.displayName}`,
+               actor: {
+               type: "author",
+               id: `${userInfo.id}`,
+               host: `${userInfo.host}`,
+               displayName: `${userInfo.displayName}`,
+               github: `${userInfo.github}`,
+               page: `${userInfo.page}`,
+               },
+            };
+      
+            await InboxService.sendPostToInbox(userID, followRequest);
       }
    }
-   if (!authorData) return <div className="loading"><CircularProgress/></div>;
+
+   function handleLoginClick(){
+      navigate('/login');
+   }
+   if (!authorData) return <div className="loading"><CircularProgress /></div>;
 
    return (
       <div className={styles.wrapper}>
@@ -104,12 +139,17 @@ export default function PublicProfile() {
                   <div className={styles.user}>
                      <div className={styles.user__main}>
                         <h2 className={styles.display__name}>{authorData.displayName}</h2>
-                        <Button variant="contained" color="primary" size="small" onClick = {handleButtonClick}>
-                           {isFollowing ? "Unfollow" : "Follow"}
+                        <Button
+                           variant="contained"
+                           color="primary"
+                           size="small"
+                           onClick={isAuthenticated ? handleButtonClick : handleLoginClick}
+                        >
+                           {isAuthenticated ? (isFollowing ? "Unfollow" : "Follow") : "Login"}
                         </Button>
                         {authorData.github &&
-                           <IconButton className={styles.icon__button} 
-                              size="small" 
+                           <IconButton className={styles.icon__button}
+                              size="small"
                               onClick={() => window.open(authorData.github, "_blank")}>
                               <GitHub />
                            </IconButton>
@@ -128,9 +168,7 @@ export default function PublicProfile() {
                            <p className={styles.following__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.following })}>
                               <b>{followingCount}</b> following
                            </p>
-                           <p className={styles.friends__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.friends })}>
-                              <b>{friendsCount}</b> {friendsCount === 1 ? "friend" : "friends"}
-                           </p>
+
                            <FollowList
                               isOpen={followersModal.open}
                               onClose={() => setfollowersModal({ open: false, type: "follower" })}
@@ -162,11 +200,11 @@ export default function PublicProfile() {
             autoHideDuration={2000} // auto close after 2s
             onClose={() => setOpenSnackbar(false)}
             anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-          >
+         >
             <Alert onClose={() => setOpenSnackbar(false)} severity="success" sx={{ width: '100%' }}>
-              Link copied to clipboard!
+               Link copied to clipboard!
             </Alert>
-          </Snackbar>
+         </Snackbar>
       </div>
    );
 }
