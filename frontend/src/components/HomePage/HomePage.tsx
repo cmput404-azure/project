@@ -82,24 +82,6 @@ const HomePage = () => {
     setSelectedPost(null);
   };
 
-  // test comments
-  const comments = [
-    {
-      id: 1,
-      image: `https://ui-avatars.com/api/?background=random&name=${"Garfield"}`,
-      author: "Garfield",
-      timePosted: "8h ago",
-      text: "Great Success!",
-    },
-    {
-      id: 2,
-      image: `https://ui-avatars.com/api/?background=random&name=${"Douglas"}`,
-      author: "Douglas",
-      timePosted: "10h ago",
-      text: "Well Done!",
-    },
-  ];
-
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
     setActiveFilterPost(icon);
