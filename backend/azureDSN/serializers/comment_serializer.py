@@ -15,12 +15,12 @@ class CommentSerializer(serializers.ModelSerializer):
     # This method gets the custom uuid value and maps it to'id'
     def get_id(self, obj):
         post = obj.post
-        return f"{post.user.host}authors/{post.user.uuid}/commented/{obj.uuid}"  
+        return f"{post.user.host}/authors/{post.user.uuid}/commented/{obj.uuid}"  
 
     # The returned id field is the value stored in the uuid
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['post_id'] = self.get_id(instance)
+        representation['id'] = self.get_id(instance)
         return representation
 
     # Convert post object into a FQID of post object
