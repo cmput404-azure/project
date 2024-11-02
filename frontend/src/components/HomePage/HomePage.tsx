@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { CircularProgress } from "@mui/material";
 import CommentView from "../CommentView/CommentView";
-import PeopleIcon from '@mui/icons-material/People';
+import PeopleIcon from "@mui/icons-material/People";
 import PostBar from "../PostBar/PostBar";
 import PostCard from "../PostCard/PostCard";
-import PublicIcon from '@mui/icons-material/Public';
+import PublicIcon from "@mui/icons-material/Public";
 import { api } from "../../service/config";
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import stream from "../../service/stream";
@@ -21,6 +21,7 @@ const HomePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  const [commentsList, setCommentsList] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const authProvider = useAuth();
 
@@ -49,16 +50,15 @@ const HomePage = () => {
     fetchUser();
   }, [authProvider.user]); // This effect runs when authProvider.user changes
 
-  const fetchPosts = async () => { 
+  const fetchPosts = async () => {
     if (isUserLoading) return;
-    console.log("Fetch post called");
-    try { 
+    try {
       const publicPosts = await stream.getStream();
       const privatePosts = await stream.getStream(true);
       setPublicPosts(decodeBase64ToUrl(publicPosts));
       setNonPublicPosts(decodeBase64ToUrl(privatePosts));
-      setIsLoading(false); }
-    catch (err) { 
+      setIsLoading(false);
+    } catch (err) {
       console.log(err);
       setError("Failed to fetch posts. Please try again.");
     }
@@ -68,12 +68,13 @@ const HomePage = () => {
     fetchPosts();
     const interval = setInterval(fetchPosts, 60000);
     return () => clearInterval(interval); // Clean up the interval on component unmount
-    }, [isUserLoading]);
+  }, [isUserLoading]);
 
   // handle when the comment button is clicked
   const handleCommentButtonClick = (post: any) => {
     setIsCommentModalOpen(true);
     setSelectedPost(post);
+    setCommentsList(post.comments.src);
   };
   // handle when the comment modal is closed
   const handleCommentModalClose = () => {
@@ -81,30 +82,17 @@ const HomePage = () => {
     setSelectedPost(null);
   };
 
-  // test comments
-  const comments = [
-    {
-      id: 1,
-      image: `https://ui-avatars.com/api/?background=random&name=${"Garfield"}`,
-      author: "Garfield",
-      timePosted: "8h ago",
-      text: "Great Success!",
-    },
-    {
-      id: 2,
-      image: `https://ui-avatars.com/api/?background=random&name=${"Douglas"}`,
-      author: "Douglas",
-      timePosted: "10h ago",
-      text: "Well Done!",
-    },
-  ];
-
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
     setActiveFilterPost(icon);
   }
 
-  if (isLoading) return <div className={"loading"}><CircularProgress/></div>;
+  if (isLoading)
+    return (
+      <div className={"loading"}>
+        <CircularProgress />
+      </div>
+    );
   if (error) return <p>{error}</p>;
 
   const displayedPosts =
@@ -123,7 +111,7 @@ const HomePage = () => {
               }`}
               onClick={() => handleFilterPost("all")}
             >
-              <PublicIcon className={styles.icon}/>
+              <PublicIcon className={styles.icon} />
             </div>
             <div
               className={`${styles.icon_section} ${
@@ -133,14 +121,14 @@ const HomePage = () => {
               }`}
               onClick={() => handleFilterPost("unlisted_friends-only")}
             >
-              <PeopleIcon className={styles.icon}/>
+              <PeopleIcon className={styles.icon} />
             </div>
           </div>
         )}
         {displayedPosts.map((post) => (
           <PostCard
             key={post.id}
-            post = {post}
+            post={post}
             onCommentButtonClick={() => handleCommentButtonClick(post)}
           />
         ))}
@@ -155,13 +143,10 @@ const HomePage = () => {
           selectedPost &&
           displayedPosts.find((post) => post.id === selectedPost.id) ? (
             // pass in the selected post for the modal to display
-            <PostCard
-              key={selectedPost.id}
-              post = {selectedPost}
-            />
+            <PostCard key={selectedPost.id} post={selectedPost} />
           ) : null
         }
-        comments={comments}
+        comments={commentsList ? commentsList : []}
         author={user}
       />
     </div>
@@ -170,11 +155,11 @@ const HomePage = () => {
 
 export default HomePage;
 
-
-
-
-      {/* Second Section: Author Post */}
-      {/* <div className={styles.authorSection}>
+{
+  /* Second Section: Author Post */
+}
+{
+  /* <div className={styles.authorSection}>
         <h2 className={styles.recommendedTitle}>Recommended Author</h2>
         <AuthorPost
           authorImage={logo}
@@ -183,4 +168,5 @@ export default HomePage;
           postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
           onAddClick={handleAddClick}
         />
-      </div> */}
+      </div> */
+}
