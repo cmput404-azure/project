@@ -16,6 +16,7 @@ import remarkGfm from 'remark-gfm';
 import { useNavigate } from 'react-router-dom';
 
 import { api } from "../../service/config";
+import { extractUUID } from "../../util/formatting/extractUUID";
 
 interface PostCardProps {
   post: Post
@@ -110,7 +111,7 @@ function PostCard({
       // Later when able to connect to other nodes, fetch the remote author info using FQID
       // Then display the remote user info in our layout
     } else {
-      const authorURL = `/authors/${post.author.id}`;
+      const authorURL = `/authors/${extractUUID(post.author.id)}`;
       navigate(authorURL);
     }
  };
