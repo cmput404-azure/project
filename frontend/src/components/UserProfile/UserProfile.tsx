@@ -10,14 +10,13 @@ import FollowList from "../FollowList/FollowList";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import { api } from "../../service/config";
+import { extractUUID } from "../../util/formatting/extractUUID";
 import follow from "../../service/follow";
 import followService from "../../service/follow";
 import inbox from "../../service/inbox";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import { useParams } from "react-router-dom";
-import { extractUUID } from "../../util/formatting/extractUUID";
-
 
 // by default isViewing is false which means the user is viewing their own profile
 export default function UserProfile() {
@@ -418,26 +417,15 @@ export default function UserProfile() {
       <hr className={styles.horizontalLine} />
 
       <section className={styles.userPostContainer}>
-        <section className={styles.userPosts}>
+        <div className={styles.userPosts}>
           {authorPosts.map((post) => (
             <MiniPostCard
               key={post.id}
-              author={post.author.displayName}
-              title={post.title}
-              time={post.published}
-              content={post.content}
-              likes={1523382}
-              saves={250}
-              comments={10000}
-              canDelete={isEditing}
-              handleDelete={() =>
-                handleDeletePostButtonClicked(post.id, post.visibility)
-              }
-              canEdit={isEditing}
-              handleEdit={() => handleEditPostButtonClicked(post.id)}
+              authorUUID={authorData.id}
+              post={post}
             />
           ))}
-        </section>
+        </div>
       </section>
       <EditProfileModal
         isOpen={isEditingProfile}

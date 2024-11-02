@@ -3,20 +3,15 @@ import { Author, PostData as Post } from "../../models/models";
 import { useEffect, useState } from "react";
 
 import FollowList from "../FollowList/FollowList";
+import { FollowerModalTypes } from "../../models/modelTypes";
 import { GitHub } from "@mui/icons-material";
 import LinkIcon from '@mui/icons-material/Link';
+import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import PostCard from "../PostCard/PostCard";
 import ProfileService from "../../service/profile";
 import followService from "../../service/follow";
 import styles from "./UserProfile2.module.scss";
 import { useAuth } from "../../state";
-import { useParams } from "react-router-dom";
-
-const FollowerModalTypes = {
-   follower: "Follower",
-   following: "Following",
-   friends: "Friends",
-};
 
 interface FollowersModal{
    open: boolean;
@@ -106,13 +101,13 @@ export default function UserProfile2() {
                            <p className={styles.posts__count} >
                               <b>{posts.length}</b> {posts.length === 1 ? "post" : "posts"}
                            </p>
-                           <p className={styles.followers__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.follower })}>
+                           <p className={styles.followers__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FOLLOWER })}>
                               <b>{followersCount}</b> {followersCount === 1 ? "follower" : "followers"}
                            </p>
-                           <p className={styles.following__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.following })}>
+                           <p className={styles.following__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FOLLOWING })}>
                               <b>{followingCount}</b> following
                            </p>
-                           <p className={styles.friends__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.friends })}>
+                           <p className={styles.friends__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FRIENDS })}>
                               <b>{friendsCount}</b> {friendsCount === 1 ? "friend" : "friends"}
                            </p>
                            <FollowList
@@ -136,7 +131,7 @@ export default function UserProfile2() {
 
             <section className={styles.posts}>
                {posts.map(post => (
-                  <PostCard key={post.id} post={post} />
+                  <MiniPostCard key={post.id} post={post} authorUUID={authorData.id} />
                ))}
             </section>
          </div>

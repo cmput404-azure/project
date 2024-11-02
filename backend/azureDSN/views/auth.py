@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from ..models.site_config import SiteConfiguration
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
+from django.conf import settings
 
 class LoginView(APIView):
     def post(self, request):
@@ -114,7 +115,7 @@ class CheckAuthView(APIView):
                 'user': {
                     'username': request.user.username,
                     'uuid': request.user.uuid,
-                    'profileImage': request.user.profile_image.url if request.user.profile_image else None
+                    'profileImage': f"{settings.BASE_URL}/{request.user.profile_image.url}" if request.user.profile_image else None
                 }
             }
             return Response(response, status=status.HTTP_200_OK)
