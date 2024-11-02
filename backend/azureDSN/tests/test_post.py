@@ -149,8 +149,8 @@ class PostTests(APITestCase):
         
         # check that we actually got all two posts, the second one is friends-only so it
         # should be included in the response
-        self.assertEqual(len(response.data['results']), 2)
-        post_titles = [post['title'] for post in response.data['results']]
+        self.assertEqual(len(response.data['src']), 2)
+        post_titles = [post['title'] for post in response.data['src']]
         self.assertIn(self.test_post1.title, post_titles)
         self.assertIn(self.test_post2.title, post_titles)
 

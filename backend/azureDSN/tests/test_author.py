@@ -138,7 +138,7 @@ class AuthorTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         self.assertEqual(response.data['type'], 'author')
-        self.assertEqual(response.data['id'], f"{self.test_author.uuid}")
+        self.assertEqual(response.data['id'], f"http://localhost:8000/api/authors/{self.test_author.uuid}")
         self.assertEqual(response.data['displayName'], self.test_author.display_name)
         self.assertEqual(response.data['host'], 'http://localhost:8000/api/')
         self.assertEqual(response.data['github'], 'github.com/testauthor')
