@@ -36,4 +36,4 @@ jobs:
       env:
         DJANGO_SETTINGS_MODULE: server.settings
       run: |
-        python manage.py test
+        python -W ignore manage.py test
