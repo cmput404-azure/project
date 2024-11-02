@@ -273,8 +273,9 @@ class InboxViewTestCase(TestCase):
     #     self.assertEqual(len(inbox_obj.items.all()), 1)
     #     self.assertEqual(response.data["message"], "Notice post's owner about your like successfully")
         
+    pass
 
-import random 
+import random
 
 def create_user():
     random_suffix = random.randint(1000, 9999)  # Add random digits to ensure uniqueness
