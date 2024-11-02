@@ -4,8 +4,6 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from ..models import User, Inbox, InboxItem, Post, FollowRequest
 from django.contrib.contenttypes.models import ContentType
-import time
-
 
 class InboxViewTestCase(TestCase):
     def setUp(self):

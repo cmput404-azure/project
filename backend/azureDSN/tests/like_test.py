@@ -2,7 +2,6 @@ import uuid
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from django.contrib.auth import get_user_model
 from ..models import Like, Post, User
 
 class LikesAPITest(APITestCase):

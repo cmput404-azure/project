@@ -224,6 +224,8 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       setDescription("")
       setContent("")
       setImageBase64(null); // Clear image base64 on post submission
+      setActiveCommonMark(false);
+      setActiveIcon("public");
 
     } catch (error) {
       console.error("Error in combined request flow:", error);
