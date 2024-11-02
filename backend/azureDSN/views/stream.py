@@ -92,13 +92,11 @@ class AuthStreamView(APIView):
             followees = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True)
 
             # Retrieve mutual followers (friends: both following each other)
+            # Referenced FollowCustomView for this query
             friends = Follow.objects.filter(
-                local_follower=user,
-                local_followee__in=followees
-            ).filter(
-                local_follower__in=followees,
-                local_followee=user
-            ).values_list('local_followee', flat=True)
+                local_followee=user,
+                local_follower_id__in=followees
+            ).values_list('local_follower_id', flat=True)
 
             # Query for followees' unlisted posts
             followees_unlisted_posts = Post.objects.filter(
@@ -118,11 +116,7 @@ class AuthStreamView(APIView):
             all_relevant_posts = all_relevant_posts.order_by("-created_at").distinct()
             combined_data = PostSerializer(all_relevant_posts, many=True).data
 
-            for data in combined_data:
-                print(data)
-
             return Response(combined_data, status=status.HTTP_200_OK)
-
         else:
             return Response([], status=status.HTTP_200_OK)
             
