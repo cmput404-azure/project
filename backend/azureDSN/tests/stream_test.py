@@ -20,7 +20,6 @@ class StreamViewTest(APITestCase):
             title="Test Post 1",
             content="This is a test post 1.",
             user=self.user,
-            image=None,
             visibility=1
         )
 
@@ -28,7 +27,6 @@ class StreamViewTest(APITestCase):
             title="Test Post 2",
             content="This is a test post 2.",
             user=self.user,
-            image=None,
             visibility=1
         )
 
@@ -36,7 +34,6 @@ class StreamViewTest(APITestCase):
             title="Test Post 3",
             content="This is a deleted post.",
             user=self.user,
-            image=None,
             visibility=4
         )
 
