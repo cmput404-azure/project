@@ -392,6 +392,14 @@ class InboxView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
     
+
+    def create_share(self, user_object, payload, request):
+        
+        return Response({"message": "Notice's your followers about your post successfully"}, status=status.HTTP_200_OK)
+        
+
+
+
     
 '''
 This create an inbox item referenced to one of the four model except from case where a post make by a remote user
