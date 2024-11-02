@@ -136,7 +136,7 @@ class PostTests(APITestCase):
         url = reverse('create_post', kwargs={'author_serial': self.test_author.uuid})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreater(len(response.data['results']), 0)
+        self.assertGreater(len(response.data['src']), 0)
         
     def test_get_all_posts_authenticated_as_author(self):
         """Test retrieving all posts when authenticated as the author."""
