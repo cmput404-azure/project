@@ -5,7 +5,7 @@ from rest_framework.test import APIClient
 from ..models import User, Inbox, InboxItem, Post, FollowRequest
 from django.contrib.contenttypes.models import ContentType
 
-class InboxViewTestCase(TestCase):
+# class InboxViewTestCase(TestCase):
     # def setUp(self):
     #     self.client = APIClient()
     #     self.user = create_user()
@@ -273,7 +273,6 @@ class InboxViewTestCase(TestCase):
     #     self.assertEqual(len(inbox_obj.items.all()), 1)
     #     self.assertEqual(response.data["message"], "Notice post's owner about your like successfully")
         
-    pass
 
 import random
 
