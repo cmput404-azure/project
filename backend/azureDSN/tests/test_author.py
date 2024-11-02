@@ -75,20 +75,21 @@ class AuthorTests(APITestCase):
     def test_retrieve_authors_all(self):
         """Test retrieving all authors without pagination."""
         url = reverse('authors_all')
-        response = self.client.get(url)
+        string_uuid = str(self.test_author.uuid)
+        url_with_params = f"{url}?user={string_uuid}"
+        response = self.client.get(url_with_params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         payload = response.data
-        self.assertEqual(len(payload), 7)
+        self.assertEqual(len(payload), 6)
         for author in payload:
             print(author)
-            self.assertEqual(author["type"], "author")
-            self.assertIn(author["id"], [str(self.test_author.uuid), str(self.test_author2.uuid), str(self.test_author3.uuid), str(self.test_author4.uuid), str(self.test_author5.uuid), str(self.test_author6.uuid), str(self.test_author7.uuid)])
-            self.assertIn(author["displayName"], ['Test Author', 'Test Author2', 'Test Author3', 'Test Author4', 'Test Author5', 'Test Author6', 'Test Author7'])
+            self.assertIn(str(author["id"]), [str(self.test_author.uuid), str(self.test_author2.uuid), str(self.test_author3.uuid), str(self.test_author4.uuid), str(self.test_author5.uuid), str(self.test_author6.uuid), str(self.test_author7.uuid)])
+            self.assertIn(author["displayName"], ['Test Author2', 'Test Author3', 'Test Author4', 'Test Author5', 'Test Author6', 'Test Author7'])
             self.assertIn(author["host"], ['http://localhost:8000/api/'])
             self.assertIn(author["github"], ['github.com/testauthor', 'github.com/testauthor2', 'github.com/testauthor3', 'github.com/testauthor4', 'github.com/testauthor5', 'github.com/testauthor6', 'github.com/testauthor7'])
             self.assertIn(author["page"], ['http://localhost:8000/api/authors/testauthor', 'http://localhost:8000/api/authors/testauthor2', 'http://localhost:8000/api/authors/testauthor3', 'http://localhost:8000/api/authors/testauthor4', 'http://localhost:8000/api/authors/testauthor5', 'http://localhost:8000/api/authors/testauthor6', 'http://localhost:8000/api/authors/testauthor7'])
-    
+            self.assertEqual(author["has_requested"], False)
     # TODO: test getting authors with pagination 
     # def test_retrieve_authors_paginated(self):
     
