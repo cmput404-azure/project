@@ -46,13 +46,31 @@ export default function ListItem({
   const authProvider = useAuth();
   const [isRequested, setIsRequested] = useState(false);
   const navigate = useNavigate();
-
+  const [userId, setUserId] = useState("");
   useEffect(()=>{
-    let userId = user.id;
-    userId = userId.replace(/\/+$/, '').split('/').pop() || userId;
-    console.log("USERID", userId);
-    
-  })
+    const fetchData = async () => {
+      // Format the user ID
+      let formatted_userId = user.id.replace(/\/+$/, '').split('/').pop();
+      setUserId(formatted_userId);
+  
+      // Check inbox of the user ID
+      const userInbox = await InboxService.getInbox(formatted_userId);
+      await Promise.all(
+        userInbox.map(async (item: any) => {
+          if (item.type === "follow") {
+            let actorId = item.actor.id.replace(/\/+$/, '').split('/').pop();
+            if (actorId===authProvider.user.uuid){
+              setIsRequested(true);
+            }
+          }
+        })
+      );
+
+    };
+  
+    fetchData(); // Call the async function
+  }, []);
+
   const unFollow = async () => {
     await FollowService.unFollow(user.id, authProvider.user);
   };
@@ -112,7 +130,7 @@ export default function ListItem({
   return (
     <div className={styles.ListItemContainer}>
       <div className={styles.container}>
-        <Link to={`/authors/${user.id}`} className={styles.profileLink} onClick={navigateToProfile}>
+        <Link to={`/authors/${userId}`} className={styles.profileLink} onClick={navigateToProfile}>
           <img
             className={styles.listImg}
             src={

@@ -203,6 +203,7 @@ export default function UserProfile() {
   async function updateUserInfo(data) {
     try {
       if (authProvider.user) {
+        data.id = data.id.replace(/\/+$/, '').split('/').pop();
         const response = await api.put(
           `/api/authors/${authProvider.user.uuid}/`,
           data

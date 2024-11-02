@@ -9,6 +9,7 @@ import Modal from 'react-modal';
 import { api } from "../../service/config";
 import styles from './FollowList.module.scss';
 import { useAuth } from "../../state";
+import Author from "../../models/models"
 
 interface Follower {
   displayName: string;
@@ -24,11 +25,12 @@ interface FollowerListProps {
   isOpen: boolean;
   onClose: () => void;
   isFollowerList: string;
+  profileId?:string;
 }
 
 Modal.setAppElement('#root');
 
-export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerListProps) {
+export default function FollowList({ isOpen, onClose, isFollowerList, profileId,}: FollowerListProps) {
   const [followers, setFollowers] = useState<Follower[]>([]);
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -50,7 +52,12 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
 
   const fetchFriends = async () => {
     try {
-      const data = await follow.getFriends(authProvider.user.uuid);
+      let data = null;
+      if (profileId){
+        data = await follow.getFriends(profileId);
+      }else{
+        data = await follow.getFriends(authProvider.user.uuid);
+      }
       setFollowers(data);
       setLoading(false);
     } catch (error) {
@@ -62,9 +69,14 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
 
   const fetchFollowers = async () => {
     try {
-      const data = await follow.getFollowers(authProvider.user.uuid);
+      let data = null;
+      if (profileId){
+        console.log("PROFILEID", profileId)
+        data = await follow.getFollowers(profileId);
+      }else{
+        data = await follow.getFollowers(authProvider.user.uuid);
+      }
       setFollowers(data);
-
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
@@ -74,7 +86,12 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
 
   const fetchFollowing = async () => {
     try {
-      const data = await follow.getFollowing(authProvider.user.uuid);
+      let data = null;
+      if (profileId){
+        data = await follow.getFollowing(profileId);
+      }else{
+        data = await follow.getFollowing(authProvider.user.uuid);
+      }
       setFollowers(data);
       setLoading(false);
     } catch (error) {
@@ -107,7 +124,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
                 isRequest={false}
                 isPost={false}
                 isLike={false}
-                isFollowerList={isFollowerList === "Following"}
+                isFollowerList={profileId ? false : isFollowerList === "Following"}
                 isUserList={false}
                 user={follower}
               />
