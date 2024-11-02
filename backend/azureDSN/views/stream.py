@@ -81,7 +81,6 @@ class AuthStreamView(APIView):
             print(f"the user uuid: {author_uuid}")
             # get author (user) object
             user = get_object_or_404(User, uuid=author_uuid)
-            user_inbox = get_object_or_404(Inbox, user=user)
 
             # Query for unlisted and friends-only posts of this user (visibility=2 and visibility=3)
             unlisted_and_friends_posts = Post.objects.filter(
@@ -92,34 +91,38 @@ class AuthStreamView(APIView):
             # Retrieve the followees (users the current user is following)
             followees = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True)
 
-            # Retrieve the mutual followers (friends: both following each other)
+            # Retrieve mutual followers (friends: both following each other)
             friends = Follow.objects.filter(
-                Q(local_follower=user, local_followee__in=followees) |
-                Q(local_followee=user, local_follower__in=followees)
+                local_follower=user,
+                local_followee__in=followees
+            ).filter(
+                local_follower__in=followees,
+                local_followee=user
             ).values_list('local_followee', flat=True)
 
-            followees_set = set(followees)
-            friends_set = set(friends)
+            # Query for followees' unlisted posts
+            followees_unlisted_posts = Post.objects.filter(
+                user__in=followees,
+                visibility=3
+            )
 
-            relevant_posts = Post.objects.filter(
-                Q(user__in=friends_set, visibility=3) |  # Friends-only posts
-                Q(user__in=followees_set, visibility=2)  # Followees' posts
-            ).order_by("-created_at")
+            # Query for friends' friends-only posts
+            friends_only_posts = Post.objects.filter(
+                user__in=friends,
+                visibility=2
+            )
 
-            # Serialize both datasets
-            unlisted_and_friends_serializer = PostSerializer(unlisted_and_friends_posts, many=True)
-            relevant_serializer = PostSerializer(relevant_posts, many=True)
+            all_relevant_posts = unlisted_and_friends_posts | followees_unlisted_posts | friends_only_posts
 
-            # Combine serialized data without duplicates (using unique post UUIDs)
-            combined_data = {post['id']: post for post in (unlisted_and_friends_serializer.data + relevant_serializer.data)}
-            combined_data_list = list(combined_data.values())  # Convert back to list
+            # Remove duplicates and sort by creation date
+            all_relevant_posts = all_relevant_posts.order_by("-created_at").distinct()
+            combined_data = PostSerializer(all_relevant_posts, many=True).data
 
-            # print(combined_data)
+            for data in combined_data:
+                print(data)
 
-            combined_data_sorted = sorted(combined_data_list, key=lambda post: post.get('published'), reverse=True)
-            # combined_data_sorted = sorted(combined_data, key=lambda post: post.created_at, reverse=True)
+            return Response(combined_data, status=status.HTTP_200_OK)
 
-            return Response(combined_data_sorted, status=status.HTTP_200_OK)
         else:
             return Response([], status=status.HTTP_200_OK)
             
