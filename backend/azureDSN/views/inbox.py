@@ -294,7 +294,7 @@ class InboxView(APIView):
         elif payload["type"].lower() == "like":
             return self.create_like(user_obj, payload, request)
         elif payload["type"].lower() == "share":
-            return self.create_share(user_obj, payload, request)
+            return self.create_share(user_obj, payload, author_serial)
         else:
             return Response(
                 {"detail": "Invalid type or unhandled type in request."},
@@ -405,18 +405,44 @@ class InboxView(APIView):
                 user: is fqid of sender 
                }
     '''
-    def create_share(self, user_object, payload, request):
-        serializer = ShareSerializer(data=payload)
-        # post_author = payload["post"].split('/')[-3]
-        # post_author_obj = User.objects.get(uuid = post_author)
-        if serializer.is_valid():
-            share_obj = serializer.save()
+    def create_share(self, user_object, payload, author_serial):
+        user_object = User.objects.get(uuid=author_serial)
+        # Check if a Share with the same post and receiver already exists
+        # If yes, only add to inbox to be displayed in notification
+        if Share.objects.filter(post=payload["post"], receiver=user_object).exists():
+            share_obj = Share.objects.get(receiver = user_object)
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, share_obj)
-            return Response({"message": "Notice post's owner about your share successfully"}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "This post has already been shared with the receiver."},
+                status=status.HTTP_200_OK
+            )
+
+        # Create the Share object if it doesn't already exist
+        share_obj = Share.objects.create(
+            user=payload["user"],
+            post=payload["post"],
+            receiver=user_object,
+            type="share"
+        )
+        
+        # Serialize and validate
+        serializer = ShareSerializer(share_obj, data=payload)
+        if serializer.is_valid():
+            share_obj = serializer.save()
+            
+            # Get or create the Inbox for the receiver and add the Share object to it
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, share_obj)
+            
+            return Response(
+                {"message": "Notice post's owner about your share successfully"},
+                status=status.HTTP_200_OK
+            )
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
-    
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 '''
 This create an inbox item referenced to one of the four model except from case where a post make by a remote user
 sending to local nodes, then treat it as a JSON data because we don't want to store/have it in our database
