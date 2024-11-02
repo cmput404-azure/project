@@ -6,7 +6,12 @@ import CommentInputField from "../CommentInput/CommentInput";
 
 interface Comment {
   id: number;
-  author: string;
+  author: {
+    id: string;
+    type: string;
+    displayName: string;
+    profileImage?: string;
+  };
   comment: string;
   contentType: string;
   published: string;
@@ -27,6 +32,8 @@ const CommentView: React.FC<CommentViewProps> = ({
   comments,
   author,
 }) => {
+  console.log("Comments", comments);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -52,7 +59,7 @@ const CommentView: React.FC<CommentViewProps> = ({
                   src={
                     author.profileImage
                       ? author.profileImage
-                      : `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+                      : `https://ui-avatars.com/api/?background=random&name=${comment.author.displayName}`
                   }
                   className={styles.userImage}
                 />
@@ -60,7 +67,7 @@ const CommentView: React.FC<CommentViewProps> = ({
               <div className={styles.commentContent}>
                 <div className={styles.authorTime}>
                   <div className={styles.commentAuthor}>
-                    {author.displayName}
+                    {comment.author.displayName}
                   </div>
                   <div className={styles.timePosted}>{comment.published}</div>
                 </div>
