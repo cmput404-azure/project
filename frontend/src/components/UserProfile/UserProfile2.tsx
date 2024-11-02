@@ -1,4 +1,4 @@
-import { Alert, Avatar, Button, IconButton, Snackbar } from "@mui/material";
+import { Alert, Avatar, Button, CircularProgress, IconButton, Snackbar } from "@mui/material";
 import { Author, PostData as Post } from "../../models/models";
 import { useEffect, useState } from "react";
 
@@ -8,7 +8,8 @@ import LinkIcon from '@mui/icons-material/Link';
 import PostCard from "../PostCard/PostCard";
 import ProfileService from "../../service/profile";
 import followService from "../../service/follow";
-import styles from "./PublicProfile.module.scss";
+import styles from "./UserProfile2.module.scss";
+import { useAuth } from "../../state";
 import { useParams } from "react-router-dom";
 
 const FollowerModalTypes = {
@@ -22,7 +23,7 @@ interface FollowersModal{
    type: string;
 }
 
-export default function PublicProfile() {
+export default function UserProfile2() {
    const [authorData, setAuthorData] = useState<Author | null>(null);
    const [posts, setPosts] = useState<Post[]>([]);
    const [isFollowing, setIsFollowing] = useState<boolean>(false);
@@ -31,15 +32,12 @@ export default function PublicProfile() {
    const [followersCount, setFollowersCount] = useState(0);
    const [followingCount, setFollowingCount] = useState(0);
    const [openSnackbar, setOpenSnackbar] = useState(false);
-
-   // TODO: make the follow button change to unfollow if the user is already following the author, or hidden if the user is the author
-
-   const { userID } = useParams<{ userID: string }>();
+   const auth = useAuth();
 
    const fetchProfileData = async () => {
-      if (userID) {
-         const author = await ProfileService.fetchAuthorData(userID);
-         const posts = await ProfileService.fetchAuthorPosts(userID);
+      if (auth.isAuthenticated && auth.user.uuid) {
+         const author = await ProfileService.fetchAuthorData(auth.user.uuid);
+         const posts = await ProfileService.fetchAuthorPosts(auth.user.uuid);
          setAuthorData(author);
          setPosts(posts);
       }
@@ -47,14 +45,14 @@ export default function PublicProfile() {
 
    useEffect(() => {
       fetchProfileData();
-   }, [userID]);
+   }, [auth.user.uuid]);
 
    useEffect(() => {
       async function fetchCounts() {
          try {
-            const friends = await followService.getFollowers(userID);
-            const followers = await followService.getFollowers(userID);
-            const following = await followService.getFollowing(userID);
+            const friends = await followService.getFollowers(auth.user.uuid);
+            const followers = await followService.getFollowers(auth.user.uuid);
+            const following = await followService.getFollowing(auth.user.uuid);
 
             setFriendsCount(friends.length);
             setFollowersCount(followers.length);
@@ -65,7 +63,7 @@ export default function PublicProfile() {
       }
 
       fetchCounts();
-   }, [userID]);
+   }, [auth.user.uuid]);
 
    function getLink(){
       const currentURL = window.location.href;
@@ -73,7 +71,7 @@ export default function PublicProfile() {
       setOpenSnackbar(true);
    }
 
-   if (!authorData) return <div>Loading...</div>;
+   if (!authorData) return <div className="loading"><CircularProgress/></div>;
 
    return (
       <div className={styles.wrapper}>
