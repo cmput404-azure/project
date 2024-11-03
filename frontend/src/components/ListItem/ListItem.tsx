@@ -16,6 +16,7 @@ interface ListItemProps {
   postTitle?: string;
   isLike: boolean;
   isComment?:boolean;
+  isShare?:boolean;
   isFollowerList: boolean;
   isUserList: boolean;
   notif_id?: string;
@@ -38,6 +39,7 @@ export default function ListItem({
   isPost,
   postTitle,
   isLike,
+  isShare,
   isComment,
   isFollowerList,
   isUserList,
@@ -129,7 +131,8 @@ export default function ListItem({
   let additionalText = "";
   if (isRequest) additionalText = "wants to follow you";
   else if (isLike) additionalText = `liked your post titled: ${postTitle}`;
-  else if (isPost) additionalText = "shared a post with you";
+  else if (isShare) additionalText = `shared a post with you titled: ${postTitle}`;
+  else if (isPost) additionalText = `posted a post titled: ${postTitle}`;
   else if (isComment) additionalText = `commented on your post titled: ${postTitle}`;
 
   return (
@@ -167,17 +170,6 @@ export default function ListItem({
             <button onClick={addFollower}>Accept</button>{" "}
             <button onClick={deleteFollowRequest}>Decline</button>
           </div>
-        )}
-
-        {isPost && (
-          <img
-            className={styles.listImgPost}
-            src={
-              user.profileImage ??
-              `https://ui-avatars.com/api/?background=random&name=${user.displayName}`
-            }
-            alt="pfp"
-          />
         )}
       </div>
     </div>
