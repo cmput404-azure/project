@@ -57,7 +57,7 @@ export default function ListItem({
       const userInbox = await InboxService.getInbox(formatted_userId);
       await Promise.all(
         userInbox.map(async (item: any) => {
-          if (item.type === "follow") {
+          if (item && item.type === "follow") {
             let actorId = item.actor.id.replace(/\/+$/, '').split('/').pop();
             if (actorId===authProvider.user.uuid){
               setIsRequested(true);
@@ -102,10 +102,10 @@ export default function ListItem({
   };
 
   const addFollower = async () => {
-
     const encodedId = encodeURIComponent(user.id);
     await FollowService.addFolower(authProvider.user.uuid, encodedId)
-    await deleteFollowRequest;
+    await deleteFollowRequest();
+    onRefresh();
   };
 
   const deleteFollowRequest = async () => {
