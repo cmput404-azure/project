@@ -68,8 +68,11 @@ export default function UserProfile() {
    }, [auth.user.uuid]);
 
    function getLink() {
-      const currentURL = window.location.href;
-      navigator.clipboard.writeText(currentURL);
+      const currentURL = window.location.host;
+      const protocol = window.location.protocol;
+      const constructedURL = `${protocol}//${currentURL}/#/authors/${extractUUID(auth.user.uuid)}`;
+      
+      navigator.clipboard.writeText(constructedURL);
       setOpenSnackbar(true);
    }
 
@@ -274,7 +277,7 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
 
          <p className={styles.error}>{error}</p>
 
-         <Button variant="contained" onClick={handleUpdate} disabled={disabled} sx={{ width: "100%", marginTop: "1rem" }}>
+         <Button variant="contained" onClick={handleUpdate} disabled={disabled} sx={{ width: "100%", marginTop: "1rem", backgroundColor: "#70ffaf", color: "black" }}>
             {loading ? <CircularProgress sx={{ color: "#70ffaf" }} /> : "Save"}
          </Button>
          <Snackbar
