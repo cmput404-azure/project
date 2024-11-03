@@ -10,10 +10,8 @@ import { useAuth } from "../../state";
 import authService from "../../service/auth";
 import styled from "@mui/material/styles/styled";
 import { InputAdornment } from "@mui/material";
-import AccountCircle from "@mui/icons-material/AccountCircle";
-import { Email } from "@mui/icons-material";
-import { GitHub } from "@mui/icons-material";
-import Lock from "@mui/icons-material/Lock";
+import Snackbar from "@mui/material/Snackbar";
+import { Alert } from "@mui/material";
 import { IconButton } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
@@ -71,7 +69,7 @@ function Auth() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [openSnackbarRegister, setOpenSnackbarRegister] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -115,7 +113,7 @@ function Auth() {
       });
 
       if (response) {
-        alert("Registration successful! Please log in.");
+        setOpenSnackbarRegister(true); // open snackbar
         setIsRegister(false); // Switch back to login form
       } else {
         setError("Registration failed. Username might already be taken.");
@@ -134,6 +132,10 @@ function Auth() {
     }
 
     resetFields();
+  };
+
+  const handleCloseSnackbarRegister = () => {
+    setOpenSnackbarRegister(false);
   };
 
   const resetFields = () => {
@@ -267,6 +269,17 @@ function Auth() {
           <div className={styles.auth__container__submit__container}>
             <button type="submit">Submit</button>
             {error && <p className={styles.error}>{error}</p>}
+            <Snackbar
+              open={openSnackbarRegister}
+              autoHideDuration={2000} // auto close after 2s
+              onClose={handleCloseSnackbarRegister}
+              anchorOrigin={{ vertical: "top", horizontal: "right" }}
+              className={styles.snackbar}
+            >
+              <Alert severity="success" sx={{ width: "100%" }}>
+                "Registration Successful! Please Login!"
+              </Alert>
+            </Snackbar>
           </div>
         </form>
         <section className={styles.auth__container__footer}>
