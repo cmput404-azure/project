@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useCallback, useEffect, useState } from "react";
 
-import { CircularProgress } from "@mui/material";
+import { CircularProgress, responsiveFontSizes } from "@mui/material";
 import ListItem from "../ListItem/ListItem";
 import Modal from "react-modal";
 import PostService from "../../service/post"
@@ -27,6 +27,8 @@ export default function NotificationList() {
   const fetchNotifications = useCallback(async () => {
     try {
       const userResponse = await inbox.getInbox(authProvider.user.uuid);
+      console.log("USER RESPONSE", userResponse);
+
       const notificationsWithUsers = await Promise.all(
         userResponse.map(async (item: any) => {
           let user = null;
@@ -41,13 +43,25 @@ export default function NotificationList() {
             let post_resp = await api.get(`${item.author.host}${objectPath}`);
             post_obj = post_resp.data;
           }else if (item.type === "comment"){
-            user = await fetchUser(item.author.id);
+            let encodedId = encodeURIComponent(item.author.id);
+            user = await fetchUser(encodedId);
+            let post_resp = await api.get(item.post);
+            post_obj = post_resp.data;
+          }else if (item.type === "share"){
+            let user_resp = await api.get(item.user);
+          user = user_resp.data;
             let post_resp = await api.get(item.post);
             post_obj = post_resp.data;
           }
+          // else if (item.type === "post"){ //Someone shared a friends only post
+          //   user = await api.get(item.author.id);
+          //   let post_resp = await api.get(item.id);
+          //   post_obj = post_resp.data;
+          // }
           return { ...item, user, post_obj };
         })
       );
+      console.log("NOTIFICATONS", notificationsWithUsers);
       setNotifications(notificationsWithUsers);
       setLoading(false);
     } catch (err) {
@@ -130,7 +144,42 @@ export default function NotificationList() {
                     onRefresh={handleRefresh}
                   />
                 );
+              }else if (item.type === "share") {
+                return (
+                  <ListItem
+                    key={index}
+                    isRequest={false}
+                    isPost={true} 
+                    isLike={false}
+                    isComment={false}
+                    isShare = {true}
+                    isFollowerList={false}
+                    isUserList={false}
+                    notif_id={item.id}
+                    postTitle = {item.post_obj.title}
+                    user={item.user}
+                    onRefresh={handleRefresh}
+                  />
+                );
               }
+              // else if (item.type === "post") {
+              //   return (
+              //     <ListItem
+              //       key={index}
+              //       isRequest={false}
+              //       isPost={true} 
+              //       isLike={false}
+              //       isComment={false}
+              //       isShare = {false}
+              //       isFollowerList={false}
+              //       isUserList={false}
+              //       notif_id={item.id}
+              //       postTitle = {item.post_obj.title}
+              //       user={item.user}
+              //       onRefresh={handleRefresh}
+              //     />
+              //   );
+              // }
               return null; 
             })}
           </ul>
