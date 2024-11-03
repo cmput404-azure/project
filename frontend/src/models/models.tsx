@@ -69,8 +69,8 @@ export interface PostData {
     content: string;
     description: string;
     author: Author;
-    comments: PostComment | [];
-    likes: PostLike | [];
+    comments: PostComment;
+    likes: PostLike;
     published: string;
     visibility: number;
 }

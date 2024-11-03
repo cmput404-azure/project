@@ -66,7 +66,7 @@ export default function UserSearch({ closeModal }: userSearchProps) {
       </div>
 
 
-      {loading && <div className={"loading_component"}><CircularProgress/></div>}
+      {loading && <div className={"loading_component"}><CircularProgress sx={{color: "#70ffaf"}}/></div>}
       {error && <p>{error}</p>}
       {filteredResults.length > 0 ? (
         <ul className={styles.customList}>

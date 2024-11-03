@@ -76,8 +76,8 @@ class UserSerializer(serializers.ModelSerializer):
     
     def get_profileImage(self, obj):
         if obj.profile_image:  # if the image exists
-            return f"{settings.MEDIA_URL}{obj.profile_image}"
-
+            return f"{settings.BASE_URL}{settings.MEDIA_URL}{obj.profile_image}"
+        return None
 
     def create(self, validated_data):
         return User.objects.create(**validated_data)

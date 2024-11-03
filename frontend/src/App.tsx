@@ -11,6 +11,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicProfile from "./components/PublicProfile/PublicProfile";
 import Root from "./routes/Root";
 import UserProfile from "./components/UserProfile/UserProfile";
+import UserProfileOld from "./components/UserProfile/UserProfileOld";
 import styles from "./App.module.scss";
 import { useAuth } from "./state";
 
@@ -19,7 +20,7 @@ export default function App() {
   const authProvider = useAuth();
 
   if (authProvider.loading) {
-    return <div className={"loading"}><CircularProgress/></div>;
+    return <div className={"loading"}><CircularProgress sx={{color: "#70ffaf"}}/></div>;
   }
 
   return (
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/login" element={<Auth />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/profile2" element={<UserProfileOld />} />
             <Route path="/logout" element={<Logout />} />
           </Route>
           <Route path="/post/:postID" element={<Post />} />

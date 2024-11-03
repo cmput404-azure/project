@@ -304,7 +304,7 @@ class AuthorPostsAllView(APIView):
         self.fetch_github_activity(author)
 
         # retrieve all posts by the author
-        posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3])
+        posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3]).order_by('-created_at')
 
         
 

@@ -1,12 +1,13 @@
+import { Button, TextField } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
-import styled from "@mui/material/styles/styled";
+
 import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Modal from "react-modal";
-
+import styled from "@mui/material/styles/styled";
 import styles from "./EditPostModal.module.scss";
 
 interface EditPostModalProps {
@@ -84,17 +85,18 @@ export default function EditPostModal({
       <h2 className={styles.title}>Edit Post</h2>
       <form>
         <div className={styles.formGroup}>
-          <label>Title</label>
-          <input
-            type="text"
+          <label>Content</label>
+          <PostTextField
             value={title}
+            fullWidth
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
         <div className={styles.formGroup}>
           <label>Content</label>
-          <textarea
+          <PostTextField
             value={content}
+            fullWidth
             onChange={(e) => setContent(e.target.value)}
           />
         </div>
@@ -117,22 +119,60 @@ export default function EditPostModal({
           </StyledFormControl>
         </div>
         <div className={styles.buttonGroup}>
-          <button
-            type="button"
+          <Button
+              variant="contained"
+              size="small"
+              onClick={onRequestClose}
+              className={styles.cancelButton}
+            >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
             onClick={handleSave}
             className={styles.saveButton}
           >
             Save
-          </button>
-          <button
-            type="button"
-            onClick={onRequestClose}
-            className={styles.cancelButton}
-          >
-            Cancel
-          </button>
+          </Button>
+          
         </div>
       </form>
     </Modal>
   );
 }
+
+const PostTextField = styled(TextField)({
+  "& label": {
+    color: "#ffffff !important",
+  },
+
+  "& input": {
+    color: "white !important",
+  },
+
+  "& textarea": {
+    color: "white !important",
+  },
+
+  "& .MuiOutlinedInput-root": {
+    "& fieldset": {
+      border: "none",
+      boxShadow:"0 4px 7px rgba(0, 0, 0, 0.45)",
+    },
+    "&:hover fieldset": {
+      border: "1px solid",
+      borderColor: "white !important",
+    },
+    "&.Mui-focused fieldset": {
+      border: "1px solid",
+      borderColor: "#70ffaf !important",
+    },
+  },
+
+  "& .MuiFormHelperText-root": {
+    color: "#ffffff",
+    "&.Mui-error": {
+      color: "#dc3545",
+    },
+  },
+});

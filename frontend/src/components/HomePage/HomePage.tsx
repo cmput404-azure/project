@@ -85,12 +85,13 @@ const HomePage = () => {
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
     setActiveFilterPost(icon);
+    fetchPosts();
   }
 
   if (isLoading)
     return (
       <div className={"loading"}>
-        <CircularProgress />
+        <CircularProgress sx={{color: "#70ffaf"}}/>
       </div>
     );
   if (error) return <p>{error}</p>;

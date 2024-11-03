@@ -16,7 +16,7 @@ export default function ProtectedRoute() {
    }, [authProvider.loading]);
 
    if (!loaded || authProvider.loading) {
-      return <div className={"loading"}><CircularProgress/></div>;
+      return <div className={"loading"}><CircularProgress sx={{color: "#70ffaf"}}/></div>;
    }
 
    if (loaded && !authProvider.isAuthenticated) {

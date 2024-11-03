@@ -42,7 +42,7 @@ class ProfileService {
    public async fetchAuthorPosts(userId: string): Promise<Post[]> {
       try {
          const response = await api.get<AuthorPostsResponse>(`/api/authors/${userId}/posts/`);
-         return response.data.src.reverse();
+         return response.data.src;
       } catch (error) {
          console.error("Error fetching the author posts", error);
          return [];
