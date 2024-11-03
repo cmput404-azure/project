@@ -7,6 +7,7 @@ import Tooltip from '@mui/material/Tooltip';
 import follow from "../../service/follow";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
+import profileService from "../../service/profile";
 import styles from "./PostCard.module.scss";
 import { useAuth } from "../../state";
 import { Author,  Follower } from "../../models/models";
@@ -18,6 +19,7 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, B
 
 import { api } from "../../service/config";
 import { extractUUID } from "../../util/formatting/extractUUID";
+import auth from "../../service/auth";
 
 interface PostCardProps {
   post: Post
@@ -31,7 +33,6 @@ function PostCard({
   onClick,
 }: PostCardProps) {
   const authProvider = useAuth();
-  const [open, setOpen] = useState<boolean>(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [likeCount, setLikeCount] = useState<number>(Array.isArray(post.likes) ? 0 : post.likes.count);
   const [commentCount, setCommentCount] = useState<number>(Array.isArray(post.comments) ? 0 : post.comments.count);
@@ -45,17 +46,22 @@ function PostCard({
 
   // Function to open the dialog
   const handleClickShare = () => {
-    setShareDialogOpen(true);
+    if (authProvider.user) {
+      setShareDialogOpen(true);
+    } 
+    else {
+      navigate('/login');
+    }
   };
   
   // Function to confirm sharing
   const handleConfirmShare = async () => {
     setShareDialogOpen(false)
     // Get followers and share the post
-    const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
+    const currentUser = await profileService.fetchAuthorData(authProvider.user.uuid)
     const share_obj = {
       type: "share",
-      user: currentUser.data["id"],
+      user: currentUser.id,
       post: post.id,
     }
     const followers = await follow.getFollowers(authProvider.user.uuid);
@@ -69,8 +75,14 @@ function PostCard({
   };
 
   const handleClickLike = async () => {
-    if (hasLiked) return;
-    console.log(authProvider.user.uuid);
+    if (!authProvider.user) {
+      navigate('/login');
+      return;
+    }
+
+    if (hasLiked) 
+      return;
+
     const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
     const like_obj =  {
       type: "like",
@@ -216,21 +228,51 @@ const transformImageUri = (src: string, alt: string, title: string) => {
               <i className="fas fa-share"></i>
             </div>
           ) : null}
-          <Dialog open={shareDialogOpen} onClose={handleCloseShare}>
-            <DialogTitle>Share Post</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Do you want to share this post with all your friends and followers?
-            </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseShare} color="secondary">
-                Cancel
-              </Button>
-              <Button onClick={handleConfirmShare} color="primary" autoFocus>
-                Share
-              </Button>
-            </DialogActions>
+          <Dialog 
+            open={shareDialogOpen} 
+            onClose={handleCloseShare}
+            sx={{
+              '& .MuiDialog-paper': {
+                backgroundColor: 'rgb(123, 123, 123)',  // Dialog background color
+                color: 'white',  // Text color in dialog
+              },
+            }}>
+              <DialogTitle>Share Post</DialogTitle>
+              <DialogContent>
+                <DialogContentText sx={{ color: 'white' }}>
+                  Do you want to share this post with all your friends and followers?
+              </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button 
+                  onClick={handleCloseShare} 
+                  sx={{
+                    backgroundColor: 'rgb(143, 143, 143)',  // Slightly lighter color
+                    color: 'white',
+                    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
+                    '&:hover': {
+                      backgroundColor: 'lightcoral',  // Slightly lighter on hover
+                    },
+                  }}
+                  autoFocus
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleConfirmShare} 
+                  sx={{
+                    backgroundColor: 'rgb(143, 143, 143)',  // Slightly lighter color
+                    color: 'white',
+                    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
+                    '&:hover': {
+                      backgroundColor: '#5acc8c',  // Slightly lighter on hover
+                    },
+                  }}
+                  autoFocus
+                >
+                  Share
+                </Button>
+              </DialogActions>
           </Dialog>
         </div>
         <div className={styles.cardContent}>
