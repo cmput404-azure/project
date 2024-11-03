@@ -73,7 +73,7 @@ export default function PublicProfile() {
       setOpenSnackbar(true);
    }
 
-   if (!authorData) return <div className="loading"><CircularProgress/></div>;
+   if (!authorData) return <div className="loading"><CircularProgress sx={{color: "#70ffaf"}}/></div>;
 
    return (
       <div className={styles.wrapper}>
@@ -90,7 +90,7 @@ export default function PublicProfile() {
                   <div className={styles.user}>
                      <div className={styles.user__main}>
                         <h2 className={styles.display__name}>{authorData.displayName}</h2>
-                        <Button variant="contained" color="primary" size="small">
+                        <Button variant="contained" color="primary" size="small" sx={{ backgroundColor: "#70ffaf", color: "black" }}>
                            {isFollowing ? "Unfollow" : "Follow"}
                         </Button>
                         {authorData.github &&

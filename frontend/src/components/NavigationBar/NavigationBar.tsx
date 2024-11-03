@@ -35,8 +35,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
   const loggedInNavigationItems = [
     { icon: <i className="fa-regular fa-bell" />, label: "notifications" },
-    { icon: <i className="fa-solid fa-heart" />, label: "likes" },
-    { icon: <i className="fa-solid fa-comment-dots" />, label: "messages" },
     { icon: <i className="fa-solid fa-sign-out" />, label: "logout" },
   ];
 

@@ -13,7 +13,6 @@ import PublicIcon from '@mui/icons-material/Public';
 import { api } from "../../service/config";
 import follow from "../../service/follow";
 import inbox from "../../service/inbox";
-import stream from "../../service/stream";
 import styled from "@mui/material/styles/styled";
 import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
@@ -289,12 +288,12 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
 
           {imageBase64 ? (
             <div className={styles.image_preview}>
-              <p>Uploaded: {fileName}</p>
               <img
                 src={`data:image/png;base64,${imageBase64}`}
                 alt="Preview"
                 className={styles.uploaded_image}
               />
+              <p>Uploaded: {fileName}</p>
             </div>
           ) : (
             <>
