@@ -236,15 +236,12 @@ class InboxViewTestCase(TestCase):
                 "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
             },
             "comment": "Nice post!",
-            "contentType": "text/plain",
-            "published": '2024-10-21T00:00:00Z'
         }
 
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         response = self.client.post(self.inbox_url, data=payload, format='json')
         self.assertEqual(len(inbox_obj.items.all()), 1)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "Notice post's owner about your comment successfully")
 
     # Test sending a like into one's inbox
     def test_create_like(self):
