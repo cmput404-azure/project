@@ -90,8 +90,52 @@ class AuthorTests(APITestCase):
             self.assertIn(author["github"], ['github.com/testauthor', 'github.com/testauthor2', 'github.com/testauthor3', 'github.com/testauthor4', 'github.com/testauthor5', 'github.com/testauthor6', 'github.com/testauthor7'])
             self.assertIn(author["page"], ['http://localhost:8000/api/authors/testauthor', 'http://localhost:8000/api/authors/testauthor2', 'http://localhost:8000/api/authors/testauthor3', 'http://localhost:8000/api/authors/testauthor4', 'http://localhost:8000/api/authors/testauthor5', 'http://localhost:8000/api/authors/testauthor6', 'http://localhost:8000/api/authors/testauthor7'])
             self.assertEqual(author["has_requested"], False)
+    
     # TODO: test getting authors with pagination 
-    # def test_retrieve_authors_paginated(self):
+    
+    def test_retrieve_authors_paginated(self):
+        """Test retrieving authors with pagination."""
+        
+        url = reverse('authors_list')
+        
+        # Request the first page with 5 authors per page
+        response = self.client.get(url, {'page': 1, 'size': 5})
+        
+        # Check if the response status is 200 OK
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Check pagination metadata and authors data
+        payload = response.data
+        self.assertIn("type", payload)
+        self.assertEqual(payload["type"], "authors")
+        
+        # Check if we have exactly 5 authors on the first page
+        authors_data = payload["authors"]  
+        self.assertEqual(len(authors_data), 5)
+        
+        # check that the first page contains the first 5 authors
+        for author in authors_data:
+            self.assertIn("displayName", author)
+            self.assertIn(author["displayName"], ["Test Author", "Test Author2", "Test Author3", "Test Author4", "Test Author5"])
+
+        # ------SECOND PAGE------
+
+        # Request the second page and check if it contains remaining authors
+        response = self.client.get(url, {'page': 2, 'size': 5})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Check pagination metadata for the second page
+        payload = response.data
+        self.assertEqual(payload["type"], "authors")
+        
+        # Check that the second page contains only 2 authors (remaining ones)
+        authors_data = payload["authors"]
+        self.assertEqual(len(authors_data), 2)
+        
+        for author in authors_data:
+            self.assertIn("displayName", author)
+            self.assertIn(author["displayName"], ["Test Author6", "Test Author7"])
+        
     
     # test getting author by uuid
     def test_get_author_by_uuid(self):
