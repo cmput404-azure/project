@@ -272,21 +272,21 @@ class InboxViewTestCase(TestCase):
         self.assertEqual(response.data["message"], "Notice post's owner about your like successfully")
         
     # Test sending a share into one's inbox
-    # def test_create_share(self):
-    #     payload = {
-    #         "type": "share",
-    #         "user": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
-    #         "post": "http://localhost:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e12/posts/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e68"
-    #     }
-    #     response = self.client.post(self.inbox_url, data=payload, format='json')
-    #     inbox_obj = Inbox.objects.get(user=self.user.uuid)
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(inbox_obj.items.all()), 1)
-    #     try:
-    #         share_obj = Share.objects.get(id=1)
-    #         self.assertIsNotNone(share_obj) 
-    #     except Share.DoesNotExist:
-    #         self.assertRaises(ObjectDoesNotExist)
+    def test_create_share(self):
+        payload = {
+            "type": "share",
+            "user": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+            "post": "http://localhost:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e12/posts/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e68"
+        }
+        response = self.client.post(self.inbox_url, data=payload, format='json')
+        inbox_obj = Inbox.objects.get(user=self.user.uuid)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(inbox_obj.items.all()), 1)
+        try:
+            share_obj = Share.objects.get(id=1)
+            self.assertIsNotNone(share_obj) 
+        except Share.DoesNotExist:
+            self.assertRaises(ObjectDoesNotExist)
         
         
 
