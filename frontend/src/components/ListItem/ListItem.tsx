@@ -73,6 +73,7 @@ export default function ListItem({
 
   const unFollow = async () => {
     await FollowService.unfollow(user.id, authProvider.user);
+    onRefresh();
   };
 
   const sendFollowerRequest = async () => {

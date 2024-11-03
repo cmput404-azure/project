@@ -34,7 +34,7 @@ export default function PublicProfile() {
    const [openSnackbar, setOpenSnackbar] = useState(false);
    const [isAuthenticated, setIsAuthenticated] = useState(true);
    const [isOwnProfile, setIsOwnProfile] = useState(false);
-
+   const [isRequested, setIsRequested] = useState(false);
    const navigate = useNavigate();
 
    // TODO: make the follow button change to unfollow if the user is already following the author, or hidden if the user is the author
@@ -79,7 +79,7 @@ export default function PublicProfile() {
          setIsAuthenticated(false);
       } else {
          if (userID === authProvider.user.uuid) {
-            navigate('/profile');
+            setIsOwnProfile(true);
          } else {
             checkFollowing();
          }
@@ -96,7 +96,6 @@ export default function PublicProfile() {
       if (isFollowing) {
          // Displaying unfollow button
          await FollowService.unfollow(userID, authProvider.user);
-         window.location.reload();
       } else {
          // Displaying follow button, send follower request
          const userResponse = await ProfileService.fetchAuthorData(authProvider.user.uuid);
@@ -114,7 +113,12 @@ export default function PublicProfile() {
          };
 
          await InboxService.sendPostToInbox(userID, followRequest);
+         setIsRequested(true);
       }
+   }
+
+   function handleManageProfileClick() {
+      navigate('/profile');
    }
 
    function handleLoginClick() {
@@ -142,9 +146,17 @@ export default function PublicProfile() {
                            variant="contained"
                            color="primary"
                            size="small"
-                           onClick={isAuthenticated ? handleButtonClick : handleLoginClick}
+                           onClick={isOwnProfile ? handleManageProfileClick : (isAuthenticated ? handleButtonClick : handleLoginClick)}
+                           disabled={isRequested}
                         >
-                           {isFollowing ? "Unfollow" : "Follow"}
+                           {isOwnProfile
+                              ? "Manage Profile"
+                              : isRequested
+                                 ? "Requested"
+                                 : isFollowing
+                                    ? "Unfollow"
+                                    : "Follow"
+                           }
                         </Button>
 
                         {authorData.github &&
