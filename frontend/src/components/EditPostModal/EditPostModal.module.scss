@@ -79,21 +79,16 @@
     transition: background-color 0.3s ease;
 
     &.saveButton {
-      background-color: #555;
-      color: white;
-      margin-right: 10px;
-      transition: 0.3s;
-
-      &:hover {
-        background-color: #70ffaf;
-        color: #555;
-      }
+      background-color: #70ffaf;
+      color: #555;
+      transition: 0.3s ease-in-out;
     }
 
     &.cancelButton {
-      background-color: #dc3545;
+      background-color: #555;
       color: white;
-      transition: 0.3s;
+      transition: 0.3s ease-in-out;
+      margin-right: 1rem;
 
       &:hover {
         background-color: #ff4d4d;
