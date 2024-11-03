@@ -72,7 +72,7 @@ export default function ListItem({
   }, []);
 
   const unFollow = async () => {
-    await FollowService.unFollow(user.id, authProvider.user);
+    await FollowService.unfollow(user.id, authProvider.user);
   };
 
   const sendFollowerRequest = async () => {
@@ -103,7 +103,7 @@ export default function ListItem({
 
   const addFollower = async () => {
     const encodedId = encodeURIComponent(user.id);
-    await FollowService.addFolower(authProvider.user.uuid, encodedId)
+    await FollowService.addFollower(authProvider.user.uuid, encodedId)
     await deleteFollowRequest();
     onRefresh();
   };

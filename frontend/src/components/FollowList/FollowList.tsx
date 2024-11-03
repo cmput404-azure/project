@@ -25,12 +25,12 @@ interface FollowerListProps {
   isOpen: boolean;
   onClose: () => void;
   isFollowerList: string;
-  profileId?:string;
+  profileId?: string;
 }
 
 Modal.setAppElement('#root');
 
-export default function FollowList({ isOpen, onClose, isFollowerList, profileId,}: FollowerListProps) {
+export default function FollowList({ isOpen, onClose, isFollowerList, profileId, }: FollowerListProps) {
   const [followers, setFollowers] = useState<Follower[]>([]);
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -53,9 +53,9 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
   const fetchFriends = async () => {
     try {
       let data = null;
-      if (profileId){
+      if (profileId) {
         data = await follow.getFriends(profileId);
-      }else{
+      } else {
         data = await follow.getFriends(authProvider.user.uuid);
       }
       setFollowers(data);
@@ -70,10 +70,10 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
   const fetchFollowers = async () => {
     try {
       let data = null;
-      if (profileId){
+      if (profileId) {
         console.log("PROFILEID", profileId)
         data = await follow.getFollowers(profileId);
-      }else{
+      } else {
         data = await follow.getFollowers(authProvider.user.uuid);
       }
       setFollowers(data);
@@ -87,9 +87,9 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
   const fetchFollowing = async () => {
     try {
       let data = null;
-      if (profileId){
+      if (profileId) {
         data = await follow.getFollowing(profileId);
-      }else{
+      } else {
         data = await follow.getFollowing(authProvider.user.uuid);
       }
       setFollowers(data);
@@ -111,7 +111,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
       <button onClick={onClose} style={{ float: 'right' }}>Close</button>
       <h2 className={styles.h2}>{isFollowerList}</h2>
       {loading ? (
-        <div className={"loading_component"}><CircularProgress/></div>
+        <div className={"loading_component"}><CircularProgress /></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
@@ -119,7 +119,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
 
           {followers.map((follower, index) => (
             <div key={index}>
-              <p>{follower.name}</p> 
+              <p>{follower.name}</p>
               <ListItem
                 isRequest={false}
                 isPost={false}

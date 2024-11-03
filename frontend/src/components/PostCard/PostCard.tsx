@@ -9,7 +9,8 @@ import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
 import styles from "./PostCard.module.scss";
 import { useAuth } from "../../state";
-import { Author,  Follower } from "../../models/models";
+import ProfileService from "../../service/profile";
+import { Author, Follower } from "../../models/models";
 import { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -35,10 +36,10 @@ function PostCard({
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [likeCount, setLikeCount] = useState<number>(Array.isArray(post.likes) ? 0 : post.likes.count);
   const [commentCount, setCommentCount] = useState<number>(Array.isArray(post.comments) ? 0 : post.comments.count);
-  const [hasLiked, setHasLiked] = useState<boolean>(Array.isArray(post.likes) 
-                                                          ? false 
-                                                          : authProvider.user && post.likes.src.some((like) => like.author.id.split('/').pop() === authProvider.user.uuid)
-                                                    );
+  const [hasLiked, setHasLiked] = useState<boolean>(Array.isArray(post.likes)
+    ? false
+    : authProvider.user && post.likes.src.some((like) => like.author.id.split('/').pop() === authProvider.user.uuid)
+  );
   const [imageSrc, setImageSrc] = useState<string>('');
   const navigate = useNavigate();
   const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false);
@@ -49,18 +50,18 @@ function PostCard({
   const handleClickShare = () => {
     setShareDialogOpen(true);
   };
-  
-  useEffect(()=>{
-    const getUser = async()=>{
-      const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
-      if (post.author.id === currentUser.data["id"]){
+
+  useEffect(() => {
+    const getUser = async () => {
+      const currentUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
+      if (post.author.id === currentUser.id) {
         setIsAuthor(true);
-      }else if(authProvider.user.is_staff){
+      } else if (authProvider.user.is_staff) {
         setIsAdmin(true);
       }
     }
     getUser();
-  },[])
+  }, [])
 
   // Function to confirm sharing
   const handleConfirmShare = async () => {
@@ -86,13 +87,13 @@ function PostCard({
     if (hasLiked) return;
     console.log(authProvider.user.uuid);
     const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
-    const like_obj =  {
+    const like_obj = {
       type: "like",
       author: currentUser.data,
       published: new Date(post.published).toISOString(),
       object: post.id
     }
-  
+
     await inbox.sendPostToInbox(post.author.id, like_obj);
 
     setLikeCount(likeCount + 1);
@@ -132,48 +133,48 @@ function PostCard({
       const authorURL = `/authors/${extractUUID(post.author.id)}`;
       navigate(authorURL);
     }
- };
+  };
 
   useEffect(() => {
     const fetchImage = async () => {
       if (post.contentType === ContentType.MARKDOWN) {
-          const imageRegex = /!\[.*?\]\((.*?)\)/; // Regex to find the image URL in the Markdown
-          const match = post.content.match(imageRegex);
-          if (match) {
-              const imageUrl = match[1]; // Get the URL from the Markdown
-              console.log("imageURL: ", imageUrl);
-              
-              // Check if the imageUrl is a data URL
-              if (imageUrl.startsWith("data:")) {
-                  // Directly set the src to the data URL
-                  setImageSrc(imageUrl);
+        const imageRegex = /!\[.*?\]\((.*?)\)/; // Regex to find the image URL in the Markdown
+        const match = post.content.match(imageRegex);
+        if (match) {
+          const imageUrl = match[1]; // Get the URL from the Markdown
+          console.log("imageURL: ", imageUrl);
+
+          // Check if the imageUrl is a data URL
+          if (imageUrl.startsWith("data:")) {
+            // Directly set the src to the data URL
+            setImageSrc(imageUrl);
+          } else {
+            // If it's not a data URL, fetch from the endpoint
+            try {
+              const response = await fetch(imageUrl);
+              console.log(response);
+              if (response.ok) {
+                const jsonResponse = await response.json();
+                const imageData = jsonResponse.image;
+                setImageSrc(imageData);
               } else {
-                  // If it's not a data URL, fetch from the endpoint
-                  try {
-                      const response = await fetch(imageUrl);
-                      console.log(response);
-                      if (response.ok) {
-                          const jsonResponse = await response.json();
-                          const imageData = jsonResponse.image;
-                          setImageSrc(imageData);
-                      } else {
-                          console.error("Error fetching image:", response.statusText);
-                      }
-                  } catch (error) {
-                      console.error("Error fetching image:", error);
-                  }
+                console.error("Error fetching image:", response.statusText);
               }
+            } catch (error) {
+              console.error("Error fetching image:", error);
+            }
           }
+        }
       }
-  };
+    };
 
     fetchImage();
-}, [post.content, post.contentType]);
+  }, [post.content, post.contentType]);
 
-const transformImageUri = (src: string, alt: string, title: string) => {
+  const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
-};
- 
+  };
+
   return (
     <div className={styles.card} onClick={onClick}>
       <div className={styles.grid}>
@@ -190,9 +191,9 @@ const transformImageUri = (src: string, alt: string, title: string) => {
           <span className={styles.userName} onClick={redirectToAuthorProfile}>{post.author.displayName}</span>
           <span className={styles.postTime}>{new Date(post.published).toLocaleString()}</span>
         </div>
-        
+
         <div className={styles.icon}>
-          {post.visibility === 3 || isAuthor || isAdmin || post.visibility === 1? ( // friend post doesnt have a link 
+          {post.visibility === 3 || isAuthor || isAdmin || post.visibility === 1 ? ( // friend post doesnt have a link 
             <Tooltip title="copy link">
               <i className="fas fa-link" onClick={handleGetLink}></i>
             </Tooltip>
@@ -235,7 +236,7 @@ const transformImageUri = (src: string, alt: string, title: string) => {
             <DialogContent>
               <DialogContentText>
                 Do you want to share this post with all your friends and followers?
-            </DialogContentText>
+              </DialogContentText>
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseShare} color="secondary">
@@ -261,17 +262,17 @@ const transformImageUri = (src: string, alt: string, title: string) => {
             // <div className={styles.postText}>{post.content}</div>
             <div className={styles.postText}>
               {post.contentType === ContentType.MARKDOWN ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-                    img: ({ src, alt, title }) => {
-                      return (
-                          <img src={transformImageUri(src, alt, title)} alt={alt} title={title} />
-                      );
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                  img: ({ src, alt, title }) => {
+                    return (
+                      <img src={transformImageUri(src, alt, title)} alt={alt} title={title} />
+                    );
                   }
                 }}>
-                      {post.content}
-                  </ReactMarkdown>
+                  {post.content}
+                </ReactMarkdown>
               ) : (
-                  post.content
+                post.content
               )}
             </div>
           )}

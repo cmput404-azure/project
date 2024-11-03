@@ -86,7 +86,7 @@ class FollowService{
       }
    }
 
-   public async unFollow(userId:string, follower:User){
+   public async unfollow(userId:string, follower:User){
       //follower is the logged in user, user is the user profile we're viewing
       const userResponse = await api.get<Author>(`/api/authors/${follower.uuid}/`);
       const encodedUrl = encodeURIComponent(userResponse.data.id);
@@ -104,7 +104,7 @@ class FollowService{
       }
    }
 
-   public async addFolower(userId:string, follower_url:string){ 
+   public async addFollower(userId:string, follower_url:string){ 
       try {
          await api.put(`/api/authors/${userId}/followers/${follower_url}/`);
       } catch (error) {

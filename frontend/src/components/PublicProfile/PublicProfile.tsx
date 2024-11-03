@@ -12,7 +12,6 @@ import styles from "./PublicProfile.module.scss";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../state";
 import { api } from "../../service/config";
-import EditProfileModal from "../EditProfileModal/EditProfileModal";
 
 const FollowerModalTypes = {
    follower: "Follower",
@@ -35,7 +34,6 @@ export default function PublicProfile() {
    const [openSnackbar, setOpenSnackbar] = useState(false);
    const [isAuthenticated, setIsAuthenticated] = useState(true);
    const [isOwnProfile, setIsOwnProfile] = useState(false);
-   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
    const navigate = useNavigate();
 
@@ -69,9 +67,8 @@ export default function PublicProfile() {
          }
       }
       async function checkFollowing() {
-         console.log("CHECK FOLLOWING");
-         const authUser = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
-         let url = `${authUser.data.host}authors/${authProvider.user.uuid}`;
+         const authUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
+         let url = `${authUser.host}authors/${authProvider.user.uuid}`;
          const encodedUrl = encodeURIComponent(url);
          const is_following = await FollowService.checkFollowing(userID, encodedUrl);
          setIsFollowing(is_following);
@@ -82,41 +79,12 @@ export default function PublicProfile() {
          setIsAuthenticated(false);
       } else {
          if (userID === authProvider.user.uuid) {
-            setIsOwnProfile(true);
+            navigate('/profile');
          } else {
             checkFollowing();
          }
       }
    }, [userID]);
-
-
-   const handleSaveEditProfileButtonClicked = (data) => {
-      let tempAuthorData = authorData;
-      tempAuthorData.displayName = data.displayName;
-      tempAuthorData.github = data.githubLink;
-      updateUserInfo(tempAuthorData);
-      setIsEditingProfile(false);
-   };
-
-   async function updateUserInfo(data) {
-      try {
-         if (authProvider.user) {
-            data.id = data.id.replace(/\/+$/, '').split('/').pop();
-
-            const response = await api.put(
-               `/api/authors/${authProvider.user.uuid}/`,
-               data
-            );
-            console.log("User info updated successfully:", response.data);
-            fetchProfileData();
-         }
-      } catch (error) {
-         console.error("Error updating user info", error);
-      }
-   }
-   function handleEditProfileClick() {
-      setIsEditingProfile(true);
-   }
 
    function getLink() {
       const currentURL = window.location.href;
@@ -127,22 +95,21 @@ export default function PublicProfile() {
    async function handleButtonClick() {
       if (isFollowing) {
          // Displaying unfollow button
-         await FollowService.unFollow(userID, authProvider.user);
+         await FollowService.unfollow(userID, authProvider.user);
+         window.location.reload();
       } else {
          // Displaying follow button, send follower request
-         const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
-         const userInfo = userResponse.data;
-
+         const userResponse = await ProfileService.fetchAuthorData(authProvider.user.uuid);
          const followRequest = {
             type: "follow",
-            summary: `${userInfo.displayName} wants to follow ${authorData.displayName}`,
+            summary: `${userResponse.displayName} wants to follow ${authorData.displayName}`,
             actor: {
                type: "author",
-               id: `${userInfo.id}`,
-               host: `${userInfo.host}`,
-               displayName: `${userInfo.displayName}`,
-               github: `${userInfo.github}`,
-               page: `${userInfo.page}`,
+               id: `${userResponse.id}`,
+               host: `${userResponse.host}`,
+               displayName: `${userResponse.displayName}`,
+               github: `${userResponse.github}`,
+               page: `${userResponse.page}`,
             },
          };
 
@@ -153,6 +120,7 @@ export default function PublicProfile() {
    function handleLoginClick() {
       navigate('/login');
    }
+
    if (!authorData) return <div className="loading"><CircularProgress /></div>;
 
    return (
@@ -174,20 +142,10 @@ export default function PublicProfile() {
                            variant="contained"
                            color="primary"
                            size="small"
-                           onClick={isOwnProfile ? handleEditProfileClick : (isAuthenticated ? handleButtonClick : handleLoginClick)}
+                           onClick={isAuthenticated ? handleButtonClick : handleLoginClick}
                         >
-                           {isOwnProfile
-                              ? "Edit Profile"
-                              : isAuthenticated
-                                 ? (isFollowing ? "Unfollow" : "Follow")
-                                 : "Login"}
+                           {isFollowing ? "Unfollow" : "Follow"}
                         </Button>
-                        <EditProfileModal
-                           isOpen={isEditingProfile}
-                           onSave={handleSaveEditProfileButtonClicked}
-                           onClose={() => setIsEditingProfile(false)}
-                           author={authorData}
-                        />
 
                         {authorData.github &&
                            <IconButton className={styles.icon__button}
