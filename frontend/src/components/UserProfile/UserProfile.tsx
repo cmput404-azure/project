@@ -52,7 +52,7 @@ export default function UserProfile() {
    useEffect(() => {
       async function fetchCounts() {
          try {
-            const friends = await followService.getFollowers(auth.user.uuid);
+            const friends = await followService.getFriends(auth.user.uuid);
             const followers = await followService.getFollowers(auth.user.uuid);
             const following = await followService.getFollowing(auth.user.uuid);
 
