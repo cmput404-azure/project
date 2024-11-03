@@ -20,7 +20,7 @@ export default function App() {
   const authProvider = useAuth();
 
   if (authProvider.loading) {
-    return <div className={"loading"}><CircularProgress/></div>;
+    return <div className={"loading"}><CircularProgress sx={{color: "#70ffaf"}}/></div>;
   }
 
   return (

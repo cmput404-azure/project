@@ -90,7 +90,7 @@ const HomePage = () => {
   if (isLoading)
     return (
       <div className={"loading"}>
-        <CircularProgress />
+        <CircularProgress sx={{color: "#70ffaf"}}/>
       </div>
     );
   if (error) return <p>{error}</p>;

@@ -73,7 +73,7 @@ export default function PublicProfile() {
       setOpenSnackbar(true);
    }
 
-   if (!authorData) return <div className="loading"><CircularProgress/></div>;
+   if (!authorData) return <div className="loading"><CircularProgress sx={{color: "#70ffaf"}}/></div>;
 
    return (
       <div className={styles.wrapper}>

@@ -354,7 +354,7 @@ export default function UserProfile() {
   if (!authorData) {
     return (
       <div className={"loading"}>
-        <CircularProgress />
+        <CircularProgress sx={{color: "#70ffaf"}}/>
       </div>
     );
   }

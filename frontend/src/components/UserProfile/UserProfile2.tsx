@@ -73,7 +73,7 @@ export default function UserProfile2() {
       setOpenSnackbar(true);
    }
 
-   if (!authorData) return <div className="loading"><CircularProgress /></div>;
+   if (!authorData) return <div className="loading"><CircularProgress sx={{color: "#70ffaf"}} /></div>;
 
    return (
       <div className={styles.wrapper}>
@@ -275,7 +275,7 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
          <p className={styles.error}>{error}</p>
 
          <Button variant="contained" onClick={handleUpdate} disabled={disabled} sx={{ width: "100%", marginTop: "1rem" }}>
-            {loading ? <CircularProgress /> : "Save"}
+            {loading ? <CircularProgress sx={{color: "#70ffaf"}}/> : "Save"}
          </Button>
          <Snackbar
             open={success}

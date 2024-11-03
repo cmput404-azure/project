@@ -93,7 +93,7 @@ export default function Post() {
       if (reason !== 'clickaway') setOpenSnackbar(false);
    };
 
-   if (!post) return <div><CircularProgress/></div>;
+   if (!post) return <div><CircularProgress sx={{color: "#70ffaf"}}/></div>;
 
    return (
       <div className={styles.card}>

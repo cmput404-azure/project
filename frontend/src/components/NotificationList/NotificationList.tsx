@@ -4,9 +4,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import { CircularProgress } from "@mui/material";
 import ListItem from "../ListItem/ListItem";
 import Modal from "react-modal";
+import PostService from "../../service/post"
 import { api } from "../../service/config";
 import inbox from "../../service/inbox";
-import PostService from "../../service/post"
 import styles from "./NotificationList.module.scss";
 import { useAuth } from "../../state";
 
@@ -78,7 +78,7 @@ export default function NotificationList() {
     <div>
       <h2 className={styles.h2}>Notifications</h2>
       {loading ? (
-        <div className={"loading_component"}><CircularProgress/></div>
+        <div className={"loading_component"}><CircularProgress sx={{color: "#70ffaf"}}/></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
