@@ -43,6 +43,7 @@ function PostCard({
   const [imageSrc, setImageSrc] = useState<string>('');
   const navigate = useNavigate();
   const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false);
+  const [isLiking, setIsLiking] = useState<boolean>(false);
 
   // Function to open the dialog
   const handleClickShare = () => {
@@ -80,21 +81,28 @@ function PostCard({
       return;
     }
 
-    if (hasLiked) 
+    if (hasLiked || isLiking) 
       return;
 
-    const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
-    const like_obj =  {
-      type: "like",
-      author: currentUser.data,
-      published: new Date(post.published).toISOString(),
-      object: post.id
-    }
-  
-    await inbox.sendPostToInbox(post.author.id, like_obj);
+    setIsLiking(true);
 
-    setLikeCount(likeCount + 1);
-    setHasLiked(true);
+    try {
+      const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
+      const like_obj =  {
+        type: "like",
+        author: currentUser.data,
+        published: new Date(post.published).toISOString(),
+        object: post.id
+      };
+  
+      await inbox.sendPostToInbox(post.author.id, like_obj);
+      setLikeCount(likeCount + 1);
+      setHasLiked(true);
+    } catch (error) {
+      console.error("Error liking post:", error);
+    } finally {
+      setIsLiking(false); 
+    }
   };
 
   const handleGetLink = () => {

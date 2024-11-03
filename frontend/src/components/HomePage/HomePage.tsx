@@ -85,6 +85,7 @@ const HomePage = () => {
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
     setActiveFilterPost(icon);
+    fetchPosts();
   }
 
   if (isLoading)
