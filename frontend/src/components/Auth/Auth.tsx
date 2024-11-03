@@ -176,15 +176,6 @@ function Auth() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <AccountCircle />
-                  </InputAdornment>
-                ),
-              },
-            }}
           />
           {isRegister && (
             <StyledTextField
@@ -194,15 +185,6 @@ function Auth() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccountCircle />
-                    </InputAdornment>
-                  ),
-                },
-              }}
             />
           )}
           {isRegister && (
@@ -213,15 +195,6 @@ function Auth() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email />
-                    </InputAdornment>
-                  ),
-                },
-              }}
             />
           )}
           {isRegister && (
@@ -231,15 +204,6 @@ function Auth() {
               size="small"
               value={githubUsername}
               onChange={(e) => setGithubUsername(e.target.value)}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <GitHub />
-                    </InputAdornment>
-                  ),
-                },
-              }}
             />
           )}
           <StyledTextField
@@ -252,11 +216,6 @@ function Auth() {
             required
             slotProps={{
               input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock />
-                  </InputAdornment>
-                ),
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
@@ -288,11 +247,6 @@ function Auth() {
               required
               slotProps={{
                 input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock />
-                    </InputAdornment>
-                  ),
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
@@ -314,7 +268,7 @@ function Auth() {
               }}
             />
           )}
-          <div className={styles.auth__container__footer}>
+          <div className={styles.auth__container__submit__container}>
             <button type="submit">Submit</button>
             {error && <p className={styles.error}>{error}</p>}
           </div>
@@ -325,7 +279,10 @@ function Auth() {
           </p>
           <p
             className={styles.check}
-            onClick={() => setIsRegister(!isRegister)}
+            onClick={() => {
+              setIsRegister(!isRegister);
+              setError("");
+            }}
           >
             {isRegister ? "Login instead" : "Register instead"}
           </p>

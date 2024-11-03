@@ -49,6 +49,14 @@
   }
 }
 
+.auth__container__submit__container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .auth__container__footer {
   display: flex;
   justify-content: center;
@@ -60,11 +68,15 @@
   color: #f1f1f1;
 }
 
+.error {
+  color: #ff4d4d;
+}
+
 .check {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 0.5rem;
   color: #70ffaf;
-  cursor: pointer;
+  cursor: pointer !important;
 }
