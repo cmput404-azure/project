@@ -1,4 +1,4 @@
-import { Alert, Avatar, Box, Button, CircularProgress, Drawer, IconButton, Snackbar, TextField } from "@mui/material";
+import { Alert, Avatar, Box, Button, CircularProgress, Drawer, IconButton, Snackbar, TextField, styled } from "@mui/material";
 import { Author, PostData as Post, User } from "../../models/models";
 import { Edit, GitHub } from "@mui/icons-material";
 import { useEffect, useState } from "react";
@@ -266,9 +266,9 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
             </div>
 
             <div className={styles.edit__profile__body__form}>
-               <TextField className={styles.input} label="Display Name" variant="outlined" value={displayName} onChange={e => setDisplayName(e.target.value)} />
-               <TextField className={styles.input} label="Bio" variant="outlined" value={bio} onChange={e => setBio(e.target.value)} />
-               <TextField className={styles.input} label="Github" variant="outlined" value={github} onChange={e => setGithub(e.target.value)} />
+               <EditField className={styles.input} label="Display Name" variant="outlined" value={displayName} onChange={e => setDisplayName(e.target.value)} />
+               <EditField className={styles.input} label="Bio" variant="outlined" value={bio} onChange={e => setBio(e.target.value)} />
+               <EditField className={styles.input} label="Github" variant="outlined" value={github} onChange={e => setGithub(e.target.value)} />
             </div>
          </div>
 
@@ -286,7 +286,43 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
             <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
                Successfully updated profile.
             </Alert>
-         </Snackbar>   
+         </Snackbar>
       </div>
    );
 }
+
+const EditField = styled(TextField)({
+   "& label": {
+      color: "#ffffff !important",
+   },
+
+   "& input": {
+      color: "white !important",
+   },
+
+   "& textarea": {
+      color: "white !important",
+   },
+
+   "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+         border: "none",
+         boxShadow: "0 4px 7px rgba(0, 0, 0, 0.45)",
+      },
+      "&:hover fieldset": {
+         border: "1px solid",
+         borderColor: "white !important",
+      },
+      "&.Mui-focused fieldset": {
+         border: "1px solid",
+         borderColor: "#70ffaf !important",
+      },
+   },
+
+   "& .MuiFormHelperText-root": {
+      color: "#ffffff",
+      "&.Mui-error": {
+         color: "#dc3545",
+      },
+   },
+});
