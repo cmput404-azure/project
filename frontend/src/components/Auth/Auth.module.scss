@@ -1,35 +1,82 @@
-.auth{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+.auth {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
-.auth__container{
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    width: 300px;
-    height: 300px;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
-    padding: 1rem;
-
-    h1 {
-        margin: 0;
-        font-weight: bold;
-        font-size: 14px;
-    }
-
-    p {
-        color: rgba(97, 97, 97, 0.815);
-        font-size: small;
-        margin: 0;
-    }
+.auth__container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 350px;
+  padding: 2rem;
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.check{
-    text-decoration: underline;
+.auth__container__header h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #f1f1f1;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.auth__container__form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 1.5rem;
+
+  button {
+    width: 100%;
+    background-color: #70ffaf;
+    color: #1a1a1a;
+    font-weight: bold;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
     cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: #30fb88;
+    }
+  }
+}
+
+.auth__container__submit__container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth__container__footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth__account__or__not {
+  color: #f1f1f1;
+}
+
+.error {
+  color: #ff4d4d;
+}
+
+.check {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  color: #70ffaf;
+  cursor: pointer !important;
 }

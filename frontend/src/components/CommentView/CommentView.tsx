@@ -1,6 +1,6 @@
 import { Comment } from "@mui/icons-material";
 import Modal from "react-modal";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./CommentView.module.scss";
 import CommentInputField from "../CommentInput/CommentInput";
 
@@ -23,6 +23,7 @@ interface CommentViewProps {
   postComponent: React.ReactNode;
   comments: Comment[]; // List of comments
   author: any; // author object
+  post: any;
 }
 
 const CommentView: React.FC<CommentViewProps> = ({
@@ -31,8 +32,23 @@ const CommentView: React.FC<CommentViewProps> = ({
   postComponent,
   comments,
   author,
+  post
 }) => {
   console.log("Comments", comments);
+
+  const [commentList, setCommentList] = useState([...comments])
+
+  const handleNewComment = (newComment) => {
+    const newCommentList = [...commentList, newComment]
+    setCommentList(newCommentList)
+  }
+
+    // Use useEffect to update commentList when comments prop changes
+    useEffect(() => {
+      setCommentList([...comments]);
+    }, [comments]);
+  
+
 
   return (
     <Modal
@@ -50,9 +66,9 @@ const CommentView: React.FC<CommentViewProps> = ({
         {/* Comments Section */}
         <div className={styles.commentsSection}>
           {/* Comment Input Field */}
-          {!(author == null) && <CommentInputField authorObj={author} />}
+          {!(author == null) && <CommentInputField authorObj={author} post={post}  onCommentAdded={handleNewComment}/>}
 
-          {comments.map((comment) => (
+          {commentList.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
                 <img

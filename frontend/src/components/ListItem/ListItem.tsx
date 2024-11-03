@@ -8,7 +8,8 @@ import { api } from "../../service/config";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import styles from "./ListItem.module.scss";
 import { useAuth } from "../../state";
-
+import FollowService from "../../service/follow";
+import InboxService from "../../service/inbox";
 interface ListItemProps {
   isRequest: boolean;
   isPost: boolean;
@@ -50,25 +51,37 @@ export default function ListItem({
   const authProvider = useAuth();
   const [isRequested, setIsRequested] = useState(false);
   const navigate = useNavigate();
+  const [userId, setUserId] = useState("");
+  useEffect(()=>{
+    const fetchData = async () => {
+      // Format the user ID
+      let formatted_userId = user.id.replace(/\/+$/, '').split('/').pop();
+      setUserId(formatted_userId);
+  
+      // Check inbox of the user ID
+      const userInbox = await InboxService.getInbox(formatted_userId);
+      await Promise.all(
+        userInbox.map(async (item: any) => {
+          if (item && item.type === "follow") {
+            let actorId = item.actor.id.replace(/\/+$/, '').split('/').pop();
+            if (actorId===authProvider.user.uuid){
+              setIsRequested(true);
+            }
+          }
+        })
+      );
+
+    };
+  
+    fetchData(); // Call the async function
+  }, []);
 
   const unFollow = async () => {
-    const encodedHost = encodeURIComponent(user.host);
-    const encodedId = encodeURIComponent(authProvider.user.uuid);
-    const url = `${encodedHost}/api/authors/${encodedId}`;
-    const encodedUrl = encodeURIComponent(url);
-
-    try {
-      const response = await api.delete(`/api/authors/${user.id}/followers/${encodedUrl}/`);
-      const data = response.data;
-    } catch (error) {
-      console.error('Fetch error:', error);
-    }
+    await FollowService.unfollow(user.id, authProvider.user);
+    onRefresh();
   };
 
   const sendFollowerRequest = async () => {
-    const encodedHost = encodeURIComponent(user.host);
-    const encodedId = encodeURIComponent(user.id);
-    const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
 
     try {
       const userResponse = await api.get(`/api/authors/${authProvider.user.uuid}/`);
@@ -87,7 +100,7 @@ export default function ListItem({
         },
       };
 
-      await api.post(`/api/authors/${user.id}/inbox/`, followRequest);
+      await InboxService.sendPostToInbox(user.id, followRequest);
       setIsRequested(true);
     } catch (error) {
       console.error("Fetch error:", error);
@@ -95,23 +108,15 @@ export default function ListItem({
   };
 
   const addFollower = async () => {
-    const encodedHost = encodeURIComponent(user.host);
     const encodedId = encodeURIComponent(user.id);
-    const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
-
-    try {
-      await api.put(`/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`);
-      await deleteFollowRequest();
-    } catch (error) {
-      console.error("Add follower error:", error);
-    }
+    await FollowService.addFollower(authProvider.user.uuid, encodedId)
+    await deleteFollowRequest();
+    onRefresh();
   };
 
   const deleteFollowRequest = async () => {
     try {
-      const deleteRequest = { type: "follow", id: notif_id };
-      console.log(deleteRequest);
-      await api.delete(`/api/authors/${authProvider.user.uuid}/inbox/`, { data: deleteRequest });
+      await InboxService.deleteInboxFollowRequest(authProvider.user.uuid,notif_id);
       onRefresh();
     } catch (error) {
       console.error("Delete follow request error:", error);

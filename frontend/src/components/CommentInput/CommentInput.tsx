@@ -2,6 +2,7 @@ import { useState } from "react";
 import TextField from "@mui/material/TextField";
 import styled from "@mui/material/styles/styled";
 import styles from "./CommentInput.module.scss";
+import inbox from "../../service/inbox";
 
 // Styling inspired from https://medium.com/@irwantoalvin/how-to-style-your-material-ui-textfield-integrate-it-with-react-hook-form-and-make-it-reusable-0f3050a90e9a, Downloaded 2024-10-24
 // need to style field like this otherwise stylings may reset and not appear properly
@@ -34,7 +35,7 @@ const StyledCommentInputField = styled(TextField)({
   },
 });
 
-const CommentInputField = ({ authorObj }) => {
+const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
   const [commentFieldClicked, setCommentFieldClicked] = useState(false);
   const [isTextError, setIsTextError] = useState<boolean>(false);
   const [textErrorMsg, setTextErrorMsg] = useState("");
@@ -54,10 +55,26 @@ const CommentInputField = ({ authorObj }) => {
     setTextInField("");
   };
 
-  const handleCommentSubmit = (authorObj: any) => {
+  const handleCommentSubmit = async (authorObj: any) => {
     console.log(`AuthorID: ${authorObj.id}`); // for testing, change to API call or whatever
     console.log(`Author: ${authorObj.displayName}`); // for testing, change to API call or whatever
     console.log(`Comment: "${textInField}" | Submitted`); // for testing, change to API call or whatever
+    console.log(`Post: "${post}"`)
+    
+    const comment_obj = {
+      type: "comment",
+      author: authorObj,
+      comment: textInField,
+      post: post.id,
+    }
+    
+    const response = await inbox.sendCommentToInbox(post.author.id, comment_obj);
+    console.log("returned comment is: ", response)
+    if (response){
+      // In here  you will append the comment to the list. You can create a useState hook and then call something set comments 
+      onCommentAdded(response)
+    }
+
   };
 
   // Inspired from https://muhimasri.com/blogs/mui-validation/, Downloaded 2024-10-24

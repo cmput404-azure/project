@@ -58,6 +58,9 @@ urlpatterns = [
     path("api/authors/<path:author_fqid>/", AuthorsSpecificView.as_view(), name="author_fqid"),
     path("api/authors/", AuthorsView.as_view(), name="authors_list"),
 
+    # Share API
+    path("api/share/<uuid:author_serial>/<path:post_fqid>", ShareView.as_view(), name="shared_posts"),
+    
     # Auth
     path('api/login/', LoginView.as_view(), name='login'),
     path('api/logout/', LogoutView.as_view(), name='logout'),

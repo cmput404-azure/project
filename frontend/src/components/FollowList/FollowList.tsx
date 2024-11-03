@@ -9,6 +9,7 @@ import Modal from 'react-modal';
 import { api } from "../../service/config";
 import styles from './FollowList.module.scss';
 import { useAuth } from "../../state";
+import Author from "../../models/models"
 
 interface Follower {
   displayName: string;
@@ -24,15 +25,17 @@ interface FollowerListProps {
   isOpen: boolean;
   onClose: () => void;
   isFollowerList: string;
+  profileId?: string;
 }
 
 Modal.setAppElement('#root');
 
-export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerListProps) {
+export default function FollowList({ isOpen, onClose, isFollowerList, profileId, }: FollowerListProps) {
   const [followers, setFollowers] = useState<Follower[]>([]);
-
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+
   const authProvider = useAuth();
 
   useEffect(() => {
@@ -46,11 +49,18 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
         fetchFriends();
       }
     }
-  }, [isOpen]);
+  }, [isOpen, refreshTrigger]);
+
+  const handleRefresh = () => setRefreshTrigger(prev => prev + 1);
 
   const fetchFriends = async () => {
     try {
-      const data = await follow.getFriends(authProvider.user.uuid);
+      let data = null;
+      if (profileId) {
+        data = await follow.getFriends(profileId);
+      } else {
+        data = await follow.getFriends(authProvider.user.uuid);
+      }
       setFollowers(data);
       setLoading(false);
     } catch (error) {
@@ -62,9 +72,14 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
 
   const fetchFollowers = async () => {
     try {
-      const data = await follow.getFollowers(authProvider.user.uuid);
+      let data = null;
+      if (profileId) {
+        console.log("PROFILEID", profileId)
+        data = await follow.getFollowers(profileId);
+      } else {
+        data = await follow.getFollowers(authProvider.user.uuid);
+      }
       setFollowers(data);
-
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
@@ -74,7 +89,12 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
 
   const fetchFollowing = async () => {
     try {
-      const data = await follow.getFollowing(authProvider.user.uuid);
+      let data = null;
+      if (profileId) {
+        data = await follow.getFollowing(profileId);
+      } else {
+        data = await follow.getFollowing(authProvider.user.uuid);
+      }
       setFollowers(data);
       setLoading(false);
     } catch (error) {
@@ -94,7 +114,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
       <button onClick={onClose} style={{ float: 'right' }}>Close</button>
       <h2 className={styles.h2}>{isFollowerList}</h2>
       {loading ? (
-        <div className={"loading_component"}><CircularProgress/></div>
+        <div className={"loading_component"}><CircularProgress /></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
@@ -102,14 +122,15 @@ export default function FollowList({ isOpen, onClose, isFollowerList}: FollowerL
 
           {followers.map((follower, index) => (
             <div key={index}>
-              <p>{follower.name}</p> 
+              <p>{follower.name}</p>
               <ListItem
                 isRequest={false}
                 isPost={false}
                 isLike={false}
-                isFollowerList={isFollowerList === "Following"}
+                isFollowerList={profileId ? false : isFollowerList === "Following"}
                 isUserList={false}
                 user={follower}
+                onRefresh={handleRefresh}
               />
             </div>
           ))}

@@ -149,6 +149,7 @@ const HomePage = () => {
         }
         comments={commentsList ? commentsList : []}
         author={user}
+        post={selectedPost}
       />
     </div>
   );
