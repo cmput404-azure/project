@@ -145,12 +145,8 @@ function Auth() {
     setConfirmPassword("");
   };
 
-  const handleClickShowPassword = (isConfirm) => {
-    if (isConfirm) {
-      setShowPasswordConfirm(!showPasswordConfirm);
-    } else {
-      setShowPassword(!showPassword);
-    }
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleMouseDownPassword = (event) => {
@@ -224,7 +220,7 @@ function Auth() {
                           ? "hide the password"
                           : "display the password"
                       }
-                      onClick={() => handleClickShowPassword(false)}
+                      onClick={handleClickShowPassword}
                       onMouseDown={handleMouseDownPassword}
                       onMouseUp={handleMouseUpPassword}
                       edge="end"
@@ -241,7 +237,7 @@ function Auth() {
               label="Confirm Password"
               variant="outlined"
               size="small"
-              type={showPasswordConfirm ? "text" : "password"}
+              type={showPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -255,7 +251,7 @@ function Auth() {
                             ? "hide the password"
                             : "display the password"
                         }
-                        onClick={() => handleClickShowPassword(true)}
+                        onClick={handleClickShowPassword}
                         onMouseDown={handleMouseDownPassword}
                         onMouseUp={handleMouseUpPassword}
                         edge="end"
