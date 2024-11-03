@@ -32,9 +32,10 @@ Modal.setAppElement('#root');
 
 export default function FollowList({ isOpen, onClose, isFollowerList, profileId, }: FollowerListProps) {
   const [followers, setFollowers] = useState<Follower[]>([]);
-
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+
   const authProvider = useAuth();
 
   useEffect(() => {
@@ -48,7 +49,9 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
         fetchFriends();
       }
     }
-  }, [isOpen]);
+  }, [isOpen, refreshTrigger]);
+
+  const handleRefresh = () => setRefreshTrigger(prev => prev + 1);
 
   const fetchFriends = async () => {
     try {
@@ -127,6 +130,7 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
                 isFollowerList={profileId ? false : isFollowerList === "Following"}
                 isUserList={false}
                 user={follower}
+                onRefresh={handleRefresh}
               />
             </div>
           ))}
