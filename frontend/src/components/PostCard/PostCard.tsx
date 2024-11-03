@@ -212,7 +212,6 @@ const transformImageUri = (src: string, alt: string, title: string) => {
               className={`${styles.icon} ${hasLiked ? styles.liked : ""}`}
               onClick={(e) => {
                 e.stopPropagation();
-                console.log("Like");
               }}
             >
               <i className="fas fa-heart icon" onClick={handleClickLike}></i>
@@ -233,8 +232,8 @@ const transformImageUri = (src: string, alt: string, title: string) => {
             onClose={handleCloseShare}
             sx={{
               '& .MuiDialog-paper': {
-                backgroundColor: 'rgb(123, 123, 123)',  // Dialog background color
-                color: 'white',  // Text color in dialog
+                backgroundColor: 'rgb(123, 123, 123)', 
+                color: 'white',  
               },
             }}>
               <DialogTitle>Share Post</DialogTitle>
@@ -247,11 +246,11 @@ const transformImageUri = (src: string, alt: string, title: string) => {
                 <Button 
                   onClick={handleCloseShare} 
                   sx={{
-                    backgroundColor: 'rgb(143, 143, 143)',  // Slightly lighter color
+                    backgroundColor: 'rgb(143, 143, 143)',  
                     color: 'white',
                     boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
                     '&:hover': {
-                      backgroundColor: 'lightcoral',  // Slightly lighter on hover
+                      backgroundColor: 'lightcoral',  
                     },
                   }}
                   autoFocus
@@ -261,11 +260,11 @@ const transformImageUri = (src: string, alt: string, title: string) => {
                 <Button 
                   onClick={handleConfirmShare} 
                   sx={{
-                    backgroundColor: 'rgb(143, 143, 143)',  // Slightly lighter color
+                    backgroundColor: 'rgb(143, 143, 143)', 
                     color: 'white',
                     boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
                     '&:hover': {
-                      backgroundColor: '#5acc8c',  // Slightly lighter on hover
+                      backgroundColor: '#5acc8c', 
                     },
                   }}
                   autoFocus
