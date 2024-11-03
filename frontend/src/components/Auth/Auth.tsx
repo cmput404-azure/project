@@ -267,7 +267,7 @@ function Auth() {
             />
           )}
           <div className={styles.auth__container__submit__container}>
-            <button type="submit">Submit</button>
+            <button type="submit">{isRegister ? "Submit" : "Login"}</button>
             {error && <p className={styles.error}>{error}</p>}
             <Snackbar
               open={openSnackbarRegister}
