@@ -126,7 +126,7 @@ export default function PublicProfile() {
       navigate('/login');
    }
 
-   if (!authorData) return <div className="loading"><CircularProgress /></div>;
+   if (!authorData) return <div className="loading"><CircularProgress  sx={{color: "#70ffaf"}}/></div>;
 
    return (
       <div className={styles.wrapper}>
@@ -149,6 +149,7 @@ export default function PublicProfile() {
                            size="small"
                            onClick={isOwnProfile ? handleManageProfileClick : (isAuthenticated ? handleButtonClick : handleLoginClick)}
                            disabled={isRequested}
+                           sx={{ backgroundColor: "#70ffaf", color: "black" }}
                         >
                            {isOwnProfile
                               ? "Manage Profile"

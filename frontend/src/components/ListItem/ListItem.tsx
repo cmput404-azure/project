@@ -1,8 +1,11 @@
 // @ts-nocheck
 
-import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+
+import { Avatar } from "@mui/material";
 import { api } from "../../service/config";
+import { extractUUID } from "../../util/formatting/extractUUID";
 import styles from "./ListItem.module.scss";
 import { useAuth } from "../../state";
 import FollowService from "../../service/follow";
@@ -120,6 +123,7 @@ export default function ListItem({
 
   const navigateToProfile = () => {
     closeModal?.();
+    navigate(`/authors/${extractUUID(user.id)}`);
   };
 
   let additionalText = "";
@@ -131,14 +135,12 @@ export default function ListItem({
   return (
     <div className={styles.ListItemContainer}>
       <div className={styles.container}>
-        <Link to={`/authors/${userId}`} className={styles.profileLink} onClick={navigateToProfile}>
-          <img
+        <div className={styles.profileLink} onClick={navigateToProfile}>
+          <Avatar
             className={styles.listImg}
-            src={
-              user.profileImage ? user.profileImage.trim() :
-              `https://ui-avatars.com/api/?background=random&name=${user.displayName}`
-            }
-            alt="pfp"
+            alt={user.displayName}
+            src={user.profileImage}
+            sx={{ width: 48, height: 48 }}
           />
           <div className={styles.text}>
             <h1>
@@ -147,7 +149,7 @@ export default function ListItem({
             </h1>
             <p>@{user.displayName}</p>
           </div>
-        </Link>
+        </div>
 
         {isFollowerList && <button onClick={unFollow}>Unfollow</button>}
 

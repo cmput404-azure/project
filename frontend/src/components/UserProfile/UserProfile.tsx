@@ -1,484 +1,331 @@
+import { Alert, Avatar, Button, CircularProgress, Drawer, IconButton, Snackbar, TextField, styled } from "@mui/material";
 import { Author, PostData as Post } from "../../models/models";
-import { CircularProgress, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 
-import { AuthorPostsResponse } from "../../models/models";
-import DeletePostModal from "../DeletePostModal/DeletePostModal";
-import EditPostModal from "../EditPostModal/EditPostModal";
-import EditProfileModal from "../EditProfileModal/EditProfileModal";
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 import FollowList from "../FollowList/FollowList";
-import GitHubIcon from "@mui/icons-material/GitHub";
+import { FollowerModalTypes } from "../../models/modelTypes";
+import { GitHub } from "@mui/icons-material";
+import LinkIcon from '@mui/icons-material/Link';
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
-import { api } from "../../service/config";
-import follow from "../../service/follow";
+import ProfileService from "../../service/profile";
+import { extractUUID } from "../../util/formatting/extractUUID";
 import followService from "../../service/follow";
-import inbox from "../../service/inbox";
+import profileService from "../../service/profile";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
-import { useParams } from "react-router-dom";
-import { extractUUID } from "../../util/formatting/extractUUID";
 
-// by default isViewing is false which means the user is viewing their own profile
-export default function UserProfile() {
-  // Author data
-  const [authorData, setAuthorData] = useState(null);
-  const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
-  // Get the userID from the URL, used for viewing other users profile
-  const { userID } = useParams<{ userID: string }>();
-  const [userToGet, setUserToGet] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  // Edit profile
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  // Delete post
-  const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<string | null>(null);
-  const [visibilityNumber, setVisibilityNumber] = useState<number | null>(null);
-  // Edit post
-  const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
-  const [postToEdit, setPostToEdit] = useState<Post[]>([]);
-  // FollowerList
-  const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
-  const [showFollowerList, setShowFollowerList] = useState<string>("");
-
-  const [friendsCount, setFriendsCount] = useState(0);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-  // Profile Link
-  const [hasCopiedProfileLink, setHasCopiedProfileLink] = useState(false);
-
-  const handleEditProfileButtonClicked = () => {
-    setIsEditingProfile(true);
-  };
-
-  const fetchFriendsCount = async () => {
-    try {
-      const data = await followService.getFriends(authProvider.user.uuid);
-      setFriendsCount(data.length);
-    } catch (error) {
-      console.error("Fetch error (friends):", error);
-    }
-  };
-
-  const fetchFollowersCount = async () => {
-    try {
-      const data = await followService.getFollowers(authProvider.user.uuid);
-      setFollowersCount(data.length);
-    } catch (error) {
-      console.error("Fetch error (followers):", error);
-    }
-  };
-
-  const fetchFollowingCount = async () => {
-    try {
-      const data = await followService.getFollowing(authProvider.user.uuid);
-      setFollowingCount(data.length);
-    } catch (error) {
-      console.error("Fetch error (following):", error);
-    }
-  };
-
-  const handleSaveEditProfileButtonClicked = (data) => {
-    let tempAuthorData = authorData;
-    tempAuthorData.displayName = data.displayName;
-    tempAuthorData.github = data.githubLink;
-    updateUserInfo(tempAuthorData);
-    console.log(data);
-    setIsEditingProfile(false);
-  };
-
-  const handleDeletePostButtonClicked = (
-    postId: string,
-    visibilityNumber: number
-  ) => {
-    setPostToDelete(extractUUID(postId));
-    setVisibilityNumber(visibilityNumber);
-    setIsPostDeleteModalOpen(true);
-  };
-
-  const handleEditPostButtonClicked = (postId: string) => {
-    setPostToEdit(authorPosts.filter((post) => post.id === postId));
-    setIsEditPostModalOpen(true);
-  };
-
-  function handleDeletePostModalClose() {
-    setIsPostDeleteModalOpen(false);
-    setPostToDelete(null);
-    setVisibilityNumber(null);
-  }
-
-  function handleEditPostModalClose() {
-    setIsEditPostModalOpen(false);
-    setPostToEdit([]);
-  }
-
-  // From https://devsarticles.com/react-copy-to-clipboard, Downloaded on 2024-10-26
-  async function handleGetProfileLinkButtonClicked() {
-    console.log("Get Profile Link button clicked");
-    console.log(window.location.href);
-
-    // From https://stackoverflow.com/questions/39823681/read-the-current-full-url-with-react, Downloaded on 2024-10-27
-    let url = window.location.href;
-    let parse = url.split("/");
-    let hostDomain = parse.slice(0, 3).join("/") + "/";
-
-    const content = `${hostDomain}#/authors/${extractUUID(authorData.id)}`;
-
-    try {
-      await navigator.clipboard.writeText(content);
-      console.log("Copied to clipboard:", content);
-      setHasCopiedProfileLink(true);
-    } catch (error) {
-      console.error("Unable to copy to clipboard:", error);
-    }
-  }
-
-  function handleFollowButtonClicked() {
-    console.log("Follow button clicked");
-    // TODO: Implement follow functionality
-    // addFollower();
-  }
-
-  function openFollowers() {
-    setShowFollowerList("Follower");
-    setIsFollowerListModalOpen(true);
-  }
-
-  function openFollowing() {
-    setShowFollowerList("Following");
-    setIsFollowerListModalOpen(true);
-  }
-  function openFriends() {
-    setShowFollowerList("Friends");
-    setIsFollowerListModalOpen(true);
-  }
-
-  // authentication
-  const authProvider = useAuth();
-
-  useEffect(() => {
-    const fetchCounts = async () => {
-      try {
-        await Promise.all([
-          fetchFriendsCount(),
-          fetchFollowersCount(),
-          fetchFollowingCount(),
-        ]);
-      } catch (error) {
-        console.error("Failed to fetch counts:", error);
-      }
-    };
-
-    if (userID) {
-      console.log(userID);
-      setUserToGet(userID);
-      setIsEditing(false);
-    } else if (authProvider.user) {
-      fetchCounts();
-      setHasCopiedProfileLink(false);
-
-      setUserToGet(authProvider.user.uuid);
-      setIsEditing(true);
-    }
-  }, [userID, authProvider.user]);
-
-  useEffect(() => {
-    // Only fetch data if userToGet is defined
-    if (userToGet) {
-      fetchAuthorData();
-      fetchAuthorPosts();
-    }
-  }, [userToGet]);
-
-  // function to get the info of the user who is currently logged in
-  async function fetchAuthorData() {
-    try {
-      if (userToGet) {
-        const response = await api.get(`/api/authors/${userToGet}/`);
-        setAuthorData(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching the author data", error);
-    }
-  }
-
-  // function to update an Authors data
-  async function updateUserInfo(data) {
-    try {
-      if (authProvider.user) {
-        data.id = data.id.replace(/\/+$/, '').split('/').pop();
-        const response = await api.put(
-          `/api/authors/${authProvider.user.uuid}/`,
-          data
-        );
-        console.log("User info updated successfully:", response.data);
-        fetchAuthorData();
-        fetchAuthorPosts();
-      }
-    } catch (error) {
-      console.error("Error updating user info", error);
-    }
-  }
-
-  // function to get all the authors posts, used to refresh after save
-  async function fetchAuthorPosts() {
-    try {
-      if (authProvider.user) {
-        const response = await api.get<AuthorPostsResponse>(
-          `/api/authors/${userToGet}/posts/`
-        );
-        // filter out the posts that are not publicaly visible
-        const posts = response.data.src.filter((post) => post.visibility == 1);
-        setAuthorPosts(posts.reverse());
-      }
-    } catch (error) {
-      console.error("Error fetching the author posts", error);
-    }
-  }
-
-  // Function to handle updating the post
-  async function handleUpdatePost(updatedPost: {
-    title: string;
-    content: string;
-    visibility: number;
-  }) {
-    if (postToEdit.length > 0 && authProvider.user) {
-      try {
-        const postId = extractUUID(postToEdit[0].id);
-
-        // PUT request to update the post
-        const response = await api.put(
-          `/api/authors/${authProvider.user.uuid}/posts/${postId}/`,
-          {
-            title: updatedPost.title,
-            content: updatedPost.content,
-            visibility: updatedPost.visibility,
-          }
-        );
-
-        // Get friends and followers list
-        const followers = await follow.getFollowers(authProvider.user.uuid);
-        const friends = await follow.getFriends(authProvider.user.uuid);
-
-        // followers already include all followers and friends
-        // public/unlisted=> send to followers and friends
-        if (postToEdit[0].visibility === 1 || postToEdit[0].visibility === 3) {
-          for (const follower of followers) {
-            const inboxResponse = await inbox.updateInboxPost(
-              follower.id,
-              postId,
-              updatedPost.title,
-              updatedPost.content,
-              updatedPost.visibility
-            );
-          }
-        } else {
-          for (const friend of friends) {
-            const inboxResponse = await inbox.updateInboxPost(
-              friend.id,
-              postId,
-              updatedPost.title,
-              updatedPost.content,
-              updatedPost.visibility
-            );
-          }
-        }
-
-        console.log("Post updated successfully:", response.data);
-
-        // call again to refresh teh posts
-        await fetchAuthorPosts();
-        // close modal after updating the post
-        handleEditPostModalClose();
-      } catch (error) {
-        console.error("Error updating post", error);
-      }
-    }
-  }
-
-  async function handleConfirmDelete() {
-    if (postToDelete && authProvider.user) {
-      try {
-        // API call to delete the post
-        await api.delete(
-          `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
-        );
-
-        // Get friends and followers list
-        const followers = await follow.getFollowers(authProvider.user.uuid);
-        const friends = await follow.getFriends(authProvider.user.uuid);
-
-        // followers already include friends and followers
-        if (visibilityNumber === 1 || visibilityNumber === 3) {
-          for (const follower of followers) {
-            const inboxResponse = await inbox.deleteInboxPost(
-              follower.id,
-              postToDelete
-            );
-          }
-        } else {
-          // Friends receive inbox on all type of post
-          for (const friend of friends) {
-            const inboxResponse = await inbox.deleteInboxPost(
-              friend.id,
-              postToDelete
-            );
-          }
-        }
-
-        // Refresh the posts after successful deletion
-        await fetchAuthorPosts();
-
-        // Close the modal after deletion
-        setIsPostDeleteModalOpen(false);
-        setPostToDelete(null);
-        setVisibilityNumber(null);
-      } catch (error) {
-        console.error("Error deleting post", error);
-      }
-    }
-  }
-
-  // not used yet
-  // const addFollower = async () => {
-  //   const encodedHost = encodeURIComponent(authorData.host);
-  //   const encodedId = encodeURIComponent(authorData.id);
-
-  //   const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
-  //   // Add actor as follower
-  //   const response = await api.put(
-  //     `/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`
-  //   );
-
-  //   const data = response.data;
-  // };
-
-  if (!authorData) {
-    return (
-      <div className={"loading"}>
-        <CircularProgress />
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.userProfileContainer}>
-      <section className={styles.profileHeaderContainer}>
-        <img
-          className={styles.profilePic}
-          src={`https://ui-avatars.com/api/?background=random&name=${authorData.displayName}`}
-          alt={authorData.profilePic}
-        />
-        <section className={styles.userInfoContainer}>
-          <section className={styles.userInfo}>
-            <section className={styles.userNameContainer}>
-              <span className={styles.userName}>{authorData.displayName}</span>
-            </section>
-            <section className={styles.buttonContainer}>
-              {isEditing ? (
-                <button
-                  className={styles.followButton}
-                  onClick={handleEditProfileButtonClicked}
-                >
-                  Edit Profile
-                </button>
-              ) : (
-                <button
-                  className={styles.followButton}
-                  onClick={handleFollowButtonClicked}
-                >
-                  Follow
-                </button>
-              )}
-
-              <IconButton
-                onClick={() => window.open(authorData.github, "_blank")}
-              >
-                <GitHubIcon />
-              </IconButton>
-            </section>
-          </section>
-
-          {/* {          <span className={styles.userHandle}>
-            @{authorData.displayName.toLowerCase().replace(" ", "_")}
-          </span>} */}
-
-          <section className={styles.userStats}>
-            <span>
-              <p className={styles.count}>100</p> <p>posts</p>
-            </span>
-            <span onClick={openFollowers} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>{followersCount}</p> <p>followers</p>
-            </span>
-            <span onClick={openFollowing} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>{followingCount}</p> <p>following</p>
-            </span>
-            <span onClick={openFriends} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>{friendsCount}</p>
-              <p>friends</p>
-            </span>
-            <FollowList
-              isOpen={isFollowerListModalOpen}
-              onClose={() => setIsFollowerListModalOpen(false)}
-              isFollowerList={showFollowerList}
-            ></FollowList>
-          </section>
-        </section>
-
-        <section className={styles.userProfileLink}>
-          <button
-            className={
-              hasCopiedProfileLink ? styles.linkCopied : styles.followButton
-            }
-            onClick={handleGetProfileLinkButtonClicked}
-          >
-            {hasCopiedProfileLink ? "Link Copied" : "Get Profile Link"}
-          </button>
-        </section>
-      </section>
-
-      <hr className={styles.horizontalLine} />
-
-      <section className={styles.userPostContainer}>
-        <section className={styles.userPosts}>
-          {authorPosts.map((post) => (
-            <MiniPostCard
-              key={post.id}
-              author={post.author.displayName}
-              title={post.title}
-              time={post.published}
-              content={post.content}
-              likes={1523382}
-              saves={250}
-              comments={10000}
-              canDelete={isEditing}
-              handleDelete={() =>
-                handleDeletePostButtonClicked(post.id, post.visibility)
-              }
-              canEdit={isEditing}
-              handleEdit={() => handleEditPostButtonClicked(post.id)}
-            />
-          ))}
-        </section>
-      </section>
-      <EditProfileModal
-        isOpen={isEditingProfile}
-        onSave={handleSaveEditProfileButtonClicked}
-        onClose={() => setIsEditingProfile(false)}
-        author={authorData}
-      />
-
-      <DeletePostModal
-        isOpen={isPostDeleteModalOpen}
-        onRequestClose={handleDeletePostModalClose}
-        onDelete={handleConfirmDelete}
-      />
-
-      <EditPostModal
-        isOpen={isEditPostModalOpen}
-        onRequestClose={handleEditPostModalClose}
-        post={postToEdit.length > 0 ? postToEdit[0] : null}
-        onSubmit={handleUpdatePost}
-      />
-    </div>
-  );
+interface FollowersModal {
+   open: boolean;
+   type: string;
 }
+
+export default function UserProfile() {
+   const [authorData, setAuthorData] = useState<Author | null>(null);
+   const [posts, setPosts] = useState<Post[]>([]);
+   const [edit, setEdit] = useState<boolean>(false);
+   const [followersModal, setfollowersModal] = useState<FollowersModal>({ open: false, type: "follower" });
+   const [friendsCount, setFriendsCount] = useState(0);
+   const [followersCount, setFollowersCount] = useState(0);
+   const [followingCount, setFollowingCount] = useState(0);
+   const [openSnackbar, setOpenSnackbar] = useState(false);
+   const auth = useAuth();
+
+   const fetchProfileData = async () => {
+      if (auth.isAuthenticated && auth.user.uuid) {
+         const author = await ProfileService.fetchAuthorData(auth.user.uuid);
+         const posts = await ProfileService.fetchAuthorPosts(auth.user.uuid);
+         setAuthorData(author);
+         setPosts(posts);
+      }
+   };
+
+   function onDeletePost(postId: string) {
+      setPosts(posts.filter((post) => post.id !== postId));
+   }
+
+   useEffect(() => {
+      fetchProfileData();
+   }, [auth.user.uuid, edit]);
+
+   useEffect(() => {
+      async function fetchCounts() {
+         try {
+            const friends = await followService.getFollowers(auth.user.uuid);
+            const followers = await followService.getFollowers(auth.user.uuid);
+            const following = await followService.getFollowing(auth.user.uuid);
+
+            setFriendsCount(friends.length);
+            setFollowersCount(followers.length);
+            setFollowingCount(following.length);
+         } catch (error) {
+            console.error("Failed to fetch counts:", error);
+         }
+      }
+
+      fetchCounts();
+   }, [auth.user.uuid]);
+
+   function getLink() {
+      const currentURL = window.location.host;
+      const protocol = window.location.protocol;
+      const constructedURL = `${protocol}//${currentURL}/#/authors/${extractUUID(auth.user.uuid)}`;
+      
+      navigator.clipboard.writeText(constructedURL);
+      setOpenSnackbar(true);
+   }
+
+   if (!authorData) return <div className="loading"><CircularProgress sx={{ color: "#70ffaf" }} /></div>;
+
+   return (
+      <div className={styles.wrapper}>
+         <div className={styles.container}>
+            <section className={styles.header}>
+               <div className={styles.info}>
+                  <div className={styles.icon}>
+                     <Avatar
+                        alt={authorData.displayName}
+                        src={authorData.profileImage ?? "https://ui-avatars.com/api/?name=" + authorData.displayName}
+                        sx={{ width: 100, height: 100 }}
+                     />
+                  </div>
+                  <div className={styles.user}>
+                     <div className={styles.user__main}>
+                        <h2 className={styles.display__name}>{authorData.displayName}</h2>
+                        <IconButton className={styles.icon__button} size="small" onClick={() => setEdit(true)}>
+                           <EditIcon />
+                        </IconButton>
+                        {authorData.github &&
+                           <IconButton className={styles.icon__button}
+                              size="small"
+                              onClick={() => window.open(authorData.github, "_blank")}>
+                              <GitHub />
+                           </IconButton>
+                        }
+                     </div>
+                     <div className={styles.user__secondary}>
+                        <p className={styles.username}>@{authorData.username}</p>
+
+                        <div className={styles.follows}>
+                           <p className={styles.posts__count} >
+                              <b>{posts.length}</b> {posts.length === 1 ? "post" : "posts"}
+                           </p>
+                           <p className={styles.followers__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FOLLOWER })}>
+                              <b>{followersCount}</b> {followersCount === 1 ? "follower" : "followers"}
+                           </p>
+                           <p className={styles.following__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FOLLOWING })}>
+                              <b>{followingCount}</b> following
+                           </p>
+                           <p className={styles.friends__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FRIENDS })}>
+                              <b>{friendsCount}</b> {friendsCount === 1 ? "friend" : "friends"}
+                           </p>
+                           <FollowList
+                              isOpen={followersModal.open}
+                              onClose={() => setfollowersModal({ open: false, type: "follower" })}
+                              isFollowerList={followersModal.type}
+                           />
+                        </div>
+                     </div>
+                  </div>
+                  <div className={styles.footer}>
+                     <IconButton className={styles.icon__button} size="small" onClick={getLink}>
+                        <LinkIcon />
+                     </IconButton>
+                  </div>
+               </div>
+               <div className={styles.bio}>
+                  <p className={styles.bio__text}>{authorData.bio}</p>
+               </div>
+            </section>
+
+            <section className={styles.posts}>
+               {posts.map(post => (
+                  <MiniPostCard key={post.id} post={post} authorUUID={authorData.id} onDelete={onDeletePost} />
+               ))}
+            </section>
+         </div>
+
+         <Drawer open={edit} anchor="right" onClose={() => setEdit(false)}
+            PaperProps={{
+               sx: { bgcolor: "#555", color: "#fff" }
+            }}
+         >
+            <EditProfile user={authorData} toggleDrawer={setEdit} />
+         </Drawer>
+
+         <Snackbar
+            open={openSnackbar}
+            autoHideDuration={2000} // auto close after 2s
+            onClose={() => setOpenSnackbar(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+         >
+            <Alert onClose={() => setOpenSnackbar(false)} severity="success" sx={{ width: '100%' }}>
+               Link copied to clipboard!
+            </Alert>
+         </Snackbar>
+      </div>
+   );
+}
+
+export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer: (value: boolean) => void }) {
+   const [displayName, setDisplayName] = useState<string>(user.displayName);
+   const [bio, setBio] = useState<string>(user.bio ?? "");
+   const [github, setGithub] = useState<string>(user.github ?? "");
+   const [profileImage, setProfileImage] = useState<string>(user.profileImage ?? "");
+   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+   const [loading, setLoading] = useState<boolean>(false);
+   const [error, setError] = useState<string>("");
+   const [success, setSuccess] = useState<boolean>(false);
+   const [disabled, setDisabled] = useState<boolean>(false);
+
+   user.id = extractUUID(user.id);
+
+   function convertToBase64(file: File): Promise<string> {
+      return new Promise((resolve, reject) => {
+         const reader = new FileReader();
+         reader.readAsDataURL(file);
+         reader.onload = () => resolve(reader.result as string);
+         reader.onerror = error => reject(error);
+      });
+   }
+
+   async function handleUpdate() {
+      setError("");
+
+      // Validation
+      if (!displayName) {
+         setError("Display name is required");
+         return;
+      }
+
+      if (!github) {
+         setError("Github is required");
+         return;
+      }
+
+      // Create new user object
+      const updatedUser: Author = {
+         ...user,
+         displayName,
+         bio,
+         github,
+         profileImage: URL.createObjectURL(profileImageFile ?? new Blob())
+      };
+
+      setLoading(true);
+
+      try {
+         // Check if a new profile image file exists
+         if (profileImageFile) {
+            const image = await convertToBase64(profileImageFile);
+            updatedUser.profileImage = image;
+         }
+
+         await profileService.updateUserInfo(user.id, updatedUser);
+
+         setSuccess(true);
+         setLoading(false);
+         setDisabled(true);
+      }
+      catch (error: any) {
+         setError(error.message);
+         setLoading(false);
+      }
+   }
+
+   // Check disabled if no changes
+   useEffect(() => {
+      if (displayName === user.displayName && bio === user.bio && github === user.github && profileImage === user.profileImage) {
+         setDisabled(true);
+      } else {
+         setDisabled(false);
+      }
+   }, [displayName, bio, github, profileImage]);
+
+
+   return (
+      <div className={styles.edit__profile}>
+         <div className={styles.edit__profile__header}>
+            <h2>Edit Profile</h2>
+            <IconButton className={styles.icon__button} size="small" onClick={() => toggleDrawer(false)}>
+               <CloseIcon />
+            </IconButton>
+         </div>
+
+         <div className={styles.edit__profile__body}>
+            <div className={styles.edit__profile__body__image}>
+               <div className={styles.edit__profile__body__image__container}>
+                  <Avatar alt="profile image" src={profileImage} sx={{ width: 100, height: 100 }} />
+               </div>
+               <div className={styles.edit__profile__body__image__input}>
+                  <input type="file" accept="image/*" onChange={e => {
+                     if (e.target.files) {
+                        setProfileImageFile(e.target.files[0]);
+                        setProfileImage(URL.createObjectURL(e.target.files[0]));
+                     }
+                  }} />
+               </div>
+            </div>
+
+            <div className={styles.edit__profile__body__form}>
+               <EditField className={styles.input} label="Display Name" variant="outlined" value={displayName} onChange={e => setDisplayName(e.target.value)} />
+               <EditField className={styles.input} label="Bio" variant="outlined" value={bio} onChange={e => setBio(e.target.value)} />
+               <EditField className={styles.input} label="Github" variant="outlined" value={github} onChange={e => setGithub(e.target.value)} />
+            </div>
+         </div>
+
+         <p className={styles.error}>{error}</p>
+
+         <Button variant="contained" onClick={handleUpdate} disabled={disabled} sx={{ width: "100%", marginTop: "1rem", backgroundColor: "#70ffaf", color: "black" }}>
+            {loading ? <CircularProgress sx={{ color: "#70ffaf" }} /> : "Save"}
+         </Button>
+         <Snackbar
+            open={success}
+            autoHideDuration={2000}
+            onClose={() => setSuccess(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+         >
+            <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
+               Successfully updated profile.
+            </Alert>
+         </Snackbar>
+      </div>
+   );
+}
+
+const EditField = styled(TextField)({
+   "& label": {
+      color: "#ffffff !important",
+   },
+
+   "& input": {
+      color: "white !important",
+   },
+
+   "& textarea": {
+      color: "white !important",
+   },
+
+   "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+         border: "none",
+         boxShadow: "0 4px 7px rgba(0, 0, 0, 0.45)",
+      },
+      "&:hover fieldset": {
+         border: "1px solid",
+         borderColor: "white !important",
+      },
+      "&.Mui-focused fieldset": {
+         border: "1px solid",
+         borderColor: "#70ffaf !important",
+      },
+   },
+
+   "& .MuiFormHelperText-root": {
+      color: "#ffffff",
+      "&.Mui-error": {
+         color: "#dc3545",
+      },
+   },
+});
