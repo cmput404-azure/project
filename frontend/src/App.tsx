@@ -10,7 +10,7 @@ import Post from "./components/Post/Post";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicProfile from "./components/PublicProfile/PublicProfile";
 import Root from "./routes/Root";
-import UserProfile from "./components/UserProfile/UserProfileOld";
+import UserProfile from "./components/UserProfile/UserProfile";
 import UserProfileOld from "./components/UserProfile/UserProfileOld";
 import styles from "./App.module.scss";
 import { useAuth } from "./state";
