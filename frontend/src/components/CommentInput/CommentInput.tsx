@@ -34,7 +34,7 @@ const StyledCommentInputField = styled(TextField)({
   },
 });
 
-const CommentInputField = ({ authorObj }) => {
+const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
   const [commentFieldClicked, setCommentFieldClicked] = useState(false);
   const [isTextError, setIsTextError] = useState<boolean>(false);
   const [textErrorMsg, setTextErrorMsg] = useState("");
@@ -54,10 +54,25 @@ const CommentInputField = ({ authorObj }) => {
     setTextInField("");
   };
 
-  const handleCommentSubmit = (authorObj: any) => {
+  const handleCommentSubmit = async (authorObj: any) => {
     console.log(`AuthorID: ${authorObj.id}`); // for testing, change to API call or whatever
     console.log(`Author: ${authorObj.displayName}`); // for testing, change to API call or whatever
     console.log(`Comment: "${textInField}" | Submitted`); // for testing, change to API call or whatever
+    console.log(`Post: "${post}"`)
+    const url = `${post.author.id}/inbox/`
+    const body = {
+      type: "comment",
+      author: authorObj,
+      comment: textInField,
+      post: post.id
+    }
+    const response = await fetch(url, {method: "POST", headers: {'Content-Type': 'application/json'},  body: JSON.stringify(body)})
+    const data = await response.json()
+    if (response.ok){
+      // In here  you will append the comment to the list. You can create a useState hook and then call something set comments 
+      onCommentAdded(data)
+    }
+
   };
 
   // Inspired from https://muhimasri.com/blogs/mui-validation/, Downloaded 2024-10-24

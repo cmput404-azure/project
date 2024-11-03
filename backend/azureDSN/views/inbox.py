@@ -360,17 +360,15 @@ class InboxView(APIView):
         post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
         post_obj = Post.objects.get(uuid=post_id)
         comment_obj = Comment.objects.create(user=payload["author"], 
-                                             created_at=payload["published"], 
                                              post=post_obj,
-                                             comment=payload["comment"],
-                                             contentType=payload["contentType"])
+                                             comment=payload["comment"])
         serializer = CommentSerializer(comment_obj, data=payload, context={"request": request})
 
         if serializer.is_valid():
             comment_instance = serializer.save()
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, comment_instance)
-            return Response({"message": "Notice post's owner about your comment successfully"}, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
