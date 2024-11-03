@@ -39,7 +39,6 @@ export default function UserSearch({ closeModal }: userSearchProps) {
                 const response = await api.get(`/api/authors/all/`,{
                     params: { user: authProvider.user.uuid }
                 }); 
-                console.log("RESPONSE", response.data);
                 setResults(response.data); 
             } catch (err) {
                 console.error('Error fetching users:', err);
