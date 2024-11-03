@@ -9,9 +9,11 @@ import follow from "../../service/follow";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
 import postService from "../../service/post";
+import FollowService from "../../service/follow";
+import ProfileService from "../../service/profile";
 import styles from "./Post.module.scss";
 import { useAuth } from "../../state";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 export default function Post() {
    const { postID } = useParams<{ postID: string }>();
@@ -24,20 +26,44 @@ export default function Post() {
    const [hasShared, setHasShared] = useState(false);
    const [openSnackbar, setOpenSnackbar] = useState(false);
    const [isCommentOpen, setIsCommentOpen] = useState(false);
-
-   // TODO: need to check if its friends only post, if so then redirect to home if user is not a friend
+   const [showAlert, setShowAlert] = useState(false);
+   const navigate = useNavigate();
+   // TODO: need to check if its friends only (unlisted) post, if so then redirect to home if user is not a friend
 
    useEffect(() => {
       const fetchPost = async () => {
          try {
             if (postID) {
                const postData = await postService.getPost(`api/posts/${postID}`);
+               // Check if logged in user is a follower of post user
+               const authUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
+
+               // Check if the author is viewing it
+               let url = `${authUser.host}authors/${authProvider.user.uuid}`;
+               if (url != postData.author.id) {
+                  let authorId = postData.author.id.replace(/\/+$/, '').split('/').pop();
+                  const encodedUrl = encodeURIComponent(url);
+                  const is_following = await FollowService.checkFollowing(authorId, encodedUrl);
+                  if (is_following === false) {
+                     setOpenSnackbar(true);
+                     setShowAlert(true);
+
+                     setTimeout(() => {
+                        navigate('/home');
+                     }, 2000);
+                  }
+               }
+
                setPost(postData);
                setLikeCount(Array.isArray(post.likes) ? 0 : post.likes.count);
                setCommentCount(Array.isArray(post.comments) ? 0 : post.comments.count);
             }
          } catch (error) {
-            console.error("Error fetching post data:", error);
+            if (error.response && error.response.status === 403) {
+               navigate('/login'); // Redirect to login if unauthorized
+            } else {
+               console.error("Error fetching post data:", error);
+            }
          }
       };
       fetchPost();
@@ -96,63 +122,78 @@ export default function Post() {
    if (!post) return <div><CircularProgress sx={{color: "#70ffaf"}}/></div>;
 
    return (
-      <div className={styles.card}>
-         <div className={styles.grid}>
-            <img
-               className={styles.profilePic}
-               src={post.author.profileImage ?? `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`}
-               alt={`${post.author.displayName}'s profile`}
-            />
-            <div className={styles.headerText}>
-               <span className={styles.userName}>{post.author.displayName}</span>
-               <span className={styles.postTime}>{new Date(post.published).toLocaleString()}</span>
-            </div>
-            <Tooltip title="Copy link">
-               <i className="fas fa-link" onClick={handleCopyLink}></i>
-            </Tooltip>
-            <Snackbar
-               open={openSnackbar}
-               autoHideDuration={2000}
-               onClose={handleCloseSnackbar}
-               anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-               <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-                  Link copied to clipboard!
-               </Alert>
-            </Snackbar>
-            <div className={styles.cardFooter}>
-               <div className={styles.essentials}>
-                  <div
-                     className={`${styles.icon} ${hasLiked ? styles.liked : ""}`}
-                     onClick={(e) => {
-                        e.stopPropagation();
-                        handleLikePost();
-                     }}
-                  >
-                     <i className="fas fa-heart icon"></i>
-                     <span>{formatCount(likeCount)}</span>
+      showAlert ? (
+         <Snackbar
+            open={openSnackbar}
+            autoHideDuration={2000}
+            onClose={handleCloseSnackbar}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+         >
+            <Alert onClose={handleCloseSnackbar} severity="info" sx={{ width: '100%' }}>
+               Sorry, this post has been hidden from you.
+            </Alert>
+         </Snackbar>
+      ) : (
+         <div className={styles.card}>
+            <div className={styles.grid}>
+               <img
+                  className={styles.profilePic}
+                  src={post.author.profileImage ?? `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`}
+                  alt={`${post.author.displayName}'s profile`}
+               />
+               <div className={styles.headerText}>
+                  <span className={styles.userName}>{post.author.displayName}</span>
+                  <span className={styles.postTime}>{new Date(post.published).toLocaleString()}</span>
+               </div>
+               <Tooltip title="Copy link">
+                  <i className="fas fa-link" onClick={handleCopyLink}></i>
+               </Tooltip>
+   
+               <Snackbar
+                  open={openSnackbar}
+                  autoHideDuration={2000}
+                  onClose={handleCloseSnackbar}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+               >
+                  <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+                     Link copied to clipboard!
+                  </Alert>
+               </Snackbar>
+   
+               <div className={styles.cardFooter}>
+                  <div className={styles.essentials}>
+                     <div
+                        className={`${styles.icon} ${hasLiked ? styles.liked : ""}`}
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           handleLikePost();
+                        }}
+                     >
+                        <i className="fas fa-heart icon"></i>
+                        <span>{formatCount(likeCount)}</span>
+                     </div>
+                     <div className={styles.icon} onClick={handleToggleComment}>
+                        <i className="fas fa-comment"></i>
+                        <span>{formatCount(commentCount)}</span>
+                     </div>
                   </div>
-                  <div className={styles.icon} onClick={handleToggleComment}>
-                     <i className="fas fa-comment"></i>
-                     <span>{formatCount(commentCount)}</span>
+                  <div className={`${styles.icon} ${hasShared ? styles.shared : ""}`} onClick={handleSharePost}>
+                     <i className="fas fa-share"></i>
                   </div>
                </div>
-               <div className={`${styles.icon} ${hasShared ? styles.shared : ""}`} onClick={handleSharePost}>
-                  <i className="fas fa-share"></i>
+               <div className={styles.cardContent}>
+                  <div className={styles.postTitle}>{post.title}</div>
+                  {post.contentType !== ContentType.MARKDOWN && post.contentType !== ContentType.PLAIN ? (
+                     <div className={styles.imgContainer}>
+                        <img className={styles.postImage} src={post.content} alt={post.description} />
+                     </div>
+                  ) : (
+                     <div className={styles.postText}>{post.content}</div>
+                  )}
                </div>
             </div>
-            <div className={styles.cardContent}>
-               <div className={styles.postTitle}>{post.title}</div>
-               {post.contentType !== ContentType.MARKDOWN && post.contentType !== ContentType.PLAIN ? (
-                  <div className={styles.imgContainer}>
-                     <img className={styles.postImage} src={post.content} alt={post.description} />
-                  </div>
-               ) : (
-                  <div className={styles.postText}>{post.content}</div>
-               )}
-            </div>
+            {isCommentOpen && <div>Comment section here</div>}
          </div>
-         {isCommentOpen && <div>Comment section here</div>}
-      </div>
+      )
    );
-}
+}   
