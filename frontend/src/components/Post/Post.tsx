@@ -40,17 +40,17 @@ export default function Post() {
 
                // Check if the author is viewing it
                let url = `${authUser.host}authors/${authProvider.user.uuid}`;
-
                if (url != postData.author.id) {
                   let authorId = postData.author.id.replace(/\/+$/, '').split('/').pop();
                   const encodedUrl = encodeURIComponent(url);
                   const is_following = await FollowService.checkFollowing(authorId, encodedUrl);
-
                   if (is_following === false) {
+                     setOpenSnackbar(true);
                      setShowAlert(true);
+
                      setTimeout(() => {
                         navigate('/home');
-                     }, 2000); 
+                     }, 2000);
                   }
                }
 
@@ -122,68 +122,78 @@ export default function Post() {
    if (!post) return <div><CircularProgress /></div>;
 
    return (
-      <div className={styles.card}>
-         <div className={styles.grid}>
-            <img
-               className={styles.profilePic}
-               src={post.author.profileImage ?? `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`}
-               alt={`${post.author.displayName}'s profile`}
-            />
-            <div className={styles.headerText}>
-               <span className={styles.userName}>{post.author.displayName}</span>
-               <span className={styles.postTime}>{new Date(post.published).toLocaleString()}</span>
-            </div>
-            <Tooltip title="Copy link">
-               <i className="fas fa-link" onClick={handleCopyLink}></i>
-            </Tooltip>
-            <Snackbar
-               open={openSnackbar}
-               autoHideDuration={2000}
-               onClose={handleCloseSnackbar}
-               anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-               <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-                  Link copied to clipboard!
-               </Alert>
-            </Snackbar>
-            {showAlert && (
-               <Alert onClose={handleCloseSnackbar} severity="info" sx={{ width: '100%' }}>
-                  Sorry, this post has been hidden from you.
-               </Alert>
-            )}
-            <div className={styles.cardFooter}>
-               <div className={styles.essentials}>
-                  <div
-                     className={`${styles.icon} ${hasLiked ? styles.liked : ""}`}
-                     onClick={(e) => {
-                        e.stopPropagation();
-                        handleLikePost();
-                     }}
-                  >
-                     <i className="fas fa-heart icon"></i>
-                     <span>{formatCount(likeCount)}</span>
+      showAlert ? (
+         <Snackbar
+            open={openSnackbar}
+            autoHideDuration={2000}
+            onClose={handleCloseSnackbar}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+         >
+            <Alert onClose={handleCloseSnackbar} severity="info" sx={{ width: '100%' }}>
+               Sorry, this post has been hidden from you.
+            </Alert>
+         </Snackbar>
+      ) : (
+         <div className={styles.card}>
+            <div className={styles.grid}>
+               <img
+                  className={styles.profilePic}
+                  src={post.author.profileImage ?? `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`}
+                  alt={`${post.author.displayName}'s profile`}
+               />
+               <div className={styles.headerText}>
+                  <span className={styles.userName}>{post.author.displayName}</span>
+                  <span className={styles.postTime}>{new Date(post.published).toLocaleString()}</span>
+               </div>
+               <Tooltip title="Copy link">
+                  <i className="fas fa-link" onClick={handleCopyLink}></i>
+               </Tooltip>
+   
+               <Snackbar
+                  open={openSnackbar}
+                  autoHideDuration={2000}
+                  onClose={handleCloseSnackbar}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+               >
+                  <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+                     Link copied to clipboard!
+                  </Alert>
+               </Snackbar>
+   
+               <div className={styles.cardFooter}>
+                  <div className={styles.essentials}>
+                     <div
+                        className={`${styles.icon} ${hasLiked ? styles.liked : ""}`}
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           handleLikePost();
+                        }}
+                     >
+                        <i className="fas fa-heart icon"></i>
+                        <span>{formatCount(likeCount)}</span>
+                     </div>
+                     <div className={styles.icon} onClick={handleToggleComment}>
+                        <i className="fas fa-comment"></i>
+                        <span>{formatCount(commentCount)}</span>
+                     </div>
                   </div>
-                  <div className={styles.icon} onClick={handleToggleComment}>
-                     <i className="fas fa-comment"></i>
-                     <span>{formatCount(commentCount)}</span>
+                  <div className={`${styles.icon} ${hasShared ? styles.shared : ""}`} onClick={handleSharePost}>
+                     <i className="fas fa-share"></i>
                   </div>
                </div>
-               <div className={`${styles.icon} ${hasShared ? styles.shared : ""}`} onClick={handleSharePost}>
-                  <i className="fas fa-share"></i>
+               <div className={styles.cardContent}>
+                  <div className={styles.postTitle}>{post.title}</div>
+                  {post.contentType !== ContentType.MARKDOWN && post.contentType !== ContentType.PLAIN ? (
+                     <div className={styles.imgContainer}>
+                        <img className={styles.postImage} src={post.content} alt={post.description} />
+                     </div>
+                  ) : (
+                     <div className={styles.postText}>{post.content}</div>
+                  )}
                </div>
             </div>
-            <div className={styles.cardContent}>
-               <div className={styles.postTitle}>{post.title}</div>
-               {post.contentType !== ContentType.MARKDOWN && post.contentType !== ContentType.PLAIN ? (
-                  <div className={styles.imgContainer}>
-                     <img className={styles.postImage} src={post.content} alt={post.description} />
-                  </div>
-               ) : (
-                  <div className={styles.postText}>{post.content}</div>
-               )}
-            </div>
+            {isCommentOpen && <div>Comment section here</div>}
          </div>
-         {isCommentOpen && <div>Comment section here</div>}
-      </div>
+      )
    );
-}
+}   
