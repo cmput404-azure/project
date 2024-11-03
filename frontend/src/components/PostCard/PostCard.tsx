@@ -42,12 +42,23 @@ function PostCard({
   const [imageSrc, setImageSrc] = useState<string>('');
   const navigate = useNavigate();
   const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false);
+  const [isAuthor, setIsAuthor] = useState(false);
 
   // Function to open the dialog
   const handleClickShare = () => {
     setShareDialogOpen(true);
   };
   
+  useEffect(()=>{
+    const getUser = async()=>{
+      const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
+      if (post.author.id === currentUser.data["id"]){
+        setIsAuthor(true);
+      }
+    }
+    getUser();
+  },[])
+
   // Function to confirm sharing
   const handleConfirmShare = async () => {
     setShareDialogOpen(false)
@@ -178,7 +189,7 @@ const transformImageUri = (src: string, alt: string, title: string) => {
         </div>
         
         <div className={styles.icon}>
-          {post.visibility === 3 || post.visibility === 1? ( // friend post doesnt have a link 
+          {post.visibility === 3 || isAuthor || post.visibility === 1? ( // friend post doesnt have a link 
             <Tooltip title="copy link">
               <i className="fas fa-link" onClick={handleGetLink}></i>
             </Tooltip>
