@@ -60,6 +60,10 @@ function PostCard({
 
   useEffect(() => {
     const getUser = async () => {
+      if (!authProvider.user) {
+        return;
+      }
+
       const currentUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
       if (post.author.id === currentUser.id) {
         setIsAuthor(true);
