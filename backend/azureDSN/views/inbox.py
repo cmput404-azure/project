@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.contenttypes.models import ContentType
 from urllib.parse import urlparse
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes, OpenApiExample
 from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
 from django.utils import timezone
@@ -30,20 +30,72 @@ class InboxView(APIView):
                 location=OpenApiParameter.PATH
             )
         ],
-        responses={
+        responses = {
             status.HTTP_200_OK: OpenApiResponse(
                 response=inline_serializer(
                     name="InboxResponse",
                     fields={
                         'user': serializers.CharField(),
-                        'items': InboxItemSerializer(many=True),  # Keep the InboxItemSerializer here
+                        'items': serializers.ListField(
+                            child=serializers.JSONField(),  # Use JSONField for flexibility in representing different item types
+                            help_text="List of inbox items, which may include Likes, Comments, FollowRequests, or Shares."
+                        ),
                         'type': serializers.CharField()
                     }
                 ),
-                description='Inbox items retrieved successfully'
+                description='Inbox items retrieved successfully',
+                examples=[
+                    OpenApiExample(
+                        "Example Inbox Response",
+                        value={
+                            "user": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                            "items": [
+                                {
+                                    "type":"like",
+                                    "author":{
+                                        "type":"author",
+                                        "id":"http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                                        "host":"http://127.0.0.1:8000/azureDSN/",
+                                        "displayName":"Quin Nguyen",
+                                        "github": "https://github.com/QuinNguyen02",
+                                        "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                                        "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                                    },
+                                    "published":"2015-03-09T13:07:04+00:00",
+                                    "object": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0/posts/c3616cea-959f-4656-b1c4-34f9f39b8197"
+                                },
+                                {
+                                        "type":"comment",
+                                        "author":{
+                                            "type":"author",
+                                            "id":"http://127.0.0.1:8000/api/authors/aa19d08d-e256-45d2-8b9b-b2cef638815e",
+                                            "host":"http://127.0.0.1:8000/azureDSN/",
+                                            "displayName":"Quin Nguyen",
+                                            "github": "https://github.com/QuinNguyen02",
+                                            "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                                            "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                                        },
+                                        "comment":"Tina comment on Kyle's public post",
+                                        "contentType":"text/plain",
+                                        "published":"2024-10-30T13:07:04+00:00",
+                                        "post": "http://127.0.0.1:8000/api/authors/7104fa38-1129-4f3b-a4e8-8ce6f7552454/posts/0f9bea88-45a8-41c4-95eb-73cb381f2ab5"
+                                },
+                                {
+                                    "type": "share",
+                                    "user": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                                    "post": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0/posts/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0"
+                                },
+                            ],
+                            "type": "Inbox"
+                        },
+                    ),
+                ]
             ),
-            status.HTTP_404_NOT_FOUND: OpenApiResponse(description='Author not found.')
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                description="Author not found.",
+            ),
         }
+
     )
     def get(self, request, author_serial):
         action = request.query_params.get('action', None)
@@ -87,24 +139,78 @@ class InboxView(APIView):
                 location=OpenApiParameter.PATH,
                 required=True
             ),
-            OpenApiParameter(
-                name='type',
-                description='Type of the item to delete (e.g., "post", "follow").',
-                type=str,
-                location=OpenApiParameter.QUERY,
-                required=False
-            ),
-            OpenApiParameter(
-                name='id',
-                description='ID of the item to delete (e.g., post or follow request).',
-                type=str,
-                location=OpenApiParameter.QUERY,
-                required=False
-            ),
         ],
-        request=None,  # Request body not required for delete all case
+
+        # Define the request body with `type` and `id` as fields in the payload
+        request = inline_serializer(
+            name="DeleteInboxItemPayload",
+            fields={
+                "type": serializers.CharField(help_text="Type of the item to delete (e.g., 'post', 'follow')", required=True),
+                "id": serializers.CharField(help_text="fqid/id of the item to delete (e.g., post or follow request)", required=True),
+            }
+        ),
+        
         responses={
-            status.HTTP_200_OK: OpenApiResponse(description="Inbox items deleted successfully."),
+            status.HTTP_200_OK: OpenApiResponse(
+                response=inline_serializer(
+                    name="DeleteInboxResponse",
+                    fields={
+                        'user': serializers.CharField(),
+                        'items': serializers.ListField(
+                            child=serializers.JSONField(),  # Use JSONField for flexibility in representing different item types
+                            help_text="List of inbox items, which may include Likes, Comments, FollowRequests, or Shares."
+                        ),
+                        'type': serializers.CharField()
+                    }
+                ),
+                description='It will return the remaning inbox items',
+                examples=[
+                    OpenApiExample(
+                        "Example Delete Inbox Response",
+                        value={
+                            "user": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                            "items": [
+                                {
+                                    "type":"like",
+                                    "author":{
+                                        "type":"author",
+                                        "id":"http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                                        "host":"http://127.0.0.1:8000/azureDSN/",
+                                        "displayName":"Quin Nguyen",
+                                        "github": "https://github.com/QuinNguyen02",
+                                        "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                                        "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                                    },
+                                    "published":"2015-03-09T13:07:04+00:00",
+                                    "object": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0/posts/c3616cea-959f-4656-b1c4-34f9f39b8197"
+                                },
+                                {
+                                        "type":"comment",
+                                        "author":{
+                                            "type":"author",
+                                            "id":"http://127.0.0.1:8000/api/authors/aa19d08d-e256-45d2-8b9b-b2cef638815e",
+                                            "host":"http://127.0.0.1:8000/azureDSN/",
+                                            "displayName":"Quin Nguyen",
+                                            "github": "https://github.com/QuinNguyen02",
+                                            "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                                            "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                                        },
+                                        "comment":"Tina comment on Kyle's public post",
+                                        "contentType":"text/plain",
+                                        "published":"2024-10-30T13:07:04+00:00",
+                                        "post": "http://127.0.0.1:8000/api/authors/7104fa38-1129-4f3b-a4e8-8ce6f7552454/posts/0f9bea88-45a8-41c4-95eb-73cb381f2ab5"
+                                },
+                                {
+                                    "type": "share",
+                                    "user": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                                    "post": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0/posts/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0"
+                                },
+                            ],
+                            "type": "Inbox"
+                        },
+                    ),
+                ]
+            ),
             status.HTTP_404_NOT_FOUND: OpenApiResponse(description="User, inbox, or item not found."),
         }
     )
@@ -126,7 +232,7 @@ class InboxView(APIView):
             return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_200_OK)
         
         if "type" not in payload:
-            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_400_BAD_REQUEST)
         
         if payload["type"].lower() == "post":
             return self.delete_post(user_obj, payload, request)
@@ -198,7 +304,8 @@ class InboxView(APIView):
                 'properties': {
                     'id': {'type': 'string', 'format': 'uuid', 'description': 'UUID of the post to update'},
                     'title': {'type': 'string', 'description': 'New title of the post', 'maxLength': 255},
-                    'content': {'type': 'string', 'description': 'New content of the post'}
+                    'content': {'type': 'string', 'description': 'New content of the post'},
+                    'visibility': {'type': 'string', 'description': 'New visibility of the post'}
                 },
                 'required': ['id']
             }
@@ -206,7 +313,6 @@ class InboxView(APIView):
         responses={
             status.HTTP_200_OK: OpenApiResponse(description="Post updated successfully."),
             status.HTTP_404_NOT_FOUND: OpenApiResponse(description="Post or inbox item not found."),
-            status.HTTP_400_BAD_REQUEST: OpenApiResponse(description="Invalid input.")
         }
     )
     def put(self, request, author_serial):
@@ -254,8 +360,8 @@ class InboxView(APIView):
     
     @extend_schema(
         summary="Add Item to Inbox",
-        description="Add a new item (post, comment, like, or follow request) to the inbox.",
-        request=PostSerializer,  # This is the serializer used for the POST request body
+        description="Add a new item (post, comment, like, share or follow request) to the inbox.",
+        request=FollowRequestSerializer,  # This is the serializer used for the follow request
         parameters=[
             OpenApiParameter(
                 name='author_serial', 
@@ -263,6 +369,106 @@ class InboxView(APIView):
                 type=str, 
                 required=True,
                 location=OpenApiParameter.PATH
+            ),
+        ],
+        examples=[
+            OpenApiExample(
+                name="Post Example",
+                value={
+                        "type": "post",
+                        "title": "A post title about a post about web dev",
+                        "id": "http://127.0.0.1:8000/api/authors/4b190967-fe45-41be-9814-a3de5d028264/posts/c3616cea-959f-4656-b1c4-34f9f39b8197",
+                        "description": "This post is a test",
+                        "contentType": "text/plain",
+                        "content": "Quin public a post, this notifies kyle's inbox",
+                        "author":{
+                            "type":"author",
+                            "id":"http://127.0.0.1:8000/api/authors/4b190967-fe45-41be-9814-a3de5d028264",
+                            "host":"http://127.0.0.1:8000/azureDSN/",
+                            "displayName":"Quin Nguyen",
+                            "github": "https://github.com/QuinNguyen02",
+                            "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                            "page": "post_images/Screenshot_2024-10-17_014549.png"
+                        },
+                        "comments": {},
+                        "likes": {},
+                        "published": "2024-03-09T13:07:04+00:00",
+                        "visibility": "PUBLIC"
+                },
+                description="Example of adding a post to the inbox."
+            ),
+            OpenApiExample(
+                name="Comment Example",
+                value={
+                        "type":"comment",
+                        "author":{
+                            "type":"author",
+                            "id":"http://127.0.0.1:8000/api/authors/aa19d08d-e256-45d2-8b9b-b2cef638815e",
+                            "host":"http://127.0.0.1:8000/azureDSN/",
+                            "displayName":"Quin Nguyen",
+                            "github": "https://github.com/QuinNguyen02",
+                            "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                            "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                        },
+                        "comment":"Tina comment on Kyle's public post",
+                        "contentType":"text/plain",
+                        "published":"2024-10-30T13:07:04+00:00",
+                        "post": "http://127.0.0.1:8000/api/authors/7104fa38-1129-4f3b-a4e8-8ce6f7552454/posts/0f9bea88-45a8-41c4-95eb-73cb381f2ab5"
+                },
+                description="Example of adding a comment to the inbox."
+            ),
+            OpenApiExample(
+                name="Like Example",
+                value={
+                        "type":"like",
+                        "author":{
+                            "type":"author",
+                            "id":"http://127.0.0.1:8000/api/authors/4b190967-fe45-41be-9814-a3de5d028264",
+                            "host":"http://127.0.0.1:8000/azureDSN/",
+                            "displayName":"Quin Nguyen",
+                            "github": "https://github.com/QuinNguyen02",
+                            "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                            "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                        },
+                        "published":"2015-03-09T13:07:04+00:00",
+                        "object": "http://127.0.0.1:8000/api/authors/4b190967-fe45-41be-9814-a3de5d028264/posts/c3616cea-959f-4656-b1c4-34f9f39b8197"
+                },
+                description="Example of adding a like to the inbox."
+            ),
+            OpenApiExample(
+                name="Follow Request Example",
+                value={
+                        "type": "follow",      
+                        "summary":"Quin Nguyen wants to follow Kyle Quach",
+                        "actor":{
+                            "type":"author",
+                            "id":"http://127.0.0.1:8000/api/authors/e2c09099-67ad-4d06-bd00-967ab99025f2",
+                            "host":"http://127.0.0.1:8000/azureDSN/",
+                            "displayName":"Quin Nguyen",
+                            "github": "https://github.com/QuinNguyen02",
+                            "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                            "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                        },
+                        "object":{
+                            "type":"author",
+                            "id":"http://127.0.0.1:8000/api/authors/1b7fbe0a-7160-4823-8b24-a24f728b8666",
+                            "host":"http://127.0.0.1:8000/azureDSN/",
+                            "displayName":"Kyle Quach",
+                            "page":"http://127.0.0.1:8000/azureDSN/authors/kyle",
+                            "github": "https://github.com/KyleQuach03",
+                            "profileImage": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                        }
+                },
+                description="Example of adding a follow request to the inbox."
+            ),
+            OpenApiExample(
+                name="Share Example",
+                value={
+                        "type": "share",      
+                        "user": "http://127.0.0.1:8000/api/authors/1b7fbe0a-7160-4823-8b24-a24f728b8666",
+                        "post": "http://127.0.0.1:8000/api/authors/1b7fbe0a-7160-4823-8b24-a24f728b8666/posts/1b7fbe0a-7160-4823-8b24-a24f728b8666"
+                },
+                description="Example of adding a follow request to the inbox."
             ),
         ],
         responses={
@@ -283,7 +489,7 @@ class InboxView(APIView):
         payload = request.data
        
         if "type" not in payload:
-            return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
 
         if payload["type"].lower() == "post":
             return self.create_post(user_obj, payload, request)
@@ -293,6 +499,8 @@ class InboxView(APIView):
             return self.create_comment(user_obj, payload, request)
         elif payload["type"].lower() == "like":
             return self.create_like(user_obj, payload, request)
+        elif payload["type"].lower() == "share":
+            return self.create_share(user_obj, payload, author_serial)
         else:
             return Response(
                 {"detail": "Invalid type or unhandled type in request."},
@@ -394,7 +602,53 @@ class InboxView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
     
-    
+
+    '''
+    We add into the receiver's inbox as well as create share object in the share model
+    payload is a share object
+    payload = {
+                post: is fqid of shared post
+                user: is fqid of sender 
+               }
+    '''
+    def create_share(self, user_object, payload, author_serial):
+        user_object = User.objects.get(uuid=author_serial)
+        # Check if a Share with the same post and receiver already exists
+        # If yes, only add to inbox to be displayed in notification
+        if Share.objects.filter(post=payload["post"], receiver=user_object).exists():
+            share_obj = Share.objects.get(receiver = user_object)
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, share_obj)
+            return Response(
+                {"message": "This post has already been shared with the receiver."},
+                status=status.HTTP_200_OK
+            )
+
+        # Create the Share object if it doesn't already exist
+        share_obj = Share.objects.create(
+            user=payload["user"],
+            post=payload["post"],
+            receiver=user_object,
+            type="share"
+        )
+        
+        # Serialize and validate
+        serializer = ShareSerializer(share_obj, data=payload)
+        if serializer.is_valid():
+            share_obj = serializer.save()
+            
+            # Get or create the Inbox for the receiver and add the Share object to it
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, share_obj)
+            
+            return Response(
+                {"message": "Notice post's owner about your share successfully"},
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 '''
 This create an inbox item referenced to one of the four model except from case where a post make by a remote user
 sending to local nodes, then treat it as a JSON data because we don't want to store/have it in our database

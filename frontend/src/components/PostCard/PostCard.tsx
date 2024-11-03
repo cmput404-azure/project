@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useNavigate } from 'react-router-dom';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 
 import { api } from "../../service/config";
 import { extractUUID } from "../../util/formatting/extractUUID";
@@ -36,32 +37,35 @@ function PostCard({
   const [commentCount, setCommentCount] = useState<number>(Array.isArray(post.comments) ? 0 : post.comments.count);
   const [hasLiked, setHasLiked] = useState<boolean>(Array.isArray(post.likes) 
                                                           ? false 
-                                                          : post.likes.src.some((like) => like.author.id.split('/').pop() === authProvider.user.uuid)
+                                                          : authProvider.user && post.likes.src.some((like) => like.author.id.split('/').pop() === authProvider.user.uuid)
                                                     );
-  const [hasShared, setHasShared] = useState<boolean>(false);
   const [imageSrc, setImageSrc] = useState<string>('');
   const navigate = useNavigate();
+  const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false);
 
-  const handleClickShare = async () => {
-    if (hasShared) return;
+  // Function to open the dialog
+  const handleClickShare = () => {
+    setShareDialogOpen(true);
+  };
+  
+  // Function to confirm sharing
+  const handleConfirmShare = async () => {
+    setShareDialogOpen(false)
+    // Get followers and share the post
+    const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
+    const share_obj = {
+      type: "share",
+      user: currentUser.data["id"],
+      post: post.id,
+    }
+    const followers = await follow.getFollowers(authProvider.user.uuid);
+    for (const follower of followers) {
+      await inbox.sendPostToInbox(follower.id, share_obj);
+    }
+  };
 
-    // Get friends and followers list, followers inlcude both friends and followers
-    // const followers = await follow.getFollowers(authProvider.user.uuid);
-    // const friends = await follow.getFriends(authProvider.user.uuid);
-
-    // send to followers if post is public or unlisted
-    // always send to friends for all type of posts
-    // if (post.visibility === 1 || post.visibility === 3) {
-    //   for (const follower of followers) {
-    //     const inboxResponse = await inbox.sendPostToInbox(follower.id, post);
-    //   }
-    // } else {
-    //   for (const friend of friends) {
-    //     const inboxResponse = await inbox.sendPostToInbox(friend.id, post);
-    //   }
-    // }
-
-    setHasShared(true);
+  const handleCloseShare = () => {
+    setShareDialogOpen(false);
   };
 
   const handleClickLike = async () => {
@@ -75,7 +79,7 @@ function PostCard({
       object: post.id
     }
   
-    const inboxResponse = await inbox.sendPostToInbox(post.author.id, like_obj);
+    await inbox.sendPostToInbox(post.author.id, like_obj);
 
     setLikeCount(likeCount + 1);
     setHasLiked(true);
@@ -172,10 +176,13 @@ const transformImageUri = (src: string, alt: string, title: string) => {
           <span className={styles.userName} onClick={redirectToAuthorProfile}>{post.author.displayName}</span>
           <span className={styles.postTime}>{new Date(post.published).toLocaleString()}</span>
         </div>
+        
         <div className={styles.icon}>
-          <Tooltip title="copy link">
-            <i className="fas fa-link" onClick={handleGetLink}></i>
-          </Tooltip>
+          {post.visibility === 3 || post.visibility === 1? ( // friend post doesnt have a link 
+            <Tooltip title="copy link">
+              <i className="fas fa-link" onClick={handleGetLink}></i>
+            </Tooltip>
+          ) : null}
           <Snackbar
             open={openSnackbar}
             autoHideDuration={2000} // auto close after 2s
@@ -204,9 +211,27 @@ const transformImageUri = (src: string, alt: string, title: string) => {
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
-          <div className={`${styles.icon} ${hasShared ? styles.shared : ""}`} onClick={handleClickShare}>
-            <i className="fas fa-share"></i>
-          </div>
+          {post.visibility === 1 ? (
+            <div className={styles.icon} onClick={handleClickShare}>
+              <i className="fas fa-share"></i>
+            </div>
+          ) : null}
+          <Dialog open={shareDialogOpen} onClose={handleCloseShare}>
+            <DialogTitle>Share Post</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Do you want to share this post with all your friends and followers?
+            </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseShare} color="secondary">
+                Cancel
+              </Button>
+              <Button onClick={handleConfirmShare} color="primary" autoFocus>
+                Share
+              </Button>
+            </DialogActions>
+          </Dialog>
         </div>
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>

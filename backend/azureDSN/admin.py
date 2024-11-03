@@ -46,4 +46,5 @@ admin.site.register(Follow)
 admin.site.register(Inbox)
 admin.site.register(InboxItem)
 admin.site.register(SiteConfiguration, SiteConfigurationAdmin)
+admin.site.register(Share)
 

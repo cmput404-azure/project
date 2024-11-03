@@ -17,6 +17,7 @@ import inbox from "../../service/inbox";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import { useParams } from "react-router-dom";
+import { extractUUID } from "../../util/formatting/extractUUID";
 
 // by default isViewing is false which means the user is viewing their own profile
 export default function UserProfile() {
@@ -39,7 +40,7 @@ export default function UserProfile() {
   // FollowerList
   const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
   const [showFollowerList, setShowFollowerList] = useState<string>("");
-    
+
   const [friendsCount, setFriendsCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -55,7 +56,7 @@ export default function UserProfile() {
       const data = await followService.getFriends(authProvider.user.uuid);
       setFriendsCount(data.length);
     } catch (error) {
-      console.error('Fetch error (friends):', error);
+      console.error("Fetch error (friends):", error);
     }
   };
 
@@ -64,7 +65,7 @@ export default function UserProfile() {
       const data = await followService.getFollowers(authProvider.user.uuid);
       setFollowersCount(data.length);
     } catch (error) {
-      console.error('Fetch error (followers):', error);
+      console.error("Fetch error (followers):", error);
     }
   };
 
@@ -73,7 +74,7 @@ export default function UserProfile() {
       const data = await followService.getFollowing(authProvider.user.uuid);
       setFollowingCount(data.length);
     } catch (error) {
-      console.error('Fetch error (following):', error);
+      console.error("Fetch error (following):", error);
     }
   };
 
@@ -158,25 +159,28 @@ export default function UserProfile() {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        await Promise.all([fetchFriendsCount(), fetchFollowersCount(), fetchFollowingCount()]);
+        await Promise.all([
+          fetchFriendsCount(),
+          fetchFollowersCount(),
+          fetchFollowingCount(),
+        ]);
       } catch (error) {
         console.error("Failed to fetch counts:", error);
       }
     };
 
-    if(userID){
-      console.log(userID)
+    if (userID) {
+      console.log(userID);
       setUserToGet(userID);
       setIsEditing(false);
-    }
-    else if (authProvider.user) {
+    } else if (authProvider.user) {
       fetchCounts();
       setHasCopiedProfileLink(false);
 
       setUserToGet(authProvider.user.uuid);
       setIsEditing(true);
     }
-  }, [userID, authProvider.user]); 
+  }, [userID, authProvider.user]);
 
   useEffect(() => {
     // Only fetch data if userToGet is defined
@@ -222,7 +226,9 @@ export default function UserProfile() {
         const response = await api.get<AuthorPostsResponse>(
           `/api/authors/${userToGet}/posts/`
         );
-        setAuthorPosts(response.data.src.reverse());
+        // filter out the posts that are not publicaly visible
+        const posts = response.data.src.filter((post) => post.visibility == 1);
+        setAuthorPosts(posts.reverse());
       }
     } catch (error) {
       console.error("Error fetching the author posts", error);
@@ -251,23 +257,29 @@ export default function UserProfile() {
 
         // Get friends and followers list
         const followers = await follow.getFollowers(authProvider.user.uuid);
-        const friends =  await follow.getFriends(authProvider.user.uuid);
+        const friends = await follow.getFriends(authProvider.user.uuid);
 
         // followers already include all followers and friends
         // public/unlisted=> send to followers and friends
         if (postToEdit[0].visibility === 1 || postToEdit[0].visibility === 3) {
           for (const follower of followers) {
-            const inboxResponse = await inbox.updateInboxPost(follower.id, postId, 
-                                                              updatedPost.title, 
-                                                              updatedPost.content, 
-                                                              updatedPost.visibility);
+            const inboxResponse = await inbox.updateInboxPost(
+              follower.id,
+              postId,
+              updatedPost.title,
+              updatedPost.content,
+              updatedPost.visibility
+            );
           }
-        } else { 
+        } else {
           for (const friend of friends) {
-            const inboxResponse = await inbox.updateInboxPost(friend.id, postId, 
-                                                              updatedPost.title, 
-                                                              updatedPost.content, 
-                                                              updatedPost.visibility);
+            const inboxResponse = await inbox.updateInboxPost(
+              friend.id,
+              postId,
+              updatedPost.title,
+              updatedPost.content,
+              updatedPost.visibility
+            );
           }
         }
 
@@ -293,20 +305,26 @@ export default function UserProfile() {
 
         // Get friends and followers list
         const followers = await follow.getFollowers(authProvider.user.uuid);
-        const friends =  await follow.getFriends(authProvider.user.uuid);
+        const friends = await follow.getFriends(authProvider.user.uuid);
 
         // followers already include friends and followers
         if (visibilityNumber === 1 || visibilityNumber === 3) {
           for (const follower of followers) {
-            const inboxResponse = await inbox.deleteInboxPost(follower.id, postToDelete);
+            const inboxResponse = await inbox.deleteInboxPost(
+              follower.id,
+              postToDelete
+            );
           }
         } else {
           // Friends receive inbox on all type of post
           for (const friend of friends) {
-            const inboxResponse = await inbox.deleteInboxPost(friend.id, postToDelete);
+            const inboxResponse = await inbox.deleteInboxPost(
+              friend.id,
+              postToDelete
+            );
           }
         }
-        
+
         // Refresh the posts after successful deletion
         await fetchAuthorPosts();
 
@@ -335,7 +353,11 @@ export default function UserProfile() {
   // };
 
   if (!authorData) {
-    return <div className={"loading"}><CircularProgress/></div>;
+    return (
+      <div className={"loading"}>
+        <CircularProgress />
+      </div>
+    );
   }
 
   return (
