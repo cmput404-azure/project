@@ -118,6 +118,24 @@ class InboxService{
             return "Error";
         }
     }
+
+
+    /* 
+    Send a comment into the inbox of a user
+    @param uuid: string - the fqid of the user
+           inbox_item: object - the inbox item to be sent
+    @returns: message: string 
+    */
+    public async sendCommentToInbox(uuid: string, inbox_item: object): Promise<Comment | null> {
+        uuid = uuid.split('/').pop()
+        try {
+            const inboxResponse = await api.post<Comment>(`/api/authors/${uuid}/inbox/`, inbox_item);
+            return inboxResponse.data;
+        } catch (error) {
+            console.error(`Error sending object to inbox of ${uuid}:`, error);
+            return null;
+        }
+    }
 }
 
 // Create default instance of the service

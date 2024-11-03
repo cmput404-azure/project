@@ -2,6 +2,7 @@ import { useState } from "react";
 import TextField from "@mui/material/TextField";
 import styled from "@mui/material/styles/styled";
 import styles from "./CommentInput.module.scss";
+import inbox from "../../service/inbox";
 
 // Styling inspired from https://medium.com/@irwantoalvin/how-to-style-your-material-ui-textfield-integrate-it-with-react-hook-form-and-make-it-reusable-0f3050a90e9a, Downloaded 2024-10-24
 // need to style field like this otherwise stylings may reset and not appear properly
@@ -59,18 +60,19 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
     console.log(`Author: ${authorObj.displayName}`); // for testing, change to API call or whatever
     console.log(`Comment: "${textInField}" | Submitted`); // for testing, change to API call or whatever
     console.log(`Post: "${post}"`)
-    const url = `${post.author.id}/inbox/`
-    const body = {
+    
+    const comment_obj = {
       type: "comment",
       author: authorObj,
       comment: textInField,
-      post: post.id
+      post: post.id,
     }
-    const response = await fetch(url, {method: "POST", headers: {'Content-Type': 'application/json'},  body: JSON.stringify(body)})
-    const data = await response.json()
-    if (response.ok){
+    
+    const response = await inbox.sendCommentToInbox(post.author.id, comment_obj);
+    console.log("returned comment is: ", response)
+    if (response){
       // In here  you will append the comment to the list. You can create a useState hook and then call something set comments 
-      onCommentAdded(data)
+      onCommentAdded(response)
     }
 
   };
