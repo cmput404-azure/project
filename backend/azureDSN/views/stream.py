@@ -5,9 +5,10 @@ from rest_framework import status
 from django.db.models import Q
 from ..serializers import PostSerializer, InboxItemSerializer
 from django.shortcuts import get_object_or_404
-from ..models import Post, User, Inbox, InboxItem, Follow
+from ..models import Post, User, Inbox, InboxItem, Follow, Share
 from django.contrib.contenttypes.models import ContentType
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
+import requests
 
 # TODO if user is admin, also get deleted post
 
@@ -32,7 +33,7 @@ class PublicStreamView(APIView):
 
         # Serialize and return the posts
         serializer = PostSerializer(public_posts, many=True)
-        # print(serializer.data)
+                  
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class AuthStreamView(APIView):
@@ -115,6 +116,21 @@ class AuthStreamView(APIView):
             # Remove duplicates and sort by creation date
             all_relevant_posts = all_relevant_posts.order_by("-created_at").distinct()
             combined_data = PostSerializer(all_relevant_posts, many=True).data
+            
+                
+            """
+            In this stream, there is also a case where user also see posts shared by people they follow
+            All the posts shared are public post as well but it could either remote or local
+            """
+            # Query all items in the Share table whose receiver is the same as current user
+            shared_posts = Share.objects.filter(receiver = user)
+            for shared in shared_posts:
+                # here the post is the fqid
+                # we send a request to fetch the post data
+                response = requests.get(shared.post)
+                if response.status_code == 200:
+                    shared_data = response.json()
+                    combined_data.append(shared_data)
 
             return Response(combined_data, status=status.HTTP_200_OK)
         else:
