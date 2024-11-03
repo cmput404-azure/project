@@ -96,6 +96,7 @@ export default function PublicProfile() {
       if (isFollowing) {
          // Displaying unfollow button
          await FollowService.unfollow(userID, authProvider.user);
+         window.location.reload();
       } else {
          // Displaying follow button, send follower request
          const userResponse = await ProfileService.fetchAuthorData(authProvider.user.uuid);
