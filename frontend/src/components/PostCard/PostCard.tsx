@@ -246,11 +246,11 @@ const transformImageUri = (src: string, alt: string, title: string) => {
                 <Button 
                   onClick={handleCloseShare} 
                   sx={{
-                    backgroundColor: 'rgb(143, 143, 143)',  
+                    backgroundColor: 'lightcoral',  
                     color: 'white',
                     boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
                     '&:hover': {
-                      backgroundColor: 'lightcoral',  
+                      backgroundColor: '#e57373',  
                     },
                   }}
                   autoFocus
@@ -260,11 +260,11 @@ const transformImageUri = (src: string, alt: string, title: string) => {
                 <Button 
                   onClick={handleConfirmShare} 
                   sx={{
-                    backgroundColor: 'rgb(143, 143, 143)', 
+                    backgroundColor: '#5acc8c', 
                     color: 'white',
                     boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
                     '&:hover': {
-                      backgroundColor: '#5acc8c', 
+                      backgroundColor: '#4ba578', 
                     },
                   }}
                   autoFocus
