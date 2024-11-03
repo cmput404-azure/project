@@ -17,7 +17,6 @@ import inbox from "../../service/inbox";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 import { useParams } from "react-router-dom";
-import { extractUUID } from "../../util/formatting/extractUUID";
 
 // by default isViewing is false which means the user is viewing their own profile
 export default function UserProfile() {
