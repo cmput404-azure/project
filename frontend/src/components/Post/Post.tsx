@@ -9,9 +9,11 @@ import follow from "../../service/follow";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
 import postService from "../../service/post";
+import FollowService from "../../service/follow";
+import ProfileService from "../../service/profile";
 import styles from "./Post.module.scss";
 import { useAuth } from "../../state";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 export default function Post() {
    const { postID } = useParams<{ postID: string }>();
@@ -24,7 +26,8 @@ export default function Post() {
    const [hasShared, setHasShared] = useState(false);
    const [openSnackbar, setOpenSnackbar] = useState(false);
    const [isCommentOpen, setIsCommentOpen] = useState(false);
-
+   const [showAlert, setShowAlert] = useState(false);
+   const navigate = useNavigate();
    // TODO: need to check if its friends only (unlisted) post, if so then redirect to home if user is not a friend
 
    useEffect(() => {
@@ -32,21 +35,35 @@ export default function Post() {
          try {
             if (postID) {
                const postData = await postService.getPost(`api/posts/${postID}`);
-               console.log("POST", postData);
-               // Check visibility
-               if (postData.visibility === 3){
-                  // Check if logged in
-                  if (authProvider.isAuthenticated){
-                     // Check if following
-                     
+               // Check if logged in user is a follower of post user
+               const authUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
+
+               // Check if the author is viewing it
+               let url = `${authUser.host}authors/${authProvider.user.uuid}`;
+
+               if (url != postData.author.id) {
+                  let authorId = postData.author.id.replace(/\/+$/, '').split('/').pop();
+                  const encodedUrl = encodeURIComponent(url);
+                  const is_following = await FollowService.checkFollowing(authorId, encodedUrl);
+
+                  if (is_following === false) {
+                     setShowAlert(true);
+                     setTimeout(() => {
+                        navigate('/home');
+                     }, 2000); 
                   }
                }
+
                setPost(postData);
                setLikeCount(Array.isArray(post.likes) ? 0 : post.likes.count);
                setCommentCount(Array.isArray(post.comments) ? 0 : post.comments.count);
             }
          } catch (error) {
-            console.error("Error fetching post data:", error);
+            if (error.response && error.response.status === 403) {
+               navigate('/login'); // Redirect to login if unauthorized
+            } else {
+               console.error("Error fetching post data:", error);
+            }
          }
       };
       fetchPost();
@@ -102,7 +119,7 @@ export default function Post() {
       if (reason !== 'clickaway') setOpenSnackbar(false);
    };
 
-   if (!post) return <div><CircularProgress/></div>;
+   if (!post) return <div><CircularProgress /></div>;
 
    return (
       <div className={styles.card}>
@@ -129,6 +146,11 @@ export default function Post() {
                   Link copied to clipboard!
                </Alert>
             </Snackbar>
+            {showAlert && (
+               <Alert onClose={handleCloseSnackbar} severity="info" sx={{ width: '100%' }}>
+                  Sorry, this post has been hidden from you.
+               </Alert>
+            )}
             <div className={styles.cardFooter}>
                <div className={styles.essentials}>
                   <div
