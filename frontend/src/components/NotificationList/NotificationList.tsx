@@ -42,22 +42,22 @@ export default function NotificationList() {
             const objectPath = item.object.startsWith("api/") ? item.object.slice(4) : item.object;
             let post_resp = await api.get(`${item.author.host}${objectPath}`);
             post_obj = post_resp.data;
-          }else if (item.type === "comment"){
+          } else if (item.type === "comment") {
             let encodedId = encodeURIComponent(item.author.id);
             user = await fetchUser(encodedId);
             let post_resp = await api.get(item.post);
             post_obj = post_resp.data;
-          }else if (item.type === "share"){
+          } else if (item.type === "share") {
             let user_resp = await api.get(item.user);
-          user = user_resp.data;
-            let post_resp = await api.get(item.post);
-            post_obj = post_resp.data;
+            user = user_resp.data;
+            let post_resp = await PostService.getPost(item.post);
+            post_obj = post_resp;
+          } else if (item.type === "post") {
+            // Someone shared a friends only post
+            let user_resp = await api.get(item.author.id);
+            user = user_resp.data;
+            post_obj = item;
           }
-          // else if (item.type === "post"){ //Someone shared a friends only post
-          //   user = await api.get(item.author.id);
-          //   let post_resp = await api.get(item.id);
-          //   post_obj = post_resp.data;
-          // }
           return { ...item, user, post_obj };
         })
       );
@@ -92,7 +92,7 @@ export default function NotificationList() {
     <div>
       <h2 className={styles.h2}>Notifications</h2>
       {loading ? (
-        <div className={"loading_component"}><CircularProgress sx={{color: "#70ffaf"}}/></div>
+        <div className={"loading_component"}><CircularProgress sx={{ color: "#70ffaf" }} /></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
@@ -123,7 +123,7 @@ export default function NotificationList() {
                     isFollowerList={false}
                     isUserList={false}
                     notif_id={item.id}
-                    postTitle = {item.post_obj.title}
+                    postTitle={item.post_obj.title}
                     user={item.user}
                     onRefresh={handleRefresh}
                   />
@@ -133,18 +133,36 @@ export default function NotificationList() {
                   <ListItem
                     key={index}
                     isRequest={false}
-                    isPost={false} 
+                    isPost={false}
                     isLike={false}
                     isComment={true}
                     isFollowerList={false}
                     isUserList={false}
                     notif_id={item.id}
-                    postTitle = {item.post_obj.title}
+                    postTitle={item.post_obj.title}
                     user={item.user}
                     onRefresh={handleRefresh}
                   />
                 );
-              }else if (item.type === "share") {
+              } else if (item.type === "share") {
+                return (
+                  <ListItem
+                    key={index}
+                    isRequest={false}
+                    isPost={true}
+                    isLike={false}
+                    isComment={false}
+                    isShare={true}
+                    isFollowerList={false}
+                    isUserList={false}
+                    notif_id={item.id}
+                    postTitle={item.post_obj.title}
+                    user={item.user}
+                    onRefresh={handleRefresh}
+                  />
+                );
+              }
+              else if (item.type === "post") {
                 return (
                   <ListItem
                     key={index}
@@ -152,7 +170,7 @@ export default function NotificationList() {
                     isPost={true} 
                     isLike={false}
                     isComment={false}
-                    isShare = {true}
+                    isShare = {false}
                     isFollowerList={false}
                     isUserList={false}
                     notif_id={item.id}
@@ -162,25 +180,7 @@ export default function NotificationList() {
                   />
                 );
               }
-              // else if (item.type === "post") {
-              //   return (
-              //     <ListItem
-              //       key={index}
-              //       isRequest={false}
-              //       isPost={true} 
-              //       isLike={false}
-              //       isComment={false}
-              //       isShare = {false}
-              //       isFollowerList={false}
-              //       isUserList={false}
-              //       notif_id={item.id}
-              //       postTitle = {item.post_obj.title}
-              //       user={item.user}
-              //       onRefresh={handleRefresh}
-              //     />
-              //   );
-              // }
-              return null; 
+              return null;
             })}
           </ul>
         </div>
