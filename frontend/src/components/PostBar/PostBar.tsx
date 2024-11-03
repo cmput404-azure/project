@@ -288,12 +288,12 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
 
           {imageBase64 ? (
             <div className={styles.image_preview}>
-              <p>Uploaded: {fileName}</p>
               <img
                 src={`data:image/png;base64,${imageBase64}`}
                 alt="Preview"
                 className={styles.uploaded_image}
               />
+              <p>Uploaded: {fileName}</p>
             </div>
           ) : (
             <>
