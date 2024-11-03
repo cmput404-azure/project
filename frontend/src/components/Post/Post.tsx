@@ -25,13 +25,22 @@ export default function Post() {
    const [openSnackbar, setOpenSnackbar] = useState(false);
    const [isCommentOpen, setIsCommentOpen] = useState(false);
 
-   // TODO: need to check if its friends only post, if so then redirect to home if user is not a friend
+   // TODO: need to check if its friends only (unlisted) post, if so then redirect to home if user is not a friend
 
    useEffect(() => {
       const fetchPost = async () => {
          try {
             if (postID) {
                const postData = await postService.getPost(`api/posts/${postID}`);
+               console.log("POST", postData);
+               // Check visibility
+               if (postData.visibility === 3){
+                  // Check if logged in
+                  if (authProvider.isAuthenticated){
+                     // Check if following
+                     
+                  }
+               }
                setPost(postData);
                setLikeCount(Array.isArray(post.likes) ? 0 : post.likes.count);
                setCommentCount(Array.isArray(post.comments) ? 0 : post.comments.count);
