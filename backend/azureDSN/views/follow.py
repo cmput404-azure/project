@@ -167,11 +167,10 @@ class FollowCustomView(APIView):
         # Get remote followee_ids that are in the remote followers URLs
         remote_followee_ids = list(Follow.objects.filter(remote_follower__contains=user_id).values_list('local_followee_id', flat=True))
 
-        print(user_id, remote_followee_ids)
         # Combine both lists of followees
         all_followee_ids = set(followee_ids) | set(remote_followee_ids)  # Using set to ensure uniqueness
         
-       # Build the Q object for the remote follower check
+        # Build the Q object for the remote follower check
         remote_follower_q = Q()  # Start with an empty Q object
 
         # Dynamically create Q objects for each followee ID to check if it is at the end of the remote_follower URLs
@@ -190,12 +189,10 @@ class FollowCustomView(APIView):
             )
         combined_friends = []
 
-
         # Get the list of friend ids
         local_friend_ids = mutual_followers.values_list('local_follower_id', flat=True)
 
         remote_friend_ids = mutual_followers.values_list('remote_follower', flat = True)
-        print("REMOTE_FRIENDS", remote_friend_ids)
         # remote
         for remote_friend in remote_friend_ids:
             remote_follower_data = fetch_remote_follower_data(remote_friend)

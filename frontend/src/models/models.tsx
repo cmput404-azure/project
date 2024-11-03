@@ -16,6 +16,7 @@ export interface User{
     username: string;
     uuid: string;
     profileImage: string | null;
+    is_staff: boolean;
 }
 
 export interface FollowRequest {

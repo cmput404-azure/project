@@ -43,6 +43,7 @@ function PostCard({
   const navigate = useNavigate();
   const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false);
   const [isAuthor, setIsAuthor] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Function to open the dialog
   const handleClickShare = () => {
@@ -54,6 +55,8 @@ function PostCard({
       const currentUser = await api.get(`/api/authors/${authProvider.user.uuid}/`);
       if (post.author.id === currentUser.data["id"]){
         setIsAuthor(true);
+      }else if(authProvider.user.is_staff){
+        setIsAdmin(true);
       }
     }
     getUser();
@@ -189,7 +192,7 @@ const transformImageUri = (src: string, alt: string, title: string) => {
         </div>
         
         <div className={styles.icon}>
-          {post.visibility === 3 || isAuthor || post.visibility === 1? ( // friend post doesnt have a link 
+          {post.visibility === 3 || isAuthor || isAdmin || post.visibility === 1? ( // friend post doesnt have a link 
             <Tooltip title="copy link">
               <i className="fas fa-link" onClick={handleGetLink}></i>
             </Tooltip>
