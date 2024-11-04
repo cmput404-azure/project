@@ -201,7 +201,7 @@ export default function Post({
   };
 
   const handleNewComment = (newComment) => {
-    const newCommentList = [...commentList, newComment];
+    const newCommentList = [newComment, ...commentList];
     setCommentList(newCommentList);
   };
 
