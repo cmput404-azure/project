@@ -86,7 +86,6 @@ class AuthorTests(APITestCase):
         payload = response.data
         self.assertEqual(len(payload), 6)
         for author in payload:
-            print(author)
             self.assertIn(str(author["id"]), [str(self.test_author.uuid), str(self.test_author2.uuid), str(self.test_author3.uuid), str(self.test_author4.uuid), str(self.test_author5.uuid), str(self.test_author6.uuid), str(self.test_author7.uuid)])
             self.assertIn(author["displayName"], ['Test Author2', 'Test Author3', 'Test Author4', 'Test Author5', 'Test Author6', 'Test Author7'])
             self.assertIn(author["host"], ['http://localhost:8000/api/'])
@@ -160,10 +159,6 @@ class AuthorTests(APITestCase):
             'page': 'http://localhost:8000/api/authors/updated_testauthor',
         }
         response = self.client.put(url, updated_data, format='json')
-        
-        # check if the response is not valid
-        if response.status_code != 200:
-            print(response.data) 
 
         self.assertEqual(response.status_code, 200)
 
