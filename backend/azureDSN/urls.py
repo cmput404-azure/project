@@ -1,7 +1,4 @@
 from django.urls import path
-
-from .views.comments import CreateCommentView
-
 from .views import *
 from .views.posts import * # raises warning for PostCreation if not imported
 from django.urls import path
@@ -27,10 +24,8 @@ urlpatterns = [
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/<uuid:comment_serial>/likes", LikesView.as_view(), name="get_comment_likes"),
     
     # Comments API
-    # MultipleCommentsView
     path('api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/',MultipleCommentsView.as_view(),name='comments_by_serial'),
     path('api/posts/<path:post_fqid>/comments/',MultipleCommentsView.as_view(),name='comments_by_fqid'),
-    # SingleCommentView
     path('api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/<uuid:comment_serial>/',SingleCommentView.as_view(),name='comment_by_serial'),
     path('api/comments/<path:comment_fqid>/',SingleCommentView.as_view(),name='comment_by_fqid'),
 
@@ -42,7 +37,6 @@ urlpatterns = [
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
     path("api/authors/<uuid:author_serial>/posts/", AuthorPostsAllView.as_view(), name="create_post"),
     path("api/posts/<path:post_fqid>/", PostView.as_view(), name="post"),
-
 
     # Likes API (specific Likes)
     path("api/authors/<uuid:author_serial>/liked/<uuid:like_serial>/", LikeView.as_view(), name="get_like_by_serial"),
