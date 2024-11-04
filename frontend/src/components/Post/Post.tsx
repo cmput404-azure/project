@@ -30,8 +30,10 @@ import {
 import profileService from "../../service/profile";
 import { PostData } from "../../models/models";
 
-export default function Post() {
-  const { postID } = useParams<{ postID: string }>();
+export default function Post({ postGiven }: { postGiven?: PostModel }) {
+  const { postID: postIDFromParams } = useParams<{ postID: string }>();
+  const postID = postGiven ? postGiven.id : postIDFromParams;
+
   const authProvider = useAuth();
 
   const [post, setPost] = useState<PostModel | null>(null);
