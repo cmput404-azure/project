@@ -25,8 +25,19 @@
   padding: 20px;
 }
 
-.h2 {
-  color: black;
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0px;
+  margin-top:0px;
+}
+
+.modalTitle {
+  flex-grow: 1;
+  text-align: center;
+  color:black;
+  margin:0
 }
 
 .closeModalButton{

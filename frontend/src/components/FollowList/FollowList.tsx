@@ -111,10 +111,12 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
       className={styles.modalContent}
       overlayClassName={styles.modalOverlay}
     >
-      <button onClick={onClose} className={styles.closeModalButton}>
-        <CloseIcon style={{ fontSize: "14px" }} />
-      </button>
-      <h2 className={styles.h2}>{isFollowerList}</h2>
+      <div className={styles.modalHeader}>
+        <h2 className={styles.modalTitle}>{isFollowerList}</h2>
+        <button onClick={onClose} className={styles.closeModalButton}>
+          <CloseIcon style={{ fontSize: "14px" }} />
+        </button>
+      </div>
       {loading ? (
         <div className={"loading_component"}><CircularProgress /></div>
       ) : error ? (
