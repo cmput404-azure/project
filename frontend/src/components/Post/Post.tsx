@@ -1,6 +1,12 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-import { Alert, CircularProgress, Snackbar, Tooltip } from "@mui/material";
+import {
+  Alert,
+  CircularProgress,
+  Snackbar,
+  Tooltip,
+  Modal,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 
@@ -33,9 +39,11 @@ import { PostData } from "../../models/models";
 export default function Post({
   postGiven,
   canToggleComments = true,
+  isModal = false,
 }: {
   postGiven?: PostModel;
   canToggleComments?: boolean;
+  isModal?: boolean;
 }) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
   const postID = postGiven ? postGiven.id : postIDFromParams;
@@ -54,6 +62,7 @@ export default function Post({
   const [showAlert, setShowAlert] = useState(false);
   const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -120,7 +129,19 @@ export default function Post({
     return imageSrc || src;
   };
 
-  const handleToggleComment = () => setIsCommentOpen(!isCommentOpen);
+  const handleToggleComment = () => {
+    setIsCommentOpen(!isCommentOpen);
+  };
+
+  const handleCommentButtonClick = () => {
+    if (isModal) return;
+    setIsModalOpen(true);
+  };
+
+  // handle when the comment modal is closed
+  const handleCommentModalClose = () => {
+    setIsModalOpen(false);
+  };
 
   const handleNewComment = (newComment) => {
     const newCommentList = [...commentList, newComment];
@@ -263,7 +284,11 @@ export default function Post({
             </div>
             <div
               className={styles.icon}
-              onClick={canToggleComments ? handleToggleComment : null}
+              onClick={
+                canToggleComments
+                  ? handleToggleComment
+                  : handleCommentButtonClick
+              }
             >
               <i className="fas fa-comment"></i>
               <span>{formatCount(commentCount)}</span>
@@ -318,7 +343,7 @@ export default function Post({
         </div>
       </div>
 
-      {isCommentOpen && canToggleComments ? (
+      {(isCommentOpen && canToggleComments) || isModal ? (
         <div className={styles.comments}>
           <div className={styles.commentsHeader}>Comments</div>
           <CommentInputField
@@ -351,6 +376,10 @@ export default function Post({
           ))}
         </div>
       ) : null}
+
+      <Modal open={isModalOpen} onClose={handleCommentModalClose}>
+        <Post postGiven={post} canToggleComments={false} isModal={true} />
+      </Modal>
     </div>
   );
 }
