@@ -37,6 +37,7 @@ import profileService from "../../service/profile";
 import { PostData } from "../../models/models";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import Avatar from "@mui/material/Avatar";
+import auth from "../../service/auth";
 
 export default function Post({
   postGiven,
@@ -119,6 +120,7 @@ export default function Post({
           setPost(postData);
 
           setCommentList(postData.comments.src.reverse());
+          console.log("comments", postData.comments.src);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
           );
@@ -127,6 +129,19 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
+          // TODO: fix liking in stream
+          setHasLiked(
+            postGiven.likes.src.some((like) =>
+              like.object.includes(authProvider.user.uuid)
+            )
+          );
+          setCommentList(postGiven.comments.src.reverse());
+          setLikeCount(
+            Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
+          );
+          setCommentCount(
+            Array.isArray(postGiven.comments) ? 0 : postGiven.comments.count
+          );
         }
       } catch (error) {
         if (error.response && error.response.status === 403) {
