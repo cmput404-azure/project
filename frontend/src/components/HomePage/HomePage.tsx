@@ -1,5 +1,5 @@
 // HomePage.jsx
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { CircularProgress } from "@mui/material";
 import CommentView from "../CommentView/CommentView";

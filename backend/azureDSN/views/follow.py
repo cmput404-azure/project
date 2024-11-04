@@ -1,9 +1,7 @@
 import json
-from uuid import UUID
 from django.http import Http404
 from rest_framework.views import APIView
 import http.client
-from django.contrib.contenttypes.models import ContentType
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from drf_spectacular.utils import inline_serializer
 from rest_framework.response import Response
@@ -14,7 +12,7 @@ from ..serializers.follow_serializer import FollowSerializer
 from ..serializers.user_serializer import UserSerializer
 from ..models import Follow
 from ..models import User
-from urllib.parse import quote, unquote, urlparse
+from urllib.parse import unquote, urlparse
 from django.db.models import Q
 
 def fetch_remote_follower_data(remote_url):

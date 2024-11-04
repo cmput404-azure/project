@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from rest_framework.serializers import *
-
 from ..models import *
 from .user_serializer import UserSerializer
 

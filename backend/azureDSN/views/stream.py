@@ -1,16 +1,11 @@
-from uuid import UUID
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Q
-from ..serializers import PostSerializer, InboxItemSerializer
+from ..serializers import PostSerializer
 from django.shortcuts import get_object_or_404
-from ..models import Post, User, Inbox, InboxItem, Follow, Share
-from django.contrib.contenttypes.models import ContentType
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
+from ..models import Post, User, Follow, Share
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 import requests
-
-# TODO if user is admin, also get deleted post
 
 class PublicStreamView(APIView):
     @extend_schema(

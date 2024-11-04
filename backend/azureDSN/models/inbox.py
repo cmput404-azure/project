@@ -1,5 +1,4 @@
 from django.db import models
-from datetime import datetime
 from .user import User
 from .inbox_item import InboxItem
 
