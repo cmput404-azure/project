@@ -35,6 +35,7 @@ import {
 } from "@mui/material";
 import profileService from "../../service/profile";
 import { PostData } from "../../models/models";
+import { extractUUID } from "../../util/formatting/extractUUID";
 
 export default function Post({
   postGiven,
@@ -76,36 +77,43 @@ export default function Post({
           const decodedPost = decodeBase64ToUrl(postDataList);
           postData.content = decodedPost[0].content;
 
-          const authUser = await ProfileService.fetchAuthorData(
-            authProvider.user.uuid
-          );
-          const url = `${authUser.host}authors/${authProvider.user.uuid}`;
-
-          if (url !== postData.author.id) {
-            let authorId = postData.author.id
-              .replace(/\/+$/, "")
-              .split("/")
-              .pop();
-            const encodedUrl = encodeURIComponent(url);
-            const is_following = await FollowService.checkFollowing(
-              authorId,
-              encodedUrl
+          if (authProvider.user) {
+            const authUser = await ProfileService.fetchAuthorData(
+              authProvider.user.uuid
             );
-            if (!is_following) {
-              setOpenSnackbar(true);
-              setShowAlert(true);
-              setTimeout(() => {
-                navigate("/home");
-              }, 2000);
+            const url = `${authUser.host}authors/${authProvider.user.uuid}`;
+
+            if (url !== postData.author.id) {
+              let authorId = postData.author.id
+                .replace(/\/+$/, "")
+                .split("/")
+                .pop();
+              const encodedUrl = encodeURIComponent(url);
+              const is_following = await FollowService.checkFollowing(
+                authorId,
+                encodedUrl
+              );
+              console.log(postData.visibility);
+              if (!authProvider.user.is_staff) {
+                if (!is_following || (postData.visibility ===2)) {
+                  setOpenSnackbar(true);
+                  setShowAlert(true);
+                  setTimeout(() => {
+                    navigate("/home");
+                  }, 2000);
+                }
+              }
             }
+
+            setHasLiked(
+              postData.likes.src.some((like) =>
+                like.object.includes(authProvider.user.uuid)
+              )
+            );
           }
 
           setPost(postData);
-          setHasLiked(
-            postData.likes.src.some((like) =>
-              like.object.includes(authProvider.user.uuid)
-            )
-          );
+
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
@@ -123,10 +131,49 @@ export default function Post({
       }
     };
     fetchPost();
-  }, [postID, authProvider.user.uuid, navigate]);
+  }, [postID, authProvider.user ? authProvider.user.uuid : null, navigate]);
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      if (post.contentType === ContentType.MARKDOWN) {
+        const imageRegex = /!\[.*?\]\((.*?)\)/; // Regex to find the image URL in the Markdown
+        const match = post.content.match(imageRegex);
+        if (match) {
+          const imageUrl = match[1]; // Get the URL from the Markdown
+          console.log("imageURL: ", imageUrl);
+
+          // Check if the imageUrl is a data URL
+          if (imageUrl.startsWith("data:")) {
+            // Directly set the src to the data URL
+            setImageSrc(imageUrl);
+          } else {
+            // If it's not a data URL, fetch from the endpoint
+            try {
+              const response = await fetch(imageUrl);
+              console.log(response);
+              if (response.ok) {
+                const jsonResponse = await response.json();
+                const imageData = jsonResponse.image;
+                setImageSrc(imageData);
+              } else {
+                console.error("Error fetching image:", response.statusText);
+              }
+            } catch (error) {
+              console.error("Error fetching image:", error);
+            }
+          }
+        }
+      }
+    };
+
+    if (post) {
+      fetchImage();
+    }
+
+  }, [post]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
-    return imageSrc || src;
+    return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
   };
 
   const handleToggleComment = () => {
@@ -205,6 +252,18 @@ export default function Post({
     }
   };
 
+  const redirectToAuthorProfile = () => {
+    const isExternalLink = !post.author.host.includes(window.location.hostname);
+
+    if (isExternalLink) {
+      // Later when able to connect to other nodes, fetch the remote author info using FQID
+      // Then display the remote user info in our layout
+    } else {
+      const authorURL = `/authors/${extractUUID(post.author.id)}`;
+      navigate(authorURL);
+    }
+  };
+
   const handleCloseSnackbar = (
     event?: React.SyntheticEvent | Event,
     reason?: string
@@ -244,11 +303,11 @@ export default function Post({
             `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
           }
           alt={`${post.author.displayName}'s profile`}
+          onClick={redirectToAuthorProfile}
         />
         <div className={styles.headerText}>
-          <span className={styles.userName}>{post.author.displayName}</span>
-          <span className={styles.postTime}>
-            {new Date(post.published).toLocaleString()}
+          <span className={styles.userName} onClick={redirectToAuthorProfile}>{post.author.displayName}</span>
+          <span className={styles.postTime}>{new Date(post.published).toLocaleString()}
           </span>
         </div>
         <Tooltip title="Copy link">
@@ -307,7 +366,7 @@ export default function Post({
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
           {post.contentType !== ContentType.MARKDOWN &&
-          post.contentType !== ContentType.PLAIN ? (
+            post.contentType !== ContentType.PLAIN ? (
             <div className={styles.imgContainer}>
               <img
                 className={styles.postImage}
@@ -316,7 +375,6 @@ export default function Post({
               />
             </div>
           ) : (
-            // <div className={styles.postText}>{post.content}</div>
             <div className={styles.postText}>
               {post.contentType === ContentType.MARKDOWN ? (
                 <ReactMarkdown
@@ -324,11 +382,13 @@ export default function Post({
                   components={{
                     img: ({ src, alt, title }) => {
                       return (
-                        <img
-                          src={transformImageUri(src, alt, title)}
-                          alt={alt}
-                          title={title}
-                        />
+                        <div className={styles.imgContainer}>
+                          <img
+                            src={transformImageUri(src, alt, title)}
+                            alt={alt}
+                            title={title}
+                          />
+                        </div>
                       );
                     },
                   }}
