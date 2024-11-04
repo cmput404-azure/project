@@ -74,6 +74,7 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
       // In here  you will append the comment to the list. You can create a useState hook and then call something set comments 
       onCommentAdded(response)
     }
+    setTextInField("");
 
   };
 
