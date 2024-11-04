@@ -25,14 +25,21 @@ class PublicStreamView(APIView):
     )
     def get(self, request):
         """Retrieve the public posts of the node (currently only working for nodes)"""
+
         # if author is not authenticated just return the public posts
-        public_posts = Post.objects.filter(visibility=1)
+        visibility_filter = [1]
+
+        if (request.user and request.user.is_authenticated): # if there is a user
+            user = get_object_or_404(User, uuid=request.user.uuid)
+            if user.is_staff:
+                visibility_filter.append(4) # Add deleted posts for admin
+
 
         # Sort the posts by the most recent creation date
-        public_posts = public_posts.order_by('-created_at')
+        posts = Post.objects.filter(visibility__in=visibility_filter).order_by('-created_at')
 
         # Serialize and return the posts
-        serializer = PostSerializer(public_posts, many=True)
+        serializer = PostSerializer(posts, many=True)
                   
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -92,12 +99,16 @@ class AuthStreamView(APIView):
             # Retrieve the followees (users the current user is following)
             followees = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True)
 
+            print(f"People I'm following: {followees}")
+
             # Retrieve mutual followers (friends: both following each other)
             # Referenced FollowCustomView for this query
             friends = Follow.objects.filter(
                 local_followee=user,
                 local_follower_id__in=followees
             ).values_list('local_follower_id', flat=True)
+
+            print(f"People I'm friends with: {friends}")
 
             # Query for followees' unlisted posts
             followees_unlisted_posts = Post.objects.filter(
@@ -116,6 +127,8 @@ class AuthStreamView(APIView):
             # Remove duplicates and sort by creation date
             all_relevant_posts = all_relevant_posts.order_by("-created_at").distinct()
             combined_data = PostSerializer(all_relevant_posts, many=True).data
+
+            # print(f"First point: {combined_data}")
             
                 
             """
@@ -123,7 +136,7 @@ class AuthStreamView(APIView):
             All the posts shared are public post as well but it could either remote or local
             """
             # Query all items in the Share table whose receiver is the same as current user
-            shared_posts = Share.objects.filter(receiver = user)
+            shared_posts = Share.objects.filter(receiver=user)
             for shared in shared_posts:
                 # here the post is the fqid
                 # we send a request to fetch the post data
@@ -131,6 +144,8 @@ class AuthStreamView(APIView):
                 if response.status_code == 200:
                     shared_data = response.json()
                     combined_data.append(shared_data)
+
+            print(f"Second point: {combined_data}")
 
             return Response(combined_data, status=status.HTTP_200_OK)
         else:
