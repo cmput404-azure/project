@@ -180,7 +180,7 @@ REST_FRAMEWORK = {
 }
 
 # Media files (e.g. Users' Profile Pictures)
-MEDIA_URL = '/media/' # this is the public URL for accessing media
+MEDIA_URL = 'media/' # this is the public URL for accessing media
 MEDIA_ROOT = BASE_DIR / 'azureDSN' / 'media' # directory where media files will go
 
 REACT_APP_BUILD_PATH = "../frontend/build"
