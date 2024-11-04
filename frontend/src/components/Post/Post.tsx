@@ -82,7 +82,7 @@ export default function Post({
               authProvider.user.uuid
             );
             const url = `${authUser.host}authors/${authProvider.user.uuid}`;
-  
+            
             if (url !== postData.author.id) {
               let authorId = postData.author.id
                 .replace(/\/+$/, "")
@@ -93,7 +93,9 @@ export default function Post({
                 authorId,
                 encodedUrl
               );
-              if (!is_following) {
+              const friends = await FollowService.getFriends(authorId);
+              const isFriend = friends.some(friend => friend.id.includes(authProvider.user.uuid));
+              if (!is_following || (postData.visibility ===2 && !isFriend)) {
                 setOpenSnackbar(true);
                 setShowAlert(true);
                 setTimeout(() => {
