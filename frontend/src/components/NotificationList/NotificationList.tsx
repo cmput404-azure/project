@@ -90,7 +90,6 @@ export default function NotificationList() {
 
   return (
     <div>
-      <h2 className={styles.h2}>Notifications</h2>
       {loading ? (
         <div className={"loading_component"}><CircularProgress sx={{ color: "#70ffaf" }} /></div>
       ) : error ? (

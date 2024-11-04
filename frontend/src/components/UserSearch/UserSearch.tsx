@@ -25,66 +25,67 @@ export default function UserSearch({ closeModal }: userSearchProps) {
     setSearchTerm(event.target.value);
   };
 
-    // Filter results based on the search term
+  // Filter results based on the search term
   const filteredResults = results.filter((user) =>
     user.displayName.toLowerCase().includes(searchTerm.toLowerCase())
-  );   
+  );
 
   // Fetch users when the search term changes
- useEffect(() => {
-        const fetchUsers = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const response = await api.get(`/api/authors/all/`,{
-                    params: { user: authProvider.user.uuid }
-                }); 
-                setResults(response.data); 
-            } catch (err) {
-                console.error('Error fetching users:', err);
-                setError('Failed to fetch users');
-            } finally {
-                setLoading(false);
-            }
-        };
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await api.get(`/api/authors/all/`, {
+          params: { user: authProvider.user.uuid }
+        });
+        setResults(response.data);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError('Failed to fetch users');
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchUsers();
   }, []);
 
   return (
-    <div className={styles.componentWidth}>
-      <div className={styles.searchContainer}>
-        <i className="fa-solid fa-magnifying-glass"></i>
-        <input
-          className={styles.searchInput}
-          type="text"
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={handleInputChange}
-        />
+    <div>
+      <div className={styles.componentWidth}>
+        <div className={styles.searchContainer}>
+          <i className="fa-solid fa-magnifying-glass"></i>
+          <input
+            className={styles.searchInput}
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={handleInputChange}
+          />
+        </div>
+
+        {loading && <div className={"loading_component"}><CircularProgress sx={{ color: "#70ffaf" }} /></div>}
+        {error && <p>{error}</p>}
+        {filteredResults.length > 0 ? (
+          <ul className={styles.customList}>
+            {filteredResults.map((user) => (
+              <ListItem
+                key={user.id}
+                isRequest={false}
+                isPost={false}
+                isLike={false}
+                isFollowerList={false}
+                isUserList={true}
+                user={user}
+                closeModal={closeModal}
+              />
+            ))}
+          </ul>
+        ) : (
+          searchTerm && <p>No users found</p> // Show message when there are no matches
+        )}
       </div>
-
-
-      {loading && <div className={"loading_component"}><CircularProgress sx={{color: "#70ffaf"}}/></div>}
-      {error && <p>{error}</p>}
-      {filteredResults.length > 0 ? (
-        <ul className={styles.customList}>
-          {filteredResults.map((user) => (
-            <ListItem
-              key={user.id}
-              isRequest={false}
-              isPost={false}
-              isLike={false}
-              isFollowerList={false}
-              isUserList={true}
-              user={user}
-              closeModal={closeModal}
-            />
-          ))}
-        </ul>
-      ) : (
-        searchTerm && <p>No users found</p> // Show message when there are no matches
-      )}
     </div>
   );
 }
