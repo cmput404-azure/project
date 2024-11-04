@@ -14,8 +14,8 @@ import requests
 
 class PublicStreamView(APIView):
     @extend_schema(
-        summary="Retrieve Public Posts",
-        description="Retrieve all public posts available on the node, sorted by the most recent creation date.",
+        summary="Retrieve Public Posts (and Deleted Posts if Admin)",
+        description="Retrieve all public (and deleted) posts available on the node, sorted by the most recent creation date.",
         responses={
             status.HTTP_200_OK: OpenApiResponse(
                 response=PostSerializer(many=True),
@@ -29,11 +29,10 @@ class PublicStreamView(APIView):
         # if author is not authenticated just return the public posts
         visibility_filter = [1]
 
-        if (request.user and request.user.is_authenticated): # if there is a user
+        if (request.user and request.user.is_authenticated):
             user = get_object_or_404(User, uuid=request.user.uuid)
             if user.is_staff:
                 visibility_filter.append(4) # Add deleted posts for admin
-
 
         # Sort the posts by the most recent creation date
         posts = Post.objects.filter(visibility__in=visibility_filter).order_by('-created_at')
@@ -127,10 +126,7 @@ class AuthStreamView(APIView):
             # Remove duplicates and sort by creation date
             all_relevant_posts = all_relevant_posts.order_by("-created_at").distinct()
             combined_data = PostSerializer(all_relevant_posts, many=True).data
-
-            # print(f"First point: {combined_data}")
-            
-                
+                  
             """
             In this stream, there is also a case where user also see posts shared by people they follow
             All the posts shared are public post as well but it could either remote or local
@@ -145,12 +141,7 @@ class AuthStreamView(APIView):
                     shared_data = response.json()
                     combined_data.append(shared_data)
 
-            print(f"Second point: {combined_data}")
-
             return Response(combined_data, status=status.HTTP_200_OK)
         else:
             return Response([], status=status.HTTP_200_OK)
             
-             
-
-        
