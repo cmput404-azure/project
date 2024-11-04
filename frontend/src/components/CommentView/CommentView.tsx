@@ -85,7 +85,7 @@ const CommentView: React.FC<CommentViewProps> = ({
                   <div className={styles.commentAuthor}>
                     {comment.author.displayName}
                   </div>
-                  <div className={styles.timePosted}>{comment.published}</div>
+                  <div className={styles.timePosted}>{new Date(comment.published).toLocaleString()}</div>
                 </div>
                 <div className={styles.commentText}>{comment.comment}</div>
               </div>
