@@ -155,7 +155,7 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
             {postData.contentType === ContentType.MARKDOWN ? (
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
                 img: ({ src, alt, title }) => (
-                  <img src={transformImageUri(src, alt, title)} alt={alt} title={title} />
+                  <img src={transformImageUri(src, alt, title)} alt={alt} title={title} className={styles.postImage}/>
                 )
               }}>
                 {postData.content}

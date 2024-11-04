@@ -30,15 +30,41 @@ export default function UserProfile() {
    const [followersCount, setFollowersCount] = useState(0);
    const [followingCount, setFollowingCount] = useState(0);
    const [openSnackbar, setOpenSnackbar] = useState(false);
+   const [page, setPage] = useState(1);
+   const [totalPages, setTotalPages] = useState(0);
+   const [loading, setLoading] = useState(false);
+   const pageSize = 10;
+
    const auth = useAuth();
 
    const fetchProfileData = async () => {
       if (auth.isAuthenticated && auth.user.uuid) {
          const author = await ProfileService.fetchAuthorData(auth.user.uuid);
-         const posts = await ProfileService.fetchAuthorPosts(auth.user.uuid);
          setAuthorData(author);
-         setPosts(posts);
+         // Fetch initial posts
+         await fetchPosts(auth.user.uuid);
       }
+   };
+
+   const fetchPosts = async (userId: string, page: number = 1) => {
+      if (loading) return;
+      setLoading(true);
+      const { count, src } = await ProfileService.fetchAuthorPosts(userId, page); 
+
+      setPosts(prevPosts => {
+         const existingIds = new Set(prevPosts.map(post => post.id));
+         const newPosts = src.filter(post => !existingIds.has(post.id));
+         return [...prevPosts, ...newPosts];
+      });
+
+      setTotalPages(Math.ceil(count / pageSize));
+      setLoading(false);
+   };
+
+   const nextPage = async () => {
+      if (loading || page >= totalPages) return;
+      await fetchPosts(auth.user.uuid, page + 1);
+      setPage(prevPage => prevPage + 1);
    };
 
    function onDeletePost(postId: string) {
@@ -71,7 +97,7 @@ export default function UserProfile() {
       const currentURL = window.location.host;
       const protocol = window.location.protocol;
       const constructedURL = `${protocol}//${currentURL}/#/authors/${extractUUID(auth.user.uuid)}`;
-      
+
       navigator.clipboard.writeText(constructedURL);
       setOpenSnackbar(true);
    }
@@ -143,6 +169,16 @@ export default function UserProfile() {
                {posts.map(post => (
                   <MiniPostCard key={post.id} post={post} authorUUID={authorData.id} onDelete={onDeletePost} />
                ))}
+               {page < totalPages && (
+                  <Button
+                     variant="contained"
+                     onClick={nextPage}
+                     disabled={loading}
+                     sx={{ marginTop: "1rem", backgroundColor: "#70ffaf", color: "black" }}
+                  >
+                     {loading ? <CircularProgress size={24} sx={{ color: "#70ffaf" }} /> : "Load More"}
+                  </Button>
+               )}
             </section>
          </div>
 

@@ -1,5 +1,4 @@
-import { Author, Like, PostData } from "../models/models";
-
+import { PostData } from "../models/models";
 import { api } from "./config"
 
 class PostService {

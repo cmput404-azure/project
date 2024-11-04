@@ -1,19 +1,19 @@
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { Alert } from "@mui/material";
 import { Button } from "@mui/material";
-import TextField from "@mui/material/TextField";
-import { login } from "../../util/auth/login";
-import { logout } from "../../util/auth/checkauth";
-import styles from "./Auth.module.scss";
-import { useAuth } from "../../state";
-import authService from "../../service/auth";
-import styled from "@mui/material/styles/styled";
+import { IconButton } from "@mui/material";
 import { InputAdornment } from "@mui/material";
 import Snackbar from "@mui/material/Snackbar";
-import { Alert } from "@mui/material";
-import { IconButton } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import TextField from "@mui/material/TextField";
+import authService from "../../service/auth";
+import { login } from "../../util/auth/login";
+import { logout } from "../../util/auth/checkauth";
+import styled from "@mui/material/styles/styled";
+import styles from "./Auth.module.scss";
+import { useAuth } from "../../state";
 
 const StyledTextField = styled(TextField)({
   "& label": {

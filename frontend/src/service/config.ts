@@ -8,9 +8,9 @@ axios.defaults.xsrfHeaderName = "x-csrftoken";
 const csrfToken = getCsrfToken();
 
 export const api = axios.create({
-   baseURL: 'http://localhost:8000',
-   timeout: 10000,
-   headers: {
-      "x-csrftoken": csrfToken,
-   },
+  baseURL: "http://localhost:8000",
+  timeout: 10000,
+  headers: {
+    "x-csrftoken": csrfToken,
+  },
 });

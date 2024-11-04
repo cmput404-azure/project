@@ -37,8 +37,8 @@
 }
 
 .deleteButton {
-  background-color: #dc3545;
-  color: white;
+  background-color: #70ffaf;
+  color: #555;
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
@@ -46,14 +46,14 @@
   transition: 0.3s;
 
   &:hover {
-    background-color: #ff4d4d;
+    background-color: #2efa86;
     color: #555;
   }
 }
 
 .cancelButton {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: #555;
+  color: #fff;
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
@@ -61,7 +61,7 @@
   transition: 0.3s;
 
   &:hover {
-    background-color: #70ffaf;
+    background-color: #ff4646;
     color: #333;
   }
 }

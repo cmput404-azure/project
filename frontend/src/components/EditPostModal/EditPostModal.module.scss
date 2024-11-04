@@ -41,6 +41,25 @@
     color: #70ffaf;
   }
 
+  .cardImage {
+    margin: 0 auto;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+  }
+
+  .postImage {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 5px;
+    margin: 0 auto;
+  }
+
   input,
   textarea {
     border: 1px solid #ccc;

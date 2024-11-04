@@ -1,17 +1,16 @@
 // HomePage.jsx
 import { useEffect, useState } from "react";
 
-import { CircularProgress } from "@mui/material";
-import CommentView from "../CommentView/CommentView";
+import { CircularProgress, Modal } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import PostBar from "../PostBar/PostBar";
-import PostCard from "../PostCard/PostCard";
 import PublicIcon from "@mui/icons-material/Public";
 import { api } from "../../service/config";
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
+import Post from "../Post/Post";
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
@@ -19,9 +18,6 @@ const HomePage = () => {
   const [nonPublicPosts, setNonPublicPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<any | null>(null);
-  const [commentsList, setCommentsList] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const authProvider = useAuth();
 
@@ -55,13 +51,16 @@ const HomePage = () => {
     try {
       const publicPosts = await stream.getStream();
       const privatePosts = await stream.getStream(true);
-      const decodedPublicPosts = decodeBase64ToUrl(publicPosts)
-      const decodedNonPublicPosts = decodeBase64ToUrl(privatePosts)
+      const decodedPublicPosts = decodeBase64ToUrl(publicPosts);
+      const decodedNonPublicPosts = decodeBase64ToUrl(privatePosts);
       setPublicPosts(decodedPublicPosts);
       setNonPublicPosts(decodedNonPublicPosts);
 
       setIsLoading(false);
-      return { publicPosts: decodedPublicPosts, nonPublicPosts: decodedNonPublicPosts };
+      return {
+        publicPosts: decodedPublicPosts,
+        nonPublicPosts: decodedNonPublicPosts,
+      };
     } catch (err) {
       console.log(err);
       setError("Failed to fetch posts. Please try again.");
@@ -75,42 +74,6 @@ const HomePage = () => {
     return () => clearInterval(interval); // Clean up the interval on component unmount
   }, [isUserLoading]);
 
-  // handle when the comment button is clicked
-  // const handleCommentButtonClick = (post: any) => {
-  //   setIsCommentModalOpen(true);
-  //   setSelectedPost(post);
-  //   setCommentsList(post.comments.src);
-  // };
-
-  const handleCommentButtonClick = async (post) => {
-    try {
-      // Fetch posts and get the latest public and non-public posts
-      const { publicPosts, nonPublicPosts } = await fetchPosts();
-  
-      // Search for the post in the freshly fetched posts
-      const allPosts = [...publicPosts, ...nonPublicPosts];
-      const foundPost = allPosts.find((p) => p.id === post.id);
-  
-      if (foundPost) {
-        setSelectedPost(foundPost);
-        setCommentsList(foundPost.comments.src); // Set the comments list from the found post
-      } else {
-        setError("Post not found.");
-      }
-  
-      setIsCommentModalOpen(true);
-    } catch (err) {
-      console.error("Error refetching posts:", err);
-      setError("Failed to fetch posts. Please try again.");
-    }
-  };
-
-  // handle when the comment modal is closed
-  const handleCommentModalClose = () => {
-    setIsCommentModalOpen(false);
-    setSelectedPost(null);
-  };
-
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
     setActiveFilterPost(icon);
@@ -120,7 +83,7 @@ const HomePage = () => {
   if (isLoading)
     return (
       <div className={"loading"}>
-        <CircularProgress sx={{color: "#70ffaf"}}/>
+        <CircularProgress sx={{ color: "#70ffaf" }} />
       </div>
     );
   if (error) return <p>{error}</p>;
@@ -156,48 +119,11 @@ const HomePage = () => {
           </div>
         )}
         {displayedPosts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            onCommentButtonClick={() => handleCommentButtonClick(post)}
-          />
+          <Post key={post.id} postGiven={post} canToggleComments={false} />
         ))}
       </div>
-
-      {/* Comment Modal */}
-      <CommentView
-        isOpen={isCommentModalOpen}
-        onRequestClose={handleCommentModalClose}
-        postComponent={
-          // find the post that was selected by uising the selectedPostID
-          selectedPost &&
-          displayedPosts.find((post) => post.id === selectedPost.id) ? (
-            // pass in the selected post for the modal to display
-            <PostCard key={selectedPost.id} post={selectedPost} />
-          ) : null
-        }
-        comments={commentsList ? commentsList : []}
-        author={user}
-        post={selectedPost}
-      />
     </div>
   );
 };
 
 export default HomePage;
-
-{
-  /* Second Section: Author Post */
-}
-{
-  /* <div className={styles.authorSection}>
-        <h2 className={styles.recommendedTitle}>Recommended Author</h2>
-        <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-      </div> */
-}
