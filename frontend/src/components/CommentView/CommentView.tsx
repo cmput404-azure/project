@@ -32,23 +32,19 @@ const CommentView: React.FC<CommentViewProps> = ({
   postComponent,
   comments,
   author,
-  post
+  post,
 }) => {
-  console.log("Comments", comments);
-
-  const [commentList, setCommentList] = useState([...comments])
+  const [commentList, setCommentList] = useState([...comments]);
 
   const handleNewComment = (newComment) => {
-    const newCommentList = [...commentList, newComment]
-    setCommentList(newCommentList)
-  }
+    const newCommentList = [...commentList, newComment];
+    setCommentList(newCommentList.reverse());
+  };
 
-    // Use useEffect to update commentList when comments prop changes
-    useEffect(() => {
-      setCommentList([...comments]);
-    }, [comments]);
-  
-
+  // Use useEffect to update commentList when comments prop changes
+  useEffect(() => {
+    setCommentList([...comments].reverse());
+  }, [comments]);
 
   return (
     <Modal
@@ -66,7 +62,13 @@ const CommentView: React.FC<CommentViewProps> = ({
         {/* Comments Section */}
         <div className={styles.commentsSection}>
           {/* Comment Input Field */}
-          {!(author == null) && <CommentInputField authorObj={author} post={post}  onCommentAdded={handleNewComment}/>}
+          {!(author == null) && (
+            <CommentInputField
+              authorObj={author}
+              post={post}
+              onCommentAdded={handleNewComment}
+            />
+          )}
 
           {commentList.map((comment) => (
             <div key={comment.id} className={styles.comment}>

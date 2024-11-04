@@ -4,6 +4,7 @@ import { Alert, CircularProgress, Snackbar, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 
+import CommentInputField from "../CommentInput/CommentInput";
 import { ContentType } from "../../models/modelTypes";
 import { PostData as PostModel } from "../../models/models";
 import follow from "../../service/follow";
@@ -40,6 +41,7 @@ export default function Post() {
         if (postID) {
           const postData = await postService.getPost(`api/posts/${postID}`);
           console.log("Post Data:", postData);
+          console.log("Post Data Author:", postData.author);
           // put the post data into a list to be able to decode it
           let postDataList = [];
           postDataList.push(postData);
@@ -72,7 +74,7 @@ export default function Post() {
           }
 
           setPost(postData);
-          setCommentList(postData.comments.src);
+          setCommentList(postData.comments.src.reverse());
           console.log("Comment List:", commentList);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
@@ -129,6 +131,11 @@ export default function Post() {
   };
 
   const handleToggleComment = () => setIsCommentOpen(!isCommentOpen);
+
+  const handleNewComment = (newComment) => {
+    const newCommentList = [...commentList, newComment];
+    setCommentList(newCommentList);
+  };
 
   const handleSharePost = async () => {
     if (!post || hasShared) return;
@@ -311,6 +318,11 @@ export default function Post() {
       {isCommentOpen ? (
         <div className={styles.comments}>
           <div className={styles.commentsHeader}>Comments</div>
+          <CommentInputField
+            authorObj={post.author}
+            post={post}
+            onCommentAdded={handleNewComment}
+          />
           {commentList.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
