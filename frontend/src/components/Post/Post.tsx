@@ -97,37 +97,6 @@ export default function Post() {
     fetchPost();
   }, [postID, authProvider.user.uuid, navigate]);
 
-  useEffect(() => {
-    const fetchImage = async () => {
-      if (post && post.contentType === ContentType.MARKDOWN) {
-        const imageRegex = /!\[.*?\]\((.*?)\)/;
-        const match = post.content.match(imageRegex);
-        if (match) {
-          const imageUrl = match[1];
-
-          if (imageUrl.startsWith("data:")) {
-            setImageSrc(imageUrl);
-          } else {
-            try {
-              const response = await fetch(imageUrl);
-              if (response.ok) {
-                const jsonResponse = await response.json();
-                const imageData = jsonResponse.image;
-                setImageSrc(imageData);
-              } else {
-                console.error("Error fetching image:", response.statusText);
-              }
-            } catch (error) {
-              console.error("Error fetching image:", error);
-            }
-          }
-        }
-      }
-    };
-
-    fetchImage();
-  }, [post]); // Only runs if post changes
-
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src;
   };
