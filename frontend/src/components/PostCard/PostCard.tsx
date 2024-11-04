@@ -318,7 +318,13 @@ function PostCard({
                 <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
                   img: ({ src, alt, title }) => {
                     return (
-                      <img src={transformImageUri(src, alt, title)} alt={alt} title={title} />
+                      <div className={styles.imgContainer}>
+                        <img 
+                          src={transformImageUri(src, alt, title)} 
+                          alt={alt} 
+                          title={title} 
+                        />
+                      </div>
                     );
                   }
                 }}>
