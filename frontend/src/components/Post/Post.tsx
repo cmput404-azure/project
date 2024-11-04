@@ -35,6 +35,7 @@ import {
 } from "@mui/material";
 import profileService from "../../service/profile";
 import { PostData } from "../../models/models";
+import { extractUUID } from "../../util/formatting/extractUUID";
 
 export default function Post({
   postGiven,
@@ -205,6 +206,18 @@ export default function Post({
     }
   };
 
+  const redirectToAuthorProfile = () => {
+    const isExternalLink = !post.author.host.includes(window.location.hostname);
+
+    if (isExternalLink) {
+      // Later when able to connect to other nodes, fetch the remote author info using FQID
+      // Then display the remote user info in our layout
+    } else {
+      const authorURL = `/authors/${extractUUID(post.author.id)}`;
+      navigate(authorURL);
+    }
+  };
+
   const handleCloseSnackbar = (
     event?: React.SyntheticEvent | Event,
     reason?: string
@@ -244,11 +257,11 @@ export default function Post({
             `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
           }
           alt={`${post.author.displayName}'s profile`}
+          onClick={redirectToAuthorProfile}
         />
         <div className={styles.headerText}>
-          <span className={styles.userName}>{post.author.displayName}</span>
-          <span className={styles.postTime}>
-            {new Date(post.published).toLocaleString()}
+          <span className={styles.userName} onClick={redirectToAuthorProfile}>{post.author.displayName}</span>
+          <span className={styles.postTime}>{new Date(post.published).toLocaleString()}
           </span>
         </div>
         <Tooltip title="Copy link">
@@ -316,7 +329,6 @@ export default function Post({
               />
             </div>
           ) : (
-            // <div className={styles.postText}>{post.content}</div>
             <div className={styles.postText}>
               {post.contentType === ContentType.MARKDOWN ? (
                 <ReactMarkdown
@@ -324,11 +336,13 @@ export default function Post({
                   components={{
                     img: ({ src, alt, title }) => {
                       return (
-                        <img
-                          src={transformImageUri(src, alt, title)}
-                          alt={alt}
-                          title={title}
-                        />
+                        <div className={styles.imgContainer}>
+                          <img 
+                            src={transformImageUri(src, alt, title)} 
+                            alt={alt} 
+                            title={title} 
+                          />
+                      </div>
                       );
                     },
                   }}
