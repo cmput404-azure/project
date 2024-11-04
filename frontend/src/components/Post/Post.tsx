@@ -18,6 +18,7 @@ import { useAuth } from "../../state";
 import { useNavigate, useParams } from "react-router";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { api } from "../../service/config";
 
 export default function Post() {
   const { postID } = useParams<{ postID: string }>();
@@ -153,25 +154,30 @@ export default function Post() {
   };
 
   const handleLikePost = async () => {
-    if (!post || hasLiked) return;
+    if (!authProvider.user) {
+      navigate("/login");
+      return;
+    }
 
-    const likeObj = {
-      type: "like",
-      author: post.author,
-      published: new Date(post.published).toISOString(),
-      object: post.id,
-    };
+    if (hasLiked) return;
 
-    const recipients =
-      post.visibility === 1 || post.visibility === 3
-        ? await follow.getFollowers(authProvider.user.uuid)
-        : await follow.getFriends(authProvider.user.uuid);
+    try {
+      const currentUser = await api.get(
+        `/api/authors/${authProvider.user.uuid}/`
+      );
+      const like_obj = {
+        type: "like",
+        author: currentUser.data,
+        published: new Date(post.published).toISOString(),
+        object: post.id,
+      };
 
-    await Promise.all(
-      recipients.map(({ id }) => inbox.sendPostToInbox(id, likeObj))
-    );
-    setLikeCount((count) => count + 1);
-    setHasLiked(true);
+      await inbox.sendPostToInbox(post.author.id, like_obj);
+      setLikeCount(likeCount + 1);
+      setHasLiked(true);
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
   };
 
   const handleCopyLink = () => {
