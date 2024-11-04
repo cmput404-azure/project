@@ -1,3 +1,50 @@
-ul{
-    padding-left:0
+.customList {
+  padding-left: 0;
+  width: 98%;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); // Semi-transparent black overlay
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalContent {
+  position: relative;
+  width: 90%;
+  max-width: 500px;
+  background-color: #9c9c9c;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0px;
+  margin-top:0px;
+}
+
+.modalTitle {
+  flex-grow: 1;
+  text-align: center;
+  color:black;
+  margin:0
+}
+
+.closeModalButton{
+  float:right;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:8px;
+  border-radius:50%;
 }

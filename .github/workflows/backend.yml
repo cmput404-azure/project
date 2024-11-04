@@ -1,0 +1,39 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ "deployment" ]
+  pull_request:
+    branches: [ "deployment", "development", "production" ]
+
+jobs:
+  backend-tests:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Setup Python and Install Dependencies for Django
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Python dependencies
+      working-directory: ./backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # Run Django Unit Tests
+    - name: Run Django tests
+      working-directory: ./backend
+      env:
+        DJANGO_SETTINGS_MODULE: server.settings
+      run: |
+        python -W ignore manage.py test

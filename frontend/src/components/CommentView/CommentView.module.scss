@@ -28,7 +28,6 @@
   justify-content: end;
   align-self: end;
   margin-bottom: -30px;
-
 }
 
 .comments {
@@ -50,13 +49,7 @@
 .commentsSection {
   flex-grow: 1;
   overflow-y: auto; /* allows for more comments to load by adding a scrolling effect */
-  padding-bottom: 100px;
-}
-
-.comment {
-  display: flex;
-  flex-direction: center;
-  padding: 8px 0;
+  padding-bottom: 10px;
 }
 
 .userImage {
@@ -89,15 +82,12 @@
   color: #d0d0d0;
 }
 
-.commentText {
-  color: #d0d0d0;
+.comment {
+  display: flex;
+  flex-direction: center;
+  padding: 8px 0;
 }
 
-.commentBar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 10px;
-  width: 100%;
-  margin-bottom: 50px;
+.commentText {
+  color: #d0d0d0;
 }

@@ -1,20 +1,16 @@
-from uuid import UUID
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Q
-from ..serializers import PostSerializer, InboxItemSerializer
+from ..serializers import PostSerializer
 from django.shortcuts import get_object_or_404
-from ..models import Post, User, Inbox, InboxItem, Follow
-from django.contrib.contenttypes.models import ContentType
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
-
-# TODO if user is admin, also get deleted post
+from ..models import Post, User, Follow, Share
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+import requests
 
 class PublicStreamView(APIView):
     @extend_schema(
-        summary="Retrieve Public Posts",
-        description="Retrieve all public posts available on the node, sorted by the most recent creation date.",
+        summary="Retrieve Public Posts (and Deleted Posts if Admin)",
+        description="Retrieve all public (and deleted) posts available on the node, sorted by the most recent creation date.",
         responses={
             status.HTTP_200_OK: OpenApiResponse(
                 response=PostSerializer(many=True),
@@ -24,15 +20,21 @@ class PublicStreamView(APIView):
     )
     def get(self, request):
         """Retrieve the public posts of the node (currently only working for nodes)"""
+
         # if author is not authenticated just return the public posts
-        public_posts = Post.objects.filter(visibility=1)
+        visibility_filter = [1]
+
+        if (request.user and request.user.is_authenticated):
+            user = get_object_or_404(User, uuid=request.user.uuid)
+            if user.is_staff:
+                visibility_filter.append(4) # Add deleted posts for admin
 
         # Sort the posts by the most recent creation date
-        public_posts = public_posts.order_by('-created_at')
+        posts = Post.objects.filter(visibility__in=visibility_filter).order_by('-created_at')
 
         # Serialize and return the posts
-        serializer = PostSerializer(public_posts, many=True)
-        print(serializer.data)
+        serializer = PostSerializer(posts, many=True)
+                  
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class AuthStreamView(APIView):
@@ -81,7 +83,6 @@ class AuthStreamView(APIView):
             print(f"the user uuid: {author_uuid}")
             # get author (user) object
             user = get_object_or_404(User, uuid=author_uuid)
-            user_inbox = get_object_or_404(Inbox, user=user)
 
             # Query for unlisted and friends-only posts of this user (visibility=2 and visibility=3)
             unlisted_and_friends_posts = Post.objects.filter(
@@ -92,37 +93,50 @@ class AuthStreamView(APIView):
             # Retrieve the followees (users the current user is following)
             followees = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True)
 
-            # Retrieve the mutual followers (friends: both following each other)
+            print(f"People I'm following: {followees}")
+
+            # Retrieve mutual followers (friends: both following each other)
+            # Referenced FollowCustomView for this query
             friends = Follow.objects.filter(
-                Q(local_follower=user, local_followee__in=followees) |
-                Q(local_followee=user, local_follower__in=followees)
-            ).values_list('local_followee', flat=True)
+                local_followee=user,
+                local_follower_id__in=followees
+            ).values_list('local_follower_id', flat=True)
 
-            followees_set = set(followees)
-            friends_set = set(friends)
+            print(f"People I'm friends with: {friends}")
 
-            relevant_posts = Post.objects.filter(
-                Q(user__in=friends_set, visibility=3) |  # Friends-only posts
-                Q(user__in=followees_set, visibility=2)  # Followees' posts
-            ).order_by("-created_at")
+            # Query for followees' unlisted posts
+            followees_unlisted_posts = Post.objects.filter(
+                user__in=followees,
+                visibility=3
+            )
 
-            # Serialize both datasets
-            unlisted_and_friends_serializer = PostSerializer(unlisted_and_friends_posts, many=True)
-            relevant_serializer = PostSerializer(relevant_posts, many=True)
+            # Query for friends' friends-only posts
+            friends_only_posts = Post.objects.filter(
+                user__in=friends,
+                visibility=2
+            )
 
-            # Combine serialized data without duplicates (using unique post UUIDs)
-            combined_data = {post['id']: post for post in (unlisted_and_friends_serializer.data + relevant_serializer.data)}
-            combined_data_list = list(combined_data.values())  # Convert back to list
+            all_relevant_posts = unlisted_and_friends_posts | followees_unlisted_posts | friends_only_posts
 
-            print(combined_data)
+            # Remove duplicates and sort by creation date
+            all_relevant_posts = all_relevant_posts.order_by("-created_at").distinct()
+            combined_data = PostSerializer(all_relevant_posts, many=True).data
+                  
+            """
+            In this stream, there is also a case where user also see posts shared by people they follow
+            All the posts shared are public post as well but it could either remote or local
+            """
+            # Query all items in the Share table whose receiver is the same as current user
+            shared_posts = Share.objects.filter(receiver=user)
+            for shared in shared_posts:
+                # here the post is the fqid
+                # we send a request to fetch the post data
+                response = requests.get(shared.post)
+                if response.status_code == 200:
+                    shared_data = response.json()
+                    combined_data.append(shared_data)
 
-            combined_data_sorted = sorted(combined_data_list, key=lambda post: post.get('published'), reverse=True)
-            # combined_data_sorted = sorted(combined_data, key=lambda post: post.created_at, reverse=True)
-
-            return Response(combined_data_sorted, status=status.HTTP_200_OK)
+            return Response(combined_data, status=status.HTTP_200_OK)
         else:
             return Response([], status=status.HTTP_200_OK)
             
-             
-
-        

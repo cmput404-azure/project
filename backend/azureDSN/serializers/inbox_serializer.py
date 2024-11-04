@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from rest_framework.serializers import *
-
 from ..models import *
 from .inbox_item_serializer import InboxItemSerializer
 from ..utils.serializer_util import create_url_from_uuid

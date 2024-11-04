@@ -1,414 +1,367 @@
-import { Author, Post } from "../../models/models";
+import { Alert, Avatar, Button, CircularProgress, Drawer, IconButton, Snackbar, TextField, styled } from "@mui/material";
+import { Author, PostData as Post } from "../../models/models";
 import { useEffect, useState } from "react";
 
-import DeletePostModal from "../DeletePostModal/DeletePostModal";
-import EditPostModal from "../EditPostModal/EditPostModal";
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 import FollowList from "../FollowList/FollowList";
-import GitHubIcon from "@mui/icons-material/GitHub";
-import { IconButton } from "@mui/material";
+import { FollowerModalTypes } from "../../models/modelTypes";
+import { GitHub } from "@mui/icons-material";
+import LinkIcon from '@mui/icons-material/Link';
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
-import { api } from "../../service/config";
+import ProfileService from "../../service/profile";
+import { extractUUID } from "../../util/formatting/extractUUID";
+import followService from "../../service/follow";
+import profileService from "../../service/profile";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
 
-interface AuthorPostsResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Post[];
+interface FollowersModal {
+   open: boolean;
+   type: string;
 }
 
 export default function UserProfile() {
-  const [authorData, setAuthorData] = useState(null);
-  const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
-  const [isPostDeleteModalOpen, setIsPostDeleteModalOpen] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<string | null>(null);
-  const [visibilityNumber, setVisibilityNumber] = useState<number | null>(null);
+   const [authorData, setAuthorData] = useState<Author | null>(null);
+   const [posts, setPosts] = useState<Post[]>([]);
+   const [edit, setEdit] = useState<boolean>(false);
+   const [followersModal, setfollowersModal] = useState<FollowersModal>({ open: false, type: "follower" });
+   const [friendsCount, setFriendsCount] = useState(0);
+   const [followersCount, setFollowersCount] = useState(0);
+   const [followingCount, setFollowingCount] = useState(0);
+   const [openSnackbar, setOpenSnackbar] = useState(false);
+   const [page, setPage] = useState(1);
+   const [totalPages, setTotalPages] = useState(0);
+   const [loading, setLoading] = useState(false);
+   const pageSize = 10;
 
-  const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
-  const [postToEdit, setPostToEdit] = useState<Post[]>([]);
-  // FollowerList
-  const [isFollowerListModalOpen, setIsFollowerListModalOpen] = useState(false);
-  const [showFollowerList, setShowFollowerList] = useState<string>("");
+   const auth = useAuth();
 
-  const authProvider = useAuth();
-
-  async function fetchAuthorPosts() {
-    try {
-      if (authProvider.user) {
-        const response = await api.get<AuthorPostsResponse>(
-          `/api/authors/${authProvider.user.uuid}/posts/`
-        );
-        setAuthorPosts(response.data.results.reverse());
+   const fetchProfileData = async () => {
+      if (auth.isAuthenticated && auth.user.uuid) {
+         const author = await ProfileService.fetchAuthorData(auth.user.uuid);
+         setAuthorData(author);
+         // Fetch initial posts
+         await fetchPosts(auth.user.uuid);
       }
-    } catch (error) {
-      console.error("Error fetching the author posts", error);
-    }
-  }
+   };
 
-  async function fetchAuthorData() {
-    try {
-      if (authProvider.user) {
-        const response = await api.get(
-          `/api/authors/${authProvider.user.uuid}/`
-        );
-        setAuthorData(response.data);
+   const fetchPosts = async (userId: string, page: number = 1) => {
+      if (loading) return;
+      setLoading(true);
+      const { count, src } = await ProfileService.fetchAuthorPosts(userId, page); 
+
+      setPosts(prevPosts => {
+         const existingIds = new Set(prevPosts.map(post => post.id));
+         const newPosts = src.filter(post => !existingIds.has(post.id));
+         return [...prevPosts, ...newPosts];
+      });
+
+      setTotalPages(Math.ceil(count / pageSize));
+      setLoading(false);
+   };
+
+   const nextPage = async () => {
+      if (loading || page >= totalPages) return;
+      await fetchPosts(auth.user.uuid, page + 1);
+      setPage(prevPage => prevPage + 1);
+   };
+
+   function onDeletePost(postId: string) {
+      setPosts(posts.filter((post) => post.id !== postId));
+   }
+
+   useEffect(() => {
+      fetchProfileData();
+   }, [auth.user.uuid, edit]);
+
+   useEffect(() => {
+      async function fetchCounts() {
+         try {
+            const friends = await followService.getFriends(auth.user.uuid);
+            const followers = await followService.getFollowers(auth.user.uuid);
+            const following = await followService.getFollowing(auth.user.uuid);
+
+            setFriendsCount(friends.length);
+            setFollowersCount(followers.length);
+            setFollowingCount(following.length);
+         } catch (error) {
+            console.error("Failed to fetch counts:", error);
+         }
       }
-    } catch (error) {
-      console.error("Error fetching the author data", error);
-    }
-  }
 
-  const handleDeletePostButtonClicked = (
-    postId: string,
-    visibilityNumber: number
-  ) => {
-    setPostToDelete(postId);
-    setVisibilityNumber(visibilityNumber);
-    setIsPostDeleteModalOpen(true);
-  };
+      fetchCounts();
+   }, [auth.user.uuid]);
 
-  const handleEditPostButtonClicked = (postId: string) => {
-    setPostToEdit(authorPosts.filter((post) => post.id === postId));
-    setIsEditPostModalOpen(true);
-  };
+   function getLink() {
+      const currentURL = window.location.host;
+      const protocol = window.location.protocol;
+      const constructedURL = `${protocol}//${currentURL}/#/authors/${extractUUID(auth.user.uuid)}`;
 
-  function handleDeletePostModalClose() {
-    setIsPostDeleteModalOpen(false);
-    setPostToDelete(null);
-    setVisibilityNumber(null);
-  }
+      navigator.clipboard.writeText(constructedURL);
+      setOpenSnackbar(true);
+   }
 
-  function handleEditPostModalClose() {
-    setIsEditPostModalOpen(false);
-    setPostToEdit([]);
-  }
+   if (!authorData) return <div className="loading"><CircularProgress sx={{ color: "#70ffaf" }} /></div>;
 
-  // Function to handle updating the post
-  async function handleUpdatePost(updatedPost: {
-    title: string;
-    content: string;
-    visibility: number;
-  }) {
-    if (postToEdit.length > 0 && authProvider.user) {
-      try {
-        const postId = postToEdit[0].id;
+   return (
+      <div className={styles.wrapper}>
+         <div className={styles.container}>
+            <section className={styles.header}>
+               <div className={styles.info}>
+                  <div className={styles.icon}>
+                     <Avatar
+                        alt={authorData.displayName}
+                        src={authorData.profileImage ?? "https://ui-avatars.com/api/?name=" + authorData.displayName}
+                        sx={{ width: 100, height: 100 }}
+                     />
+                  </div>
+                  <div className={styles.user}>
+                     <div className={styles.user__main}>
+                        <h2 className={styles.display__name}>{authorData.displayName}</h2>
+                        <IconButton className={styles.icon__button} size="small" onClick={() => setEdit(true)}>
+                           <EditIcon />
+                        </IconButton>
+                        {authorData.github &&
+                           <IconButton className={styles.icon__button}
+                              size="small"
+                              onClick={() => window.open(authorData.github, "_blank")}>
+                              <GitHub />
+                           </IconButton>
+                        }
+                     </div>
+                     <div className={styles.user__secondary}>
+                        <p className={styles.username}>@{authorData.username}</p>
 
-        // PUT request to update the post
-        const response = await api.put(
-          `/api/authors/${authProvider.user.uuid}/posts/${postId}/`,
-          {
-            title: updatedPost.title,
-            content: updatedPost.content,
-            visibility: updatedPost.visibility,
-          }
-        );
-
-        // Second request: Get the followers
-        const followersResponse = await api.get<{
-          type: string;
-          followers: Author[];
-        }>(`/api/authors/${authProvider.user.uuid}/followers/`);
-        const followers = followersResponse.data["followers"];
-        console.log("Followers retrieved:", followers);
-
-        // Third request: Get the friends
-        const friendsResponse = await api.get<Author[]>(
-          `/api/authors/${authProvider.user.uuid}/following/?action=friends`
-        );
-        const friends = friendsResponse.data;
-        console.log("Friends retrieved:", friends);
-
-        // Now friends and followers may be duplicated, we have to go through and remove
-        // one from the follower list if it also exist in friend
-        // Create a Set of friend IDs for quick lookup
-        const friendIds = new Set(friends.map((friend) => friend.id));
-
-        // Filter out followers that are also friends
-        const uniqueFollowers = followers.filter(
-          (follower) => !friendIds.has(follower.id)
-        );
-        console.log("Filtered followers (excluding friends):", uniqueFollowers);
-
-        // send to followers if post is public or unlisted
-        // always send to friends for all type of posts
-        const payload = {
-          id: postId,
-          title: updatedPost.title,
-          content: updatedPost.content,
-          visibility: updatedPost.visibility,
-        };
-
-        if (postToEdit[0].visibility === 1 || postToEdit[0].visibility === 3) {
-          for (const follower of uniqueFollowers) {
-            const inboxUrl = `/api/authors/${follower.id}/inbox/`;
-            try {
-              const inboxResponse = await api.put<{ message: string }>(
-                inboxUrl,
-                payload
-              );
-              console.log(inboxResponse.data);
-            } catch (error) {
-              console.error(
-                `Error sending post to inbox of ${follower.id}:`,
-                error
-              );
-            }
-          }
-          console.log(
-            "Error sending noti on updated posts to followers' inboxes."
-          );
-        }
-
-        // Friends receive inbox on all type of post
-        for (const friend of friends) {
-          const inboxUrl = `/api/authors/${friend.id}/inbox/`;
-          try {
-            const inboxResponse = await api.put<{ message: string }>(
-              inboxUrl,
-              payload
-            );
-            console.log(inboxResponse.data);
-          } catch (error) {
-            console.error(
-              `Error sending noti on updated posts to ${friend.id}:`,
-              error
-            );
-          }
-        }
-
-        console.log("Post updated successfully:", response.data);
-
-        // call again to refresh teh posts
-        await fetchAuthorPosts();
-        // close modal after updating the post
-        handleEditPostModalClose();
-      } catch (error) {
-        console.error("Error updating post", error);
-      }
-    }
-  }
-
-  async function handleConfirmDelete() {
-    if (postToDelete && authProvider.user) {
-      try {
-        // API call to delete the post
-        await api.delete(
-          `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
-        );
-
-        // Second request: Get the followers
-        const followersResponse = await api.get<{
-          type: string;
-          followers: Author[];
-        }>(`/api/authors/${authProvider.user.uuid}/followers/`);
-        const followers = followersResponse.data["followers"];
-        console.log("Followers retrieved:", followers);
-
-        // Third request: Get the friends
-        const friendsResponse = await api.get<Author[]>(
-          `/api/authors/${authProvider.user.uuid}/following/?action=friends`
-        );
-        const friends = friendsResponse.data;
-        console.log("Friends retrieved:", friends);
-
-        // Now friends and followers may be duplicated, we have to go through and remove
-        // one from the follower list if it also exist in friend
-        // Create a Set of friend IDs for quick lookup
-        const friendIds = new Set(friends.map((friend) => friend.id));
-
-        // Filter out followers that are also friends
-        const uniqueFollowers = followers.filter(
-          (follower) => !friendIds.has(follower.id)
-        );
-        console.log("Filtered followers (excluding friends):", uniqueFollowers);
-
-        // send to followers if post is public or unlisted
-        // always send to friends for all type of posts
-        const config2 = {
-          headers: {},
-          data: {
-            id: `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}`,
-            type: "post",
-          },
-        };
-
-        if (visibilityNumber === 1 || visibilityNumber === 3) {
-          for (const follower of uniqueFollowers) {
-            const inboxUrl = `/api/authors/${follower.id}/inbox/`;
-            try {
-              const inboxResponse = await api.delete<{ message: string }>(
-                inboxUrl,
-                config2
-              );
-              console.log(inboxResponse.data);
-            } catch (error) {
-              console.error(
-                `Error sending post to inbox of ${follower.id}:`,
-                error
-              );
-            }
-          }
-          console.log(
-            "Error sending noti on deleted posts to followers' inboxes."
-          );
-        }
-
-        // Friends receive inbox on all type of post
-        for (const friend of friends) {
-          const inboxUrl = `/api/authors/${friend.id}/inbox/`;
-          try {
-            const inboxResponse = await api.delete<{ message: string }>(
-              inboxUrl,
-              config2
-            );
-            console.log(inboxResponse.data);
-          } catch (error) {
-            console.error(
-              `Error sending noti on deleted posts to ${friend.id}:`,
-              error
-            );
-          }
-        }
-
-        // Refresh the posts after successful deletion
-        await fetchAuthorPosts();
-
-        // Close the modal after deletion
-        setIsPostDeleteModalOpen(false);
-        setPostToDelete(null);
-        setVisibilityNumber(null);
-      } catch (error) {
-        console.error("Error deleting post", error);
-      }
-    }
-  }
-
-  function openFollowers() {
-    setShowFollowerList("follower");
-    setIsFollowerListModalOpen(true);
-  }
-
-  function openFollowing() {
-    setShowFollowerList("following");
-    setIsFollowerListModalOpen(true);
-  }
-  function openFriends() {
-    setShowFollowerList("friend");
-    setIsFollowerListModalOpen(true);
-  }
-
-  useEffect(() => {
-    if (authProvider.user) {
-      fetchAuthorData();
-      fetchAuthorPosts();
-    }
-  }, [authProvider.user]);
-
-  if (!authorData) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <div className={styles.userProfileContainer}>
-      <section className={styles.profileHeaderContainer}>
-        <img
-          className={styles.profilePic}
-          src={`https://ui-avatars.com/api/?background=random&name=${authorData.displayName}`}
-          alt={authorData.profilePic}
-        />
-        <section className={styles.userInfoContainer}>
-          <section className={styles.userInfo}>
-            <section className={styles.userNameContainer}>
-              <span className={styles.userName}>{authorData.displayName}</span>
+                        <div className={styles.follows}>
+                           <p className={styles.posts__count} >
+                              <b>{posts.length}</b> {posts.length === 1 ? "post" : "posts"}
+                           </p>
+                           <p className={styles.followers__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FOLLOWER })}>
+                              <b>{followersCount}</b> {followersCount === 1 ? "follower" : "followers"}
+                           </p>
+                           <p className={styles.following__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FOLLOWING })}>
+                              <b>{followingCount}</b> following
+                           </p>
+                           <p className={styles.friends__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FRIENDS })}>
+                              <b>{friendsCount}</b> {friendsCount === 1 ? "friend" : "friends"}
+                           </p>
+                           <FollowList
+                              isOpen={followersModal.open}
+                              onClose={() => setfollowersModal({ open: false, type: "follower" })}
+                              isFollowerList={followersModal.type}
+                           />
+                        </div>
+                     </div>
+                  </div>
+                  <div className={styles.footer}>
+                     <IconButton className={styles.icon__button} size="small" onClick={getLink}>
+                        <LinkIcon />
+                     </IconButton>
+                  </div>
+               </div>
+               <div className={styles.bio}>
+                  <p className={styles.bio__text}>{authorData.bio}</p>
+               </div>
             </section>
-            <section className={styles.buttonContainer}>
-              <button className={styles.followButton}>Follow</button>
-              <IconButton
-                onClick={() => window.open(authorData.github, "_blank")}
-              >
-                <GitHubIcon />
-              </IconButton>
+
+            <section className={styles.posts}>
+               {posts.map(post => (
+                  <MiniPostCard key={post.id} post={post} authorUUID={authorData.id} onDelete={onDeletePost} />
+               ))}
+               {page < totalPages && (
+                  <Button
+                     variant="contained"
+                     onClick={nextPage}
+                     disabled={loading}
+                     sx={{ marginTop: "1rem", backgroundColor: "#70ffaf", color: "black" }}
+                  >
+                     {loading ? <CircularProgress size={24} sx={{ color: "#70ffaf" }} /> : "Load More"}
+                  </Button>
+               )}
             </section>
-          </section>
+         </div>
 
-          <span className={styles.userHandle}>
-            @{authorData.displayName.toLowerCase().replace(" ", "_")}
-          </span>
+         <Drawer open={edit} anchor="right" onClose={() => setEdit(false)}
+            PaperProps={{
+               sx: { bgcolor: "#555", color: "#fff" }
+            }}
+         >
+            <EditProfile user={authorData} toggleDrawer={setEdit} />
+         </Drawer>
 
-          <section className={styles.userStats}>
-            <span>
-              <p className={styles.count}>100</p> <p>posts</p>
-            </span>
-            <span onClick={openFollowers} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>100</p> <p>followers</p>
-            </span>
-            <FollowList
-              isOpen={isFollowerListModalOpen}
-              onClose={() => setIsFollowerListModalOpen(false)}
-              isFollowerList={showFollowerList}
-            />
-            <span onClick={openFollowing} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>100</p> <p>following</p>
-            </span>
-            <FollowList
-              isOpen={isFollowerListModalOpen}
-              onClose={() => setIsFollowerListModalOpen(false)}
-              isFollowerList={showFollowerList}
-            />
-            <span onClick={openFriends} style={{ cursor: "pointer" }}>
-              <p className={styles.count}>10</p>
-              <p>friends</p>
-            </span>
-            <FollowList
-              isOpen={isFollowerListModalOpen}
-              onClose={() => setIsFollowerListModalOpen(false)}
-              isFollowerList={showFollowerList}
-            ></FollowList>
-          </section>
-        </section>
-
-        <section className={styles.userProfileLink}>
-          <button className={styles.followButton}>Get Profile Link</button>
-        </section>
-      </section>
-
-      <hr className={styles.horizontalLine} />
-
-      <section className={styles.userPostContainer}>
-        <section className={styles.userPosts}>
-          {authorPosts.map((post) => (
-            <MiniPostCard
-              key={post.id}
-              author={post.author.displayName}
-              title={post.title}
-              time={post.published}
-              content={post.content}
-              likes={1523382}
-              saves={250}
-              comments={10000}
-              canDelete={true}
-              handleDelete={() =>
-                handleDeletePostButtonClicked(post.id, post.visibility)
-              }
-              canEdit={true}
-              handleEdit={() => handleEditPostButtonClicked(post.id)}
-            />
-          ))}
-        </section>
-      </section>
-      <DeletePostModal
-        isOpen={isPostDeleteModalOpen}
-        onRequestClose={handleDeletePostModalClose}
-        onDelete={handleConfirmDelete}
-      />
-
-      <EditPostModal
-        isOpen={isEditPostModalOpen}
-        onRequestClose={handleEditPostModalClose}
-        post={postToEdit.length > 0 ? postToEdit[0] : null}
-        onSubmit={handleUpdatePost}
-      />
-    </div>
-  );
+         <Snackbar
+            open={openSnackbar}
+            autoHideDuration={2000} // auto close after 2s
+            onClose={() => setOpenSnackbar(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+         >
+            <Alert onClose={() => setOpenSnackbar(false)} severity="success" sx={{ width: '100%' }}>
+               Link copied to clipboard!
+            </Alert>
+         </Snackbar>
+      </div>
+   );
 }
+
+export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer: (value: boolean) => void }) {
+   const [displayName, setDisplayName] = useState<string>(user.displayName);
+   const [bio, setBio] = useState<string>(user.bio ?? "");
+   const [github, setGithub] = useState<string>(user.github ?? "");
+   const [profileImage, setProfileImage] = useState<string>(user.profileImage ?? "");
+   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+   const [loading, setLoading] = useState<boolean>(false);
+   const [error, setError] = useState<string>("");
+   const [success, setSuccess] = useState<boolean>(false);
+   const [disabled, setDisabled] = useState<boolean>(false);
+
+   user.id = extractUUID(user.id);
+
+   function convertToBase64(file: File): Promise<string> {
+      return new Promise((resolve, reject) => {
+         const reader = new FileReader();
+         reader.readAsDataURL(file);
+         reader.onload = () => resolve(reader.result as string);
+         reader.onerror = error => reject(error);
+      });
+   }
+
+   async function handleUpdate() {
+      setError("");
+
+      // Validation
+      if (!displayName) {
+         setError("Display name is required");
+         return;
+      }
+
+      if (!github) {
+         setError("Github is required");
+         return;
+      }
+
+      // Create new user object
+      const updatedUser: Author = {
+         ...user,
+         displayName,
+         bio,
+         github,
+         profileImage: URL.createObjectURL(profileImageFile ?? new Blob())
+      };
+
+      setLoading(true);
+
+      try {
+         // Check if a new profile image file exists
+         if (profileImageFile) {
+            const image = await convertToBase64(profileImageFile);
+            updatedUser.profileImage = image;
+         }
+
+         await profileService.updateUserInfo(user.id, updatedUser);
+
+         setSuccess(true);
+         setLoading(false);
+         setDisabled(true);
+      }
+      catch (error: any) {
+         setError(error.message);
+         setLoading(false);
+      }
+   }
+
+   // Check disabled if no changes
+   useEffect(() => {
+      if (displayName === user.displayName && bio === user.bio && github === user.github && profileImage === user.profileImage) {
+         setDisabled(true);
+      } else {
+         setDisabled(false);
+      }
+   }, [displayName, bio, github, profileImage]);
+
+
+   return (
+      <div className={styles.edit__profile}>
+         <div className={styles.edit__profile__header}>
+            <h2>Edit Profile</h2>
+            <IconButton className={styles.icon__button} size="small" onClick={() => toggleDrawer(false)}>
+               <CloseIcon />
+            </IconButton>
+         </div>
+
+         <div className={styles.edit__profile__body}>
+            <div className={styles.edit__profile__body__image}>
+               <div className={styles.edit__profile__body__image__container}>
+                  <Avatar alt="profile image" src={profileImage} sx={{ width: 100, height: 100 }} />
+               </div>
+               <div className={styles.edit__profile__body__image__input}>
+                  <input type="file" accept="image/*" onChange={e => {
+                     if (e.target.files) {
+                        setProfileImageFile(e.target.files[0]);
+                        setProfileImage(URL.createObjectURL(e.target.files[0]));
+                     }
+                  }} />
+               </div>
+            </div>
+
+            <div className={styles.edit__profile__body__form}>
+               <EditField className={styles.input} label="Display Name" variant="outlined" value={displayName} onChange={e => setDisplayName(e.target.value)} />
+               <EditField className={styles.input} label="Bio" variant="outlined" value={bio} onChange={e => setBio(e.target.value)} />
+               <EditField className={styles.input} label="Github" variant="outlined" value={github} onChange={e => setGithub(e.target.value)} />
+            </div>
+         </div>
+
+         <p className={styles.error}>{error}</p>
+
+         <Button variant="contained" onClick={handleUpdate} disabled={disabled} sx={{ width: "100%", marginTop: "1rem", backgroundColor: "#70ffaf", color: "black" }}>
+            {loading ? <CircularProgress sx={{ color: "#70ffaf" }} /> : "Save"}
+         </Button>
+         <Snackbar
+            open={success}
+            autoHideDuration={2000}
+            onClose={() => setSuccess(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+         >
+            <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
+               Successfully updated profile.
+            </Alert>
+         </Snackbar>
+      </div>
+   );
+}
+
+const EditField = styled(TextField)({
+   "& label": {
+      color: "#ffffff !important",
+   },
+
+   "& input": {
+      color: "white !important",
+   },
+
+   "& textarea": {
+      color: "white !important",
+   },
+
+   "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+         border: "none",
+         boxShadow: "0 4px 7px rgba(0, 0, 0, 0.45)",
+      },
+      "&:hover fieldset": {
+         border: "1px solid",
+         borderColor: "white !important",
+      },
+      "&.Mui-focused fieldset": {
+         border: "1px solid",
+         borderColor: "#70ffaf !important",
+      },
+   },
+
+   "& .MuiFormHelperText-root": {
+      color: "#ffffff",
+      "&.Mui-error": {
+         color: "#dc3545",
+      },
+   },
+});

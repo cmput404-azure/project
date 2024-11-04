@@ -1,12 +1,15 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
+import axios, { get } from 'axios';
+import follow, { getFollowers, getFollowing, getFriends } from "../../service/follow";
+import CloseIcon from '@mui/icons-material/Close';
+import { CircularProgress } from "@mui/material";
 import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
-import axios from 'axios';
+import { api } from "../../service/config";
 import styles from './FollowList.module.scss';
 import { useAuth } from "../../state";
-import { api } from "../../service/config";
-
+import Author from "../../models/models"
 
 interface Follower {
   displayName: string;
@@ -22,47 +25,43 @@ interface FollowerListProps {
   isOpen: boolean;
   onClose: () => void;
   isFollowerList: string;
-}
-
-
-interface FollowerResponse {
-  followers: Follower[];
+  profileId?: string;
 }
 
 Modal.setAppElement('#root');
 
-export default function FollowList({ isOpen, onClose, isFollowerList }: FollowerListProps) {
+export default function FollowList({ isOpen, onClose, isFollowerList, profileId, }: FollowerListProps) {
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const authProvider = useAuth();
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
-  axios.defaults.withCredentials = true;
-  axios.defaults.xsrfCookieName = "csrftoken";
-  axios.defaults.xsrfHeaderName = "x-csrftoken";
+  const authProvider = useAuth();
 
   useEffect(() => {
     if (isOpen) {
-      if (isFollowerList === 'follower') {
+      if (isFollowerList === 'Follower') {
         fetchFollowers(); // Fetch followers only when the modal is open
         return;
-      } else if (isFollowerList === 'following') {
+      } else if (isFollowerList === 'Following') {
         fetchFollowing();
       } else {
         fetchFriends();
       }
     }
-  }, [isOpen]);
+  }, [isOpen, refreshTrigger]);
+
+  const handleRefresh = () => setRefreshTrigger(prev => prev + 1);
 
   const fetchFriends = async () => {
     try {
-      const response = await api.get(`/api/authors/${authProvider.user.uuid}/following/`, {
-        params: {
-          action: 'friends'
-        }
-      });
-      const data = response.data;
-      setFollowers(response.data);
+      let data = null;
+      if (profileId) {
+        data = await follow.getFriends(profileId);
+      } else {
+        data = await follow.getFriends(authProvider.user.uuid);
+      }
+      setFollowers(data);
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
@@ -71,37 +70,36 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
     }
   };
 
-
   const fetchFollowers = async () => {
     try {
-      const response = await api.get<FollowerResponse>(`/api/authors/${authProvider.user.uuid}/followers/`, {
-      });
-
-      const data = response.data;
-      setFollowers(response.data.followers);
+      let data = null;
+      if (profileId) {
+        console.log("PROFILEID", profileId)
+        data = await follow.getFollowers(profileId);
+      } else {
+        data = await follow.getFollowers(authProvider.user.uuid);
+      }
+      setFollowers(data);
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
       setLoading(false);
-
     }
   };
 
   const fetchFollowing = async () => {
     try {
-      const response = await api.get(`/api/authors/${authProvider.user.uuid}/following/`, {
-        params: {
-          action: 'following'
-        }
-      });
-
-      const data = response.data;
-      setFollowers(response.data.followers);
+      let data = null;
+      if (profileId) {
+        data = await follow.getFollowing(profileId);
+      } else {
+        data = await follow.getFollowing(authProvider.user.uuid);
+      }
+      setFollowers(data);
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
       setLoading(false);
-
     }
   };
 
@@ -110,28 +108,33 @@ export default function FollowList({ isOpen, onClose, isFollowerList }: Follower
       isOpen={isOpen}
       onRequestClose={onClose}
       contentLabel="Follower List"
-      style={{
-        content: { width: '400px', margin: 'auto', padding: '20px', borderRadius: '10px' },
-        overlay: { backgroundColor: 'rgba(0, 0, 0, 0.5)' }
-      }}
+      className={styles.modalContent}
+      overlayClassName={styles.modalOverlay}
     >
-      <button onClick={onClose} style={{ float: 'right' }}>Close</button>
+      <div className={styles.modalHeader}>
+        <h2 className={styles.modalTitle}>{isFollowerList}</h2>
+        <button onClick={onClose} className={styles.closeModalButton}>
+          <CloseIcon style={{ fontSize: "14px" }} />
+        </button>
+      </div>
       {loading ? (
-        <p>Loading...</p>
+        <div className={"loading_component"}><CircularProgress /></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
-        <ul className={styles.ul}>
+        <ul className={styles.customList}>
+
           {followers.map((follower, index) => (
             <div key={index}>
-              <p>{follower.name}</p> 
+              <p>{follower.name}</p>
               <ListItem
                 isRequest={false}
                 isPost={false}
                 isLike={false}
-                isFollowerList={isFollowerList === "following"}
+                isFollowerList={profileId ? false : isFollowerList === "Following"}
                 isUserList={false}
                 user={follower}
+                onRefresh={handleRefresh}
               />
             </div>
           ))}

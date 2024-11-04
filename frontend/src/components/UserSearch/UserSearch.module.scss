@@ -1,18 +1,21 @@
 .componentWidth {
-    width: 400px;
+    width: 98%;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center children horizontally */
+    align-items: center;
+    padding-top:0px;
+    /* Center children horizontally */
 }
 
 .searchContainer {
     background-color: #aeaeae;
     display: flex;
     align-items: center;
-    width: 200px; /* Set the desired width for the search container */
+    width: 200px;
     padding: 10px;
     border-radius: 16px;
-    justify-content: center; 
+    justify-content: center;
+    margin-top:15px;
 }
 
 .searchInput {
@@ -23,6 +26,35 @@
     width: 100%;
 }
 
-ul{
-    width:100%;
+.customList {
+    padding-left: 0;
+    width: 100%;
+}
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); // Semi-transparent black overlay
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modalContent {
+    position: relative;
+    width: 90%;
+    max-width: 500px;
+    background-color: #9c9c9c;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+}
+
+.h2{
+    color:black;
+    padding-top:0px;
+    margin-bottom:10px;
 }
