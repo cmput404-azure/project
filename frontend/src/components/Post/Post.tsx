@@ -64,6 +64,7 @@ export default function Post({
   const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentAuthor, setCurrentAuthor] = useState<any>();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -95,7 +96,7 @@ export default function Post({
               );
               console.log(postData.visibility);
               if (!authProvider.user.is_staff) {
-                if (!is_following || (postData.visibility ===2)) {
+                if (!is_following || postData.visibility === 2) {
                   setOpenSnackbar(true);
                   setShowAlert(true);
                   setTimeout(() => {
@@ -130,7 +131,15 @@ export default function Post({
         }
       }
     };
+    const fetchAuthor = async () => {
+      if (authProvider.user) {
+        const author = await api.get(`/api/authors/${authProvider.user.uuid}/`);
+        setCurrentAuthor(author.data);
+      }
+    };
+
     fetchPost();
+    fetchAuthor();
   }, [postID, authProvider.user ? authProvider.user.uuid : null, navigate]);
 
   useEffect(() => {
@@ -169,7 +178,6 @@ export default function Post({
     if (post) {
       fetchImage();
     }
-
   }, [post]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
@@ -306,8 +314,11 @@ export default function Post({
           onClick={redirectToAuthorProfile}
         />
         <div className={styles.headerText}>
-          <span className={styles.userName} onClick={redirectToAuthorProfile}>{post.author.displayName}</span>
-          <span className={styles.postTime}>{new Date(post.published).toLocaleString()}
+          <span className={styles.userName} onClick={redirectToAuthorProfile}>
+            {post.author.displayName}
+          </span>
+          <span className={styles.postTime}>
+            {new Date(post.published).toLocaleString()}
           </span>
         </div>
         <Tooltip title="Copy link">
@@ -366,7 +377,7 @@ export default function Post({
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
           {post.contentType !== ContentType.MARKDOWN &&
-            post.contentType !== ContentType.PLAIN ? (
+          post.contentType !== ContentType.PLAIN ? (
             <div className={styles.imgContainer}>
               <img
                 className={styles.postImage}
@@ -407,7 +418,7 @@ export default function Post({
         <div className={styles.comments}>
           <div className={styles.commentsHeader}>Comments</div>
           <CommentInputField
-            authorObj={post.author}
+            authorObj={currentAuthor}
             post={post}
             onCommentAdded={handleNewComment}
           />
