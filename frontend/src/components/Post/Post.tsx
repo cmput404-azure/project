@@ -32,10 +32,10 @@ import { PostData } from "../../models/models";
 
 export default function Post({
   postGiven,
-  displayingModal = false,
+  canToggleComments = true,
 }: {
   postGiven?: PostModel;
-  displayingModal?: boolean;
+  canToggleComments?: boolean;
 }) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
   const postID = postGiven ? postGiven.id : postIDFromParams;
@@ -261,7 +261,10 @@ export default function Post({
               <i className="fas fa-heart icon"></i>
               <span>{formatCount(likeCount)}</span>
             </div>
-            <div className={styles.icon} onClick={handleToggleComment}>
+            <div
+              className={styles.icon}
+              onClick={canToggleComments ? handleToggleComment : null}
+            >
               <i className="fas fa-comment"></i>
               <span>{formatCount(commentCount)}</span>
             </div>
@@ -315,7 +318,7 @@ export default function Post({
         </div>
       </div>
 
-      {isCommentOpen || displayingModal ? (
+      {isCommentOpen && canToggleComments ? (
         <div className={styles.comments}>
           <div className={styles.commentsHeader}>Comments</div>
           <CommentInputField

@@ -22,7 +22,7 @@ const CommentView: React.FC<CommentViewProps> = ({
       className={styles.modalContent}
       overlayClassName={styles.modalOverlay}
     >
-      <Post postGiven={post} displayingModal={true} />
+      <Post postGiven={post} canToggleComments={false} />
     </Modal>
   );
 };

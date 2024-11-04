@@ -12,6 +12,7 @@ import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
+import Post from "../Post/Post";
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
@@ -159,11 +160,7 @@ const HomePage = () => {
           </div>
         )}
         {displayedPosts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            onCommentButtonClick={() => handleCommentButtonClick(post)}
-          />
+          <Post key={post.id} postGiven={post} canToggleComments={false} />
         ))}
       </div>
 
