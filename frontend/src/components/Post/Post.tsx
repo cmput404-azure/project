@@ -40,8 +40,6 @@ export default function Post() {
       try {
         if (postID) {
           const postData = await postService.getPost(`api/posts/${postID}`);
-          console.log("Post Data:", postData);
-          console.log("Post Data Author:", postData.author);
           // put the post data into a list to be able to decode it
           let postDataList = [];
           postDataList.push(postData);
@@ -74,8 +72,12 @@ export default function Post() {
           }
 
           setPost(postData);
+          setHasLiked(
+            postData.likes.src.some((like) =>
+              like.object.includes(authProvider.user.uuid)
+            )
+          );
           setCommentList(postData.comments.src.reverse());
-          console.log("Comment List:", commentList);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
           );
@@ -101,7 +103,6 @@ export default function Post() {
         const match = post.content.match(imageRegex);
         if (match) {
           const imageUrl = match[1];
-          console.log("Image URL:", imageUrl);
 
           if (imageUrl.startsWith("data:")) {
             setImageSrc(imageUrl);
