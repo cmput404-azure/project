@@ -154,8 +154,15 @@ class PostTests(APITestCase):
     GET [local] get the public post whose URL is POST_FQID
         friends-only posts: must be authenticated
     """
-    # TODO: test getting post by fqid
-    # def test_get_post_by_fqid(self):
+    # ------------------------200 OK------------------------
+    # get post by fqid
+    def test_get_post_by_fqid(self):
+        host = "http://localhost:8000/api/posts/"
+        url = reverse('post', kwargs={'post_fqid': f"{host}{self.test_post1.uuid}"})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.test_post1.title)
+        self.assertEqual(response.data['content'], self.test_post1.content)
     
     """
     Creation URL ://service/api/authors/{AUTHOR_SERIAL}/posts/
@@ -170,7 +177,7 @@ class PostTests(APITestCase):
     POST [local] create a new post but generate a new ID
         Authenticated locally as author
     """
-    
+    # ------------------------200 OK------------------------
     # test getting posts paginated
     def test_get_all_public_posts(self):
         """Test retrieving recent posts from an author."""
