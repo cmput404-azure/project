@@ -2,7 +2,6 @@
 from datetime import datetime
 from django.db import models
 from .user import User
-from .post import Post
 
 class Share(models.Model):
     # user is the person who share

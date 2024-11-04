@@ -409,7 +409,9 @@ class AuthorPostsAllView(APIView):
         for event in events:
             if(not Post.objects.filter(github_id=event["id"]).exists()):
                 event_post = self.generate_post_data(event)
-                event_post["author"] = UserSerializer(author).data
+                author_data = UserSerializer(author).data
+                author_data["id"] = author.uuid
+                event_post["author"] = author_data
 
                 serializer = CreatePostSerializer(data=event_post)
                 if serializer.is_valid():

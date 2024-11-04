@@ -1,14 +1,11 @@
 from rest_framework import serializers
 from rest_framework.serializers import *
-from django.contrib.contenttypes.models import ContentType
-
 from ..models import *
 from .post_serializer import PostSerializer
 from .comment_serializer import CommentSerializer
 from .like_serializer import LikeSerializer
 from .follow_request_serializer import FollowRequestSerializer
 from .share_serializer import ShareSerializer
-
 
 class InboxItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,6 +27,4 @@ class InboxItemSerializer(serializers.ModelSerializer):
             return ShareSerializer(instance=obj.content_object, context=self.context).data
         elif obj.remote_payload is not None:
             return obj.remote_payload
-
-    
-    
+ 

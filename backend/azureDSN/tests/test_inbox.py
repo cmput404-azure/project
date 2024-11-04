@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from ..models import User, Inbox, InboxItem, Post, FollowRequest, Share, Comment, Like
+from ..models import User, Inbox, InboxItem, Post, FollowRequest, Share
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 

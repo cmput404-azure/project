@@ -1,6 +1,5 @@
 from datetime import datetime
 from django.db import models
-from django.urls import reverse
 import uuid
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 

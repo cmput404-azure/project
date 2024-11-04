@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import *
-from ..models import Comment, Post
+from ..models import Comment
 
 class CommentSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField(source='uuid')
