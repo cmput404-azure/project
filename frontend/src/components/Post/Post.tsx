@@ -36,6 +36,8 @@ import {
 import profileService from "../../service/profile";
 import { PostData } from "../../models/models";
 import { extractUUID } from "../../util/formatting/extractUUID";
+import Avatar from "@mui/material/Avatar";
+import auth from "../../service/auth";
 
 export default function Post({
   postGiven,
@@ -94,7 +96,6 @@ export default function Post({
                 authorId,
                 encodedUrl
               );
-              console.log(postData.visibility);
               if (!authProvider.user.is_staff) {
                 if (postData.visibility !== 1) {
                   if (!is_following || postData.visibility === 2) {
@@ -110,7 +111,7 @@ export default function Post({
 
             setHasLiked(
               postData.likes.src.some((like) =>
-                like.object.includes(authProvider.user.uuid)
+                like.id.includes(authProvider.user.uuid)
               )
             );
           }
@@ -126,6 +127,18 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
+          setHasLiked(
+            postGiven.likes.src.some((like) =>
+              like.id.includes(authProvider.user.uuid)
+            )
+          );
+          setCommentList(postGiven.comments.src.reverse());
+          setLikeCount(
+            Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
+          );
+          setCommentCount(
+            Array.isArray(postGiven.comments) ? 0 : postGiven.comments.count
+          );
         }
       } catch (error) {
         if (error.response && error.response.status === 403) {
@@ -153,7 +166,6 @@ export default function Post({
         const match = post.content.match(imageRegex);
         if (match) {
           const imageUrl = match[1]; // Get the URL from the Markdown
-          console.log("imageURL: ", imageUrl);
 
           // Check if the imageUrl is a data URL
           if (imageUrl.startsWith("data:")) {
@@ -163,7 +175,6 @@ export default function Post({
             // If it's not a data URL, fetch from the endpoint
             try {
               const response = await fetch(imageUrl);
-              console.log(response);
               if (response.ok) {
                 const jsonResponse = await response.json();
                 const imageData = jsonResponse.image;
@@ -395,6 +406,17 @@ export default function Post({
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
+                    p: ({ node, children }) => {
+                      // Check if the first child is an element with tagName "img"
+                      const firstChild = node.children[0];
+                      const isImage =
+                        firstChild &&
+                        "tagName" in firstChild &&
+                        firstChild.tagName === "img";
+
+                      // Only wrap in <p> if it is not an <img> tag
+                      return isImage ? <>{children}</> : <p>{children}</p>;
+                    },
                     img: ({ src, alt, title }) => {
                       return (
                         <div className={styles.imgContainer}>
@@ -421,22 +443,23 @@ export default function Post({
       {(isCommentOpen && canToggleComments) || isModal ? (
         <div className={styles.comments}>
           <div className={styles.commentsHeader}>Comments</div>
-          <CommentInputField
-            authorObj={currentAuthor}
-            post={post}
-            onCommentAdded={handleNewComment}
-          />
+          {currentAuthor && (
+            <CommentInputField
+              authorObj={currentAuthor}
+              post={post}
+              onCommentAdded={handleNewComment}
+            />
+          )}
           {commentList.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
-                <img
-                  src={
-                    post.author.profileImage
-                      ? post.author.profileImage
-                      : `https://ui-avatars.com/api/?background=random&name=${comment.author.displayName}`
-                  }
-                  className={styles.userImage}
-                />
+                <Avatar
+                  src={comment.author?.profileImage}
+                  alt={comment.author?.displayName}
+                  sx={{ marginRight: "0.5rem" }}
+                >
+                  {comment.author?.displayName.charAt(0)}
+                </Avatar>
               </div>
               <div className={styles.commentContent}>
                 <div className={styles.authorTime}>
@@ -495,7 +518,6 @@ function ShareDialogue({ post, isDialogOpen }: ShareDialogueProps) {
     for (const follower of followers) {
       await inbox.sendPostToInbox(follower.id, share_obj);
     }
-    console.log("Post shared with followers");
   };
 
   return (
