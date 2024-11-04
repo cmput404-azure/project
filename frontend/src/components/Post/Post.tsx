@@ -82,7 +82,7 @@ export default function Post({
               authProvider.user.uuid
             );
             const url = `${authUser.host}authors/${authProvider.user.uuid}`;
-  
+
             if (url !== postData.author.id) {
               let authorId = postData.author.id
                 .replace(/\/+$/, "")
@@ -93,12 +93,15 @@ export default function Post({
                 authorId,
                 encodedUrl
               );
-              if (!is_following) {
-                setOpenSnackbar(true);
-                setShowAlert(true);
-                setTimeout(() => {
-                  navigate("/home");
-                }, 2000);
+              console.log(postData.visibility);
+              if (!authProvider.user.is_staff) {
+                if (!is_following || (postData.visibility ===2)) {
+                  setOpenSnackbar(true);
+                  setShowAlert(true);
+                  setTimeout(() => {
+                    navigate("/home");
+                  }, 2000);
+                }
               }
             }
 
@@ -108,9 +111,9 @@ export default function Post({
               )
             );
           }
-          
+
           setPost(postData);
-          
+
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
@@ -166,7 +169,7 @@ export default function Post({
     if (post) {
       fetchImage();
     }
-    
+
   }, [post]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
@@ -363,7 +366,7 @@ export default function Post({
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
           {post.contentType !== ContentType.MARKDOWN &&
-          post.contentType !== ContentType.PLAIN ? (
+            post.contentType !== ContentType.PLAIN ? (
             <div className={styles.imgContainer}>
               <img
                 className={styles.postImage}
@@ -380,12 +383,12 @@ export default function Post({
                     img: ({ src, alt, title }) => {
                       return (
                         <div className={styles.imgContainer}>
-                          <img 
-                            src={transformImageUri(src, alt, title)} 
-                            alt={alt} 
-                            title={title} 
+                          <img
+                            src={transformImageUri(src, alt, title)}
+                            alt={alt}
+                            title={title}
                           />
-                      </div>
+                        </div>
                       );
                     },
                   }}
