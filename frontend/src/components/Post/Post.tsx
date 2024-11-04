@@ -47,7 +47,7 @@ export default function Post({
   isModal?: boolean;
 }) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
-  const postID = postGiven ? postGiven.id : postIDFromParams;
+  const postID = postGiven ? null : postIDFromParams;
 
   const authProvider = useAuth();
 
@@ -124,6 +124,8 @@ export default function Post({
           setCommentCount(
             Array.isArray(postData.comments) ? 0 : postData.comments.count
           );
+        } else {
+          setPost(postGiven);
         }
       } catch (error) {
         if (error.response && error.response.status === 403) {
