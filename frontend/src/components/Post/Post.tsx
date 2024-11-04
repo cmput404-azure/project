@@ -19,6 +19,16 @@ import { useNavigate, useParams } from "react-router";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { api } from "../../service/config";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
+} from "@mui/material";
+import profileService from "../../service/profile";
+import { PostData } from "../../models/models";
 
 export default function Post() {
   const { postID } = useParams<{ postID: string }>();
@@ -30,6 +40,7 @@ export default function Post() {
   const [hasLiked, setHasLiked] = useState(false);
   const [hasShared, setHasShared] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [commentList, setCommentList] = useState<any[]>([]);
   const [showAlert, setShowAlert] = useState(false);
@@ -110,6 +121,8 @@ export default function Post() {
 
   const handleSharePost = async () => {
     if (!post || hasShared) return;
+
+    setIsShareDialogOpen(true);
 
     const followers = await follow.getFollowers(authProvider.user.uuid);
     const friends = await follow.getFriends(authProvider.user.uuid);
@@ -245,12 +258,15 @@ export default function Post() {
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
-          <div
-            className={`${styles.icon} ${hasShared ? styles.shared : ""}`}
-            onClick={handleSharePost}
-          >
-            <i className="fas fa-share"></i>
-          </div>
+          {post.visibility === 1 ? (
+            <div
+              className={`${styles.icon} ${hasShared ? styles.shared : ""}`}
+              onClick={handleSharePost}
+            >
+              <i className="fas fa-share"></i>
+            </div>
+          ) : null}
+          <ShareDialogue post={post} isDialogOpen={isShareDialogOpen} />
         </div>
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
@@ -325,5 +341,93 @@ export default function Post() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+interface ShareDialogueProps {
+  post: PostData;
+  isDialogOpen: boolean;
+}
+
+function ShareDialogue({ post, isDialogOpen }: ShareDialogueProps) {
+  const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(isDialogOpen);
+  const authProvider = useAuth();
+
+  // Update shareDialogOpen when isDialogOpen prop changes
+  useEffect(() => {
+    setShareDialogOpen(isDialogOpen);
+  }, [isDialogOpen]);
+
+  const handleCloseShare = () => {
+    setShareDialogOpen(false);
+  };
+
+  // Function to confirm sharing
+  const handleConfirmShare = async () => {
+    setShareDialogOpen(false);
+    // Get followers and share the post
+    const currentUser = await profileService.fetchAuthorData(
+      authProvider.user.uuid
+    );
+    const share_obj = {
+      type: "share",
+      user: currentUser.id,
+      post: post.id,
+    };
+    const followers = await follow.getFollowers(authProvider.user.uuid);
+    for (const follower of followers) {
+      await inbox.sendPostToInbox(follower.id, share_obj);
+    }
+    console.log("Post shared with followers");
+  };
+
+  return (
+    <Dialog
+      open={shareDialogOpen}
+      onClose={handleCloseShare}
+      sx={{
+        "& .MuiDialog-paper": {
+          backgroundColor: "rgb(123, 123, 123)",
+          color: "white",
+        },
+      }}
+    >
+      <DialogTitle>Share Post</DialogTitle>
+      <DialogContent>
+        <DialogContentText sx={{ color: "white" }}>
+          Do you want to share this post with all your friends and followers?
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={handleCloseShare}
+          sx={{
+            backgroundColor: "lightcoral",
+            color: "white",
+            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+            "&:hover": {
+              backgroundColor: "#e57373",
+            },
+          }}
+          autoFocus
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleConfirmShare}
+          sx={{
+            backgroundColor: "#5acc8c",
+            color: "white",
+            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+            "&:hover": {
+              backgroundColor: "#4ba578",
+            },
+          }}
+          autoFocus
+        >
+          Share
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
