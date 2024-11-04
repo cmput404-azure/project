@@ -82,9 +82,6 @@ export default function Post({
             const authUser = await ProfileService.fetchAuthorData(
               authProvider.user.uuid
             );
-
-            console.log(authUser);
-
             const url = `${authUser.host}authors/${authProvider.user.uuid}`;
 
             if (url !== postData.author.id) {
@@ -99,12 +96,14 @@ export default function Post({
               );
               console.log(postData.visibility);
               if (!authProvider.user.is_staff) {
-                if (!is_following || postData.visibility === 2) {
-                  setOpenSnackbar(true);
-                  setShowAlert(true);
-                  setTimeout(() => {
-                    navigate("/home");
-                  }, 2000);
+                if (postData.visibility !== 1) {
+                  if (!is_following || postData.visibility === 2) {
+                    setOpenSnackbar(true);
+                    setShowAlert(true);
+                    setTimeout(() => {
+                      navigate("/home");
+                    }, 2000);
+                  }
                 }
               }
             }
@@ -289,7 +288,7 @@ export default function Post({
       </div>
     );
 
-  return showAlert ? (
+  return showAlert && canToggleComments ? (
     <Snackbar
       open={openSnackbar}
       autoHideDuration={2000}
@@ -394,15 +393,6 @@ export default function Post({
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    p: ({ node, children }) => {
-                      // Check if the first child is an element with tagName "img"
-                      const firstChild = node.children[0];
-                      const isImage =
-                        firstChild && "tagName" in firstChild && firstChild.tagName === "img";
-          
-                      // Only wrap in <p> if it is not an <img> tag
-                      return isImage ? <>{children}</> : <p>{children}</p>;
-                    },
                     img: ({ src, alt, title }) => {
                       return (
                         <div className={styles.imgContainer}>
