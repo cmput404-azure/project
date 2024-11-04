@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios, { get } from 'axios';
 import follow, { getFollowers, getFollowing, getFriends } from "../../service/follow";
-
+import CloseIcon from '@mui/icons-material/Close';
 import { CircularProgress } from "@mui/material";
 import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
@@ -111,7 +111,9 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
       className={styles.modalContent}
       overlayClassName={styles.modalOverlay}
     >
-      <button onClick={onClose} style={{ float: 'right' }}>Close</button>
+      <button onClick={onClose} className={styles.closeModalButton}>
+        <CloseIcon style={{ fontSize: "14px" }} />
+      </button>
       <h2 className={styles.h2}>{isFollowerList}</h2>
       {loading ? (
         <div className={"loading_component"}><CircularProgress /></div>

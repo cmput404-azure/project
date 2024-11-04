@@ -1,30 +1,39 @@
 .customList {
-    padding-left:0;
-    width: 100%;
+  padding-left: 0;
+  width: 98%;
 }
 
 .modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); // Semi-transparent black overlay
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .modalContent {
-    position: relative;
-    width: 90%;
-    max-width: 500px;
-    background-color: #9c9c9c;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    padding: 20px;
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); // Semi-transparent black overlay
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalContent {
+  position: relative;
+  width: 90%;
+  max-width: 500px;
+  background-color: #9c9c9c;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+}
 
 .h2 {
-    color:black;
+  color: black;
+}
+
+.closeModalButton{
+  float:right;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:8px;
+  border-radius:50%;
 }

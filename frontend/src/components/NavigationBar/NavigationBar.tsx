@@ -1,7 +1,7 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 import React, { useEffect, useState } from "react";
-
+import CloseIcon from '@mui/icons-material/Close';
 import Modal from "react-modal";
 import NotificationList from "../NotificationList/NotificationList";
 import UserSearch from "../UserSearch/UserSearch";
@@ -152,7 +152,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
           className={styles.closeModalButton}
           onClick={() => setIsSearchOpen(false)}
         >
-          Close
+          <CloseIcon style={{ fontSize: "14px" }}/>
         </button>
         <UserSearch closeModal={() => setIsSearchOpen(false)} />
       </Modal>
@@ -167,7 +167,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
           className={styles.closeModalButton}
           onClick={() => setIsNotificationOpen(false)}
         >
-          Close
+          <CloseIcon style={{ fontSize: "14px" }}/>
         </button>
         <NotificationList />
       </Modal>
