@@ -90,7 +90,8 @@ class AuthorTests(APITestCase):
             self.assertIn(author["github"], ['github.com/testauthor', 'github.com/testauthor2', 'github.com/testauthor3', 'github.com/testauthor4', 'github.com/testauthor5', 'github.com/testauthor6', 'github.com/testauthor7'])
             self.assertIn(author["page"], ['http://localhost:8000/api/authors/testauthor', 'http://localhost:8000/api/authors/testauthor2', 'http://localhost:8000/api/authors/testauthor3', 'http://localhost:8000/api/authors/testauthor4', 'http://localhost:8000/api/authors/testauthor5', 'http://localhost:8000/api/authors/testauthor6', 'http://localhost:8000/api/authors/testauthor7'])
             self.assertEqual(author["has_requested"], False)
-        
+    
+    # test getting all authors paginated  
     def test_retrieve_authors_paginated(self):
         """Test retrieving authors with pagination."""
         
