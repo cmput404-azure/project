@@ -3,6 +3,7 @@ import TextField from "@mui/material/TextField";
 import styled from "@mui/material/styles/styled";
 import styles from "./CommentInput.module.scss";
 import inbox from "../../service/inbox";
+import Avatar from "@mui/material/Avatar";
 
 // Styling inspired from https://medium.com/@irwantoalvin/how-to-style-your-material-ui-textfield-integrate-it-with-react-hook-form-and-make-it-reusable-0f3050a90e9a, Downloaded 2024-10-24
 // need to style field like this otherwise stylings may reset and not appear properly
@@ -60,20 +61,23 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
     console.log(`AuthorID: ${authorObj.id}`); // for testing, change to API call or whatever
     console.log(`Author: ${authorObj.displayName}`); // for testing, change to API call or whatever
     console.log(`Comment: "${textInField}" | Submitted`); // for testing, change to API call or whatever
-    console.log(`Post: "${post}"`)
-    
+    console.log(`Post: "${post}"`);
+
     const comment_obj = {
       type: "comment",
       author: authorObj,
       comment: textInField,
       post: post.id,
-    }
-    
-    const response = await inbox.sendCommentToInbox(post.author.id, comment_obj);
-    console.log("returned comment is: ", response)
-    if (response){
-      // In here  you will append the comment to the list. You can create a useState hook and then call something set comments 
-      onCommentAdded(response)
+    };
+
+    const response = await inbox.sendCommentToInbox(
+      post.author.id,
+      comment_obj
+    );
+    console.log("returned comment is: ", response);
+    if (response) {
+      // In here  you will append the comment to the list. You can create a useState hook and then call something set comments
+      onCommentAdded(response);
     }
 
     // Reset to initial states
@@ -109,11 +113,13 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
     <section className={styles.commentInput}>
       <div className={styles.commentDisplay}>
         <div className={styles.userImageContainer}>
-          <img
-            className={styles.userImage}
-            src={`https://ui-avatars.com/api/?background=random&name=${authorObj.displayName}`}
-            alt="User Profile"
-          />
+          <Avatar
+            src={authorObj?.profileImage}
+            alt={authorObj?.displayName}
+            sx={{ marginRight: "0.5rem" }}
+          >
+            {authorObj?.displayName.charAt(0)}
+          </Avatar>
         </div>
         <div className={styles.textFieldContainer}>
           <StyledCommentInputField
