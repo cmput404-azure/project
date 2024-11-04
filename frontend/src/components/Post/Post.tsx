@@ -36,6 +36,7 @@ import {
 import profileService from "../../service/profile";
 import { PostData } from "../../models/models";
 import { extractUUID } from "../../util/formatting/extractUUID";
+import Avatar from "@mui/material/Avatar";
 
 export default function Post({
   postGiven,
@@ -400,8 +401,10 @@ export default function Post({
                       // Check if the first child is an element with tagName "img"
                       const firstChild = node.children[0];
                       const isImage =
-                        firstChild && "tagName" in firstChild && firstChild.tagName === "img";
-          
+                        firstChild &&
+                        "tagName" in firstChild &&
+                        firstChild.tagName === "img";
+
                       // Only wrap in <p> if it is not an <img> tag
                       return isImage ? <>{children}</> : <p>{children}</p>;
                     },
@@ -431,24 +434,23 @@ export default function Post({
       {(isCommentOpen && canToggleComments) || isModal ? (
         <div className={styles.comments}>
           <div className={styles.commentsHeader}>Comments</div>
-            {currentAuthor && (
-              <CommentInputField
-                authorObj={currentAuthor}
-                post={post}
-                onCommentAdded={handleNewComment}
-              />
-            )}
+          {currentAuthor && (
+            <CommentInputField
+              authorObj={currentAuthor}
+              post={post}
+              onCommentAdded={handleNewComment}
+            />
+          )}
           {commentList.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
-                <img
-                  src={
-                    post.author.profileImage
-                      ? post.author.profileImage
-                      : `https://ui-avatars.com/api/?background=random&name=${comment.author.displayName}`
-                  }
-                  className={styles.userImage}
-                />
+                <Avatar
+                  src={comment.author?.profileImage}
+                  alt={comment.author?.displayName}
+                  sx={{ marginRight: "0.5rem" }}
+                >
+                  {comment.author?.displayName.charAt(0)}
+                </Avatar>
               </div>
               <div className={styles.commentContent}>
                 <div className={styles.authorTime}>
