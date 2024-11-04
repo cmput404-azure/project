@@ -126,8 +126,47 @@ export default function Post({
     fetchPost();
   }, [postID, authProvider.user.uuid, navigate]);
 
+  useEffect(() => {
+    const fetchImage = async () => {
+      if (post.contentType === ContentType.MARKDOWN) {
+        const imageRegex = /!\[.*?\]\((.*?)\)/; // Regex to find the image URL in the Markdown
+        const match = post.content.match(imageRegex);
+        if (match) {
+          const imageUrl = match[1]; // Get the URL from the Markdown
+          console.log("imageURL: ", imageUrl);
+
+          // Check if the imageUrl is a data URL
+          if (imageUrl.startsWith("data:")) {
+            // Directly set the src to the data URL
+            setImageSrc(imageUrl);
+          } else {
+            // If it's not a data URL, fetch from the endpoint
+            try {
+              const response = await fetch(imageUrl);
+              console.log(response);
+              if (response.ok) {
+                const jsonResponse = await response.json();
+                const imageData = jsonResponse.image;
+                setImageSrc(imageData);
+              } else {
+                console.error("Error fetching image:", response.statusText);
+              }
+            } catch (error) {
+              console.error("Error fetching image:", error);
+            }
+          }
+        }
+      }
+    };
+
+    if (post) {
+      fetchImage();
+    }
+    
+  }, [post]);
+
   const transformImageUri = (src: string, alt: string, title: string) => {
-    return imageSrc || src;
+    return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
   };
 
   const handleToggleComment = () => {
