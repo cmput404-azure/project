@@ -115,7 +115,7 @@ class CheckAuthView(APIView):
                 'user': {
                     'username': request.user.username,
                     'uuid': request.user.uuid,
-                    'profileImage': f"{settings.BASE_URL}/{request.user.profile_image.url}" if request.user.profile_image else None,
+                    'profileImage': f"{settings.BASE_URL}{request.user.profile_image.url}" if request.user.profile_image else None,
                     'is_staff': request.user.is_staff
                 }
             }
