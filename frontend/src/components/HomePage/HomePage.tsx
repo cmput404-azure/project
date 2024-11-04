@@ -55,12 +55,17 @@ const HomePage = () => {
     try {
       const publicPosts = await stream.getStream();
       const privatePosts = await stream.getStream(true);
-      setPublicPosts(decodeBase64ToUrl(publicPosts));
-      setNonPublicPosts(decodeBase64ToUrl(privatePosts));
+      const decodedPublicPosts = decodeBase64ToUrl(publicPosts)
+      const decodedNonPublicPosts = decodeBase64ToUrl(privatePosts)
+      setPublicPosts(decodedPublicPosts);
+      setNonPublicPosts(decodedNonPublicPosts);
+
       setIsLoading(false);
+      return { publicPosts: decodedPublicPosts, nonPublicPosts: decodedNonPublicPosts };
     } catch (err) {
       console.log(err);
       setError("Failed to fetch posts. Please try again.");
+      return { publicPosts: [], nonPublicPosts: [] };
     }
   };
 
@@ -71,11 +76,35 @@ const HomePage = () => {
   }, [isUserLoading]);
 
   // handle when the comment button is clicked
-  const handleCommentButtonClick = (post: any) => {
-    setIsCommentModalOpen(true);
-    setSelectedPost(post);
-    setCommentsList(post.comments.src);
+  // const handleCommentButtonClick = (post: any) => {
+  //   setIsCommentModalOpen(true);
+  //   setSelectedPost(post);
+  //   setCommentsList(post.comments.src);
+  // };
+
+  const handleCommentButtonClick = async (post) => {
+    try {
+      // Fetch posts and get the latest public and non-public posts
+      const { publicPosts, nonPublicPosts } = await fetchPosts();
+  
+      // Search for the post in the freshly fetched posts
+      const allPosts = [...publicPosts, ...nonPublicPosts];
+      const foundPost = allPosts.find((p) => p.id === post.id);
+  
+      if (foundPost) {
+        setSelectedPost(foundPost);
+        setCommentsList(foundPost.comments.src); // Set the comments list from the found post
+      } else {
+        setError("Post not found.");
+      }
+  
+      setIsCommentModalOpen(true);
+    } catch (err) {
+      console.error("Error refetching posts:", err);
+      setError("Failed to fetch posts. Please try again.");
+    }
   };
+
   // handle when the comment modal is closed
   const handleCommentModalClose = () => {
     setIsCommentModalOpen(false);
