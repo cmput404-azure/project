@@ -408,7 +408,10 @@ class FollowView(APIView):
             return Response({"error": "User not found"}, status=404)
         
         follower_local = False
-        if follower_host.find(settings.BASE_URL)!=-1:
+        
+        base_url = settings.BASE_URL.rstrip('/')
+
+        if follower_host.find(base_url)!=-1:
             follower_local = True
 
         # Check if this follow relationship already exists
