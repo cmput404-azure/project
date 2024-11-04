@@ -96,7 +96,6 @@ export default function Post({
                 authorId,
                 encodedUrl
               );
-              console.log(postData.visibility);
               if (!authProvider.user.is_staff) {
                 if (postData.visibility !== 1) {
                   if (!is_following || postData.visibility === 2) {
@@ -112,7 +111,7 @@ export default function Post({
 
             setHasLiked(
               postData.likes.src.some((like) =>
-                like.object.includes(authProvider.user.uuid)
+                like.id.includes(authProvider.user.uuid)
               )
             );
           }
@@ -120,7 +119,6 @@ export default function Post({
           setPost(postData);
 
           setCommentList(postData.comments.src.reverse());
-          console.log("comments", postData.comments.src);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
           );
@@ -129,10 +127,9 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
-          // TODO: fix liking in stream
           setHasLiked(
             postGiven.likes.src.some((like) =>
-              like.object.includes(authProvider.user.uuid)
+              like.id.includes(authProvider.user.uuid)
             )
           );
           setCommentList(postGiven.comments.src.reverse());
@@ -154,7 +151,6 @@ export default function Post({
     const fetchAuthor = async () => {
       if (authProvider.user) {
         const author = await api.get(`/api/authors/${authProvider.user.uuid}/`);
-        console.log(author);
         setCurrentAuthor(author.data);
       }
     };
@@ -170,7 +166,6 @@ export default function Post({
         const match = post.content.match(imageRegex);
         if (match) {
           const imageUrl = match[1]; // Get the URL from the Markdown
-          console.log("imageURL: ", imageUrl);
 
           // Check if the imageUrl is a data URL
           if (imageUrl.startsWith("data:")) {
@@ -180,7 +175,6 @@ export default function Post({
             // If it's not a data URL, fetch from the endpoint
             try {
               const response = await fetch(imageUrl);
-              console.log(response);
               if (response.ok) {
                 const jsonResponse = await response.json();
                 const imageData = jsonResponse.image;
@@ -524,7 +518,6 @@ function ShareDialogue({ post, isDialogOpen }: ShareDialogueProps) {
     for (const follower of followers) {
       await inbox.sendPostToInbox(follower.id, share_obj);
     }
-    console.log("Post shared with followers");
   };
 
   return (
