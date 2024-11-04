@@ -138,6 +138,7 @@ export default function Post({
     const fetchAuthor = async () => {
       if (authProvider.user) {
         const author = await api.get(`/api/authors/${authProvider.user.uuid}/`);
+        console.log(author);
         setCurrentAuthor(author.data);
       }
     };
@@ -395,6 +396,15 @@ export default function Post({
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
+                    p: ({ node, children }) => {
+                      // Check if the first child is an element with tagName "img"
+                      const firstChild = node.children[0];
+                      const isImage =
+                        firstChild && "tagName" in firstChild && firstChild.tagName === "img";
+          
+                      // Only wrap in <p> if it is not an <img> tag
+                      return isImage ? <>{children}</> : <p>{children}</p>;
+                    },
                     img: ({ src, alt, title }) => {
                       return (
                         <div className={styles.imgContainer}>
@@ -421,11 +431,13 @@ export default function Post({
       {(isCommentOpen && canToggleComments) || isModal ? (
         <div className={styles.comments}>
           <div className={styles.commentsHeader}>Comments</div>
-          <CommentInputField
-            authorObj={currentAuthor}
-            post={post}
-            onCommentAdded={handleNewComment}
-          />
+            {currentAuthor && (
+              <CommentInputField
+                authorObj={currentAuthor}
+                post={post}
+                onCommentAdded={handleNewComment}
+              />
+            )}
           {commentList.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>

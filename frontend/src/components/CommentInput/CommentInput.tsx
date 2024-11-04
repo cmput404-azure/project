@@ -36,6 +36,7 @@ const StyledCommentInputField = styled(TextField)({
 });
 
 const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
+  console.log("Received: ", authorObj);
   const [commentFieldClicked, setCommentFieldClicked] = useState(false);
   const [isTextError, setIsTextError] = useState<boolean>(false);
   const [textErrorMsg, setTextErrorMsg] = useState("");
