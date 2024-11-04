@@ -1,3 +1,4 @@
+from uuid import uuid4
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -70,6 +71,8 @@ class AuthorTests(APITestCase):
             created_at='2024-10-21T00:00:00Z',
             modified_at='2024-10-21T00:00:00Z'
         )
+
+    # ----------------------------200 Tests----------------------------
 
     # test getting all authors
     def test_retrieve_authors_all(self):
@@ -186,3 +189,40 @@ class AuthorTests(APITestCase):
         self.assertEqual(response.data['host'], 'http://localhost:8000/api/')
         self.assertEqual(response.data['github'], 'github.com/testauthor')
         self.assertEqual(response.data['page'], 'http://localhost:8000/api/authors/testauthor')
+        
+    # ----------------------------404 Tests----------------------------
+    
+    # passed
+    def test_get_nonexistent_author_by_uuid(self):
+        """Test that retrieving a non-existent author by UUID returns a 404."""
+        url = reverse('author_serial', kwargs={'author_serial': uuid4()})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND) # make sure the response status is 404
+
+    # passed
+    def test_get_nonexistent_author_by_fqid(self):
+        """Test that retrieving a non-existent author by FQID returns a 404."""
+        host = "http://localhost:8000/api/authors/"
+        url = reverse('author_fqid', kwargs={'author_fqid': f'{host}{uuid4()}'})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    
+    # passed
+    def test_update_nonexistent_author_by_uuid(self):
+        """Test that updating a non-existent author by UUID returns a 404."""
+        url = reverse('author_serial', kwargs={'author_serial': uuid4()})
+        data = {
+            'display_name': 'Updated Author'
+        }
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        
+    def test_update_nonexistent_author_by_fqid(self):
+        """Test that updating a non-existent author by FQID returns a 404."""
+        host = "http://localhost:8000/api/authors/"
+        url = reverse('author_fqid', kwargs={'author_fqid': f'{host}{uuid4()}'})
+        data = {
+            'display_name': 'Updated Author'
+        }
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
