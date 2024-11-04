@@ -8,6 +8,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
 from django.utils import timezone
+from datetime import datetime
 
 from ..serializers import *
 from ..models import *
@@ -115,7 +116,7 @@ class InboxView(APIView):
         # else:
         
         # Get the latest inbox items
-        inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-id")
+        inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-time")
         
         serializer = InboxItemSerializer(inbox_items_obj, many=True, context={"request": request})
         # author is return in format of her/his url
@@ -334,6 +335,8 @@ class InboxView(APIView):
                 item.content_object.content = request.data.get('content', item.content_object.content)
                 item.content_object.visibility = request.data.get('visibility', item.content_object.content)
                 item.content_object.modified_at = timezone.now()
+                item.time = datetime.now()
+                item.save()
                 item.content_object.save()
             
             return Response({"message": "Update post successfully."}, status=status.HTTP_200_OK)
@@ -350,7 +353,7 @@ class InboxView(APIView):
                 existing_item.remote_payload['title'] = request.data.get('title', existing_item.remote_payload.get('title'))
                 existing_item.remote_payload['content'] = request.data.get('content', existing_item.remote_payload.get('content'))
                 existing_item.remote_payload['visibility'] = request.data.get('visibility', existing_item.remote_payload.get('visibility'))
-                existing_item.modified_at = timezone.now()  # Optionally update modified_at
+                existing_item.time = datetime.now()  
                 existing_item.save()
 
                 return Response({"message": "Update post successfully."}, status=status.HTTP_200_OK)

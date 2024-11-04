@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from datetime import datetime
 
 
 '''
@@ -19,4 +20,5 @@ class InboxItem(models.Model):
     object_id = models.UUIDField(null=True, blank=True)
     content_object = GenericForeignKey("content_type", "object_id")
     remote_payload = models.JSONField(null=True, blank=True)
+    time = models.DateTimeField(default=datetime.now)
     
