@@ -1,11 +1,13 @@
+import { Button, TextField } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 
-import Box from "@mui/material/Box";
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Modal from "react-modal";
+import styled from "@mui/material/styles/styled";
 import styles from "./EditPostModal.module.scss";
 
 interface EditPostModalProps {
@@ -15,6 +17,8 @@ interface EditPostModalProps {
     title: string;
     content: string;
     visibility: number;
+    contentType: string;
+    description: string;
   } | null; // Allow post to be null or undefined
   onSubmit: (updatedPost: {
     title: string;
@@ -22,6 +26,21 @@ interface EditPostModalProps {
     visibility: number;
   }) => void;
 }
+
+const StyledFormControl = styled(FormControl)({
+  "& .MuiInputLabel-root": {
+    color: "#70ffaf !important",
+  },
+  "& .MuiSelect-root": {
+    color: "white !important",
+  },
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "white !important",
+  },
+  "& .MuiSvgIcon-root": {
+    color: "#70ffaf",
+  },
+});
 
 export default function EditPostModal({
   isOpen,
@@ -32,6 +51,10 @@ export default function EditPostModal({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<number>(0);
+  const [contentType, setContentType] = useState(`${post.contentType}`);
+  console.log(post);
+  console.log(post.contentType);
+  console.log(contentType);
   // Ensure that modal fields reset when `post` data changes
   useEffect(() => {
     if (post) {
@@ -68,24 +91,33 @@ export default function EditPostModal({
       <h2 className={styles.title}>Edit Post</h2>
       <form>
         <div className={styles.formGroup}>
-          <label htmlFor="postTitle">Title</label>
-          <input
-            id="postTitle"
-            type="text"
+          <label>Content</label>
+          <PostTextField
             value={title}
+            fullWidth
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
         <div className={styles.formGroup}>
-          <label htmlFor="postContent">Content</label>
-          <textarea
-            id="postContent"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
+          <label>Content</label>
+          {contentType == "image/png;base64" ? (
+            <div className={styles.cardImage}>
+              <img
+                className={styles.postImage}
+                src={"data:image/png;base64," + post.content}
+                alt={post.description}
+              />
+            </div>
+          ) : (
+            <PostTextField
+              value={content}
+              fullWidth
+              onChange={(e) => setContent(e.target.value)}
+            />
+          )}
         </div>
         <div className={styles.formGroup}>
-          <FormControl fullWidth>
+          <StyledFormControl fullWidth>
             <InputLabel className={styles.visibilitySelectLabelTitle}>
               Visibility
             </InputLabel>
@@ -100,25 +132,62 @@ export default function EditPostModal({
               <MenuItem value={2}>Friends-Only</MenuItem>
               <MenuItem value={3}>Unlisted</MenuItem>
             </Select>
-          </FormControl>
+          </StyledFormControl>
         </div>
         <div className={styles.buttonGroup}>
-          <button
-            type="button"
-            onClick={handleSave}
-            className={styles.saveButton}
-          >
-            Save
-          </button>
-          <button
-            type="button"
+          <Button
+            variant="contained"
+            size="small"
             onClick={onRequestClose}
             className={styles.cancelButton}
           >
             Cancel
-          </button>
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            className={styles.saveButton}
+          >
+            Save
+          </Button>
         </div>
       </form>
     </Modal>
   );
 }
+
+const PostTextField = styled(TextField)({
+  "& label": {
+    color: "#ffffff !important",
+  },
+
+  "& input": {
+    color: "white !important",
+  },
+
+  "& textarea": {
+    color: "white !important",
+  },
+
+  "& .MuiOutlinedInput-root": {
+    "& fieldset": {
+      border: "none",
+      boxShadow: "0 4px 7px rgba(0, 0, 0, 0.45)",
+    },
+    "&:hover fieldset": {
+      border: "1px solid",
+      borderColor: "white !important",
+    },
+    "&.Mui-focused fieldset": {
+      border: "1px solid",
+      borderColor: "#70ffaf !important",
+    },
+  },
+
+  "& .MuiFormHelperText-root": {
+    color: "#ffffff",
+    "&.Mui-error": {
+      color: "#dc3545",
+    },
+  },
+});

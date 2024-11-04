@@ -1,19 +1,86 @@
+import uuid
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.contenttypes.models import ContentType
-from urllib.parse import urlparse
-
+from rest_framework.pagination import PageNumberPagination
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes
+from drf_spectacular.utils import inline_serializer
+from rest_framework import serializers
 from ..serializers import *
 from ..models import *
 from ..utils import *
+
+class CommentsPagination(PageNumberPagination):
+    page_size=5
+    page_size_query_param='size'
+    max_page_size=100
+
+    def get_paginated_response(self, data):
+        return Response({
+            "type": "comments",
+            "id": self.request.build_absolute_uri(),
+            "page": self.request.build_absolute_uri(),
+            "page_number": self.page.number,
+            "size": self.page.paginator.per_page,
+            "count": self.page.paginator.count,
+            "src": data,
+        })
 
 '''
 Handle retrieval of all the comments in a post
 Both case return a comments object which is a list of comment object
 '''
 class MultipleCommentsView(APIView):
+    pagination_provider = CommentsPagination
+
+
+    @extend_schema(
+        summary="Retrieve Comments for a Post",
+        description="Fetches all comments on a specific post, optionally filtered by author.",
+        parameters=[
+            OpenApiParameter(
+                name="author_serial",
+                description="UUID of the author of the post.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="post_serial",
+                description="UUID of the post to retrieve comments for.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="post_fqid",
+                description="Full qualified identifier (FQID) of the post to retrieve comments for.",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=inline_serializer(
+                    name="PaginatedCommentsResponse",
+                    fields={
+                        "type": serializers.CharField(),
+                        "id": serializers.CharField(),
+                        "page": serializers.CharField(),
+                        "page_number": serializers.IntegerField(),
+                        "size": serializers.IntegerField(),
+                        "count": serializers.IntegerField(),
+                        "src": CommentSerializer(many=True),
+                    }
+                ),
+                description="Paginated list of comments for the specified post."
+            ),
+            404: OpenApiResponse(description="Post or author not found.")
+        }
+    )
+
     def get(self, request, author_serial=None, post_serial=None, post_fqid=None):
         if (author_serial):
             '''
@@ -21,36 +88,30 @@ class MultipleCommentsView(APIView):
             GET [local, remote]: the comments on the post
             '''
             post_id = post_serial
-            author_id = author_serial
-            post_obj = get_object_or_404(Post, uuid=post_id)
+            post_obj = get_object_or_404(Post, uuid=post_serial, user__uuid=author_serial)
         else:
             '''
             URL: ://service/api/posts/{POST_FQID}/comments
             vd:POST_FQID: http://nodebbbb/api/authors/222/posts/249
             GET [local, remote]: the comments on the post (that our server knows about)    
             '''
-            print(post_fqid)
             post_id = post_fqid.split('/')[-1]
+
+            # Validate if `post_id` is a valid UUID
+            try:
+                uuid.UUID(post_id)
+            except ValueError:
+                return Response({"detail": "Invalid post FQID."}, status=status.HTTP_400_BAD_REQUEST)
+
             post_obj = get_object_or_404(Post, uuid=post_id)
-            author_id = post_obj.user.uuid
-            
+
         comments = Comment.objects.filter(post=post_obj)
-        serialized_comments = CommentSerializer(comments, many=True).data
-        uri = request.build_absolute_uri("/")
-        
-        response = {
-            "type": "comments",
-            "page": f"{uri}api/authors/{author_id}/posts/{post_id}",
-            "id": f"{uri}api/authors/{author_id}/posts/{post_id}/comments",
-            "page_number": 1,
-            "size": 10,
-            "count": len(serialized_comments),
-            "src": serialized_comments[:10],  # Limit to first 10 comments
-        }        
-        return Response(response, status.HTTP_200_OK)
 
+        pagination = self.pagination_provider()
+        page = pagination.paginate_queryset(comments, request)
 
-
+        serialized_comments = CommentSerializer(page, many=True).data
+        return pagination.get_paginated_response(serialized_comments)
 
 '''
 URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
@@ -58,7 +119,48 @@ GET [local, remote] get the comment
 '''  
 class SingleCommentView(APIView):
     """Handle retrieval of a single comment."""
-
+    @extend_schema(
+        summary="Retrieve a Single Comment",
+        description="Fetch a single comment by either a local identifier or a fully qualified identifier (FQID).",
+        parameters=[
+            OpenApiParameter(
+                name="author_serial",
+                description="UUID of the author of the post containing the comment.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="post_serial",
+                description="UUID of the post containing the comment.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="comment_serial",
+                description="UUID of the comment itself.",
+                required=False,
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name="comment_fqid",
+                description="Fully qualified identifier (FQID) of the comment.",
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=CommentSerializer,
+                description="Details of the requested comment."
+            ),
+            400: OpenApiResponse(description="Invalid comment FQID."),
+            404: OpenApiResponse(description="Comment not found.")
+        }
+    )
     def get(self, request, comment_fqid=None, author_serial=None, post_serial=None, comment_serial=None):
         """
         URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
@@ -78,16 +180,22 @@ class SingleCommentView(APIView):
             )
         else:
             # Case: Retrieve comment using comment FQID.
+            # try:
+            #     # TODO splitting and getting the last item is wrong as per the requirements
+            #     # we need to make sure that we execute an http request against the fqid since its
+            #     # a valid path and since its foreign we shouldn't be trying to retrieve from our database directly
+            #     # it all should be done via an http request
+            #     comment_id = comment_fqid.split('/')[-1]
+            # except IndexError:
+            #     return Response(
+            #         {"detail": "Invalid comment FQID."}, status=400
+            #     )
             try:
-                # TODO splitting and getting the last item is wrong as per the requirements
-                # we need to make sure that we execute an http request against the fqid since its
-                # a valid path and since its foreign we shouldn't be trying to retrieve from our database directly
-                # it all should be done via an http request
+                # Validate that comment_fqid is a valid UUID
                 comment_id = comment_fqid.split('/')[-1]
-            except IndexError:
-                return Response(
-                    {"detail": "Invalid comment FQID."}, status=400
-                )
+                uuid.UUID(comment_id)  # Raises ValueError if invalid
+            except (IndexError, ValueError):
+                return Response({"detail": "Invalid comment FQID."}, status=status.HTTP_400_BAD_REQUEST)
             comment = get_object_or_404(Comment, uuid=comment_id)
 
         # Serialize the comment object.
@@ -95,3 +203,29 @@ class SingleCommentView(APIView):
         return Response(serialized_comment, status=200)
     
     
+class CreateCommentView(APIView):
+    """
+    Handle POST requests to the author's inbox.
+    Allows remote or local comments to be added to the post.
+    """
+    def post(self, request, author_serial):
+        # Deserialize the incoming request data
+        serializer = CommentSerializer(data=request.data)
+        print("@@@@@@@")
+        print(request.data)
+        if serializer.is_valid():
+            print("#######")
+            print(serializer.validated_data)
+            post_fqid = serializer.validated_data.get('post')
+            post_id = post_fqid.split('/')[-1]  # Extract the post UUID from the FQID
+            
+            # Fetch the post object using the extracted ID
+            post = get_object_or_404(Post, uuid=post_id)
+
+            # Save the comment with the validated data
+            serializer.save(post=post)
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        # If data is invalid, return errors
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

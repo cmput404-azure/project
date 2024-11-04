@@ -6,10 +6,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
 from django.utils import timezone
-from django.contrib.sessions.models import Session
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
+import requests
 
 class AuthorPostView(APIView):
     """
@@ -151,6 +151,7 @@ class AuthorPostView(APIView):
             # update the post fields with request data (fallback to current values if not provided)
             post.title = request.data.get('title', post.title)
             post.content = request.data.get('content', post.content)
+            post.description = request.data.get('description', post.description)
             post.visibility = request.data.get('visibility', post.visibility)
             post.modified_at = request.data.get('modified_at', post.modified_at)
             post.modified_at = timezone.now()  # update the modified time
@@ -230,6 +231,15 @@ class PostsPagination(PageNumberPagination):
     page_size_query_param = 'size'
     max_page_size = 100
 
+    def get_paginated_response(self, data):
+        return Response({
+            "type": "posts",
+            "page_number": self.page.number,
+            "size": self.page.paginator.per_page,
+            "count": self.page.paginator.count,
+            "src": data,
+        })
+
 
 class AuthorPostsAllView(APIView):
     """
@@ -290,8 +300,11 @@ class AuthorPostsAllView(APIView):
         # make sure the author exists
         author = get_object_or_404(User, uuid=author_serial)
 
+        # check for github activity
+        self.fetch_github_activity(author)
+
         # retrieve all posts by the author
-        posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3])
+        posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3]).order_by('-created_at')
 
         
 
@@ -359,17 +372,166 @@ class AuthorPostsAllView(APIView):
         
         author = User.objects.get(uuid=author_serial)
         author_data = UserSerializer(author).data
+        print(f"Passed UserSerializer: {author_data}")
+        author_data["id"] = author.uuid
         request.data["author"] = author_data
 
+        # print(request.data)
         serializer = CreatePostSerializer(data=request.data, partial=True)
+
         if serializer.is_valid():
             instance = serializer.save()
-            
+
             # Serialize the response
             response = CreatePostSerializer(instance).data
 
             return Response(response, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=400)
+        if not serializer.is_valid():
+            print("Validation Errors:", serializer.errors)  # Print errors
+            return Response(serializer.errors, status=400)
+        
+    def fetch_github_activity(self, author):
+        """
+        Fetch GitHub activity for a user and turns it into a post, only if the activity is not already in the database as a post.
+        """
+        if(not author.github):
+            return
+        
+        author_github_username = author.github.split("/")[-1]
+
+        api = f"https://api.github.com/users/{author_github_username}/events"
+        response = requests.get(api)
+        events = []
+
+        if response.status_code == 200:
+            events = response.json()
+
+        for event in events:
+            if(not Post.objects.filter(github_id=event["id"]).exists()):
+                event_post = self.generate_post_data(event)
+                author_data = UserSerializer(author).data
+                author_data["id"] = author.uuid
+                event_post["author"] = author_data
+
+                serializer = CreatePostSerializer(data=event_post)
+                if serializer.is_valid():
+                    print("Saving post...")
+                    serializer.save()
+                else:
+                    print("Error saving post:", serializer.errors)
+    
+    def generate_post_data(self, event):
+        """
+        Generate post data from GitHub event data.
+        """
+        event_type = event['type']
+        actor = event['actor']['login']
+        repo_name = event['repo']['name']
+        created_at = event['created_at']
+        
+        title, description, content = "Github Event", "Github Event", "Github Event"
+
+        if event_type == "CommitCommentEvent":
+            comment = event['payload']['comment']
+            title = f"{actor} commented on a commit in {repo_name}"
+            description = f"Comment by {actor} on commit."
+            content = comment.get("body", "")
+
+        elif event_type == "CreateEvent":
+            ref_type = event['payload'].get('ref_type', 'repository')
+            ref = event['payload'].get('ref', '')
+            title = f"Created a new {ref_type} in {repo_name}"
+            description = f"{actor} created a {ref_type} named {ref}."
+            content = f"{actor} created a {ref_type} '{ref}' in repository '{repo_name}'."
+
+        elif event_type == "DeleteEvent":
+            ref_type = event['payload'].get('ref_type', 'repository')
+            ref = event['payload'].get('ref', '')
+            title = f"Deleted a {ref_type} in {repo_name}"
+            description = f"{actor} deleted a {ref_type} named {ref}."
+            content = f"The {ref_type} '{ref}' in '{repo_name}' was deleted."
+
+        elif event_type == "ForkEvent":
+            forkee = event['payload'].get('forkee', {}).get('name', 'forked repo')
+            title = f"Forked {repo_name}"
+            description = f"{actor} forked the repository {repo_name}."
+            content = f"{actor} created a fork of '{repo_name}', resulting in '{forkee}'."
+
+        elif event_type == "GollumEvent":
+            pages = event['payload']['pages']
+            title = f"{actor} edited wiki pages in {repo_name}"
+            description = f"{actor} updated wiki pages in {repo_name}."
+            content = "\n".join([f"{page['action'].capitalize()} wiki page: {page['title']}" for page in pages])
+
+        elif event_type == "IssueCommentEvent":
+            action = event['payload']['action']
+            issue = event['payload']['issue']['title']
+            title = f"{actor} {action} a comment on an issue in {repo_name}"
+            description = f"Issue '{issue}' has a new comment by {actor}."
+            content = event['payload']['comment'].get('body', "")
+
+        elif event_type == "IssuesEvent":
+            action = event['payload']['action']
+            issue = event['payload']['issue']['title']
+            title = f"Issue '{issue}' {action} in {repo_name} by {actor}"
+            description = f"{actor} {action} issue '{issue}' in {repo_name}."
+            content = f"Issue details: {issue}\nAction taken: {action}."
+
+        elif event_type == "MemberEvent":
+            action = event['payload']['action']
+            member = event['payload']['member']['login']
+            title = f"{actor} {action} {member} to {repo_name}"
+            description = f"{member} was {action} by {actor} in {repo_name}."
+            content = f"User '{member}' was {action} as a collaborator."
+
+        elif event_type == "PublicEvent":
+            title = f"{repo_name} is now public!"
+            description = f"{actor} made {repo_name} public."
+            content = f"The repository '{repo_name}' was made public."
+
+        elif event_type == "PullRequestEvent":
+            action = event['payload']['action']
+            pr_number = event['payload']['number']
+            title = f"Pull request #{pr_number} {action} in {repo_name}"
+            description = f"Pull request #{pr_number} was {action} by {actor}."
+            content = f"Details of pull request: #{pr_number}."
+
+        elif event_type == "PushEvent":
+            commits = event['payload']['commits']
+            title = f"{actor} pushed {len(commits)} commit(s) to {repo_name}"
+            description = f"New commits pushed by {actor} to {repo_name}."
+            content = "\n".join([f"- {commit['message']}" for commit in commits])
+
+        elif event_type == "ReleaseEvent":
+            action = event['payload']['action']
+            release = event['payload']['release']['name']
+            title = f"Release '{release}' {action} in {repo_name}"
+            description = f"{actor} {action} release '{release}' in {repo_name}."
+            content = f"Release details: {release}"
+
+        elif event_type == "SponsorshipEvent":
+            action = event['payload']['action']
+            title = f"Sponsorship {action} by {actor}"
+            description = f"{actor} {action} a sponsorship."
+            content = f"Sponsorship details: {event['payload']}"
+
+        elif event_type == "WatchEvent":
+            title = f"{actor} starred {repo_name}"
+            description = f"{actor} starred the repository {repo_name}."
+            content = f"User {actor} starred {repo_name}."
+
+        return {
+            "title": title,
+            "description": description,
+            "content": content,
+            "created_at": created_at,
+            "event_type": event_type,
+            "actor": actor,
+            "repository": repo_name,
+            "contentType": "text/plain",
+            "published": created_at,
+            "github_id": event["id"],
+        }
 
 class PostView(APIView):
     """

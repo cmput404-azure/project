@@ -1,28 +1,19 @@
 import Modal from "react-modal";
-import PostBar from "../PostBar/PostBar";
 import React from "react";
 import styles from "./CommentView.module.scss";
-
-interface Comment {
-  id: number;
-  image: string;
-  author: string;
-  timePosted: string;
-  text: string;
-}
+import Post from "../Post/Post";
+import { PostData as PostModel } from "../../models/models";
 
 interface CommentViewProps {
   isOpen: boolean;
   onRequestClose: () => void;
-  postComponent: React.ReactNode;
-  comments: Comment[]; // List of comments
+  post: PostModel;
 }
 
 const CommentView: React.FC<CommentViewProps> = ({
   isOpen,
   onRequestClose,
-  postComponent,
-  comments,
+  post,
 }) => {
   return (
     <Modal
@@ -31,41 +22,7 @@ const CommentView: React.FC<CommentViewProps> = ({
       className={styles.modalContent}
       overlayClassName={styles.modalOverlay}
     >
-      {/* Post Component */}
-      <div className={styles.post}>{postComponent}</div>
-
-      <section className={styles.comments}>
-        <div className={styles.commentsHeader}>Comments</div>
-
-        {/* Comments Section */}
-        <div className={styles.commentsSection}>
-          {comments.map((comment) => (
-            <div key={comment.id} className={styles.comment}>
-              <div key={comment.id} className={styles.comment}>
-                <img
-                  src={comment.image}
-                  alt={comment.author}
-                  className={styles.userImage}
-                />
-              </div>
-              <div className={styles.commentContent}>
-                <div className={styles.authorTime}>
-                  <div className={styles.commentAuthor}>{comment.author}</div>
-                  <div className={styles.timePosted}>{comment.timePosted}</div>
-                </div>
-                <div className={styles.commentText}>{comment.text}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Comment Section */}
-      <div className={styles.commentBar}>
-        <PostBar
-          showButtonBar={false}
-        />
-      </div>
+      <Post postGiven={post} canToggleComments={false} />
     </Modal>
   );
 };

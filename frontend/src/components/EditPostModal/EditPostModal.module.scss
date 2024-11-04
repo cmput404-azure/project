@@ -21,7 +21,7 @@
   outline: none;
 }
 
-h2 {
+.title {
   margin-bottom: 20px;
   text-align: center;
   font-size: 24px;
@@ -38,7 +38,26 @@ h2 {
   label {
     font-size: 16px;
     margin-bottom: 8px;
-    color: white;
+    color: #70ffaf;
+  }
+
+  .cardImage {
+    margin: 0 auto;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+  }
+
+  .postImage {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 5px;
+    margin: 0 auto;
   }
 
   input,
@@ -79,21 +98,20 @@ h2 {
     transition: background-color 0.3s ease;
 
     &.saveButton {
-      background-color: #4caf50;
-      color: white;
-      margin-right: 10px;
-
-      &:hover {
-        background-color: #45a049;
-      }
+      background-color: #70ffaf;
+      color: #555;
+      transition: 0.3s ease-in-out;
     }
 
     &.cancelButton {
-      background-color: #f44336;
+      background-color: #555;
       color: white;
+      transition: 0.3s ease-in-out;
+      margin-right: 1rem;
 
       &:hover {
-        background-color: #e41f1f;
+        background-color: #ff4d4d;
+        color: #555;
       }
     }
   }

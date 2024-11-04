@@ -17,7 +17,7 @@ class LikesPagination(PageNumberPagination):
         return Response({
             "type": "likes",
             "id": self.request.build_absolute_uri(),
-            "page": self.request.build_absolute_uri(),
+            "page": '/'.join(self.request.build_absolute_uri().split('/')[:-1]),
             "page_number": self.page.number,
             "size": self.page.paginator.per_page,
             "count": self.page.paginator.count,

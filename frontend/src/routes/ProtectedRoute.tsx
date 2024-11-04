@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+import { CircularProgress } from "@mui/material";
 import { useAuth } from "../state";
 
 export default function ProtectedRoute() {
@@ -15,11 +16,12 @@ export default function ProtectedRoute() {
    }, [authProvider.loading]);
 
    if (!loaded || authProvider.loading) {
-      return <div>Loading...</div>;
+      return <div className={"loading"}><CircularProgress sx={{color: "#70ffaf"}}/></div>;
    }
 
    if (loaded && !authProvider.isAuthenticated) {
-      return <Navigate to="/login" state={{ from: location }} replace />;
+      const redirect = location.pathname === "/logout" ? { pathname: "/" } : location;
+      return <Navigate to="/login" state={{ from: redirect }} replace />;
    }
 
   return <Outlet />;

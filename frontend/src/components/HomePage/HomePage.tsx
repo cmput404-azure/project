@@ -1,18 +1,16 @@
 // HomePage.jsx
 import { useEffect, useState } from "react";
 
-import AuthorPost from "../AuthorPost/AuthorPost";
-import CommentView from "../CommentView/CommentView";
-import Modal from "react-modal";
+import { CircularProgress, Modal } from "@mui/material";
+import PeopleIcon from "@mui/icons-material/People";
 import PostBar from "../PostBar/PostBar";
-import PostCard from "../PostCard/PostCard";
+import PublicIcon from "@mui/icons-material/Public";
 import { api } from "../../service/config";
-import logo from "../../images/dog_icon.png";
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
+import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
-
-// Modal needs this to be set so it knows where to put the modal in the DOM
-Modal.setAppElement("#root");
+import Post from "../Post/Post";
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
@@ -20,67 +18,74 @@ const HomePage = () => {
   const [nonPublicPosts, setNonPublicPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const authProvider = useAuth();
 
+  const [isUserLoading, setIsUserLoading] = useState(true);
+
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchUser = async () => {
+      if (!authProvider.user) {
+        setIsUserLoading(false); // user not authenticated
+        return;
+      }
+
       try {
-        const req = await api.get("/api/stream/");
-        const publicPosts = req.data;
-
-        const otherReq = await api.get("/api/stream/auth");
-        const privatePosts = otherReq.data;
-
-        setNonPublicPosts(privatePosts as any[]);
-        setPublicPosts(publicPosts as any[]);
-        setIsLoading(false);
+        const authorReq = await api.get(
+          `/api/authors/${authProvider.user.uuid}/`
+        );
+        setUser(authorReq.data);
+        setIsUserLoading(false);
       } catch (err) {
-        console.log(err)
-        setError("Failed to fetch posts. Please try again.");
+        console.log(err);
+        setError("Failed to fetch user data.");
+        setIsUserLoading(false);
       }
     };
+
+    fetchUser();
+  }, [authProvider.user]); // This effect runs when authProvider.user changes
+
+  const fetchPosts = async () => {
+    if (isUserLoading) return;
+    try {
+      const publicPosts = await stream.getStream();
+      const privatePosts = await stream.getStream(true);
+      const decodedPublicPosts = decodeBase64ToUrl(publicPosts);
+      const decodedNonPublicPosts = decodeBase64ToUrl(privatePosts);
+      setPublicPosts(decodedPublicPosts);
+      setNonPublicPosts(decodedNonPublicPosts);
+
+      setIsLoading(false);
+      return {
+        publicPosts: decodedPublicPosts,
+        nonPublicPosts: decodedNonPublicPosts,
+      };
+    } catch (err) {
+      console.log(err);
+      setError("Failed to fetch posts. Please try again.");
+      return { publicPosts: [], nonPublicPosts: [] };
+    }
+  };
+
+  useEffect(() => {
     fetchPosts();
-  }, [])
-
-  const handleAddClick = () => {
-    console.log("Add button clicked");
-  };
-
-  // handle when the comment button is clicked
-  const handleCommentButtonClick = () => {
-    setIsCommentModalOpen(true);
-  };
-  // handle when the comment modal is closed
-  const handleCommentModalClose = () => {
-    setIsCommentModalOpen(false);
-  };
-
-  // test comments
-  const comments = [
-    {
-      id: 1,
-      image: `https://ui-avatars.com/api/?background=random&name=${"Garfield"}`,
-      author: "Garfield",
-      timePosted: "8h ago",
-      text: "Great Success!",
-    },
-    {
-      id: 2,
-      image: `https://ui-avatars.com/api/?background=random&name=${"Douglas"}`,
-      author: "Douglas",
-      timePosted: "10h ago",
-      text: "Well Done!",
-    },
-  ];
-
+    const interval = setInterval(fetchPosts, 60000);
+    return () => clearInterval(interval); // Clean up the interval on component unmount
+  }, [isUserLoading]);
 
   const [activeFilterPost, setActiveFilterPost] = useState<ViewType>("all");
   function handleFilterPost(icon: ViewType) {
     setActiveFilterPost(icon);
+    fetchPosts();
   }
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading)
+    return (
+      <div className={"loading"}>
+        <CircularProgress sx={{ color: "#70ffaf" }} />
+      </div>
+    );
   if (error) return <p>{error}</p>;
 
   const displayedPosts =
@@ -90,78 +95,33 @@ const HomePage = () => {
     <div className={styles.homePage}>
       {/* First Section: PostBar and Post Card */}
       <div className={styles.postSection}>
-        <PostBar showButtonBar={false}/>
+        <PostBar fetchPosts={fetchPosts} author={user} />
         {authProvider.isAuthenticated && (
-        <div className={styles["icon-bar"]}>
-          <div
-            className={`${styles["icon-section"]} ${
-              activeFilterPost === "all" ? styles.active : ""
-            }`}
-            onClick={() => handleFilterPost("all")}
-          >
-            <i className={`${styles.icon} ${styles["public-icon"]}`}></i>
+          <div className={styles.icon_bar}>
+            <div
+              className={`${styles.icon_section} ${
+                activeFilterPost === "all" ? styles.active : ""
+              }`}
+              onClick={() => handleFilterPost("all")}
+            >
+              <PublicIcon className={styles.icon} />
+            </div>
+            <div
+              className={`${styles.icon_section} ${
+                activeFilterPost === "unlisted_friends-only"
+                  ? styles.active
+                  : ""
+              }`}
+              onClick={() => handleFilterPost("unlisted_friends-only")}
+            >
+              <PeopleIcon className={styles.icon} />
+            </div>
           </div>
-          <div className={styles["vertical-divider"]}></div>
-          <div
-            className={`${styles["icon-section"]} ${
-              activeFilterPost === "unlisted_friends-only" ? styles.active : ""
-            }`}
-            onClick={() => handleFilterPost("unlisted_friends-only")}
-          >
-            <i className={`${styles.icon} ${styles["friend-icon"]}`}></i>
-          </div>
-        </div>
-      )}
+        )}
         {displayedPosts.map((post) => (
-          <PostCard
-            key={post.id}
-            profilePic={post.author.profileImage}
-            userName={post.author.displayName}
-            postTime={new Date(post.published).toLocaleString()}
-            postContent={post.content}
-            postImage={post.has_image ? post.image : ""}
-            likeCount={post.likes.length}
-            saveCount={0}
-            commentCount={post.comments.length}
-            onCommentButtonClick={handleCommentButtonClick}
-            onClick={handleCommentButtonClick}
-          />
+          <Post key={post.id} postGiven={post} canToggleComments={false} />
         ))}
-
       </div>
-
-      {/* Second Section: Author Post */}
-      <div className={styles.authorSection}>
-        <h2 className={styles.recommendedTitle} >Recommended Author</h2>
-        <AuthorPost
-          authorImage={logo}
-          authorName="Kyle Quach"
-          userName="tmquach.meomeo"
-          postText="The authors personal bio goes here, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut."
-          onAddClick={handleAddClick}
-        />
-
-      </div>
-
-      {/* Comment Modal */}
-      <CommentView
-        isOpen={isCommentModalOpen}
-        onRequestClose={handleCommentModalClose}
-        postComponent={
-          <PostCard
-            profilePic={`https://ui-avatars.com/api/?background=random&name=John Doe`}
-            userName="John Doe"
-            postTime="2h ago"
-            postContent="This is a sample post."
-            postImage="https://via.placeholder.com/300"
-            likeCount={123}
-            saveCount={45}
-            commentCount={67}
-            onCommentButtonClick={() => handleCommentButtonClick()}
-          />
-        }
-        comments={comments}
-      />
     </div>
   );
 };

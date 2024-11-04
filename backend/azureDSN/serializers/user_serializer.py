@@ -51,19 +51,32 @@ class UserSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source='uuid')
     host = serializers.URLField()
     displayName = serializers.CharField(source='display_name')
-    github = serializers.URLField()
+    username = serializers.CharField()
+    bio = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    github = serializers.URLField(required=False, allow_null=True, allow_blank=True)
+    page = serializers.URLField(required=False, allow_null=True, allow_blank=True)
     # profileImage = serializers.ImageField(source='profile_image', use_url=True)
     profileImage = serializers.SerializerMethodField(source='profile_image')
-    page = serializers.URLField()
 
     class Meta:
         model = User
         # TODO: MIGHT NEED TO ADD IMAGE LATER
-        fields = ('type', 'id', 'host', 'displayName', 'github', 'page', 'profileImage')
+        fields = ('type', 'id', 'host', 'displayName', 'username', 'bio', 'github', 'page', 'profileImage')
+    
+    
+    # This method gets the custom uuid value and maps it to'id'
+    def get_id(self, obj):
+        return f"{obj.host}authors/{obj.uuid}"  
+
+    # The returned id field is the value stored in the uuid
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['id'] = self.get_id(instance)
+        return representation
     
     def get_profileImage(self, obj):
         if obj.profile_image:  # if the image exists
-            return f"{settings.MEDIA_URL}{obj.profile_image}"
+            return f"{settings.BASE_URL}{settings.MEDIA_URL}{obj.profile_image}"
         return None
 
     def create(self, validated_data):
