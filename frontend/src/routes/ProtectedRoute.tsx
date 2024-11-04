@@ -20,7 +20,8 @@ export default function ProtectedRoute() {
    }
 
    if (loaded && !authProvider.isAuthenticated) {
-      return <Navigate to="/login" state={{ from: location }} replace />;
+      const redirect = location.pathname === "/logout" ? { pathname: "/" } : location;
+      return <Navigate to="/login" state={{ from: redirect }} replace />;
    }
 
   return <Outlet />;
