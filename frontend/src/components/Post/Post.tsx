@@ -30,7 +30,13 @@ import {
 import profileService from "../../service/profile";
 import { PostData } from "../../models/models";
 
-export default function Post({ postGiven }: { postGiven?: PostModel }) {
+export default function Post({
+  postGiven,
+  displayingModal = false,
+}: {
+  postGiven?: PostModel;
+  displayingModal?: boolean;
+}) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
   const postID = postGiven ? postGiven.id : postIDFromParams;
 
@@ -309,7 +315,7 @@ export default function Post({ postGiven }: { postGiven?: PostModel }) {
         </div>
       </div>
 
-      {isCommentOpen ? (
+      {isCommentOpen || displayingModal ? (
         <div className={styles.comments}>
           <div className={styles.commentsHeader}>Comments</div>
           <CommentInputField
