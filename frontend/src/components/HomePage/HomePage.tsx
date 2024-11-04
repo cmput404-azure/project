@@ -1,8 +1,9 @@
+import { CircularProgress, Modal } from "@mui/material";
 // HomePage.jsx
 import { useEffect, useState } from "react";
 
-import { CircularProgress, Modal } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
+import Post from "../Post/Post";
 import PostBar from "../PostBar/PostBar";
 import PublicIcon from "@mui/icons-material/Public";
 import { api } from "../../service/config";
@@ -10,7 +11,6 @@ import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
 import { useAuth } from "../../state";
-import Post from "../Post/Post";
 
 type ViewType = "all" | "unlisted_friends-only";
 const HomePage = () => {
@@ -121,6 +121,11 @@ const HomePage = () => {
         {displayedPosts.map((post) => (
           <Post key={post.id} postGiven={post} canToggleComments={false} />
         ))}
+        {displayedPosts.length === 0 && (
+          <div className={styles.noPosts}>
+            <p>There are no posts on this node 🫨</p>
+          </div>
+        )}
       </div>
     </div>
   );
