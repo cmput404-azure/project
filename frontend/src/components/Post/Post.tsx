@@ -29,6 +29,7 @@ export default function Post() {
   const [hasShared, setHasShared] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
+  const [commentList, setCommentList] = useState<any[]>([]);
   const [showAlert, setShowAlert] = useState(false);
   const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState<string>("");
@@ -38,7 +39,7 @@ export default function Post() {
       try {
         if (postID) {
           const postData = await postService.getPost(`api/posts/${postID}`);
-
+          console.log("Post Data:", postData);
           // put the post data into a list to be able to decode it
           let postDataList = [];
           postDataList.push(postData);
@@ -71,6 +72,8 @@ export default function Post() {
           }
 
           setPost(postData);
+          setCommentList(postData.comments.src);
+          console.log("Comment List:", commentList);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
           );
@@ -304,7 +307,35 @@ export default function Post() {
           )}
         </div>
       </div>
-      {isCommentOpen && <div>Comment section here</div>}
+
+      {isCommentOpen ? (
+        <div className={styles.comments}>
+          <div className={styles.commentsHeader}>Comments</div>
+          {commentList.map((comment) => (
+            <div key={comment.id} className={styles.comment}>
+              <div key={comment.id} className={styles.comment}>
+                <img
+                  src={
+                    post.author.profileImage
+                      ? post.author.profileImage
+                      : `https://ui-avatars.com/api/?background=random&name=${comment.author.displayName}`
+                  }
+                  className={styles.userImage}
+                />
+              </div>
+              <div className={styles.commentContent}>
+                <div className={styles.authorTime}>
+                  <div className={styles.commentAuthor}>
+                    {comment.author.displayName}
+                  </div>
+                  <div className={styles.timePosted}>{comment.published}</div>
+                </div>
+                <div className={styles.commentText}>{comment.comment}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
