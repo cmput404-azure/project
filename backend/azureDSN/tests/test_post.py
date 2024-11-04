@@ -51,6 +51,7 @@ class PostTests(APITestCase):
     PUT [local] update a post
       local posts: must be authenticated locally as the author
     """
+    # get public post by author and post serial
     def test_get_post(self):
         """Test getting a post by author and post serial."""
         url = reverse('author_post', kwargs={
@@ -61,7 +62,19 @@ class PostTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.test_post1.title)
         self.assertEqual(response.data['content'], self.test_post1.content)
+    
+    # get friends-only post
+    def test_get_friends_only_post(self):
+        """Test getting a friends-only post by author and post serial."""
+        self.authenticate()
+        url = reverse('author_post', kwargs={
+            'author_serial': self.test_author.uuid,
+            'post_serial': self.test_post2.uuid
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         
+    # update post by author and post serial
     def test_update_post(self):
         """Test updating a post by author and post serial."""
         self.authenticate()
@@ -86,6 +99,7 @@ class PostTests(APITestCase):
         self.assertEqual(self.test_post1.content, updated_data['content'])
         self.assertEqual(self.test_post1.visibility, updated_data['visibility'])
 
+    # delete post by author and post serial
     def test_delete_post(self):
         """Test deleting a post by author and post serial."""
         self.authenticate()
@@ -137,7 +151,8 @@ class PostTests(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.data['src']), 0)
-        
+    
+    # test getting all posts authenticated as the author
     def test_get_all_posts_authenticated_as_author(self):
         """Test retrieving all posts when authenticated as the author."""
         self.authenticate()
@@ -153,8 +168,6 @@ class PostTests(APITestCase):
         post_titles = [post['title'] for post in response.data['src']]
         self.assertIn(self.test_post1.title, post_titles)
         self.assertIn(self.test_post2.title, post_titles)
-
-        
 
     # test making posts as author
     def test_create_post(self):
