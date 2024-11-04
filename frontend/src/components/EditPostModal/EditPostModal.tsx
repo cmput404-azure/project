@@ -2,7 +2,7 @@ import { Button, TextField } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 
-import Box from "@mui/material/Box";
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -17,6 +17,8 @@ interface EditPostModalProps {
     title: string;
     content: string;
     visibility: number;
+    contentType: string;
+    description: string;
   } | null; // Allow post to be null or undefined
   onSubmit: (updatedPost: {
     title: string;
@@ -49,6 +51,10 @@ export default function EditPostModal({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<number>(0);
+  const [contentType, setContentType] = useState(`${post.contentType}`);
+  console.log(post);
+  console.log(post.contentType);
+  console.log(contentType);
   // Ensure that modal fields reset when `post` data changes
   useEffect(() => {
     if (post) {
@@ -94,11 +100,21 @@ export default function EditPostModal({
         </div>
         <div className={styles.formGroup}>
           <label>Content</label>
-          <PostTextField
-            value={content}
-            fullWidth
-            onChange={(e) => setContent(e.target.value)}
-          />
+          {contentType == "image/png;base64" ? (
+            <div className={styles.cardImage}>
+              <img
+                className={styles.postImage}
+                src={"data:image/png;base64," + post.content}
+                alt={post.description}
+              />
+            </div>
+          ) : (
+            <PostTextField
+              value={content}
+              fullWidth
+              onChange={(e) => setContent(e.target.value)}
+            />
+          )}
         </div>
         <div className={styles.formGroup}>
           <StyledFormControl fullWidth>
@@ -120,11 +136,11 @@ export default function EditPostModal({
         </div>
         <div className={styles.buttonGroup}>
           <Button
-              variant="contained"
-              size="small"
-              onClick={onRequestClose}
-              className={styles.cancelButton}
-            >
+            variant="contained"
+            size="small"
+            onClick={onRequestClose}
+            className={styles.cancelButton}
+          >
             Cancel
           </Button>
           <Button
@@ -134,7 +150,6 @@ export default function EditPostModal({
           >
             Save
           </Button>
-          
         </div>
       </form>
     </Modal>
@@ -157,7 +172,7 @@ const PostTextField = styled(TextField)({
   "& .MuiOutlinedInput-root": {
     "& fieldset": {
       border: "none",
-      boxShadow:"0 4px 7px rgba(0, 0, 0, 0.45)",
+      boxShadow: "0 4px 7px rgba(0, 0, 0, 0.45)",
     },
     "&:hover fieldset": {
       border: "1px solid",
