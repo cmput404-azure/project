@@ -103,6 +103,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
     published = serializers.DateTimeField(source='created_at')
     description = serializers.CharField(required=False)
     content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
+    github_id = serializers.CharField(required=False, allow_null=True)
 
     class Meta:
         model = Post
@@ -116,6 +117,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
             'author',
             'published',
             'visibility',
+            'github_id'
         )
 
     def create(self, validated_data):
@@ -131,13 +133,19 @@ class CreatePostSerializer(serializers.ModelSerializer):
         if content_type in ['image/png;base64', 'image/jpeg;base64', 'application/base64']:
             try:
                 content = validated_data.get('content')
-                decoded_image = base64.b64decode(content)  # Decode to check if it's valid?
+                base64.b64decode(content)
                 validated_data['has_image'] = True
             except (ValueError, TypeError):
-                raise serializers.ValidationError("Cannot be encoded into base64.")
+                raise serializers.ValidationError("Cannot be dencoded into base64.")
             validated_data['has_image'] = True
         else:
             validated_data['has_image'] = False
+
+        # Check github id to prevent duplicates
+        github_id = validated_data.get('github_id')
+        if github_id:
+            if Post.objects.filter(github_id=github_id).exists():
+                raise serializers.ValidationError("GitHub ID already retrieved.")
 
         post = Post.objects.create(user=user, **validated_data)
         return post
