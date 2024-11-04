@@ -135,7 +135,7 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
           />
           <div className={styles.userInfo}>
             <span className={styles.userName}>{postData.author.displayName}</span>
-            <span className={styles.postTime}>{postData.published}</span>
+            <span className={styles.postTime}>{new Date(postData.published).toLocaleString()}</span>
           </div>
         </div>
         <div className={styles.icons}>
