@@ -24,11 +24,11 @@ const DeletePostModal: React.FC<DeletePostModalProps> = ({
       <div className={styles.modal}>
         <h2>Are you sure you want to delete this post?</h2>
         <div className={styles.buttons}>
-          <button onClick={onDelete} className={styles.deleteButton}>
-            Delete
-          </button>
           <button onClick={onRequestClose} className={styles.cancelButton}>
             Cancel
+          </button>
+          <button onClick={onDelete} className={styles.deleteButton}>
+            Delete
           </button>
         </div>
       </div>
