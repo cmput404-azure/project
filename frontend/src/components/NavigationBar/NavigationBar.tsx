@@ -148,12 +148,15 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
         className={styles.modalContent}
         overlayClassName={styles.modalOverlay}
       >
-        <button
-          className={styles.closeModalButton}
-          onClick={() => setIsSearchOpen(false)}
-        >
-          <CloseIcon style={{ fontSize: "14px" }}/>
-        </button>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>User Search</h2>
+          <button
+            className={styles.closeModalButton}
+            onClick={() => setIsSearchOpen(false)}
+          >
+            <CloseIcon style={{ fontSize: "14px" }} />
+          </button>
+        </div>
         <UserSearch closeModal={() => setIsSearchOpen(false)} />
       </Modal>
       <Modal
@@ -163,12 +166,15 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
         className={styles.modalContent}
         overlayClassName={styles.modalOverlay}
       >
-        <button
-          className={styles.closeModalButton}
-          onClick={() => setIsNotificationOpen(false)}
-        >
-          <CloseIcon style={{ fontSize: "14px" }}/>
-        </button>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>Notifications</h2>
+          <button
+            className={styles.closeModalButton}
+            onClick={() => setIsNotificationOpen(false)}
+          >
+            <CloseIcon style={{ fontSize: "14px" }} />
+          </button>
+        </div>
         <NotificationList />
       </Modal>
     </nav>

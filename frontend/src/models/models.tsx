@@ -123,8 +123,6 @@ export interface Inbox {
 export interface AuthorPostsResponse {
     type: string;
     count: number;
-    next: string | null;
-    previous: string | null;
     src: PostData[];
     page_number: number;
     size: number;

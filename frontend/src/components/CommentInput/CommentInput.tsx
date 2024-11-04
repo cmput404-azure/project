@@ -74,14 +74,19 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
       // In here  you will append the comment to the list. You can create a useState hook and then call something set comments 
       onCommentAdded(response)
     }
-    setTextInField("");
 
+    // Reset to initial states
+    setTextInField("");
+    setCommentFieldClicked(false);
+    setIsTextError(false);
+    setDisableCommentButton(true);
+    setTextErrorMsg("");
   };
 
   // Inspired from https://muhimasri.com/blogs/mui-validation/, Downloaded 2024-10-24
   const handleTextInput = (e) => {
     setTextInField(e.target.value);
-    if (e.target.value.length == MAX_CHARACTERS) {
+    if (e.target.value.length === MAX_CHARACTERS) {
       setIsTextError(true);
       setTextErrorMsg(
         `You've reached the max character limit of ${MAX_CHARACTERS}`
