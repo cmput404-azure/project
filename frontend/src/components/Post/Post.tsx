@@ -378,7 +378,9 @@ export default function Post({
       ) : null}
 
       <Modal open={isModalOpen} onClose={handleCommentModalClose}>
-        <Post postGiven={post} canToggleComments={false} isModal={true} />
+        <>
+          <Post postGiven={post} canToggleComments={false} isModal={true} />
+        </>
       </Modal>
     </div>
   );
