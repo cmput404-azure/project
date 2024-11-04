@@ -32,6 +32,20 @@ class PostTests(APITestCase):
             content="This is the second test post.",
             visibility=2  # Friends-only
         )
+        
+        self.test_post3 = Post.objects.create(
+            user=self.test_author,
+            title="Test Post 3",
+            content="This is the third test post.",
+            visibility=3  # Unlisted
+        )
+        
+        self.test_post4 = Post.objects.create(
+            user=self.test_author,
+            title="Test Post 4",
+            content="This is the fourth test post.",
+            visibility=4  # Deleted
+        )
     
     # authenticate the test user above
     def authenticate(self):
@@ -51,6 +65,8 @@ class PostTests(APITestCase):
     PUT [local] update a post
       local posts: must be authenticated locally as the author
     """
+    
+    # ------------------------200 OK------------------------
     # get public post by author and post serial
     def test_get_post(self):
         """Test getting a post by author and post serial."""
@@ -70,6 +86,17 @@ class PostTests(APITestCase):
         url = reverse('author_post', kwargs={
             'author_serial': self.test_author.uuid,
             'post_serial': self.test_post2.uuid
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+    # get unlisted post
+    def test_get_unlisted_post(self):
+        """Test getting an unlisted post by author and post serial."""
+        self.authenticate()
+        url = reverse('author_post', kwargs={
+            'author_serial': self.test_author.uuid,
+            'post_serial': self.test_post3.uuid
         })
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
