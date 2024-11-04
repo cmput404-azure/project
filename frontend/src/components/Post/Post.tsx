@@ -77,36 +77,40 @@ export default function Post({
           const decodedPost = decodeBase64ToUrl(postDataList);
           postData.content = decodedPost[0].content;
 
-          const authUser = await ProfileService.fetchAuthorData(
-            authProvider.user.uuid
-          );
-          const url = `${authUser.host}authors/${authProvider.user.uuid}`;
-
-          if (url !== postData.author.id) {
-            let authorId = postData.author.id
-              .replace(/\/+$/, "")
-              .split("/")
-              .pop();
-            const encodedUrl = encodeURIComponent(url);
-            const is_following = await FollowService.checkFollowing(
-              authorId,
-              encodedUrl
+          if (authProvider.user) {
+            const authUser = await ProfileService.fetchAuthorData(
+              authProvider.user.uuid
             );
-            if (!is_following) {
-              setOpenSnackbar(true);
-              setShowAlert(true);
-              setTimeout(() => {
-                navigate("/home");
-              }, 2000);
+            const url = `${authUser.host}authors/${authProvider.user.uuid}`;
+  
+            if (url !== postData.author.id) {
+              let authorId = postData.author.id
+                .replace(/\/+$/, "")
+                .split("/")
+                .pop();
+              const encodedUrl = encodeURIComponent(url);
+              const is_following = await FollowService.checkFollowing(
+                authorId,
+                encodedUrl
+              );
+              if (!is_following) {
+                setOpenSnackbar(true);
+                setShowAlert(true);
+                setTimeout(() => {
+                  navigate("/home");
+                }, 2000);
+              }
             }
-          }
 
+            setHasLiked(
+              postData.likes.src.some((like) =>
+                like.object.includes(authProvider.user.uuid)
+              )
+            );
+          }
+          
           setPost(postData);
-          setHasLiked(
-            postData.likes.src.some((like) =>
-              like.object.includes(authProvider.user.uuid)
-            )
-          );
+          
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
@@ -124,7 +128,7 @@ export default function Post({
       }
     };
     fetchPost();
-  }, [postID, authProvider.user.uuid, navigate]);
+  }, [postID, authProvider.user ? authProvider.user.uuid : null, navigate]);
 
   useEffect(() => {
     const fetchImage = async () => {
