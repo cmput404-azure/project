@@ -1,17 +1,17 @@
 import { Alert, Avatar, Button, CircularProgress, IconButton, Snackbar } from "@mui/material";
 import { Author, PostData as Post } from "../../models/models";
 import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
 import FollowList from "../FollowList/FollowList";
-import { Check, GitHub } from "@mui/icons-material";
+import FollowService from "../../service/follow";
+import { GitHub } from "@mui/icons-material";
+import InboxService from "../../service/inbox";
 import LinkIcon from '@mui/icons-material/Link';
 import PostCard from "../PostCard/PostCard";
 import ProfileService from "../../service/profile";
-import FollowService from "../../service/follow";
-import InboxService from "../../service/inbox";
 import styles from "./PublicProfile.module.scss";
-import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../state";
-import { api } from "../../service/config";
 
 const FollowerModalTypes = {
    follower: "Follower",
@@ -35,6 +35,10 @@ export default function PublicProfile() {
    const [isAuthenticated, setIsAuthenticated] = useState(true);
    const [isOwnProfile, setIsOwnProfile] = useState(false);
    const [isRequested, setIsRequested] = useState(false);
+   const [loading, setLoading] = useState(false);
+   const [page, setPage] = useState(1);
+   const [totalPages, setTotalPages] = useState(0);
+   const pageSize = 10;
    const navigate = useNavigate();
 
    // TODO: make the follow button change to unfollow if the user is already following the author, or hidden if the user is the author
@@ -45,10 +49,30 @@ export default function PublicProfile() {
    const fetchProfileData = async () => {
       if (userID) {
          const author = await ProfileService.fetchAuthorData(userID);
-         const posts = await ProfileService.fetchAuthorPosts(userID);
          setAuthorData(author);
-         setPosts(posts);
+         await fetchPosts(userID);
       }
+   };
+
+   const fetchPosts = async (userId: string, page: number = 1) => {
+      if (loading) return;
+      setLoading(true);
+      const { count, src } = await ProfileService.fetchAuthorPosts(userId, page); 
+
+      setPosts(prevPosts => {
+         const existingIds = new Set(prevPosts.map(post => post.id));
+         const newPosts = src.filter(post => !existingIds.has(post.id));
+         return [...prevPosts, ...newPosts];
+      });
+
+      setTotalPages(Math.ceil(count / pageSize));
+      setLoading(false);
+   };
+
+   const nextPage = async () => {
+      if (loading || page >= totalPages) return;
+      await fetchPosts(userID, page + 1);
+      setPage(prevPage => prevPage + 1);
    };
 
    useEffect(() => {
@@ -207,6 +231,16 @@ export default function PublicProfile() {
                {posts.map(post => (
                   <PostCard key={post.id} post={post} />
                ))}
+               {page < totalPages && (
+                  <Button
+                     variant="contained"
+                     onClick={nextPage}
+                     disabled={loading}
+                     sx={{ marginTop: "1rem", backgroundColor: "#70ffaf", color: "black" }}
+                  >
+                     {loading ? <CircularProgress size={24} sx={{ color: "#70ffaf" }} /> : "Load More"}
+                  </Button>
+               )}
             </section>
          </div>
 

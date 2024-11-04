@@ -39,7 +39,7 @@ class ProfileService {
       @param userId: string - the id of the user to fetch
       @returns: Post[] - the author posts or null if error
    */
-   public async fetchAuthorPosts(userId: string, page: number = 1, size: number = 10): Promise<Post[]> {
+   public async fetchAuthorPosts(userId: string, page: number = 1, size: number = 10): Promise<AuthorPostsResponse> {
       try {
          const response = await api.get<AuthorPostsResponse>(`/api/authors/${userId}/posts/`, {
             params: {
@@ -47,10 +47,22 @@ class ProfileService {
                size: size,
             },
          });
-         return response.data.src;
+         return {
+            count: response.data.count,
+            src: response.data.src,
+            page_number: response.data.page_number,
+            size: response.data.size,
+            type: response.data.type,
+         };
       } catch (error) {
          console.error("Error fetching the author posts", error);
-         return [];
+         return {
+            count: 0,
+            src: [],
+            page_number: 1,
+            size: 10,
+            type: "posts",
+         };
       }
    }
 
