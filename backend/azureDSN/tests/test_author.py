@@ -192,22 +192,19 @@ class AuthorTests(APITestCase):
         
     # ----------------------------404 Tests----------------------------
     
-    # passed
     def test_get_nonexistent_author_by_uuid(self):
         """Test that retrieving a non-existent author by UUID returns a 404."""
         url = reverse('author_serial', kwargs={'author_serial': uuid4()})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND) # make sure the response status is 404
 
-    # passed
     def test_get_nonexistent_author_by_fqid(self):
         """Test that retrieving a non-existent author by FQID returns a 404."""
         host = "http://localhost:8000/api/authors/"
         url = reverse('author_fqid', kwargs={'author_fqid': f'{host}{uuid4()}'})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-    
-    # passed
+
     def test_update_nonexistent_author_by_uuid(self):
         """Test that updating a non-existent author by UUID returns a 404."""
         url = reverse('author_serial', kwargs={'author_serial': uuid4()})
