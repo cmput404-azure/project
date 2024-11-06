@@ -396,7 +396,11 @@ export default function Post({
             <div className={styles.imgContainer}>
               <img
                 className={styles.postImage}
-                src={post.content}
+                src={
+                  post.content.includes("data:image/" || "base64,")
+                    ? post.content
+                    : "data:image/png;base64," + post.content
+                }
                 alt={post.description}
               />
             </div>
