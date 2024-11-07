@@ -64,3 +64,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         http://node1/api/authors/<uuid>
         """
         return f"{self.host}authors/{self.user_id}"
+
+
+class NodeUser(User):
+    # Make unused fields null.
+    # Only require username, password, host (url of the remote node)
+    # Add one more Boolean field that says if the node is authenticated or not (is_authenticated)
+    # Optional: display name of the node (can reuse display_name from User class)
+    pass
+
