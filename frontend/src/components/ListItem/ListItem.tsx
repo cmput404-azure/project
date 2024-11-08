@@ -2,7 +2,6 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-
 import { Avatar } from "@mui/material";
 import { api } from "../../service/config";
 import { extractUUID } from "../../util/formatting/extractUUID";
@@ -10,13 +9,14 @@ import styles from "./ListItem.module.scss";
 import { useAuth } from "../../state";
 import FollowService from "../../service/follow";
 import InboxService from "../../service/inbox";
+
 interface ListItemProps {
   isRequest: boolean;
   isPost: boolean;
   postTitle?: string;
   isLike: boolean;
-  isComment?:boolean;
-  isShare?:boolean;
+  isComment?: boolean;
+  isShare?: boolean;
   isFollowerList: boolean;
   isUserList: boolean;
   notif_id?: string;
@@ -28,7 +28,6 @@ interface ListItemProps {
     page: string;
     type: string;
     profileImage: string | null;
-    has_requested?: boolean;
   };
   closeModal?: () => void;
   onRefresh: () => void;
@@ -50,30 +49,42 @@ export default function ListItem({
 }: ListItemProps) {
   const authProvider = useAuth();
   const [isRequested, setIsRequested] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
-  useEffect(()=>{
+  useEffect(() => {
     const fetchData = async () => {
       // Format the user ID
       let formatted_userId = user.id.replace(/\/+$/, '').split('/').pop();
       setUserId(formatted_userId);
-  
+
       // Check inbox of the user ID
       const userInbox = await InboxService.getInbox(formatted_userId);
       await Promise.all(
         userInbox.map(async (item: any) => {
           if (item && item.type === "follow") {
             let actorId = item.actor.id.replace(/\/+$/, '').split('/').pop();
-            if (actorId===authProvider.user.uuid){
+            if (actorId === authProvider.user.uuid) {
               setIsRequested(true);
             }
           }
         })
       );
 
+      // check if current user is already following the user
+      const currentUserUrl = `http://localhost:8000/api/authors/${authProvider.user.uuid}/`;
+      const following = await FollowService.checkFollowing(formatted_userId, currentUserUrl);
+
+      if (following === true) {
+        setIsFollowing(true);
+      }
+
     };
-  
-    fetchData(); // Call the async function
+
+    if (authProvider.isAuthenticated === true) {
+      fetchData(); // Call the async function
+    }
   }, []);
 
   const unFollow = async () => {
@@ -82,28 +93,33 @@ export default function ListItem({
   };
 
   const sendFollowerRequest = async () => {
+    if (authProvider.isAuthenticated === true) {
+      try {
+        const userResponse = await api.get(`/api/authors/${authProvider.user.uuid}/`);
+        const userInfo = userResponse.data;
 
-    try {
-      const userResponse = await api.get(`/api/authors/${authProvider.user.uuid}/`);
-      const userInfo = userResponse.data;
+        const followRequest = {
+          type: "follow",
+          summary: `${userInfo.displayName} wants to follow ${user.displayName}`,
+          actor: {
+            type: "author",
+            id: `${userInfo.id}`,
+            host: `${userInfo.host}`,
+            displayName: `${userInfo.displayName}`,
+            github: `${userInfo.github}`,
+            page: `${userInfo.page}`,
+          },
+        };
 
-      const followRequest = {
-        type: "follow",
-        summary: `${userInfo.displayName} wants to follow ${user.displayName}`,
-        actor: {
-          type: "author",
-          id: `${userInfo.id}`,
-          host: `${userInfo.host}`,
-          displayName: `${userInfo.displayName}`,
-          github: `${userInfo.github}`,
-          page: `${userInfo.page}`,
-        },
-      };
+        await InboxService.sendPostToInbox(user.id, followRequest);
+        setIsRequested(true);
 
-      await InboxService.sendPostToInbox(user.id, followRequest);
-      setIsRequested(true);
-    } catch (error) {
-      console.error("Fetch error:", error);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      }
+    }else{
+      closeModal?.();
+      navigate("/login");
     }
   };
 
@@ -116,7 +132,7 @@ export default function ListItem({
 
   const deleteFollowRequest = async () => {
     try {
-      await InboxService.deleteInboxFollowRequest(authProvider.user.uuid,notif_id);
+      await InboxService.deleteInboxFollowRequest(authProvider.user.uuid, notif_id);
       onRefresh();
     } catch (error) {
       console.error("Delete follow request error:", error);
@@ -159,9 +175,13 @@ export default function ListItem({
         {isUserList && (
           <button
             onClick={sendFollowerRequest}
-            disabled={isRequested || user.has_requested}
+            disabled={isRequested || isFollowing}
           >
-            {isRequested || user.has_requested ? "Requested" : "Follow"}
+            {isFollowing
+              ? "Following"
+              : isRequested
+                ? "Requested"
+                : "Follow"}
           </button>
         )}
 
