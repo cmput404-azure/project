@@ -40,6 +40,7 @@ export default function UserProfile() {
       if (auth.isAuthenticated && auth.user.uuid) {
          const author = await ProfileService.fetchAuthorData(auth.user.uuid);
          setAuthorData(author);
+         
          await fetchPosts(auth.user.uuid);
       }
    };
@@ -211,6 +212,7 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
    const [error, setError] = useState<string>("");
    const [success, setSuccess] = useState<boolean>(false);
    const [disabled, setDisabled] = useState<boolean>(false);
+   const githubUsername = extractUUID(github) === 'login' ? "" : extractUUID(github);
 
    user.id = extractUUID(user.id);
 
@@ -219,7 +221,7 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
 
       // Validation
       if (!displayName) {
-         setError("Display name is required");
+         setError("Display name cannot be empty!");
          return;
       }
 
@@ -277,6 +279,13 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
       }
     };
 
+   const handleGithubChange = (value: string) => {
+      if (value.trim() === "") {
+         setGithub("https://github.com/login");
+      } else {
+         setGithub(`https://github.com/${value}`);
+      }
+   }
 
    return (
       <div className={styles.edit__profile}>
@@ -298,9 +307,27 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
             </div>
 
             <div className={styles.edit__profile__body__form}>
-               <EditField className={styles.input} label="Display Name" variant="outlined" value={displayName} onChange={e => setDisplayName(e.target.value)} />
-               <EditField className={styles.input} label="Bio" variant="outlined" value={bio} onChange={e => setBio(e.target.value)} />
-               <EditField className={styles.input} label="Github" variant="outlined" value={github} onChange={e => setGithub(e.target.value)} />
+               <EditField
+                  className={styles.input}
+                  label="Display Name"
+                  variant="outlined"
+                  value={displayName}
+                  onChange={e => setDisplayName(e.target.value)}
+               />
+               <EditField
+                  className={styles.input}
+                  label="Bio" variant="outlined"
+                  placeholder="Enter a personal bio"
+                  value={bio}
+                  onChange={e => setBio(e.target.value)}
+               />
+               <EditField
+                  className={styles.input}
+                  label="Github Username"
+                  placeholder="Enter your github username"
+                  variant="outlined" value={githubUsername}
+                  onChange={(e) => handleGithubChange(e.target.value)}
+               />
             </div>
          </div>
 
