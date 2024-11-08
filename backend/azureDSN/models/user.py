@@ -42,14 +42,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     bio = models.TextField(null=True, blank=True)
     github = models.URLField(null=True, blank=True) # e.g. "http://github.com/gjohnson"
     page = models.URLField(null=True, blank=True) # e.g. "http://nodebbbb/authors/222"
-    profile_image = models.ImageField(upload_to='profile_pictures/', null=True, blank=True) # should be saved under BASE_DIR/azureDNS/media/profile_pictures/<filename>.jpg
+    profile_image = models.TextField(null=True, blank=True) # to store base64-encoded image for profile pictures
+    # profile_image = models.ImageField(upload_to='profile_pictures/', null=True, blank=True) # should be saved under BASE_DIR/azureDNS/media/profile_pictures/<filename>.jpg
     created_at = models.DateTimeField(default=datetime.now)
     modified_at = models.DateTimeField(auto_now=True) # Auto-update on every save
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    objects = UserManager() 
+    objects = UserManager()
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['display_name']
@@ -76,6 +77,7 @@ class NodeUser(User):
     bio = None
     github = None
     page = None
+    display_name = "external"
 
     # Only require username, password, host (url of the remote node)
     # keep created_at and modified_at for consistency with other models
@@ -85,5 +87,6 @@ class NodeUser(User):
     def save(self, *args, **kwargs):
         # Explicitly set profile_image to None to avoid file processing attempts
         self.profile_image = None
+        self.display_name = "external" # hard coded for now
         super(NodeUser, self).save(*args, **kwargs)
 
