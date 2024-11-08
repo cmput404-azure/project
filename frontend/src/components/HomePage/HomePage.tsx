@@ -48,23 +48,27 @@ const HomePage = () => {
 
   const fetchPosts = async () => {
     if (isUserLoading) return;
+
     try {
+      // Fetch paginated data for the requested page
       const publicPosts = await stream.getStream();
-      const privatePosts = await stream.getStream(true);
-      const decodedPublicPosts = decodeBase64ToUrl(publicPosts);
-      const decodedNonPublicPosts = decodeBase64ToUrl(privatePosts);
+      const privatePosts = await stream.getStream(true); // this returns PaginatedResponse type
+
+      const decodedPublicPosts = decodeBase64ToUrl(publicPosts.src);
+      const decodedNonPublicPosts = decodeBase64ToUrl(privatePosts.src);
+
       setPublicPosts(decodedPublicPosts);
       setNonPublicPosts(decodedNonPublicPosts);
-
       setIsLoading(false);
+
       return {
         publicPosts: decodedPublicPosts,
-        nonPublicPosts: decodedNonPublicPosts,
-      };
+        nonPublicPosts: decodedNonPublicPosts
+      }
+      
     } catch (err) {
       console.log(err);
       setError("Failed to fetch posts. Please try again.");
-      return { publicPosts: [], nonPublicPosts: [] };
     }
   };
 
