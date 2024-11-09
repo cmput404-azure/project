@@ -55,13 +55,13 @@ export default function EditPostModal({
   console.log(contentType);
   // Ensure that modal fields reset when `post` data changes
   useEffect(() => {
-    if (post) {
+    if (isOpen && post) {
       // Check if post is defined
       setTitle(post.title);
       setContent(post.content);
       setVisibility(post.visibility);
     }
-  }, [post]);
+  }, [isOpen, post]);
 
   const handleSave = () => {
     if (post) {
