@@ -258,10 +258,11 @@ class AuthorsCompleteView(APIView):
         Gets all the author in our local node.
         """
         user_uuid = request.query_params.get('user')
-        # # Query all users except the current user
 
-        users = User.objects.exclude(uuid=user_uuid)
+        # Query all users of type 'author' and exclude the current user
+        users = User.objects.exclude(uuid=user_uuid).filter(type="author")
         formatted_uuid = str(UUID(user_uuid))
+
         # Query FollowRequest to check if the current user has sent a request
         follow_requests = FollowRequest.objects.filter(
             actor__id=formatted_uuid
@@ -279,8 +280,6 @@ class AuthorsCompleteView(APIView):
             profileImage=F('profile_image')  # Rename profile_image to profileImage
         )
 
-        # # Serialize the users
-        # serializer = UserSerializer(users, many=True)
         user_data = users.values(
             'id',
             'host',
