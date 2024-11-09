@@ -150,6 +150,9 @@ class AuthStreamView(APIView):
 
         else:
             # Return an empty paginated response if not authenticated
-            empty_paginated_response = pagination.get_paginated_response([])
+            pagination = PostsPagination()
+            empty_queryset = Post.objects.none()
+            page = pagination.paginate_queryset(empty_queryset, request)
+            empty_paginated_response = pagination.get_paginated_response(page if page else [])
             return Response(empty_paginated_response.data, status=status.HTTP_200_OK)
             
