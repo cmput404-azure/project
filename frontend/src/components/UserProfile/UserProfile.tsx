@@ -1,11 +1,11 @@
 import { Alert, Avatar, Button, CircularProgress, Drawer, IconButton, Snackbar, TextField, styled } from "@mui/material";
 import { Author, PostData as Post } from "../../models/models";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import FollowList from "../FollowList/FollowList";
 import { FollowerModalTypes } from "../../models/modelTypes";
-import { GitHub } from "@mui/icons-material";
+import { CloudUpload, FileUpload, GitHub } from "@mui/icons-material";
 import LinkIcon from '@mui/icons-material/Link';
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import ProfileService from "../../service/profile";
@@ -213,6 +213,7 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
    const [success, setSuccess] = useState<boolean>(false);
    const [disabled, setDisabled] = useState<boolean>(false);
    const githubUsername = extractUUID(github) === 'login' ? "" : extractUUID(github);
+   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
    user.id = extractUUID(user.id);
 
@@ -287,6 +288,10 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
       }
    }
 
+   const handleUploadButtonClick = () => {
+      fileInputRef?.current.click();
+   };
+
    return (
       <div className={styles.edit__profile}>
          <div className={styles.edit__profile__header}>
@@ -302,7 +307,21 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
                   <Avatar alt="profile image" src={profileImage} sx={{ width: 100, height: 100 }} />
                </div>
                <div className={styles.edit__profile__body__image__input}>
-                  <input type="file" accept="image/*" onChange={handleFileUpload} />
+                  <input id="upload-button" type="file" accept="image/*" onChange={handleFileUpload} hidden ref={fileInputRef}/>
+                  <label htmlFor="upload-button">
+                     <Button variant="outlined" size="small" color="secondary" startIcon={<CloudUpload />} onClick={handleUploadButtonClick}
+                        sx={{
+                           color: '#70ffaf',
+                           borderColor: '#70ffaf',
+                           '&:hover': {
+                              backgroundColor: '#70ffaf',
+                              color: '#ffffff',
+                           },
+                        }}
+                     >
+                        Upload Image
+                     </Button>
+                  </label>
                </div>
             </div>
 
