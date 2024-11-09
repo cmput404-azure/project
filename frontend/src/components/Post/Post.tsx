@@ -57,7 +57,7 @@ export default function Post({
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
-  const [hasShared, setHasShared] = useState(false);
+  // const [hasShared, setHasShared] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
@@ -79,13 +79,13 @@ export default function Post({
           // decode base64 content
           const decodedPost = decodeBase64ToUrl(postDataList);
           postData.content = decodedPost[0].content;
-
+  
           if (authProvider.user) {
             const authUser = await ProfileService.fetchAuthorData(
               authProvider.user.uuid
             );
             const url = `${authUser.host}authors/${authProvider.user.uuid}`;
-
+  
             if (url !== postData.author.id) {
               let authorId = postData.author.id
                 .replace(/\/+$/, "")
@@ -108,16 +108,16 @@ export default function Post({
                 }
               }
             }
-
+  
             setHasLiked(
               postData.likes.src.some((like) =>
                 like.id.includes(authProvider.user.uuid)
               )
             );
           }
-
+  
           setPost(postData);
-
+  
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
@@ -195,6 +195,19 @@ export default function Post({
     }
   }, [post]);
 
+  useEffect(() => {
+    const fetchPost = async () => {
+      if (postGiven) {
+        const postData = await postService.getPost(`api/posts/${postGiven.id}`);
+        setCommentList(postData.comments.src.reverse());
+        setCommentCount(
+          Array.isArray(postData.comments) ? 0 : postData.comments.count
+        );
+      }
+    }
+    fetchPost()
+  }, [isModalOpen])
+
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
   };
@@ -215,23 +228,14 @@ export default function Post({
 
   const handleNewComment = (newComment) => {
     const newCommentList = [newComment, ...commentList];
+    const newCount = commentCount + 1;
+    setCommentCount(newCount);
     setCommentList(newCommentList);
   };
 
   const handleSharePost = async () => {
-    if (!post || hasShared) return;
-
+    if (!post) return;
     setIsShareDialogOpen(true);
-
-    const followers = await follow.getFollowers(authProvider.user.uuid);
-    const friends = await follow.getFriends(authProvider.user.uuid);
-    const recipients =
-      post.visibility === 1 || post.visibility === 3 ? followers : friends;
-
-    await Promise.all(
-      recipients.map(({ id }) => inbox.sendPostToInbox(id, post))
-    );
-    setHasShared(true);
   };
 
   const handleLikePost = async () => {
@@ -381,7 +385,7 @@ export default function Post({
           </div>
           {post.visibility === 1 ? (
             <div
-              className={`${styles.icon} ${hasShared ? styles.shared : ""}`}
+              className={styles.icon}
               onClick={handleSharePost}
             >
               <i className="fas fa-share"></i>
