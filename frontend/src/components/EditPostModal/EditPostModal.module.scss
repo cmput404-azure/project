@@ -120,12 +120,6 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
 
-    &.saveButton {
-      background-color: #70ffaf;
-      color: #555;
-      transition: 0.3s ease-in-out;
-    }
-
     &.cancelButton {
       background-color: #555;
       color: white;

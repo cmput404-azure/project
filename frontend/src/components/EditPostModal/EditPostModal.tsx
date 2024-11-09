@@ -50,9 +50,8 @@ export default function EditPostModal({
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<number>(0);
   const [contentType, setContentType] = useState(`${post.contentType}`);
-  console.log(post);
-  console.log(post.contentType);
-  console.log(contentType);
+  const [disabled, setDisabled] = useState(true);
+
   // Ensure that modal fields reset when `post` data changes
   useEffect(() => {
     if (isOpen && post) {
@@ -62,6 +61,15 @@ export default function EditPostModal({
       setVisibility(post.visibility);
     }
   }, [isOpen, post]);
+
+  // Disable save button if there are no edits made
+  useEffect(() => {
+    if (title === post.title && content === post.content && visibility === post.visibility) {
+      setDisabled(true);
+    } else {
+      setDisabled(false);
+    }
+  }, [title, content, visibility, post]);
 
   const handleSave = () => {
     if (post) {
@@ -156,8 +164,9 @@ export default function EditPostModal({
           </Button>
           <Button
             variant="contained"
+            disabled={disabled}
             onClick={handleSave}
-            className={styles.saveButton}
+            sx={{ backgroundColor: "#70ffaf", color: "black", transition: "0.3s ease-in-out" }}
           >
             Save
           </Button>
