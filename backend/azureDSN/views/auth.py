@@ -1,4 +1,3 @@
-# from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,7 +6,6 @@ from django.contrib.auth import get_user_model
 from ..models.site_config import SiteConfiguration
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
-from django.conf import settings
 
 class LoginView(APIView):
     def post(self, request):
@@ -47,7 +45,7 @@ class LoginView(APIView):
                 'user': {
                     'username': request.user.username,
                     'uuid': request.user.uuid,
-                    'profileImage': request.user.profile_image.url if request.user.profile_image else None
+                    'profileImage': request.user.profile_image if request.user.profile_image else None
                 }
             }, status=status.HTTP_200_OK)
             response.set_cookie('sessionid', request.session.session_key, samesite='lax')
@@ -115,7 +113,7 @@ class CheckAuthView(APIView):
                 'user': {
                     'username': request.user.username,
                     'uuid': request.user.uuid,
-                    'profileImage': f"{settings.BASE_URL}{request.user.profile_image.url}" if request.user.profile_image else None,
+                    'profileImage': request.user.profile_image if request.user.profile_image else None,
                     'is_staff': request.user.is_staff
                 }
             }

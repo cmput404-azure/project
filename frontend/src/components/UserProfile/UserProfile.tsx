@@ -1,7 +1,6 @@
 import { Alert, Avatar, Button, CircularProgress, Drawer, IconButton, Snackbar, TextField, styled } from "@mui/material";
 import { Author, PostData as Post } from "../../models/models";
 import { useEffect, useState } from "react";
-
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import FollowList from "../FollowList/FollowList";
@@ -41,7 +40,7 @@ export default function UserProfile() {
       if (auth.isAuthenticated && auth.user.uuid) {
          const author = await ProfileService.fetchAuthorData(auth.user.uuid);
          setAuthorData(author);
-         // Fetch initial posts
+         
          await fetchPosts(auth.user.uuid);
       }
    };
@@ -209,29 +208,20 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
    const [bio, setBio] = useState<string>(user.bio ?? "");
    const [github, setGithub] = useState<string>(user.github ?? "");
    const [profileImage, setProfileImage] = useState<string>(user.profileImage ?? "");
-   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
    const [loading, setLoading] = useState<boolean>(false);
    const [error, setError] = useState<string>("");
    const [success, setSuccess] = useState<boolean>(false);
    const [disabled, setDisabled] = useState<boolean>(false);
+   const githubUsername = extractUUID(github) === 'login' ? "" : extractUUID(github);
 
    user.id = extractUUID(user.id);
-
-   function convertToBase64(file: File): Promise<string> {
-      return new Promise((resolve, reject) => {
-         const reader = new FileReader();
-         reader.readAsDataURL(file);
-         reader.onload = () => resolve(reader.result as string);
-         reader.onerror = error => reject(error);
-      });
-   }
 
    async function handleUpdate() {
       setError("");
 
       // Validation
       if (!displayName) {
-         setError("Display name is required");
+         setError("Display name cannot be empty!");
          return;
       }
 
@@ -240,22 +230,20 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
          return;
       }
 
-      // Create new user object
+      // Create new user object to store updated data
       const updatedUser: Author = {
          ...user,
          displayName,
          bio,
          github,
-         profileImage: URL.createObjectURL(profileImageFile ?? new Blob())
+         profileImage
       };
 
       setLoading(true);
 
       try {
-         // Check if a new profile image file exists
-         if (profileImageFile) {
-            const image = await convertToBase64(profileImageFile);
-            updatedUser.profileImage = image;
+         if (profileImage) {
+            updatedUser.profileImage = profileImage; // Saving the dataURL object
          }
 
          await profileService.updateUserInfo(user.id, updatedUser);
@@ -263,8 +251,8 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
          setSuccess(true);
          setLoading(false);
          setDisabled(true);
-      }
-      catch (error: any) {
+
+      } catch (error: any) {
          setError(error.message);
          setLoading(false);
       }
@@ -279,6 +267,25 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
       }
    }, [displayName, bio, github, profileImage]);
 
+   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+         const dataURL = reader.result?.toString() || "";
+          setProfileImage(dataURL);
+        };
+        reader.readAsDataURL(file); // get the dataURL
+      }
+    };
+
+   const handleGithubChange = (value: string) => {
+      if (value.trim() === "") {
+         setGithub("https://github.com/login");
+      } else {
+         setGithub(`https://github.com/${value}`);
+      }
+   }
 
    return (
       <div className={styles.edit__profile}>
@@ -295,19 +302,32 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
                   <Avatar alt="profile image" src={profileImage} sx={{ width: 100, height: 100 }} />
                </div>
                <div className={styles.edit__profile__body__image__input}>
-                  <input type="file" accept="image/*" onChange={e => {
-                     if (e.target.files) {
-                        setProfileImageFile(e.target.files[0]);
-                        setProfileImage(URL.createObjectURL(e.target.files[0]));
-                     }
-                  }} />
+                  <input type="file" accept="image/*" onChange={handleFileUpload} />
                </div>
             </div>
 
             <div className={styles.edit__profile__body__form}>
-               <EditField className={styles.input} label="Display Name" variant="outlined" value={displayName} onChange={e => setDisplayName(e.target.value)} />
-               <EditField className={styles.input} label="Bio" variant="outlined" value={bio} onChange={e => setBio(e.target.value)} />
-               <EditField className={styles.input} label="Github" variant="outlined" value={github} onChange={e => setGithub(e.target.value)} />
+               <EditField
+                  className={styles.input}
+                  label="Display Name"
+                  variant="outlined"
+                  value={displayName}
+                  onChange={e => setDisplayName(e.target.value)}
+               />
+               <EditField
+                  className={styles.input}
+                  label="Bio" variant="outlined"
+                  placeholder="Enter a personal bio"
+                  value={bio}
+                  onChange={e => setBio(e.target.value)}
+               />
+               <EditField
+                  className={styles.input}
+                  label="Github Username"
+                  placeholder="Enter your github username"
+                  variant="outlined" value={githubUsername}
+                  onChange={(e) => handleGithubChange(e.target.value)}
+               />
             </div>
          </div>
 

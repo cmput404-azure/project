@@ -115,7 +115,8 @@ export default function Post({
               )
             );
           }
-  
+
+          console.log(postData);
           setPost(postData);
   
           setCommentList(postData.comments.src.reverse());
@@ -326,7 +327,8 @@ export default function Post({
         <img
           className={styles.profilePic}
           src={
-            post.author.profileImage ??
+            post.author.profileImage && post.author.profileImage.trim() !== "" ? // the nullish coalescing operator (??) treats empty as valid
+            post.author.profileImage :
             `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
           }
           alt={`${post.author.displayName}'s profile`}
