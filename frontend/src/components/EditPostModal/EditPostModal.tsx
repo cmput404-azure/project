@@ -91,7 +91,7 @@ export default function EditPostModal({
       <h2 className={styles.title}>Edit Post</h2>
       <form>
         <div className={styles.formGroup}>
-          <label>Content</label>
+          <label>Title</label>
           <PostTextField
             value={title}
             fullWidth
@@ -110,9 +110,22 @@ export default function EditPostModal({
             </div>
           ) : (
             <PostTextField
+              className={styles.content_field}
               value={content}
+              multiline
               fullWidth
               onChange={(e) => setContent(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                   padding: 0,
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                   border: 'none',
+                },
+                '& textarea': {
+                  resize: 'none', // Remove resize handle
+                },
+             }}
             />
           )}
         </div>

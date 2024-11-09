@@ -74,6 +74,28 @@
     resize: vertical;
   }
 
+  .content_field {
+    color: white;
+    box-sizing: border-box;
+    overflow-y: auto;
+    max-height: 200px;
+    
+    /* Mimic border visibility while scrolling */
+    box-shadow: inset 0 0 0 1px #fff;
+
+    /* Hide scrollbar for WebKit browsers (e.g., Chrome, Safari) */
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Hide scrollbar in Firefox */
+    scrollbar-width: none;
+
+    &::placeholder {
+      color: #fafafa;
+    }
+  }
+
   .visibilitySelectLabelTitle {
     color: white;
     margin-bottom: 8px;
@@ -116,3 +138,4 @@
     }
   }
 }
+
