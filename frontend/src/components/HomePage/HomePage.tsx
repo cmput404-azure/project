@@ -23,7 +23,7 @@ const HomePage = () => {
   const [privatePage, setPrivatePage] = useState(1);
   const [totalPublicPages, setTotalPublicPages] = useState(0);
   const [totalPrivatePages, setTotalPrivatePages] = useState(0);
-  const pageSize = 5;
+  const pageSize = 15;
   const authProvider = useAuth();
 
   const [isUserLoading, setIsUserLoading] = useState(true);
