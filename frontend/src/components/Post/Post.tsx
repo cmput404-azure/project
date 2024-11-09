@@ -37,7 +37,6 @@ import profileService from "../../service/profile";
 import { PostData } from "../../models/models";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import Avatar from "@mui/material/Avatar";
-import auth from "../../service/auth";
 
 export default function Post({
   postGiven,
@@ -79,6 +78,8 @@ export default function Post({
           // decode base64 content
           const decodedPost = decodeBase64ToUrl(postDataList);
           postData.content = decodedPost[0].content;
+
+          console.log("What is the content? ", postData.content);
 
           if (authProvider.user) {
             const authUser = await ProfileService.fetchAuthorData(
@@ -399,7 +400,7 @@ export default function Post({
               <img
                 className={styles.postImage}
                 src={
-                  post.content.includes("data:image/" || "base64,")
+                  post.content.includes("data:image/") || post.content.includes("base64,")
                     ? post.content
                     : "data:image/png;base64," + post.content
                 }
