@@ -1,8 +1,6 @@
 import { Button, TextField } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
-
-import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -100,11 +98,11 @@ export default function EditPostModal({
         </div>
         <div className={styles.formGroup}>
           <label>Content</label>
-          {contentType == "image/png;base64" ? (
+          {/^image\/(png|jpeg);base64$/.test(contentType) ? (
             <div className={styles.cardImage}>
               <img
                 className={styles.postImage}
-                src={"data:image/png;base64," + post.content}
+                src={`data:${contentType},${post.content}`}
                 alt={post.description}
               />
             </div>
