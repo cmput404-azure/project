@@ -94,7 +94,7 @@ const HomePage = () => {
     fetchPosts(publicPage, privatePage); // fetch initial
     const interval = setInterval(() => {
       fetchPosts(publicPage, privatePage);
-    }, 10000);
+    }, 60000);
     return () => clearInterval(interval); // Clean up the interval on component unmount
   }, [isUserLoading, privatePage, publicPage]);
 
@@ -111,10 +111,6 @@ const HomePage = () => {
   function handleFilterPost(icon: ViewType) {
     setActiveFilterPost(icon);
   }
-
-  // const hasPostUpdated = (existingPost, newPost) => {
-  //   return existingPost.content !== newPost.content;
-  // };
 
   if (isLoading)
     return (

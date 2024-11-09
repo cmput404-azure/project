@@ -79,8 +79,6 @@ export default function Post({
           const decodedPost = decodeBase64ToUrl(postDataList);
           postData.content = decodedPost[0].content;
 
-          console.log("What is the content? ", postData.content);
-
           if (authProvider.user) {
             const authUser = await ProfileService.fetchAuthorData(
               authProvider.user.uuid

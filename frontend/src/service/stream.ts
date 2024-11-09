@@ -38,7 +38,7 @@ class StreamService{
          return req.data;
        } catch (error) {
          console.error("Error fetching the stream data", error);
-         return { src: [], page_number: 1, count: 0, size: 5 };
+         return { src: [], page_number: 1, count: 0, size: 15 };
        }
    }
 }
