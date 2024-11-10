@@ -350,14 +350,24 @@ export default function Post({
           alt={`${post.author.displayName}'s profile`}
           onClick={redirectToAuthorProfile}
         />
-        <div className={styles.headerText}>
-          <span className={styles.userName} onClick={redirectToAuthorProfile}>
-            {post.author.displayName}
-          </span>
-          <span className={styles.postTime}>
-            {new Date(post.published).toLocaleString()}
-          </span>
+        <div className={styles.headerContainer}>
+          <div className={styles.headerText}>
+            <span className={styles.userName} onClick={redirectToAuthorProfile}>
+              {post.author.displayName}
+            </span>
+            <span className={styles.postTime}>
+              {new Date(post.published).toLocaleString()}
+            </span>
+          </div>
+          <div>
+            {post.type === "shared" && (
+              <span className={styles.sharedLabel}>
+                Shared by {post.shared_by}
+              </span>
+            )}
+          </div>
         </div>
+        
         <Tooltip title="Copy link">
           <i className="fas fa-link" onClick={handleCopyLink}></i>
         </Tooltip>
