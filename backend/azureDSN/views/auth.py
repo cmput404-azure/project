@@ -66,40 +66,27 @@ class RegisterView(APIView):
         email = data.get('email')
         name = data.get('name')
         host = data.get('host')
-
-        print(f"Requests data: {username}, {password}, {email}, {name}, {host}")
-
-        base_host = host.rstrip('/api/')
-        print(base_host)
-
-        parsed_host = urlparse(host)
-        print(parsed_host)
-
-        if parsed_host.netloc == "localhost:3000" or parsed_host.netloc == "127.0.0.1:3000":
-            print("local")
-            host = "http://localhost:8000/api/" # when creating user locally, automatically change it to port 8000 so the API works
-
         githubUsername = data.get('githubUsername')
         githubUrl = f"https://github.com/{githubUsername if githubUsername else 'login'}"
+
+        base_host = host.rstrip('/api/')
+        parsed_host = urlparse(host)
+        if parsed_host.netloc == "localhost:3000" or parsed_host.netloc == "127.0.0.1:3000":
+            host = "http://localhost:8000/api/" # when creating user locally, automatically change it to port 8000 so the API works
 
         config = SiteConfiguration.objects.first()
         is_active = not config.require_approval
 
-        print("Requires approval? ", config.require_approval)
-
         validate_url = URLValidator()
         try:
-            print("validating host url")
             validate_url(host)
         except ValidationError:
             return Response({"error": "Invalid URL format for host."}, status=status.HTTP_400_BAD_REQUEST)
 
-        print("checking if it ends with api")
         # Ensure host ends with /api/ -- for registration not on localhost
         if not host.endswith('/api/'):
             host = host.rstrip('/') + '/api/'
 
-        print(f"Host is now: {host}")
         # username should be unique but display name (name) can be non-unique
         if User.objects.filter(username=username).exists():
             print("username taken")
@@ -116,12 +103,8 @@ class RegisterView(APIView):
             is_active=is_active
         )
 
-        print(f"New user object created: {user}")
-
         user.page = f"{base_host}/authors/{user.uuid}" # use port 3000 if local
         user.save()
-
-        print(f"The saved user page: {user.page}")
         
         if is_active:
             print("successful")

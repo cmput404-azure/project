@@ -42,7 +42,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://azuredsn-889a4fb9b2bb.herokuapp.com',
-    'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com']
+    'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com'
+]
 
 # Application definition
 
@@ -98,11 +99,6 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 if os.environ.get("DATABASE_URL") != None:
-# if 'azuredsn' in os.environ.get('HEROKU_APP_NAME', ''):
-    print(f"App name: {os.environ.get('HEROKU_APP_NAME', '')}")
-    print(f"Using DATABASE_URL: {os.environ['DATABASE_URL']}")
-    # print("App is azuredsn")
-    # Running on Heroku
     DATABASES = {
         "default": dj_database_url.config(
             conn_max_age=600,
@@ -110,18 +106,6 @@ if os.environ.get("DATABASE_URL") != None:
             ssl_require=True
         )
     }
-
-# elif 'azuredsn-secondary' in os.environ.get('HEROKU_APP_NAME', ''):
-    # print(f"Using DATABASE_URL: {os.environ['DATABASE_URL']}")
-    # print("App is azuredsn-secondary")
-    # Running on Heroku
-    # DATABASES = {
-    #     "default": dj_database_url.config(
-    #         conn_max_age=600,
-    #         conn_health_checks=True,
-    #         ssl_require=True
-    #     )
-    # }
 else:
     # Running locally.
     DATABASES = {
@@ -192,9 +176,5 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ]
 }
-
-# Media files (e.g. Users' Profile Pictures)
-# MEDIA_URL = 'media/' # this is the public URL for accessing media
-# MEDIA_ROOT = BASE_DIR / 'azureDSN' / 'media' # directory where media files will go
 
 REACT_APP_BUILD_PATH = "../frontend/build"
