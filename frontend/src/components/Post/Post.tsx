@@ -601,7 +601,6 @@ function ShareDialogue({ post, isDialogOpen, setHasShared, onClose }: ShareDialo
               backgroundColor: "#e57373",
             },
           }}
-          autoFocus
         >
           Cancel
         </Button>
@@ -615,7 +614,6 @@ function ShareDialogue({ post, isDialogOpen, setHasShared, onClose }: ShareDialo
               backgroundColor: "#4ba578",
             },
           }}
-          autoFocus
         >
           Share
         </Button>
