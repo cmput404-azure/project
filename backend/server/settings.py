@@ -42,7 +42,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://azuredsn-889a4fb9b2bb.herokuapp.com',
-    'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com']
+    'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com'
+]
 
 # Application definition
 
@@ -96,13 +97,6 @@ WSGI_APPLICATION = 'server.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 if os.environ.get("DATABASE_URL") != None:
     # Running on Heroku
@@ -183,9 +177,5 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ]
 }
-
-# Media files (e.g. Users' Profile Pictures)
-MEDIA_URL = 'media/' # this is the public URL for accessing media
-MEDIA_ROOT = BASE_DIR / 'azureDSN' / 'media' # directory where media files will go
 
 REACT_APP_BUILD_PATH = "../frontend/build"
