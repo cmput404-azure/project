@@ -146,6 +146,9 @@ class AuthStreamView(APIView):
                     shared_data = response.json()
                     serialized_posts.append(shared_data)
 
+            # Sort combined posts by the "published" field in descending order
+            serialized_posts = sorted(serialized_posts, key=lambda x: x.get("published"), reverse=True)
+
             return pagination.get_paginated_response(serialized_posts)
 
         else:
