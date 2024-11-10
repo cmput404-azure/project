@@ -1,4 +1,4 @@
-# from django.conf import settings
+from urllib.parse import urlparse
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,7 +7,6 @@ from django.contrib.auth import get_user_model
 from ..models.site_config import SiteConfiguration
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
-from django.conf import settings
 
 class LoginView(APIView):
     def post(self, request):
@@ -47,7 +46,7 @@ class LoginView(APIView):
                 'user': {
                     'username': request.user.username,
                     'uuid': request.user.uuid,
-                    'profileImage': request.user.profile_image.url if request.user.profile_image else None
+                    'profileImage': request.user.profile_image if request.user.profile_image else None
                 }
             }, status=status.HTTP_200_OK)
             response.set_cookie('sessionid', request.session.session_key, samesite='lax')
@@ -67,8 +66,15 @@ class RegisterView(APIView):
         email = data.get('email')
         name = data.get('name')
         host = data.get('host')
+
+        base_host = host.rstrip('/api/')
+        parsed_host = urlparse(host)
+        if parsed_host.netloc == "localhost:3000" or parsed_host.netloc == "127.0.0.1:3000":
+            host = "http://localhost:8000/api/" # when creating user locally, automatically change it to port 8000 so the API works
+
         githubUsername = data.get('githubUsername')
         githubUrl = f"https://github.com/{githubUsername if githubUsername else 'login'}"
+
         config = SiteConfiguration.objects.first()
         is_active = not config.require_approval
 
@@ -78,7 +84,7 @@ class RegisterView(APIView):
         except ValidationError:
             return Response({"error": "Invalid URL format for host."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ensure host ends with /api/
+        # Ensure host ends with /api/ -- for registration not on localhost
         if not host.endswith('/api/'):
             host = host.rstrip('/') + '/api/'
 
@@ -96,6 +102,9 @@ class RegisterView(APIView):
             host=host,
             is_active=is_active
         )
+
+        user.page = f"{base_host}/authors/{user.uuid}" # use port 3000 if local
+        user.save()
         
         if is_active:
             return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
@@ -115,7 +124,7 @@ class CheckAuthView(APIView):
                 'user': {
                     'username': request.user.username,
                     'uuid': request.user.uuid,
-                    'profileImage': f"{settings.BASE_URL}{request.user.profile_image.url}" if request.user.profile_image else None,
+                    'profileImage': request.user.profile_image if request.user.profile_image else None,
                     'is_staff': request.user.is_staff
                 }
             }

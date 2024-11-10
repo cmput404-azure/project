@@ -95,8 +95,8 @@ class InboxView(APIView):
             status.HTTP_404_NOT_FOUND: OpenApiResponse(
                 description="Author not found.",
             ),
-        }
-
+        },
+        tags=['Inbox API']
     )
     def get(self, request, author_serial):
         action = request.query_params.get('action', None)
@@ -213,7 +213,8 @@ class InboxView(APIView):
                 ]
             ),
             status.HTTP_404_NOT_FOUND: OpenApiResponse(description="User, inbox, or item not found."),
-        }
+        },
+        tags=['Inbox API']
     )
     def delete(self, request, author_serial):
         '''
@@ -314,7 +315,8 @@ class InboxView(APIView):
         responses={
             status.HTTP_200_OK: OpenApiResponse(description="Post updated successfully."),
             status.HTTP_404_NOT_FOUND: OpenApiResponse(description="Post or inbox item not found."),
-        }
+        },
+        tags=['Inbox API']
     )
     def put(self, request, author_serial):
         user_obj = get_object_or_404(User, uuid=author_serial)
@@ -468,16 +470,17 @@ class InboxView(APIView):
                 name="Share Example",
                 value={
                         "type": "share",      
-                        "user": "http://127.0.0.1:8000/api/authors/1b7fbe0a-7160-4823-8b24-a24f728b8666",
+                        "sharer": "1b7fbe0a-7160-4823-8b24-a24f728b8666",
                         "post": "http://127.0.0.1:8000/api/authors/1b7fbe0a-7160-4823-8b24-a24f728b8666/posts/1b7fbe0a-7160-4823-8b24-a24f728b8666"
                 },
-                description="Example of adding a follow request to the inbox."
+                description="Example of adding a share to the share model or inbox if possible."
             ),
         ],
         responses={
             status.HTTP_200_OK: OpenApiResponse(description='Inbox item added successfully'),
             status.HTTP_400_BAD_REQUEST: OpenApiResponse(description='Invalid payload or missing type field'),
-        }
+        },
+        tags=['Inbox API']
     )
     def post(self, request, author_serial):
         '''
@@ -605,50 +608,51 @@ class InboxView(APIView):
     
 
     '''
+    Here the author_serial is the receiver uuid
     We add into the receiver's inbox as well as create share object in the share model
+    If receiver is local we add into inbox + share
+    If receiver is remote, we do nothing
     payload is a share object
     payload = {
                 post: is fqid of shared post
-                user: is fqid of sender 
+                sharer: is uuid of sharer
                }
+    Now both receiver and user is foreign key of User model
+    Receiver can be empty/null meaning if the receiver is not our local user => let it empty/null
+    Sender is always triggered by our local node => must always be local user
     '''
     def create_share(self, user_object, payload, author_serial):
-        user_object = User.objects.get(uuid=author_serial)
-        # Check if a Share with the same post and receiver already exists
-        # If yes, only add to inbox to be displayed in notification
-        if Share.objects.filter(post=payload["post"], receiver=user_object).exists():
-            share_obj = Share.objects.get(receiver = user_object)
-            inbox_obj = get_object_or_404(Inbox, user=user_object)
-            create_inbox_item(inbox_obj, share_obj)
-            return Response(
-                {"message": "This post has already been shared with the receiver."},
-                status=status.HTTP_200_OK
-            )
-
-        # Create the Share object if it doesn't already exist
-        share_obj = Share.objects.create(
-            user=payload["user"],
-            post=payload["post"],
-            receiver=user_object,
-            type="share"
-        )
+        share_uuid = payload.get("sharer")
+        post_fqid = payload.get("post")
+        sharer_obj = User.objects.get(uuid=share_uuid) # sharer is always local
         
-        # Serialize and validate
-        serializer = ShareSerializer(share_obj, data=payload)
-        if serializer.is_valid():
-            share_obj = serializer.save()
+        if User.objects.filter(uuid=author_serial).exists():
+            # recevier is local, we add share to both share model and inbox 
+            receiver_obj = User.objects.get(uuid=author_serial)
             
-            # Get or create the Inbox for the receiver and add the Share object to it
-            inbox_obj = get_object_or_404(Inbox, user=user_object)
-            create_inbox_item(inbox_obj, share_obj)
-            
-            return Response(
-                {"message": "Notice post's owner about your share successfully"},
-                status=status.HTTP_200_OK
+            share_obj = Share.objects.create(
+                user=sharer_obj,
+                post=post_fqid,
+                receiver=receiver_obj,
+                type="share"
             )
+            
+            # Serialize and validate
+            serializer = ShareSerializer(share_obj, data=payload)
+            if serializer.is_valid():
+                share_obj = serializer.save()
+                
+                # Get or create the Inbox for the receiver and add the Share object to it
+                inbox_obj = get_object_or_404(Inbox, user=receiver_obj)
+                create_inbox_item(inbox_obj, share_obj)
+                
+                return Response({"message": "Store share successfully"}, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({"message": "Don't handle remote user"}, status=status.HTTP_200_OK)
+            
 
 '''
 This create an inbox item referenced to one of the four model except from case where a post make by a remote user

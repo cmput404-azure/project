@@ -157,7 +157,6 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
         setImageBase64(base64String);
         setContent("");
         setFileName(file.name);
-        console.log("Uploaded Image in Base64:", base64String);
 
         file.type === "image/png" ? setContentType("image/png;base64") :
           file.type === "image/jpeg" ? setContentType("image/jpeg;base64") :

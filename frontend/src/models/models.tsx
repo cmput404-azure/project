@@ -73,6 +73,7 @@ export interface PostData {
     likes: PostLike;
     published: string;
     visibility: number;
+    shared_by?: string; // only for share functionality
 }
 
 export interface PostLike {
@@ -126,4 +127,8 @@ export interface AuthorPostsResponse {
     src: PostData[];
     page_number: number;
     size: number;
+}
+
+export interface Share {
+    post: string;
 }
