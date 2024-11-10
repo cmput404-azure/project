@@ -1,4 +1,4 @@
-.wrapper{
+.wrapper {
     align-items: center;
     display: flex;
     flex-flow: column;
@@ -7,7 +7,7 @@
     width: 100%;
 }
 
-.container{
+.container {
     background-color: #555;
     border-top-left-radius: 1rem;
     border-top-right-radius: 1rem;
@@ -18,70 +18,69 @@
     height: 90vh;
     width: 80%;
 
-    .header{
+    .header {
         align-items: center;
         display: flex;
         flex-flow: column;
         justify-content: flex-start;
         width: 100%;
 
-        .info{
+        .info {
             align-items: flex-start;
             display: flex;
             flex-flow: row;
             justify-content: space-between;
             width: 100%;
 
-            .icon{
+            .icon {
                 margin-right: 1rem;
                 background-color: #9c9c9c;
                 border-radius: 50%;
             }
 
-            .user{
+            .user {
                 align-self: flex-start;
                 width: 100%;
 
-                .user__main{
+                .user__main {
                     align-items: center;
                     display: flex;
                     flex-flow: row;
                     justify-content: flex-start;
                     margin-top: 1rem;
 
-                    .display__name{
+                    .display__name {
                         font-size: 1.5rem;
                         font-weight: 700;
                         margin: 0 1rem 0 0;
                         text-align: start;
                         color: white;
                     }
-                    
                 }
 
-                .user__secondary{
+                .user__secondary {
                     align-items: center;
                     color: white;
                     display: flex;
                     flex-flow: row;
                     justify-content: flex-start;
 
-                    p{
+                    p {
                         margin: 0.5rem 0 0 0;
                     }
 
-                    .username{
+                    .username {
                         color: #ffffff59;
                         font-size: 0.85rem;
                         font-weight: 400;
                         text-align: start;
                     }
 
-                    .follows{
+                    .follows {
                         display: flex;
                         flex-flow: row;
                         
-                        p{
+                        p {
                             margin-left: 1rem;
                             cursor: pointer;
                         }
@@ -89,16 +88,17 @@
                 }
                 
             }
-            .footer{
+            .footer {
                 justify-self: flex-end;
             }
         }
 
-        .bio{
+        .bio {
             align-items: flex-start;
             display: flex;
             width: 100%;
-            .bio__text{
+
+            .bio__text {
                 font-size: 0.85rem;
                 font-weight: 400;
                 margin-top: 2rem;
@@ -109,7 +109,7 @@
         }
     }
     
-    .posts{
+    .posts {
         display: flex;
         flex-flow: column;
         height: 100%;
@@ -122,42 +122,43 @@
     }
 }
 
-.icon__button{
+.icon__button {
     background-color: #666666 !important;
     margin-left: 1rem !important;
 }
 
-.edit__profile{
+.edit__profile {
     display: flex;
     flex-flow: column;
     justify-content: flex-start;
     padding: 1rem;
 
-    .edit__profile__header{
+    .edit__profile__header {
         display: flex;
         flex-flow: row;
         justify-content: space-between;
 
-        h2{
+        h2 {
             font-size: 1.5rem;
             font-weight: 700;
             margin: 0;
         }
     }
 
-    .edit__profile__body{
+    .edit__profile__body {
         display: flex;
         flex-flow: column;
         margin-top: 2rem;
         width: 100%;
 
-        .edit__profile__body__image{
+        .edit__profile__body__image {
             display: flex;
             flex-flow: column;
             justify-content: center;
             align-items: center;
             width: 100%;
-            .edit__profile__body__image__container{
+
+            .edit__profile__body__image__container {
                 background-color: #666666;
                 border-radius: 50%;
                 display: flex;
@@ -168,7 +169,7 @@
             }
         }
 
-        .edit__profile__body__form{
+        .edit__profile__body__form {
             display: flex;
             flex-flow: column;
             justify-content: center;
@@ -176,9 +177,10 @@
             width: 100%;
             margin: 1rem 0;
 
-            .input{
+            .input {
                 margin-top: 1rem;
             }
         }
     }
 }
+

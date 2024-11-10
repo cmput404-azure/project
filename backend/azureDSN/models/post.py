@@ -35,3 +35,7 @@ class Post(models.Model):
     visibility = models.IntegerField(choices=VISIBILITY_CHOICES, default=1)
     created_at = models.DateTimeField("date posted", default=datetime.now)
     modified_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        """String representation for the post object (useful for admin panels)."""
+        return f"{self.title} by ({self.user.display_name})"

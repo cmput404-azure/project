@@ -1,3 +1,5 @@
+import re
+from urllib.parse import urlparse
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import *
@@ -8,8 +10,8 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
     list_editable = ('require_approval',)
 
 class UserAdmin(BaseUserAdmin):
-    list_display = ('username', 'email', 'is_staff', 'is_superuser')
-    search_fields = ('email', 'username')
+    list_display = ('username', 'email', 'type', 'is_staff', 'is_superuser')
+    search_fields = ('email', 'username', 'type')
     readonly_fields = ('created_at', 'modified_at')
 
     fieldsets = (
@@ -34,18 +36,74 @@ class UserAdmin(BaseUserAdmin):
         queryset.update(is_active=True)
     approve_users.short_description = "Approve selected users"
 
+class NodeUserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'host', 'password', 'is_authenticated')
+
+class PostAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'content_type', 'visibility')
+    search_fields = ('title', 'user')
+    readonly_fields = ('created_at', 'modified_at')
+    list_filter = ('visibility', 'content_type')
+
+class InboxItemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'object_id', 'content_type')
+
+class LikeAdmin(admin.ModelAdmin):
+    list_display = ('uuid', 'post', 'get_user_display_name')
+
+    def get_user_display_name(self, obj):
+        # Safely access display_name within user JSON field
+        return obj.user.get('displayName', 'No Name')
+    get_user_display_name.short_description = 'Liked by'
+
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('uuid', 'post', 'get_user_display_name')
+
+    def get_user_display_name(self, obj):
+        return obj.user.get('displayName', 'No Name')
+    get_user_display_name.short_description = 'Commented by' 
+
+class ShareAdmin(admin.ModelAdmin):
+    list_display = ('get_user_host', 'get_user_uuid', 'get_post_host', 'get_post_uuid', 'get_local_receiver')
+
+    def get_user_host(self, obj):
+        # Parse and return the host from the user URL
+        parsed_url = urlparse(obj.user)
+        return f"{parsed_url.scheme}://{parsed_url.netloc}"
+    get_user_host.short_description = 'Shared from'
     
+    def get_user_uuid(self, obj):
+        # Extract and return the UUID from the user URL
+        match = re.search(r'authors/([a-f0-9-]+)', obj.user)
+        return match.group(1) if match else "No UUID"
+    get_user_uuid.short_description = 'Sharer UUID'
+
+    def get_post_host(self, obj):
+        # Parse and return the host from the post URL
+        parsed_url = urlparse(obj.post)
+        return f"{parsed_url.scheme}://{parsed_url.netloc}"
+    get_post_host.short_description = 'Post Origin'
+    
+    def get_post_uuid(self, obj):
+        # Extract and return the UUID from the post URL
+        match = re.search(r'posts/([a-f0-9-]+)', obj.post)
+        return match.group(1) if match else "No UUID"
+    get_post_uuid.short_description = 'Shared Post UUID'
+
+    def get_local_receiver(self, obj):
+        return obj.receiver
+    get_local_receiver.short_description = "Local Receiver"
 
 # Register your models here.
 admin.site.register(User, UserAdmin)
-admin.site.register(NodeUser)
-admin.site.register(Post)
-admin.site.register(Like)
-admin.site.register(Comment)
+admin.site.register(NodeUser, NodeUserAdmin)
+admin.site.register(Post, PostAdmin)
+admin.site.register(Like, LikeAdmin)
+admin.site.register(Comment, CommentAdmin)
 admin.site.register(FollowRequest)
 admin.site.register(Follow)
 admin.site.register(Inbox)
-admin.site.register(InboxItem)
+admin.site.register(InboxItem, InboxItemAdmin)
 admin.site.register(SiteConfiguration, SiteConfigurationAdmin)
-admin.site.register(Share)
+admin.site.register(Share, ShareAdmin)
 

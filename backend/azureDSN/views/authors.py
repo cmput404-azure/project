@@ -258,14 +258,16 @@ class AuthorsCompleteView(APIView):
         Gets all the author in our local node.
         """
         user_uuid = request.query_params.get('user')
-        if user_uuid == 'anonymous':
-            users = User.objects.all()
+
+        if user_uuid =='anonymous':
+            users = User.objects.filter(type="author")
         else:
-            # Query all users except the current user
-            users = User.objects.exclude(uuid=user_uuid)
+        # Query all users of type 'author' and exclude the current user
+            users = User.objects.exclude(uuid=user_uuid).filter(type="author")
 
         # # Serialize the users
         serializer = UserSerializer(users, many=True)
-    
+ 
+
         return Response(serializer.data, status=200)
 

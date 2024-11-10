@@ -95,14 +95,16 @@ class StreamViewTest(APITestCase):
     def test_public_stream_view(self): # Public stream for both auth and unauth user
         url = reverse('stream')
         response = self.client.get(url)
+
+        returned_posts = response.data["src"]
         
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 3) # deleted, friends-only and unlisted posts not shown in public stream
+        self.assertEqual(len(returned_posts), 3) # deleted, friends-only and unlisted posts not shown in public stream
         
         # Check sorting order (Newest post at top)
-        self.assertEqual(response.data[0]['title'], "Other Public Post") # created last
-        self.assertEqual(response.data[1]['title'], "Test Post 2")
-        self.assertEqual(response.data[2]['title'], "Test Post 1")
+        self.assertEqual(returned_posts[0]['title'], "Other Public Post") # created last
+        self.assertEqual(returned_posts[1]['title'], "Test Post 2")
+        self.assertEqual(returned_posts[2]['title'], "Test Post 1")
 
     def test_auth_stream_view(self):
         url = reverse('auth_stream')
@@ -112,10 +114,12 @@ class StreamViewTest(APITestCase):
 
         response = self.client.get(url)
 
+        returned_posts = response.data["src"]
+
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 2) # My friends-only and unlisted post, other user should not show up here because I'm not following them yet
-        self.assertEqual(response.data[0]['title'], "My Unlisted Post")
-        self.assertEqual(response.data[1]['title'], "My Friends Only Post")
+        self.assertEqual(len(returned_posts), 2) # My friends-only and unlisted post, other user should not show up here because I'm not following them yet
+        self.assertEqual(returned_posts[0]['title'], "My Unlisted Post")
+        self.assertEqual(returned_posts[1]['title'], "My Friends Only Post")
 
     def test_follow_auth_stream_view(self):
         Follow.objects.create(local_follower_id=self.user.uuid, local_followee_id=self.friend_user.uuid)
@@ -127,14 +131,16 @@ class StreamViewTest(APITestCase):
 
         response = self.client.get(url)
 
+        returned_posts = response.data["src"]
+
         self.assertEqual(response.status_code, 200)
 
         # User is now following another user, their unlisted post should show up
-        self.assertEqual(len(response.data), 3) # Friends-only is not shown here yet because the relationship is one-way
+        self.assertEqual(len(returned_posts), 3) # Friends-only is not shown here yet because the relationship is one-way
         
-        self.assertEqual(response.data[0]['title'], "Other Unlisted Post")
-        self.assertEqual(response.data[1]['title'], "My Unlisted Post")
-        self.assertEqual(response.data[2]['title'], "My Friends Only Post")
+        self.assertEqual(returned_posts[0]['title'], "Other Unlisted Post")
+        self.assertEqual(returned_posts[1]['title'], "My Unlisted Post")
+        self.assertEqual(returned_posts[2]['title'], "My Friends Only Post")
 
     def test_friends_auth_stream_view(self):
         # Create Friend relationship
@@ -147,21 +153,25 @@ class StreamViewTest(APITestCase):
 
         response = self.client.get(url)
 
+        returned_posts = response.data["src"]
+
         self.assertEqual(response.status_code, 200)
 
         # User should be able to see unlisted and friends-only post of people they are following and friends with        
-        self.assertEqual(len(response.data), 4)
+        self.assertEqual(len(returned_posts), 4)
 
-        self.assertEqual(response.data[0]['title'], "Other Unlisted Post")
-        self.assertEqual(response.data[1]['title'], "Other Friends Only Post")
-        self.assertEqual(response.data[2]['title'], "My Unlisted Post")
-        self.assertEqual(response.data[3]['title'], "My Friends Only Post")
+        self.assertEqual(returned_posts[0]['title'], "Other Unlisted Post")
+        self.assertEqual(returned_posts[1]['title'], "Other Friends Only Post")
+        self.assertEqual(returned_posts[2]['title'], "My Unlisted Post")
+        self.assertEqual(returned_posts[3]['title'], "My Friends Only Post")
 
     def test_unauthenticated_auth_stream_view(self):
         url = reverse('auth_stream')
         response = self.client.get(url)
+
+        returned_posts = response.data["src"]
         
         # In the frontend, you can't view the auth stream because the button is hidden, so instead of returning error code, it returns empty array
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0) # empty, because user is unauthenticated, can't fetch non-public posts as that is specific to user
+        self.assertEqual(len(returned_posts), 0) # empty, because user is unauthenticated, can't fetch non-public posts as that is specific to user
 
