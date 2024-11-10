@@ -89,7 +89,6 @@ class RegisterView(APIView):
 
         # username should be unique but display name (name) can be non-unique
         if User.objects.filter(username=username).exists():
-            print("username taken")
             return Response({"error": "Username already taken."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Create new user
@@ -107,7 +106,6 @@ class RegisterView(APIView):
         user.save()
         
         if is_active:
-            print("successful")
             return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
         else:
             return Response({"message": "Registration pending approval."}, status=status.HTTP_201_CREATED)

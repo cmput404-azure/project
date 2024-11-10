@@ -99,6 +99,7 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 if os.environ.get("DATABASE_URL") != None:
+    # Running on Heroku
     DATABASES = {
         "default": dj_database_url.config(
             conn_max_age=600,
