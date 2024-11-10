@@ -17,8 +17,13 @@ class InboxItemSerializer(serializers.ModelSerializer):
     def to_representation(self, obj):
         if isinstance(obj.content_object, FollowRequest):
             return FollowRequestSerializer(instance=obj.content_object, context=self.context).data
+        # elif isinstance(obj.content_object, Post):
+        #     return PostSerializer(instance=obj.content_object, context=self.context).data
         elif isinstance(obj.content_object, Post):
-            return PostSerializer(instance=obj.content_object, context=self.context).data
+            post_data = PostSerializer(instance=obj.content_object, context=self.context).data
+            if obj.post_status is not None:
+                post_data['post_status'] = obj.post_status # this is to help add status for updated and deleted post
+            return post_data
         elif isinstance(obj.content_object, Comment):
             return CommentSerializer(instance=obj.content_object, context=self.context).data
         elif isinstance(obj.content_object, Like):
@@ -26,5 +31,9 @@ class InboxItemSerializer(serializers.ModelSerializer):
         elif isinstance(obj.content_object, Share):
             return ShareSerializer(instance=obj.content_object, context=self.context).data
         elif obj.remote_payload is not None:
-            return obj.remote_payload
+            # return obj.remote_payload
+            result = obj.remote_payload
+            if obj.post_status is not None:
+                result['post_status'] = obj.post_status
+            return result
  
