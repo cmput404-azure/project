@@ -272,7 +272,7 @@ class InboxViewTestCase(TestCase):
     def test_create_share(self):
         payload = {
             "type": "share",
-            "user": "http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+            "sharer": f"{self.follower.uuid}",
             "post": "http://localhost:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e12/posts/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e68"
         }
         response = self.client.post(self.inbox_url, data=payload, format='json')
