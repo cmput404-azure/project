@@ -150,7 +150,11 @@ const HomePage = () => {
           </div>
         )}
         {displayedPosts.map((post) => (
-          <Post key={post.id} postGiven={post} canToggleComments={false} />
+          <Post
+            key={post.type === "shared" ? `${post.id}-${post.shared_by}` : post.id}
+            postGiven={post}
+            canToggleComments={false}
+          />
         ))}
         {displayedPosts.length === 0 && (
           <div className={styles.noPosts}>
