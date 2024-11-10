@@ -127,3 +127,7 @@ export interface AuthorPostsResponse {
     page_number: number;
     size: number;
 }
+
+export interface Share {
+    post: string;
+}
