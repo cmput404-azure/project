@@ -64,19 +64,11 @@ class CommentAdmin(admin.ModelAdmin):
     get_user_display_name.short_description = 'Commented by' 
 
 class ShareAdmin(admin.ModelAdmin):
-    list_display = ('get_user_host', 'get_user_uuid', 'get_post_host', 'get_post_uuid', 'get_local_receiver')
+    list_display = ('get_user', 'get_post_host', 'get_post_uuid', 'get_local_receiver')
 
-    def get_user_host(self, obj):
-        # Parse and return the host from the user URL
-        parsed_url = urlparse(obj.user)
-        return f"{parsed_url.scheme}://{parsed_url.netloc}"
-    get_user_host.short_description = 'Shared from'
-    
-    def get_user_uuid(self, obj):
-        # Extract and return the UUID from the user URL
-        match = re.search(r'authors/([a-f0-9-]+)', obj.user)
-        return match.group(1) if match else "No UUID"
-    get_user_uuid.short_description = 'Sharer UUID'
+    def get_user(self, obj):
+        return obj.user
+    get_user.short_description = "Local Sharer"
 
     def get_post_host(self, obj):
         # Parse and return the host from the post URL
