@@ -6,8 +6,11 @@ from django.shortcuts import get_object_or_404
 from ..models import Post, User, Follow, Share
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 import requests
+from .posts import PostsPagination
 
 class PublicStreamView(APIView):
+    pagination_provider = PostsPagination
+
     @extend_schema(
         summary="Retrieve Public Posts (and Deleted Posts if Admin)",
         description="Retrieve all public (and deleted) posts available on the node, sorted by the most recent creation date.",
@@ -32,12 +35,17 @@ class PublicStreamView(APIView):
         # Sort the posts by the most recent creation date
         posts = Post.objects.filter(visibility__in=visibility_filter).order_by('-created_at')
 
-        # Serialize and return the posts
-        serializer = PostSerializer(posts, many=True)
-                  
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        pagination = PostsPagination()
+
+        paginated_posts = pagination.paginate_queryset(posts, request, view=self)
+
+        serialized_posts = PostSerializer(paginated_posts, many=True).data
+
+        return pagination.get_paginated_response(serialized_posts)
     
 class AuthStreamView(APIView):
+    pagination_provider = PostsPagination
+
     @extend_schema(
         summary="Retrieve Authenticated User's Posts and Inbox",
         description=(
@@ -81,7 +89,6 @@ class AuthStreamView(APIView):
         if request.user.is_authenticated:
             author_uuid = request.user.uuid
             print(f"the user uuid: {author_uuid}")
-            # get author (user) object
             user = get_object_or_404(User, uuid=author_uuid)
 
             # Query for unlisted and friends-only posts of this user (visibility=2 and visibility=3)
@@ -91,7 +98,10 @@ class AuthStreamView(APIView):
             )
 
             # Retrieve the followees (users the current user is following)
-            followees = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True)
+            followee_uuids = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True) # need to change to account for remote followees in the future
+
+            # Get the actual User objects of the followees based on their UUIDs
+            followees = User.objects.filter(uuid__in=followee_uuids)
 
             print(f"People I'm following: {followees}")
 
@@ -99,7 +109,7 @@ class AuthStreamView(APIView):
             # Referenced FollowCustomView for this query
             friends = Follow.objects.filter(
                 local_followee=user,
-                local_follower_id__in=followees
+                local_follower__in=followees
             ).values_list('local_follower_id', flat=True)
 
             print(f"People I'm friends with: {friends}")
@@ -120,23 +130,44 @@ class AuthStreamView(APIView):
 
             # Remove duplicates and sort by creation date
             all_relevant_posts = all_relevant_posts.order_by("-created_at").distinct()
-            combined_data = PostSerializer(all_relevant_posts, many=True).data
                   
+            pagination = PostsPagination()
+
+            paginated_posts = pagination.paginate_queryset(all_relevant_posts, request, view=self)
+
+            serialized_posts = PostSerializer(paginated_posts, many=True).data
+
             """
-            In this stream, there is also a case where user also see posts shared by people they follow
-            All the posts shared are public post as well but it could either remote or local
+                In this stream, there is also a case where user also see posts shared by people they follow
+                All the posts shared are public post as well but it could either remote or local
             """
-            # Query all items in the Share table whose receiver is the same as current user
-            shared_posts = Share.objects.filter(receiver=user)
+            # Dictionary to hold unique posts by their post ID or URL (or any unique identifier)
+            distinct_shared_posts = {} # can remove distinct if we decided to not have notification for shared post (not required per specification) --> remove receiver in Share model
+            
+            # Query all shared posts where the user who shared it is in the followees list
+            shared_posts = Share.objects.filter(user__in=followees)
             for shared in shared_posts:
-                # here the post is the fqid
-                # we send a request to fetch the post data
-                response = requests.get(shared.post)
+                response = requests.get(shared.post) # Post if FQID, we send a request to fetch the Post data
                 if response.status_code == 200:
                     shared_data = response.json()
-                    combined_data.append(shared_data)
+                    shared_data["type"] = "shared" # so we can differentiate in the frontend from normal posts
+                    shared_data["shared_by"] = shared.user.display_name
+                    unique_key = f"{shared_data.get('id')}_{shared.user.uuid}"
+                     
+                    # Only add if this exact shared instance (post + sharer) is unique
+                    if unique_key not in distinct_shared_posts:
+                        distinct_shared_posts[unique_key] = shared_data
 
-            return Response(combined_data, status=status.HTTP_200_OK)
+            serialized_posts.extend(distinct_shared_posts.values())
+            serialized_posts = sorted(serialized_posts, key=lambda x: x.get("published"), reverse=True)
+
+            return pagination.get_paginated_response(serialized_posts)
+
         else:
-            return Response([], status=status.HTTP_200_OK)
+            # Return an empty paginated response if not authenticated
+            pagination = PostsPagination()
+            empty_queryset = Post.objects.none()
+            page = pagination.paginate_queryset(empty_queryset, request)
+            empty_paginated_response = pagination.get_paginated_response(page if page else [])
+            return Response(empty_paginated_response.data, status=status.HTTP_200_OK)
             
