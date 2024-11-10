@@ -39,9 +39,29 @@
   object-fit: cover;
 }
 
-.headerText {
+.headerContainer {
   display: flex;
-  flex-direction: column;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+
+  .headerText {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sharedLabel {
+    background-color: rgba(112, 255, 174, 0.15);
+    color: #70ffae;
+    border: 1px solid #70ffae;
+    border-radius: 3px;
+    padding: 2px 6px;
+    margin-left: 10px;
+    font-size: 0.75em;
+    font-weight: 600;
+    line-height: 1.2;
+    display: inline-block;
+  }
 }
 
 .userName {

@@ -161,7 +161,7 @@ export default function ListItem({
 
   let additionalText = "";
   if (isRequest) additionalText = "wants to follow you";
-  else if (isShare) additionalText = `shared a post with you titled: ${postObj.title}`;
+  // else if (isShare) additionalText = `shared a post with you titled: ${postObj.title}`;
   else if (isLike) additionalText = `liked your post titled: ${postObj.title}`;
   else if (isComment) additionalText = `commented on your post titled: ${postObj.title}`;
   

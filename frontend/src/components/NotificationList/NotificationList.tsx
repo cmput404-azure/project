@@ -47,12 +47,14 @@ export default function NotificationList() {
             user = await fetchUser(encodedId);
             let post_resp = await api.get(item.post);
             post_obj = post_resp.data;
-          } else if (item.type === "share") {
-            let user_resp = await api.get(item.user);
-            user = user_resp.data;
-            let post_resp = await PostService.getPost(item.post);
-            post_obj = post_resp;
-          } else if (item.type === "post") {
+          } 
+          // else if (item.type === "share") {
+          //   let user_resp = await api.get(item.user);
+          //   user = user_resp.data;
+          //   let post_resp = await PostService.getPost(item.post);
+          //   post_obj = post_resp;
+          // } 
+          else if (item.type === "post") {
             // Someone shared a friends only post
             let user_resp = await api.get(item.author.id);
             user = user_resp.data;
@@ -134,20 +136,22 @@ export default function NotificationList() {
                     onRefresh={handleRefresh}
                   />
                 );
-              } else if (item.type === "share") {
-                return (
-                  <ListItem
-                    key={index}
-                    isPost={true}
-                    isShare={true}
-                    isUserList={false}
-                    notif_id={item.id}
-                    postObj={item.post_obj}
-                    user={item.user}
-                    onRefresh={handleRefresh}
-                  />
-                );
-              }
+              } 
+//               else if (item.type === "share") {
+//                 return (
+//                   <ListItem
+//                     key={index}
+//                     isPost={true}
+//                     isShare={true}
+//                     isUserList={false}
+//                     notif_id={item.id}
+//                     postObj={item.post_obj}
+//                     user={item.user}
+//                     onRefresh={handleRefresh}
+//                   />
+//                 );
+//               }
+
               else if (item.type === "post") {
                 return (
                   <ListItem

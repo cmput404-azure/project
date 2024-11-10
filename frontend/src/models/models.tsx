@@ -74,6 +74,7 @@ export interface PostData {
     published: string;
     modified_at:string;
     visibility: number;
+    shared_by?: string; // only for share functionality
 }
 
 export interface PostLike {
@@ -127,4 +128,8 @@ export interface AuthorPostsResponse {
     src: PostData[];
     page_number: number;
     size: number;
+}
+
+export interface Share {
+    post: string;
 }
