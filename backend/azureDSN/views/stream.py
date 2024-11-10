@@ -151,10 +151,12 @@ class AuthStreamView(APIView):
                 if response.status_code == 200:
                     shared_data = response.json()
                     shared_data["type"] = "shared" # so we can differentiate in the frontend from normal posts
-                    
-                    post_id = shared_data.get("id")
-                    if post_id not in distinct_shared_posts:
-                        distinct_shared_posts[post_id] = shared_data
+                    shared_data["shared_by"] = shared.user.display_name
+                    unique_key = f"{shared_data.get('id')}_{shared.user.uuid}"
+                     
+                    # Only add if this exact shared instance (post + sharer) is unique
+                    if unique_key not in distinct_shared_posts:
+                        distinct_shared_posts[unique_key] = shared_data
 
             serialized_posts.extend(distinct_shared_posts.values())
             serialized_posts = sorted(serialized_posts, key=lambda x: x.get("published"), reverse=True)
