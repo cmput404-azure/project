@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -65,8 +66,15 @@ class RegisterView(APIView):
         email = data.get('email')
         name = data.get('name')
         host = data.get('host')
+
+        base_host = host.rstrip('/api/')
+        parsed_host = urlparse(host)
+        if parsed_host.netloc == "localhost:3000" or parsed_host.netloc == "127.0.0.1:3000":
+            host = "http://localhost:8000/api/" # when creating user locally, automatically change it to port 8000 so the API works
+
         githubUsername = data.get('githubUsername')
         githubUrl = f"https://github.com/{githubUsername if githubUsername else 'login'}"
+
         config = SiteConfiguration.objects.first()
         is_active = not config.require_approval
 
@@ -76,7 +84,7 @@ class RegisterView(APIView):
         except ValidationError:
             return Response({"error": "Invalid URL format for host."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ensure host ends with /api/
+        # Ensure host ends with /api/ -- for registration not on localhost
         if not host.endswith('/api/'):
             host = host.rstrip('/') + '/api/'
 
@@ -94,6 +102,9 @@ class RegisterView(APIView):
             host=host,
             is_active=is_active
         )
+
+        user.page = f"{base_host}/authors/{user.uuid}" # use port 3000 if local
+        user.save()
         
         if is_active:
             return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)

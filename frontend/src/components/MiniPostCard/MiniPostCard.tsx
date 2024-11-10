@@ -128,7 +128,8 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
           <img
             className={styles.profilePic}
             src={
-              postData.author.profileImage ??
+              postData.author.profileImage && postData.author.profileImage.trim() !== "" ?
+              postData.author.profileImage :
               `https://ui-avatars.com/api/?background=random&name=${postData.author.displayName}`
             }
             alt={postData.author.displayName}
