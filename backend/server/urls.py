@@ -28,6 +28,6 @@ urlpatterns = [
 ]
 
 # To serve media files during development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# if settings.DEBUG:
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # This should make it possible to access media files via URLs like http://127.0.0.1:8000/azureDNS/media/profile_pictures/<filename>.jpg

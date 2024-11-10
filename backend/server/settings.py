@@ -97,14 +97,11 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 if os.environ.get("DATABASE_URL") != None:
+# if 'azuredsn' in os.environ.get('HEROKU_APP_NAME', ''):
+    print(f"App name: {os.environ.get('HEROKU_APP_NAME', '')}")
+    print(f"Using DATABASE_URL: {os.environ['DATABASE_URL']}")
+    # print("App is azuredsn")
     # Running on Heroku
     DATABASES = {
         "default": dj_database_url.config(
@@ -113,6 +110,18 @@ if os.environ.get("DATABASE_URL") != None:
             ssl_require=True
         )
     }
+
+# elif 'azuredsn-secondary' in os.environ.get('HEROKU_APP_NAME', ''):
+    # print(f"Using DATABASE_URL: {os.environ['DATABASE_URL']}")
+    # print("App is azuredsn-secondary")
+    # Running on Heroku
+    # DATABASES = {
+    #     "default": dj_database_url.config(
+    #         conn_max_age=600,
+    #         conn_health_checks=True,
+    #         ssl_require=True
+    #     )
+    # }
 else:
     # Running locally.
     DATABASES = {
@@ -185,7 +194,7 @@ REST_FRAMEWORK = {
 }
 
 # Media files (e.g. Users' Profile Pictures)
-MEDIA_URL = 'media/' # this is the public URL for accessing media
-MEDIA_ROOT = BASE_DIR / 'azureDSN' / 'media' # directory where media files will go
+# MEDIA_URL = 'media/' # this is the public URL for accessing media
+# MEDIA_ROOT = BASE_DIR / 'azureDSN' / 'media' # directory where media files will go
 
 REACT_APP_BUILD_PATH = "../frontend/build"
