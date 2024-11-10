@@ -60,7 +60,7 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = ('uuid', 'post', 'get_user_display_name')
 
     def get_user_display_name(self, obj):
-        return obj.user.get('displayName', 'No Name')
+        return obj.user.get('displayName', 'Error: No Name')
     get_user_display_name.short_description = 'Commented by' 
 
 class ShareAdmin(admin.ModelAdmin):
@@ -86,14 +86,64 @@ class ShareAdmin(admin.ModelAdmin):
         return obj.receiver
     get_local_receiver.short_description = "Local Receiver"
 
+class FollowRequestAdmin(admin.ModelAdmin):
+    list_display = ('get_request_target', 'get_request_sender', 'get_request_origin')
+
+    def get_request_target(self, obj):
+        return obj.object
+    get_request_target.short_description = "Request Sent To"
+
+    def get_request_sender(self, obj):
+        return obj.actor.get('displayName', 'Error: No Name')
+    get_request_sender.short_description = "Sent by"
+    
+    def get_request_origin(self, obj):
+        return obj.actor.get('host', 'Error: No Host')
+    get_request_origin.short_description = 'Request Origin'
+
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ('get_followee', 'get_follower', 'get_followee_origin', 'get_follower_origin')
+
+    def get_followee(self, obj):
+        if obj.local_followee:
+            return obj.local_followee
+        else:
+            match = re.search(r'authors/([a-f0-9-]+)', obj.remote_followee)
+            return match.group(1) if match else "Error: No UUID"
+    get_followee.short_description = "Followee"
+
+    def get_follower(self, obj):
+        if obj.local_follower:
+            return obj.local_follower
+        else:
+            match = re.search(r'authors/([a-f0-9-]+)', obj.remote_follower)
+            return match.group(1) if match else "Error: No UUID"
+    get_follower.short_description = "Follower"
+
+    def get_followee_origin(self, obj):
+        if obj.local_followee:
+            return "LOCAL"
+        else:
+            parsed_url = urlparse(obj.remote_follower)
+            return f"{parsed_url.scheme}://{parsed_url.netloc}"
+    get_followee_origin.short_description = "Followee Origin"
+
+    def get_follower_origin(self, obj):
+        if obj.local_follower:
+            return "LOCAL"
+        else:
+            parsed_url = urlparse(obj.remote_follower)
+            return f"{parsed_url.scheme}://{parsed_url.netloc}"
+    get_follower_origin.short_description = "Follower Origin"
+
 # Register your models here.
 admin.site.register(User, UserAdmin)
 admin.site.register(NodeUser, NodeUserAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Like, LikeAdmin)
 admin.site.register(Comment, CommentAdmin)
-admin.site.register(FollowRequest)
-admin.site.register(Follow)
+admin.site.register(FollowRequest, FollowRequestAdmin)
+admin.site.register(Follow, FollowAdmin)
 admin.site.register(Inbox)
 admin.site.register(InboxItem, InboxItemAdmin)
 admin.site.register(SiteConfiguration, SiteConfigurationAdmin)
