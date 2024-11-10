@@ -12,13 +12,14 @@ import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 
 import CommentInputField from "../CommentInput/CommentInput";
 import { ContentType } from "../../models/modelTypes";
-import { PostData as PostModel } from "../../models/models";
+import { PostData as PostModel, Share } from "../../models/models";
 import follow from "../../service/follow";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
 import postService from "../../service/post";
 import FollowService from "../../service/follow";
 import ProfileService from "../../service/profile";
+import ShareService from "../../service/share";
 import styles from "./Post.module.scss";
 import { useAuth } from "../../state";
 import { useNavigate, useParams } from "react-router";
@@ -38,6 +39,7 @@ import { PostData } from "../../models/models";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import Avatar from "@mui/material/Avatar";
 import auth from "../../service/auth";
+import share from "../../service/share";
 
 export default function Post({
   postGiven,
@@ -57,7 +59,7 @@ export default function Post({
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
-  // const [hasShared, setHasShared] = useState(false);
+  const [hasShared, setHasShared] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
@@ -114,6 +116,14 @@ export default function Post({
                 like.id.includes(authProvider.user.uuid)
               )
             );
+
+            const checkIfShared = async () => {
+              const isShared = await ShareService.checkShare(postData.id, authProvider.user.uuid);
+              setHasShared(isShared)
+            };
+            
+            // Call the function to check the share status
+            checkIfShared();
           }
   
           setPost(postData);
@@ -132,6 +142,13 @@ export default function Post({
               like.id.includes(authProvider.user.uuid)
             )
           );
+          const checkIfShared = async () => {
+            const isShared = await ShareService.checkShare(postGiven.id, authProvider.user.uuid);
+            setHasShared(isShared)
+          };
+          
+          // Call the function to check the share status
+          checkIfShared();
           setCommentList(postGiven.comments.src.reverse());
           setLikeCount(
             Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
@@ -228,13 +245,12 @@ export default function Post({
 
   const handleNewComment = (newComment) => {
     const newCommentList = [newComment, ...commentList];
-    const newCount = commentCount + 1;
-    setCommentCount(newCount);
+    setCommentCount((prevCount) => prevCount + 1);
     setCommentList(newCommentList);
   };
 
   const handleSharePost = async () => {
-    if (!post) return;
+    if (!post || hasShared) return;
     setIsShareDialogOpen(true);
   };
 
@@ -385,13 +401,13 @@ export default function Post({
           </div>
           {post.visibility === 1 ? (
             <div
-              className={styles.icon}
+              className={`${styles.icon} ${hasShared ? styles.shared : ""}`}
               onClick={handleSharePost}
             >
               <i className="fas fa-share"></i>
             </div>
           ) : null}
-          <ShareDialogue post={post} isDialogOpen={isShareDialogOpen} />
+          <ShareDialogue post={post} isDialogOpen={isShareDialogOpen} setHasShared={setHasShared}/>
         </div>
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
@@ -495,9 +511,10 @@ export default function Post({
 interface ShareDialogueProps {
   post: PostData;
   isDialogOpen: boolean;
+  setHasShared: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-function ShareDialogue({ post, isDialogOpen }: ShareDialogueProps) {
+function ShareDialogue({ post, isDialogOpen, setHasShared }: ShareDialogueProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(isDialogOpen);
   const authProvider = useAuth();
 
@@ -517,15 +534,25 @@ function ShareDialogue({ post, isDialogOpen }: ShareDialogueProps) {
     const currentUser = await profileService.fetchAuthorData(
       authProvider.user.uuid
     );
-    const share_obj = {
-      type: "share",
-      user: currentUser.id,
-      post: post.id,
-    };
     const followers = await follow.getFollowers(authProvider.user.uuid);
+    
     for (const follower of followers) {
+      const share_obj = {
+        type: "share",
+        sharer: authProvider.user.uuid,
+        post: post.id,
+      };
+
       await inbox.sendPostToInbox(follower.id, share_obj);
     }
+
+    // Add directly to the share model with receiver as null
+    const share_obj : Share = {
+      post: post.id
+    }
+
+    await share.addShare(share_obj, authProvider.user.uuid);
+    setHasShared(true);
   };
 
   return (
