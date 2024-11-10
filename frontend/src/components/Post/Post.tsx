@@ -419,7 +419,7 @@ export default function Post({
               <img
                 className={styles.postImage}
                 src={
-                  post.content.includes("data:image/" || "base64,")
+                  post.content.includes("data:image/") || post.content.includes("base64,")
                     ? post.content
                     : "data:image/png;base64," + post.content
                 }

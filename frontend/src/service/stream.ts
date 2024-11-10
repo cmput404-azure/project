@@ -13,26 +13,33 @@ interface StreamData {
    visibility: number;
 }
 
-class StreamService{
-   /* 
-      Fetch stream from backend
-      @param auth: boolean - if authentication is required
+interface PaginatedResponse {
+   src: StreamData[];
+   page_number: number; // Current page number
+   count: number;       // Total number of posts available
+   size: number;        // Number of items per page
+ }
 
-      @returns: any - stream data
+class StreamService{
+   /**
+      * Fetch paginated stream from the backend
+      * @param auth - if authentication is required
+      * @param page - the page number to fetch
+      * @param size - the number of items per page
+      * @returns paginated stream data
    */
-   public async getStream(auth: boolean = false): Promise<StreamData[]> {
+   public async getStream(auth: boolean = false, page: number = 1, size: number = 15): Promise<PaginatedResponse> {
       try {
-         if(auth) {
-            const req = await api.get<StreamData[]>("/api/stream/auth");
-            return req.data;
-         }
-         const req = await api.get<StreamData[]>("/api/stream/");
+         const endpoint = auth ? "/api/stream/auth" : "/api/stream/";
+         // const endpoint = '/api/stream/';
+         const req = await api.get<PaginatedResponse>(endpoint, {
+           params: { page, size },
+         });
          return req.data;
-      }
-      catch (error) {
+       } catch (error) {
          console.error("Error fetching the stream data", error);
-         return [];
-      }
+         return { src: [], page_number: 1, count: 0, size: 15 };
+       }
    }
 }
 

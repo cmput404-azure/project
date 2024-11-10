@@ -1,11 +1,13 @@
-import { Alert, Avatar, Button, CircularProgress, Drawer, IconButton, Snackbar, TextField, styled } from "@mui/material";
+import { Alert, Avatar, Box, Button, CircularProgress, Drawer, IconButton, Snackbar, TextField, styled } from "@mui/material";
+import DeleteIcon from '@mui/icons-material/Delete';
+import Tooltip from '@mui/material/Tooltip';
 import { Author, PostData as Post } from "../../models/models";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import FollowList from "../FollowList/FollowList";
 import { FollowerModalTypes } from "../../models/modelTypes";
-import { GitHub } from "@mui/icons-material";
+import { CloudUpload, FileUpload, GitHub } from "@mui/icons-material";
 import LinkIcon from '@mui/icons-material/Link';
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import ProfileService from "../../service/profile";
@@ -213,6 +215,8 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
    const [success, setSuccess] = useState<boolean>(false);
    const [disabled, setDisabled] = useState<boolean>(false);
    const githubUsername = extractUUID(github) === 'login' ? "" : extractUUID(github);
+   const fileInputRef = useRef<HTMLInputElement | null>(null);
+   const [hovered, setHovered] = useState(false);
 
    user.id = extractUUID(user.id);
 
@@ -274,6 +278,7 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
         reader.onloadend = () => {
          const dataURL = reader.result?.toString() || "";
           setProfileImage(dataURL);
+          setHovered(false);
         };
         reader.readAsDataURL(file); // get the dataURL
       }
@@ -285,6 +290,15 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
       } else {
          setGithub(`https://github.com/${value}`);
       }
+   }
+
+   const handleUploadButtonClick = () => {
+      fileInputRef?.current.click();
+   };
+
+   const handleDeleteImage = () => {
+      setProfileImage(null);
+      setHovered(false);
    }
 
    return (
@@ -299,10 +313,65 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
          <div className={styles.edit__profile__body}>
             <div className={styles.edit__profile__body__image}>
                <div className={styles.edit__profile__body__image__container}>
-                  <Avatar alt="profile image" src={profileImage} sx={{ width: 100, height: 100 }} />
+                  <Box
+                     sx={{
+                        position: 'relative',
+                        width: 100,
+                        height: 100,
+                        display: 'inline-block',
+                     }}
+                     onMouseEnter={() => profileImage && setHovered(true)}
+                     onMouseLeave={() => profileImage && setHovered(false)}
+                  >
+                     <Avatar
+                        alt="profile image"
+                        src={profileImage}
+                        sx={{
+                           width: 100,
+                           height: 100,
+                           opacity: hovered ? 0.7 : 1,
+                           transition: 'opacity 0.3s ease',
+                        }}
+                     />
+
+                     {hovered && profileImage && (
+                        <Tooltip title="Delete Profile Picture">
+                           <IconButton
+                              sx={{
+                                 position: 'absolute',
+                                 top: '50%',
+                                 left: '50%',
+                                 transform: 'translate(-50%, -50%)',
+                                 color: '#ff1744',
+                                 backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                 '&:hover': {
+                                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                                 },
+                              }}
+                              onClick={handleDeleteImage}
+                           >
+                              <DeleteIcon />
+                           </IconButton>
+                        </Tooltip>
+                     )}
+                  </Box>
                </div>
                <div className={styles.edit__profile__body__image__input}>
-                  <input type="file" accept="image/*" onChange={handleFileUpload} />
+                  <input id="upload-button" type="file" accept="image/*" onChange={handleFileUpload} hidden ref={fileInputRef}/>
+                  <label htmlFor="upload-button">
+                     <Button variant="outlined" size="small" color="secondary" startIcon={<CloudUpload />} onClick={handleUploadButtonClick}
+                        sx={{
+                           color: '#70ffaf',
+                           borderColor: '#70ffaf',
+                           '&:hover': {
+                              backgroundColor: '#70ffaf',
+                              color: '#ffffff',
+                           },
+                        }}
+                     >
+                        Upload Image
+                     </Button>
+                  </label>
                </div>
             </div>
 

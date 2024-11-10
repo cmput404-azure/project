@@ -87,6 +87,7 @@ class NodeUser(User):
     def save(self, *args, **kwargs):
         # Explicitly set profile_image to None to avoid file processing attempts
         self.profile_image = None
-        self.display_name = "external" # hard coded for now
+        self.display_name = "external"
+        self.type = "node"
         super(NodeUser, self).save(*args, **kwargs)
 
