@@ -295,15 +295,10 @@ class FollowView(APIView):
     )
     def get(self, request, user_id, follower_url=None):
         """
-        Directs get request to either check for a follow relationship or to get list of all followers 
+        Checks if follower_url is a follower of user_id, returns a boolean
         """
+        return self.check_follower(request, user_id, follower_url)
 
-        # Check if the user_id and follower_url should perform the "check follower" logic
-        if follower_url:
-            return self.check_follower(request, user_id, follower_url)
-
-        # If no follower_url is provided, handle another GET operation
-        return self.get_followers(request, user_id)
     
     
     @extend_schema(

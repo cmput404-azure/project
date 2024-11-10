@@ -72,6 +72,7 @@ export interface PostData {
     comments: PostComment;
     likes: PostLike;
     published: string;
+    modified_at:string;
     visibility: number;
 }
 

@@ -9,26 +9,28 @@ import styles from "./ListItem.module.scss";
 import { useAuth } from "../../state";
 import FollowService from "../../service/follow";
 import InboxService from "../../service/inbox";
-
+import ProfileService from "../../service/profile";
+import {PostData, Author} from "../../models/models"
 interface ListItemProps {
-  isRequest: boolean;
-  isPost: boolean;
-  postTitle?: string;
-  isLike: boolean;
+  isRequest?: boolean;
+  isPost?: boolean;
+  postObj?: PostData;
+  isLike?: boolean;
   isComment?: boolean;
   isShare?: boolean;
-  isFollowerList: boolean;
+  isFollowerList?: boolean;
   isUserList: boolean;
   notif_id?: string;
-  user: {
-    displayName: string;
-    github: string;
-    host: string;
-    id: string; // use the host and id to get the foreign fqid
-    page: string;
-    type: string;
-    profileImage: string | null;
-  };
+  user: Author
+  // user: {
+  //   displayName: string;
+  //   github: string;
+  //   host: string;
+  //   id: string; // use the host and id to get the foreign fqid
+  //   page: string;
+  //   type: string;
+  //   profileImage: string | null;
+  // };
   closeModal?: () => void;
   onRefresh: () => void;
 }
@@ -36,7 +38,7 @@ interface ListItemProps {
 export default function ListItem({
   isRequest,
   isPost,
-  postTitle,
+  postObj,
   isLike,
   isShare,
   isComment,
@@ -50,9 +52,11 @@ export default function ListItem({
   const authProvider = useAuth();
   const [isRequested, setIsRequested] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-
+  const [isUpdatedPost, setIsUpdatedPost] = useState(false);
+  const [isDeletedPost, setIsDeletedPost] = useState(false);
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       // Format the user ID
@@ -73,8 +77,9 @@ export default function ListItem({
       );
 
       // check if current user is already following the user
-      const currentUserUrl = `http://localhost:8000/api/authors/${authProvider.user.uuid}/`;
-      const following = await FollowService.checkFollowing(formatted_userId, currentUserUrl);
+      const currentUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
+      const encoded_url = encodeURIComponent(currentUser.id);
+      const following = await FollowService.checkFollowing(formatted_userId, encoded_url);
 
       if (following === true) {
         setIsFollowing(true);
@@ -83,7 +88,14 @@ export default function ListItem({
     };
 
     if (authProvider.isAuthenticated === true) {
-      fetchData(); // Call the async function
+      if (isUserList){
+        fetchData(); // Call the async function
+      }
+      if (postObj != null){
+        if(postObj.modified_at != postObj.published){
+          setIsUpdatedPost(true);
+        }
+      }
     }
   }, []);
 
@@ -100,12 +112,15 @@ export default function ListItem({
 
         const followRequest = {
           type: "follow",
-          summary: `${userInfo.displayName} wants to follow ${user.displayName}`,
+          summary: `${userInfo.username} wants to follow ${user.username}`,
           actor: {
             type: "author",
             id: `${userInfo.id}`,
             host: `${userInfo.host}`,
             displayName: `${userInfo.displayName}`,
+            username: `${userInfo.username}`,
+            bio: `${userInfo.bio}`,
+            profileImage:`${userInfo.profileImage}`,
             github: `${userInfo.github}`,
             page: `${userInfo.page}`,
           },
@@ -146,10 +161,12 @@ export default function ListItem({
 
   let additionalText = "";
   if (isRequest) additionalText = "wants to follow you";
-  else if (isLike) additionalText = `liked your post titled: ${postTitle}`;
-  else if (isShare) additionalText = `shared a post with you titled: ${postTitle}`;
-  else if (isPost) additionalText = `posted a post titled: ${postTitle}`;
-  else if (isComment) additionalText = `commented on your post titled: ${postTitle}`;
+  else if (isLike) additionalText = `liked your post titled: ${postObj.title}`;
+  else if (isShare) additionalText = `shared a post with you titled: ${postObj.title}`;
+  else if (isUpdatedPost) additionalText = `updated their post titled: ${postObj.title}`;
+  else if (isDeletedPost) additionalText = `deleted their post titled: ${postObj.title}`;
+  else if (isPost) additionalText = `posted a post titled: ${postObj.title}`;
+  else if (isComment) additionalText = `commented on your post titled: ${postObj.title}`;
 
   return (
     <div className={styles.ListItemContainer}>
@@ -157,16 +174,16 @@ export default function ListItem({
         <div className={styles.profileLink} onClick={navigateToProfile}>
           <Avatar
             className={styles.listImg}
-            alt={user.displayName}
+            alt={user.username}
             src={user.profileImage}
             sx={{ width: 48, height: 48 }}
           />
           <div className={styles.text}>
             <h1>
-              {user.displayName}
+              {user.username}
               <span className={styles.additionalText}>{additionalText}</span>
             </h1>
-            <p>@{user.displayName}</p>
+            <p>@{user.username}</p>
           </div>
         </div>
 

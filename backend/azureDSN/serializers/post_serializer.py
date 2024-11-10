@@ -29,6 +29,7 @@ class PostSerializer(serializers.ModelSerializer):
             'comments',
             'likes',
             'published',
+            'modified_at',
             'visibility',
         )
     def to_representation(self, instance):
@@ -88,6 +89,7 @@ class PostSerializer(serializers.ModelSerializer):
         post.contentType = validated_data.get('contentType', post.contentType)
         post.content = validated_data.get('content', post.content)
         post.published = validated_data.get('published', post.published)
+        post.modified_at = validated_data.get('modified_at', post.modified_at)
         post.visibility = validated_data.get('visibility', post.visibility)
         post.save()
         return post

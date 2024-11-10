@@ -116,11 +116,7 @@ export default function NotificationList() {
                 return (
                   <ListItem
                     key={index}
-                    isRequest={false}
-                    isPost={false}
                     isLike={true}
-                    isFollowerList={false}
-                    isUserList={false}
                     notif_id={item.id}
                     postTitle={item.post_obj.title}
                     user={item.user}
@@ -131,12 +127,7 @@ export default function NotificationList() {
                 return (
                   <ListItem
                     key={index}
-                    isRequest={false}
-                    isPost={false}
-                    isLike={false}
                     isComment={true}
-                    isFollowerList={false}
-                    isUserList={false}
                     notif_id={item.id}
                     postTitle={item.post_obj.title}
                     user={item.user}
@@ -147,15 +138,11 @@ export default function NotificationList() {
                 return (
                   <ListItem
                     key={index}
-                    isRequest={false}
                     isPost={true}
-                    isLike={false}
-                    isComment={false}
                     isShare={true}
-                    isFollowerList={false}
                     isUserList={false}
                     notif_id={item.id}
-                    postTitle={item.post_obj.title}
+                    postObj={item.post_obj}
                     user={item.user}
                     onRefresh={handleRefresh}
                   />
@@ -165,15 +152,9 @@ export default function NotificationList() {
                 return (
                   <ListItem
                     key={index}
-                    isRequest={false}
                     isPost={true} 
-                    isLike={false}
-                    isComment={false}
-                    isShare = {false}
-                    isFollowerList={false}
-                    isUserList={false}
                     notif_id={item.id}
-                    postTitle = {item.post_obj.title}
+                    postObj = {item.post_obj}
                     user={item.user}
                     onRefresh={handleRefresh}
                   />

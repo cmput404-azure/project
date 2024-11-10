@@ -247,7 +247,7 @@ class InboxView(APIView):
     payload is a post object
     id is in format: http://{server}/api/authors/{user_id}/posts/{post_id}
     '''
-    def delete_post(self, user_object, payload, request):
+    def adelete_post(self, user_object, payload, request):
         parsed_url = urlparse(payload["id"]) 
         post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
         # Validate the post object sent with the payload

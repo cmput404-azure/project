@@ -36,18 +36,18 @@ export default function UserSearch({ closeModal }: userSearchProps) {
       setLoading(true);
       setError(null);
       try {
-        if (authProvider.isAuthenticated===false){
+        if (authProvider.isAuthenticated === false) {
           const response = await api.get(`/api/authors/all/`, {
             params: { user: "anonymous" }
           });
           setResults(response.data);
-        }else{
+        } else {
           const response = await api.get(`/api/authors/all/`, {
             params: { user: authProvider.user.uuid }
           });
           setResults(response.data);
         }
-        
+
       } catch (err) {
         console.error('Error fetching users:', err);
         setError('Failed to fetch users');
