@@ -38,6 +38,7 @@ class UserAdmin(BaseUserAdmin):
 
 # Register your models here.
 admin.site.register(User, UserAdmin)
+admin.site.register(NodeUser)
 admin.site.register(Post)
 admin.site.register(Like)
 admin.site.register(Comment)
