@@ -98,7 +98,10 @@ class AuthStreamView(APIView):
             )
 
             # Retrieve the followees (users the current user is following)
-            followees = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True)
+            followee_uuids = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True) # need to change to account for remote followees in the future
+
+            # Get the actual User objects of the followees based on their UUIDs
+            followees = User.objects.filter(uuid__in=followee_uuids)
 
             print(f"People I'm following: {followees}")
 
@@ -106,7 +109,7 @@ class AuthStreamView(APIView):
             # Referenced FollowCustomView for this query
             friends = Follow.objects.filter(
                 local_followee=user,
-                local_follower_id__in=followees
+                local_follower__in=followees
             ).values_list('local_follower_id', flat=True)
 
             print(f"People I'm friends with: {friends}")
@@ -138,13 +141,23 @@ class AuthStreamView(APIView):
                 In this stream, there is also a case where user also see posts shared by people they follow
                 All the posts shared are public post as well but it could either remote or local
             """
-            # Query all items in the Share table whose receiver is the same as current user
-            shared_posts = Share.objects.filter(receiver=user)
+            # Dictionary to hold unique posts by their post ID or URL (or any unique identifier)
+            distinct_shared_posts = {} # can remove distinct if we decided to not have notification for shared post (not required per specification) --> remove receiver in Share model
+            
+            # Query all shared posts where the user who shared it is in the followees list
+            shared_posts = Share.objects.filter(user__in=followees)
             for shared in shared_posts:
                 response = requests.get(shared.post) # Post if FQID, we send a request to fetch the Post data
                 if response.status_code == 200:
                     shared_data = response.json()
-                    serialized_posts.append(shared_data)
+                    shared_data["type"] = "shared" # so we can differentiate in the frontend from normal posts
+                    
+                    post_id = shared_data.get("id")
+                    if post_id not in distinct_shared_posts:
+                        distinct_shared_posts[post_id] = shared_data
+
+            serialized_posts.extend(distinct_shared_posts.values())
+            serialized_posts = sorted(serialized_posts, key=lambda x: x.get("published"), reverse=True)
 
             return pagination.get_paginated_response(serialized_posts)
 
