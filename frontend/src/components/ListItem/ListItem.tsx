@@ -19,7 +19,7 @@ interface ListItemProps {
   isComment?: boolean;
   isShare?: boolean;
   isFollowerList?: boolean;
-  isUserList: boolean;
+  isUserList?: boolean;
   notif_id?: string;
   user: Author
   // user: {
@@ -161,12 +161,12 @@ export default function ListItem({
 
   let additionalText = "";
   if (isRequest) additionalText = "wants to follow you";
-  else if (isLike) additionalText = `liked your post titled: ${postObj.title}`;
-  else if (isShare) additionalText = `shared a post with you titled: ${postObj.title}`;
-  else if (isUpdatedPost) additionalText = `updated their post titled: ${postObj.title}`;
-  else if (isDeletedPost) additionalText = `deleted their post titled: ${postObj.title}`;
   else if (isPost) additionalText = `posted a post titled: ${postObj.title}`;
+  else if (isLike) additionalText = `liked your post titled: ${postObj.title}`;
   else if (isComment) additionalText = `commented on your post titled: ${postObj.title}`;
+  else if (isShare) additionalText = `shared a post with you titled: ${postObj.title}`;
+  else if (isDeletedPost) additionalText = `deleted their post titled: ${postObj.title}`;
+  else if (isUpdatedPost) additionalText = `updated their post titled: ${postObj.title}`;
 
   return (
     <div className={styles.ListItemContainer}>

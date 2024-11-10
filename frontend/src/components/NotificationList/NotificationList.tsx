@@ -118,7 +118,7 @@ export default function NotificationList() {
                     key={index}
                     isLike={true}
                     notif_id={item.id}
-                    postTitle={item.post_obj.title}
+                    postObj={item.post_obj}
                     user={item.user}
                     onRefresh={handleRefresh}
                   />
@@ -129,7 +129,7 @@ export default function NotificationList() {
                     key={index}
                     isComment={true}
                     notif_id={item.id}
-                    postTitle={item.post_obj.title}
+                    postObj={item.post_obj}
                     user={item.user}
                     onRefresh={handleRefresh}
                   />
