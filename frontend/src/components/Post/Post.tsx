@@ -255,6 +255,10 @@ export default function Post({
     setIsShareDialogOpen(true);
   };
 
+  const handleCloseShareDialog = () => {
+    setIsShareDialogOpen(false);
+  };
+
   const handleLikePost = async () => {
     if (!authProvider.user) {
       navigate("/login");
@@ -419,7 +423,7 @@ export default function Post({
               <i className="fas fa-share"></i>
             </div>
           ) : null}
-          <ShareDialogue post={post} isDialogOpen={isShareDialogOpen} setHasShared={setHasShared}/>
+          <ShareDialogue post={post} isDialogOpen={isShareDialogOpen} setHasShared={setHasShared} onClose={handleCloseShareDialog} />
         </div>
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
@@ -524,24 +528,26 @@ interface ShareDialogueProps {
   post: PostData;
   isDialogOpen: boolean;
   setHasShared: React.Dispatch<React.SetStateAction<boolean>>;
+  onClose: () => void;
 }
 
-function ShareDialogue({ post, isDialogOpen, setHasShared }: ShareDialogueProps) {
-  const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(isDialogOpen);
+function ShareDialogue({ post, isDialogOpen, setHasShared, onClose }: ShareDialogueProps) {
+  // const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(isDialogOpen);
   const authProvider = useAuth();
 
   // Update shareDialogOpen when isDialogOpen prop changes
-  useEffect(() => {
-    setShareDialogOpen(isDialogOpen);
-  }, [isDialogOpen]);
+  // useEffect(() => {
+  //   setShareDialogOpen(isDialogOpen);
+  // }, [isDialogOpen]);
 
-  const handleCloseShare = () => {
-    setShareDialogOpen(false);
-  };
+  // const handleCloseShare = () => {
+  //   setShareDialogOpen(false);
+  // };
 
   // Function to confirm sharing
   const handleConfirmShare = async () => {
-    setShareDialogOpen(false);
+    // setShareDialogOpen(false);
+    onClose();
     // Get followers and share the post
     const currentUser = await profileService.fetchAuthorData(
       authProvider.user.uuid
@@ -569,8 +575,8 @@ function ShareDialogue({ post, isDialogOpen, setHasShared }: ShareDialogueProps)
 
   return (
     <Dialog
-      open={shareDialogOpen}
-      onClose={handleCloseShare}
+      open={isDialogOpen}
+      onClose={onClose}
       sx={{
         "& .MuiDialog-paper": {
           backgroundColor: "rgb(123, 123, 123)",
@@ -586,7 +592,7 @@ function ShareDialogue({ post, isDialogOpen, setHasShared }: ShareDialogueProps)
       </DialogContent>
       <DialogActions>
         <Button
-          onClick={handleCloseShare}
+          onClick={onClose}
           sx={{
             backgroundColor: "lightcoral",
             color: "white",
