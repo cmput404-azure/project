@@ -100,7 +100,7 @@ export default function Post({
               );
               if (!authProvider.user.is_staff) {
                 if (postData.visibility !== 1) {
-                  if (!is_following || postData.visibility === 2) {
+                  if (!is_following && postData.visibility === 2) {
                     setOpenSnackbar(true);
                     setShowAlert(true);
                     setTimeout(() => {
@@ -144,6 +144,7 @@ export default function Post({
             )
           );
           const checkIfShared = async () => {
+            if (!authProvider.user) return;
             const isShared = await ShareService.checkShare(postGiven.id, authProvider.user.uuid);
             setHasShared(isShared)
           };
@@ -161,7 +162,8 @@ export default function Post({
       } catch (error) {
         if (error.response && error.response.status === 403) {
           navigate("/login");
-        } else {
+        } 
+        else {
           console.error("Error fetching post data:", error);
         }
       }
@@ -364,6 +366,11 @@ export default function Post({
             </span>
           </div>
           <div>
+          {post.visibility === 4 && (
+            <span className={styles.deletedLabel}>
+              Deleted
+            </span>
+          )}
             {post.type === "shared" && (
               <span className={styles.sharedLabel}>
                 Shared by {post.shared_by}
