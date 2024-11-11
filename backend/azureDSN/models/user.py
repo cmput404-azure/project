@@ -42,8 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     bio = models.TextField(null=True, blank=True)
     github = models.URLField(null=True, blank=True) # e.g. "http://github.com/gjohnson"
     page = models.URLField(null=True, blank=True) # e.g. "http://nodebbbb/authors/222"
-    profile_image = models.TextField(null=True, blank=True) # to store base64-encoded image for profile pictures
-    # profile_image = models.ImageField(upload_to='profile_pictures/', null=True, blank=True) # should be saved under BASE_DIR/azureDNS/media/profile_pictures/<filename>.jpg
+    profile_image = models.TextField(null=True, blank=True) # to store data-url of image for profile pictures
     created_at = models.DateTimeField(default=datetime.now)
     modified_at = models.DateTimeField(auto_now=True) # Auto-update on every save
 
