@@ -325,7 +325,7 @@ class AuthorPostsAllView(APIView):
             posts = posts.filter(visibility=1)
         # if user is authenticated locally as author
         elif request.user == author and request.user.is_authenticated:
-            posts = posts.all()
+            posts = posts.filter(visibility=1)
         # if user is authenticated as friend of author
         else:
             posts = posts.filter(visibility__in=[1, 2])
