@@ -26,6 +26,10 @@ class NodeView(APIView):
         
         # hashed_password = make_password(password) # if we want to hash the password, then uncomment this
 
+        # Ensure host ends with /api/ -- to keep it consistent with host on objects
+        if not node_url.endswith('/api/'):
+            node_url = node_url.rstrip('/') + '/api/'
+
         node, created = NodeUser.objects.get_or_create(
             host=node_url,
             defaults={'username': username, 'password': password}
@@ -97,7 +101,7 @@ class NodeConnectionView(APIView):
         try:
             # Send a test GET request to the remote node's API with basic auth
             response = requests.get(
-                node_url,
+                node_url, # assume this ends with /api/
                 auth=HTTPBasicAuth(username, password),
                 timeout=5
             )
