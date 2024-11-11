@@ -95,6 +95,10 @@ class AuthorPostView(APIView):
 
             elif post.visibility == 4:  # DELETED
                 # Deleted posts should return a 404 error
+                requestUser = get_object_or_404(User, uuid=request.user.uuid)
+                if requestUser.is_staff:
+                    serializer = PostSerializer(post)
+                    return Response(serializer.data, status = 200)                
                 return HttpResponse("This post does not exist.", status=404)
         
     @extend_schema(
