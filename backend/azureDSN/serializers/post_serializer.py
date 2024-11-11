@@ -103,7 +103,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True) # can be empty on post creation
     content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
     github_id = serializers.CharField(required=False, allow_null=True)
 
