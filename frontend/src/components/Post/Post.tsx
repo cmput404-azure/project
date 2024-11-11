@@ -144,6 +144,7 @@ export default function Post({
             )
           );
           const checkIfShared = async () => {
+            if (!authProvider.user) return;
             const isShared = await ShareService.checkShare(postGiven.id, authProvider.user.uuid);
             setHasShared(isShared)
           };
