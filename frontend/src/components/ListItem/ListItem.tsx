@@ -42,6 +42,7 @@ export default function ListItem({
   const [isRequested, setIsRequested] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isUpdatedPost, setIsUpdatedPost] = useState(false);
+  const [isDeletedPost, setIsDeletedPost] = useState(false);
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
 
@@ -80,14 +81,10 @@ export default function ListItem({
         fetchData(); // Call the async function
       }
       if (postObj != null) {
-        const modifiedDate = new Date(postObj.modified_at);
-        const publishedDate = new Date(postObj.published);
-
-        // Calculate the difference in seconds
-        const timeDifferenceInSeconds = Math.abs((modifiedDate - publishedDate) / 1000);
-
-        if (timeDifferenceInSeconds > 5) {
+        if (postObj.post_status === "update") {
           setIsUpdatedPost(true);
+        }else if (postObj.post_status === "delete"){
+          setIsDeletedPost(true);
         }
       }
     }
@@ -158,9 +155,8 @@ export default function ListItem({
   // else if (isShare) additionalText = `shared a post with you titled: ${postObj.title}`;
   else if (isLike) additionalText = `liked your post titled: ${postObj.title}`;
   else if (isComment) additionalText = `commented on your post titled: ${postObj.title}`;
-
-  // notification fails to differetiate these posts below
   else if (isUpdatedPost) additionalText = `updated their post titled: ${postObj.title}`;
+  else if (isDeletedPost) additionalText = `deleted their post titled: ${postObj.title}`;
   else if (isPost) additionalText = `posted a post titled: ${postObj.title}`;
 
   return (
