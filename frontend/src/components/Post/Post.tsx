@@ -216,7 +216,8 @@ export default function Post({
   useEffect(() => {
     const fetchPost = async () => {
       if (postGiven) {
-        const postData = await postService.getPost(`api/posts/${postGiven.id}`);
+        let encodedId = encodeURIComponent(postGiven.id);
+        const postData = await postService.getPost(`api/posts/${encodedId}`);
         setCommentList(postData.comments.src.reverse());
         setCommentCount(
           Array.isArray(postData.comments) ? 0 : postData.comments.count

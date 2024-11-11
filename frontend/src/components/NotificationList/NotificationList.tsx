@@ -40,20 +40,34 @@ export default function NotificationList() {
             // Expected format for host: http://host/api/
             // Expected format for object: api/authors/author_id/posts/post_id
             const objectPath = item.object.startsWith("api/") ? item.object.slice(4) : item.object;
-            let post_resp = await api.get(`${item.author.host}${objectPath}`);
-            post_obj = post_resp.data;
+            try{
+              let post_resp = await api.get(`${item.author.host}${objectPath}`);
+              post_obj = post_resp.data;
+              
+              if(post_obj.author.id.includes(authProvider.user.uuid)=== true){
+                // user liked their own post, don't need to notify
+                return null
+              }
+            }catch{
+              // post got deleted
+              return null
+            }
           } else if (item.type === "comment") {
             let encodedId = encodeURIComponent(item.author.id);
             user = await fetchUser(encodedId);
-            let post_resp = await api.get(item.post);
-            post_obj = post_resp.data;
+            try{
+              let post_resp = await api.get(item.post);
+              post_obj = post_resp.data;
+
+              if(post_obj.author.id.includes(authProvider.user.uuid)=== true){
+                // user commented on their own post, don't need to notify
+                return null
+              }
+            }catch{
+              // post got deleted
+              return null
+            }
           } 
-          // else if (item.type === "share") {
-          //   let user_resp = await api.get(item.user);
-          //   user = user_resp.data;
-          //   let post_resp = await PostService.getPost(item.post);
-          //   post_obj = post_resp;
-          // } 
           else if (item.type === "post") {
             // Someone shared a friends only post
             let user_resp = await api.get(item.author.id);
@@ -63,8 +77,9 @@ export default function NotificationList() {
           return { ...item, user, post_obj };
         })
       );
-      console.log("NOTIFICATONS", notificationsWithUsers);
-      setNotifications(notificationsWithUsers);
+      const validNotifications = notificationsWithUsers.filter((notification) => notification !== null);
+      console.log("NOTIFICATONS", validNotifications);
+      setNotifications(validNotifications);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching notifications:", err);

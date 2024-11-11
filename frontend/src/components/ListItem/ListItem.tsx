@@ -10,27 +10,17 @@ import { useAuth } from "../../state";
 import FollowService from "../../service/follow";
 import InboxService from "../../service/inbox";
 import ProfileService from "../../service/profile";
-import {PostData, Author} from "../../models/models"
+import { PostData, Author } from "../../models/models"
 interface ListItemProps {
   isRequest?: boolean;
   isPost?: boolean;
   postObj?: PostData;
   isLike?: boolean;
   isComment?: boolean;
-  isShare?: boolean;
   isFollowerList?: boolean;
   isUserList?: boolean;
   notif_id?: string;
-  user: Author
-  // user: {
-  //   displayName: string;
-  //   github: string;
-  //   host: string;
-  //   id: string; // use the host and id to get the foreign fqid
-  //   page: string;
-  //   type: string;
-  //   profileImage: string | null;
-  // };
+  user: Author;
   closeModal?: () => void;
   onRefresh: () => void;
 }
@@ -40,7 +30,6 @@ export default function ListItem({
   isPost,
   postObj,
   isLike,
-  isShare,
   isComment,
   isFollowerList,
   isUserList,
@@ -53,7 +42,6 @@ export default function ListItem({
   const [isRequested, setIsRequested] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isUpdatedPost, setIsUpdatedPost] = useState(false);
-  const [isDeletedPost, setIsDeletedPost] = useState(false);
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
 
@@ -88,11 +76,17 @@ export default function ListItem({
     };
 
     if (authProvider.isAuthenticated === true) {
-      if (isUserList){
+      if (isUserList) {
         fetchData(); // Call the async function
       }
-      if (postObj != null){
-        if(postObj.modified_at != postObj.published){
+      if (postObj != null) {
+        const modifiedDate = new Date(postObj.modified_at);
+        const publishedDate = new Date(postObj.published);
+
+        // Calculate the difference in seconds
+        const timeDifferenceInSeconds = Math.abs((modifiedDate - publishedDate) / 1000);
+
+        if (timeDifferenceInSeconds > 5) {
           setIsUpdatedPost(true);
         }
       }
@@ -120,7 +114,7 @@ export default function ListItem({
             displayName: `${userInfo.displayName}`,
             username: `${userInfo.username}`,
             bio: `${userInfo.bio}`,
-            profileImage:`${userInfo.profileImage}`,
+            profileImage: `${userInfo.profileImage}`,
             github: `${userInfo.github}`,
             page: `${userInfo.page}`,
           },
@@ -132,7 +126,7 @@ export default function ListItem({
       } catch (error) {
         console.error("Fetch error:", error);
       }
-    }else{
+    } else {
       closeModal?.();
       navigate("/login");
     }
@@ -164,11 +158,10 @@ export default function ListItem({
   // else if (isShare) additionalText = `shared a post with you titled: ${postObj.title}`;
   else if (isLike) additionalText = `liked your post titled: ${postObj.title}`;
   else if (isComment) additionalText = `commented on your post titled: ${postObj.title}`;
-  
+
   // notification fails to differetiate these posts below
-  else if (isDeletedPost) additionalText = `deleted their post titled: ${postObj.title}`;
-  else if (isPost) additionalText = `posted a post titled: ${postObj.title}`;
   else if (isUpdatedPost) additionalText = `updated their post titled: ${postObj.title}`;
+  else if (isPost) additionalText = `posted a post titled: ${postObj.title}`;
 
   return (
     <div className={styles.ListItemContainer}>
