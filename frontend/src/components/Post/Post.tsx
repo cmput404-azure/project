@@ -100,7 +100,7 @@ export default function Post({
               );
               if (!authProvider.user.is_staff) {
                 if (postData.visibility !== 1) {
-                  if (!is_following || postData.visibility === 2) {
+                  if (!is_following && postData.visibility === 2) {
                     setOpenSnackbar(true);
                     setShowAlert(true);
                     setTimeout(() => {
@@ -161,7 +161,8 @@ export default function Post({
       } catch (error) {
         if (error.response && error.response.status === 403) {
           navigate("/login");
-        } else {
+        } 
+        else {
           console.error("Error fetching post data:", error);
         }
       }
