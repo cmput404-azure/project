@@ -100,7 +100,7 @@ export default function Post({
               );
               if (!authProvider.user.is_staff) {
                 if (postData.visibility !== 1) {
-                  if (!is_following || postData.visibility === 2) {
+                  if (!is_following && postData.visibility === 2) {
                     setOpenSnackbar(true);
                     setShowAlert(true);
                     setTimeout(() => {
@@ -144,6 +144,7 @@ export default function Post({
             )
           );
           const checkIfShared = async () => {
+            if (!authProvider.user) return;
             const isShared = await ShareService.checkShare(postGiven.id, authProvider.user.uuid);
             setHasShared(isShared)
           };
@@ -161,7 +162,8 @@ export default function Post({
       } catch (error) {
         if (error.response && error.response.status === 403) {
           navigate("/login");
-        } else {
+        } 
+        else {
           console.error("Error fetching post data:", error);
         }
       }
@@ -216,7 +218,8 @@ export default function Post({
   useEffect(() => {
     const fetchPost = async () => {
       if (postGiven) {
-        const postData = await postService.getPost(`api/posts/${postGiven.id}`);
+        let encodedId = encodeURIComponent(postGiven.id);
+        const postData = await postService.getPost(`api/posts/${encodedId}`);
         setCommentList(postData.comments.src.reverse());
         setCommentCount(
           Array.isArray(postData.comments) ? 0 : postData.comments.count
@@ -364,6 +367,11 @@ export default function Post({
             </span>
           </div>
           <div>
+          {post.visibility === 4 && (
+            <span className={styles.deletedLabel}>
+              Deleted
+            </span>
+          )}
             {post.type === "shared" && (
               <span className={styles.sharedLabel}>
                 Shared by {post.shared_by}
@@ -506,7 +514,7 @@ export default function Post({
                   <div className={styles.commentAuthor}>
                     {comment.author.displayName}
                   </div>
-                  <div className={styles.timePosted}>{comment.published}</div>
+                  <div className={styles.timePosted}>{new Date(comment.published).toLocaleString()}</div>
                 </div>
                 <div className={styles.commentText}>{comment.comment}</div>
               </div>

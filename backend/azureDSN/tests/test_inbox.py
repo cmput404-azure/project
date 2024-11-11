@@ -15,7 +15,6 @@ class InboxViewTestCase(TestCase):
         # Set URL for the inbox, comment and post view
         self.inbox_url = reverse('inbox', kwargs={'author_serial': self.user.uuid}) 
 
-    
     # Fetching empty inbox
     def test_get_with_empty_inbox(self):
         response = self.client.get(self.inbox_url)
@@ -30,7 +29,6 @@ class InboxViewTestCase(TestCase):
         response = self.client.get(nonexistent_inbox_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        
     # Check fetching all items in the inbox
     def test_get_inbox_items(self):
         # Add follow request into inbox
@@ -77,7 +75,7 @@ class InboxViewTestCase(TestCase):
         self.assertEqual(len(inbox_obj.items.all()), 1) # Ensure inbox is empty
 
     # Send a DELETE request to delete a post
-    def test_delete_post(self):
+    def test_delete_local_post(self):
         # Add a post into inbox
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         create_inbox_item(self.post, inbox_obj)
@@ -88,7 +86,36 @@ class InboxViewTestCase(TestCase):
         
         response = self.client.delete(self.inbox_url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(inbox_obj.items.all()), 0) # Ensure inbox is empty
+        self.assertEqual(len(inbox_obj.items.all()), 2) # Ensure inbox have one more item
+        self.assertEqual(inbox_obj.items.last().post_status, "delete")
+        
+    def test_delete_non_existent_local_post(self):
+        inbox_obj = Inbox.objects.get(user=self.user.uuid)
+        
+        # Define a payload with a non-existent post ID
+        payload = {
+            "type": "post",
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe4c"
+        }
+        
+        response = self.client.delete(self.inbox_url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(inbox_obj.items.count(), 1)
+        
+    def test_delete_remote_post(self):
+        inbox_obj = Inbox.objects.get(user=self.user.uuid)
+        
+        # Define a payload with a post ID from a remote server
+        payload = {
+            "type": "post",
+            "id": "http://remote-server.com/api/authors/2677192c-bce3-4583-afe3-b6592155fe4c/posts/2677192c-bce3-4583-afe3-b6592155fe4c"
+        }
+        
+        response = self.client.delete(self.inbox_url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(inbox_obj.items.count(), 1) 
+        self.assertIsNotNone(inbox_obj.items.last().remote_payload)
+        self.assertEqual(inbox_obj.items.last().post_status, "delete")
 
     # Test update existing post 
     def test_update_existing_post(self):
@@ -114,22 +141,18 @@ class InboxViewTestCase(TestCase):
         }
         
         response = self.client.put(self.inbox_url, data=payload, format='json')
-        
+        inbox_obj = Inbox.objects.get(user=self.user.uuid)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "Update post successfully.")
-        
-        # Refresh the post object from the database and check that it was updated
-        self.post.refresh_from_db()
-        self.assertEqual(self.post.title, payload["title"])
-        self.assertEqual(self.post.content, payload["content"])
-        self.assertEqual(self.post.visibility, payload["visibility"])
+        self.assertEqual(response.data["message"], "We have noticed other users about your updated post")
+        self.assertEqual(len(inbox_obj.items.all()), 2)
+        self.assertEqual(inbox_obj.items.last().post_status, "update")
         
     
-    def test_update_nonexsitent_post(self):
+    def test_update_remote_post(self):
         # add post into inbox
         payload = {
             "type": "post",
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "id": f"http://localhost:8000/api/authors/2677192c-bce3-4583-afe3-b6592155fe4c/posts/2677192c-bce3-4583-afe3-b6592155fe4c",
             "description": "This post is a test",
             "contentType": "text/plain",
             "content": "This is a test post",
@@ -147,10 +170,12 @@ class InboxViewTestCase(TestCase):
             "visibility": 2
         }
         
+        inbox_obj = Inbox.objects.get(user=self.user.uuid)
         response = self.client.put(self.inbox_url, data=payload, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data["message"], "No post founded")
+        self.assertEqual(len(inbox_obj.items.all()), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(inbox_obj.items.last().post_status, "update")
+        self.assertIsNotNone(inbox_obj.items.last().remote_payload)
         
     
     # Test sending a post into one's inbox
