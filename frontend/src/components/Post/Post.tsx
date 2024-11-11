@@ -140,7 +140,7 @@ export default function Post({
           setPost(postGiven);
           setHasLiked(
             postGiven.likes.src.some((like) =>
-              like.id.includes(authProvider.user.uuid)
+              like.id.includes(authProvider.user?.uuid)
             )
           );
           const checkIfShared = async () => {
@@ -162,7 +162,12 @@ export default function Post({
       } catch (error) {
         if (error.response && error.response.status === 403) {
           navigate("/login");
-        } 
+        }
+
+        else if (error.response && error.response.status === 404) {
+          navigate("/"); // back to stream since they are not an admin
+        }
+
         else {
           console.error("Error fetching post data:", error);
         }
