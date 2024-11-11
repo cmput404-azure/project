@@ -255,12 +255,9 @@ class InboxView(APIView):
             post_obj = Post.objects.get(uuid=post_id)
             serializer = PostSerializer(post_obj, data=payload, context={"request": request})
             # local post
-            if serializer.is_valid():
-                inbox_obj = get_object_or_404(Inbox, user=user_object)
-                create_inbox_item(inbox_obj, post_obj, post_status="delete")
-                return Response({"message": "We have noticed other users about your deleted post"}, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, post_obj, post_status="delete")
+            return Response({"message": "We have noticed other users about your deleted post"}, status=status.HTTP_200_OK)
         
         except Post.DoesNotExist: # remote post
             # If post is from remote user, treat it as a json object
@@ -327,14 +324,10 @@ class InboxView(APIView):
             parsed_url = urlparse(payload["id"]) 
             post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
             post_obj = Post.objects.get(uuid=post_id)
-            serializer = PostSerializer(post_obj, data=payload, context={"request": request})
             # local post
-            if serializer.is_valid():
-                inbox_obj = get_object_or_404(Inbox, user=user_object)
-                create_inbox_item(inbox_obj, post_obj, post_status="update")
-                return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, post_obj, post_status="update")
+            return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
         
         except Post.DoesNotExist: # remote post
             # If post is from remote user, treat it as a json object
@@ -342,44 +335,6 @@ class InboxView(APIView):
             create_inbox_item(inbox_obj, remote_payload=payload, post_status="update")
             return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
         
-        # post_content_type = ContentType.objects.get(model="post")
-        # inbox_item_obj = InboxItem.objects.filter(
-        #                                             inbox=inbox_obj,
-        #                                             content_type=post_content_type,
-        #                                             object_id=payload['id']  # Filtering by the specific post ID
-        #                                         ).order_by("-id")
-
-        # if inbox_item_obj.exists():
-        #     for item in inbox_item_obj:
-        #         # item = inbox_item_obj.content_object
-        #         item.content_object.title = request.data.get('title', item.content_object.title)
-        #         item.content_object.content = request.data.get('content', item.content_object.content)
-        #         item.content_object.visibility = request.data.get('visibility', item.content_object.content)
-        #         item.content_object.modified_at = timezone.now()
-        #         item.time = datetime.now()
-        #         item.save()
-        #         item.content_object.save()
-            
-        #     return Response({"message": "Update post successfully."}, status=status.HTTP_200_OK)
-
-        # else:
-        #     # No matching inbox item found, store the payload as a JSON object
-        #     existing_item = InboxItem.objects.filter(
-        #     inbox=inbox_obj,
-        #     remote_payload__id=payload['id']  # Check if remote_payload's id matches the incoming id
-        #     ).first()
-
-        #     if existing_item:
-        #         # Update the remote_payload with the new data
-        #         existing_item.remote_payload['title'] = request.data.get('title', existing_item.remote_payload.get('title'))
-        #         existing_item.remote_payload['content'] = request.data.get('content', existing_item.remote_payload.get('content'))
-        #         existing_item.remote_payload['visibility'] = request.data.get('visibility', existing_item.remote_payload.get('visibility'))
-        #         existing_item.time = datetime.now()  
-        #         existing_item.save()
-
-        #         return Response({"message": "Update post successfully."}, status=status.HTTP_200_OK)
-        #     else:
-        #         return Response({"message": "No post founded"}, status=status.HTTP_404_NOT_FOUND)
         
     
     @extend_schema(
