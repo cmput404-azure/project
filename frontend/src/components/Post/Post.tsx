@@ -218,7 +218,8 @@ export default function Post({
   useEffect(() => {
     const fetchPost = async () => {
       if (postGiven) {
-        const postData = await postService.getPost(`api/posts/${postGiven.id}`);
+        let encodedId = encodeURIComponent(postGiven.id);
+        const postData = await postService.getPost(`api/posts/${encodedId}`);
         setCommentList(postData.comments.src.reverse());
         setCommentCount(
           Array.isArray(postData.comments) ? 0 : postData.comments.count
@@ -513,7 +514,7 @@ export default function Post({
                   <div className={styles.commentAuthor}>
                     {comment.author.displayName}
                   </div>
-                  <div className={styles.timePosted}>{comment.published}</div>
+                  <div className={styles.timePosted}>{new Date(comment.published).toLocaleString()}</div>
                 </div>
                 <div className={styles.commentText}>{comment.comment}</div>
               </div>

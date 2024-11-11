@@ -259,36 +259,15 @@ class AuthorsCompleteView(APIView):
         """
         user_uuid = request.query_params.get('user')
 
+        if user_uuid =='anonymous':
+            users = User.objects.filter(type="author")
+        else:
         # Query all users of type 'author' and exclude the current user
-        users = User.objects.exclude(uuid=user_uuid).filter(type="author")
-        formatted_uuid = str(UUID(user_uuid))
+            users = User.objects.exclude(uuid=user_uuid).filter(type="author")
 
-        # Query FollowRequest to check if the current user has sent a request
-        follow_requests = FollowRequest.objects.filter(
-            actor__id=formatted_uuid
-        ).values_list('object_id', flat=True)
+        # # Serialize the users
+        serializer = UserSerializer(users, many=True)
+ 
 
-        # Annotate users with `has_requested` based on follow request existence
-        users = users.annotate(
-            has_requested=Case(
-                When(uuid__in=follow_requests, then=Value(True)),
-                default=Value(False),
-                output_field=BooleanField()
-            ),
-            id=F('uuid'),
-            displayName=F('display_name'),  # Rename displayName to display_name
-            profileImage=F('profile_image')  # Rename profile_image to profileImage
-        )
-
-        user_data = users.values(
-            'id',
-            'host',
-            'displayName',  # Rename the field
-            'github',
-            'page',
-            'profileImage', 
-            'has_requested'
-        )     
-
-        return Response(list(user_data), status=200)
+        return Response(serializer.data, status=200)
 
