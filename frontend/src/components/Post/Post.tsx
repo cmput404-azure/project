@@ -160,9 +160,14 @@ export default function Post({
           );
         }
       } catch (error) {
-        if (error.response && error.response.status === 403) {
+        if (error.response.status === 403) {
           navigate("/login");
-        } 
+        }
+
+        else if (error.response.status === 404) {
+          navigate("/"); // back to stream since they are not an admin
+        }
+
         else {
           console.error("Error fetching post data:", error);
         }

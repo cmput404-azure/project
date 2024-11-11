@@ -100,7 +100,7 @@ class AuthorPostView(APIView):
                     if requestUser.is_staff:
                         serializer = PostSerializer(post)
                         return Response(serializer.data, status = 200)             
-                return HttpResponse("This post does not exist.", status=403) # They do not have enough clearance level to view the post
+                return HttpResponse("This post does not exist.", status=404) # We don't want to disclose information that this post still exists technically
         
     @extend_schema(
         summary="Edit a post",
@@ -580,7 +580,7 @@ class PostView(APIView):
                     return Response("Authentication required to view this post.", status=403)
             elif post.visibility == 4:  # DELETED
                 if not (request.user.is_authenticated and request.user.is_staff):
-                    return Response("Post does not exist.", status=403) # They don't have enough permission to view this resource
+                    return Response("Post does not exist.", status=404) # Don't disclose information for security purposes
             
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
