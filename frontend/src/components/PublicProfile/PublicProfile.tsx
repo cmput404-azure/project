@@ -49,6 +49,7 @@ export default function PublicProfile() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [postCount, setPostCount] = useState(0);
   const pageSize = 10;
   const navigate = useNavigate();
 
@@ -68,6 +69,7 @@ export default function PublicProfile() {
     if (loading) return;
     setLoading(true);
     const { count, src } = await ProfileService.fetchAuthorPosts(userId, page);
+    setPostCount(count); // if filter is done properly, count should represent the number of public posts
 
     setPosts((prevPosts) => {
       const existingIds = new Set(prevPosts.map((post) => post.id));
@@ -248,8 +250,7 @@ export default function PublicProfile() {
 
                 <div className={styles.follows}>
                   <p className={styles.posts__count}>
-                    <b>{posts.length}</b>{" "}
-                    {posts.length === 1 ? "post" : "posts"}
+                    <b>{postCount}</b> {postCount === 1 ? "post" : "posts"}
                   </p>
                   <p
                     className={styles.followers__count}
@@ -260,8 +261,7 @@ export default function PublicProfile() {
                       })
                     }
                   >
-                    <b>{followersCount}</b>{" "}
-                    {followersCount === 1 ? "follower" : "followers"}
+                    <b>{followersCount}</b> {followersCount === 1 ? "follower" : "followers"}
                   </p>
                   <p
                     className={styles.following__count}

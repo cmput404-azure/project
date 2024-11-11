@@ -1,8 +1,6 @@
 import { Button, TextField } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
-
-import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -52,18 +50,26 @@ export default function EditPostModal({
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<number>(0);
   const [contentType, setContentType] = useState(`${post.contentType}`);
-  console.log(post);
-  console.log(post.contentType);
-  console.log(contentType);
+  const [disabled, setDisabled] = useState(true);
+
   // Ensure that modal fields reset when `post` data changes
   useEffect(() => {
-    if (post) {
+    if (isOpen && post) {
       // Check if post is defined
       setTitle(post.title);
       setContent(post.content);
       setVisibility(post.visibility);
     }
-  }, [post]);
+  }, [isOpen, post]);
+
+  // Disable save button if there are no edits made
+  useEffect(() => {
+    if (title === post.title && content === post.content && visibility === post.visibility) {
+      setDisabled(true);
+    } else {
+      setDisabled(false);
+    }
+  }, [title, content, visibility, post]);
 
   const handleSave = () => {
     if (post) {
@@ -91,7 +97,7 @@ export default function EditPostModal({
       <h2 className={styles.title}>Edit Post</h2>
       <form>
         <div className={styles.formGroup}>
-          <label>Content</label>
+          <label>Title</label>
           <PostTextField
             value={title}
             fullWidth
@@ -100,19 +106,32 @@ export default function EditPostModal({
         </div>
         <div className={styles.formGroup}>
           <label>Content</label>
-          {contentType == "image/png;base64" ? (
+          {/^image\/(png|jpeg);base64$/.test(contentType) ? (
             <div className={styles.cardImage}>
               <img
                 className={styles.postImage}
-                src={"data:image/png;base64," + post.content}
+                src={`data:${contentType},${post.content}`}
                 alt={post.description}
               />
             </div>
           ) : (
             <PostTextField
+              className={styles.content_field}
               value={content}
+              multiline
               fullWidth
               onChange={(e) => setContent(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                   padding: 0,
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                   border: 'none',
+                },
+                '& textarea': {
+                  resize: 'none', // Remove resize handle
+                },
+             }}
             />
           )}
         </div>
@@ -145,8 +164,9 @@ export default function EditPostModal({
           </Button>
           <Button
             variant="contained"
+            disabled={disabled}
             onClick={handleSave}
-            className={styles.saveButton}
+            sx={{ backgroundColor: "#70ffaf", color: "black", transition: "0.3s ease-in-out" }}
           >
             Save
           </Button>

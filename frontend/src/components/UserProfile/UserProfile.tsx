@@ -7,7 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import FollowList from "../FollowList/FollowList";
 import { FollowerModalTypes } from "../../models/modelTypes";
-import { CloudUpload, FileUpload, GitHub } from "@mui/icons-material";
+import { CloudUpload, GitHub } from "@mui/icons-material";
 import LinkIcon from '@mui/icons-material/Link';
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import ProfileService from "../../service/profile";
@@ -34,6 +34,7 @@ export default function UserProfile() {
    const [page, setPage] = useState(1);
    const [totalPages, setTotalPages] = useState(0);
    const [loading, setLoading] = useState(false);
+   const [postCount, setPostCount] = useState(0);
    const pageSize = 10;
 
    const auth = useAuth();
@@ -50,7 +51,8 @@ export default function UserProfile() {
    const fetchPosts = async (userId: string, page: number = 1) => {
       if (loading) return;
       setLoading(true);
-      const { count, src } = await ProfileService.fetchAuthorPosts(userId, page); 
+      const { count, src } = await ProfileService.fetchAuthorPosts(userId, page);
+      setPostCount(count);
 
       setPosts(prevPosts => {
          const existingIds = new Set(prevPosts.map(post => post.id));
@@ -136,7 +138,7 @@ export default function UserProfile() {
 
                         <div className={styles.follows}>
                            <p className={styles.posts__count} >
-                              <b>{posts.length}</b> {posts.length === 1 ? "post" : "posts"}
+                              <b>{postCount}</b> {postCount === 1 ? "post" : "posts"}
                            </p>
                            <p className={styles.followers__count} onClick={() => setfollowersModal({ open: true, type: FollowerModalTypes.FOLLOWER })}>
                               <b>{followersCount}</b> {followersCount === 1 ? "follower" : "followers"}
