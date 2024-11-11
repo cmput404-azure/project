@@ -95,7 +95,12 @@ class AuthorPostView(APIView):
 
             elif post.visibility == 4:  # DELETED
                 # Deleted posts should return a 404 error
-                return HttpResponse("This post does not exist.", status=404)
+                if request.user.is_authenticated:
+                    requestUser = get_object_or_404(User, uuid=request.user.uuid)
+                    if requestUser.is_staff:
+                        serializer = PostSerializer(post)
+                        return Response(serializer.data, status = 200)             
+                return HttpResponse("This post does not exist.", status=403) # They do not have enough clearance level to view the post
         
     @extend_schema(
         summary="Edit a post",
@@ -557,14 +562,15 @@ class PostView(APIView):
             post = get_object_or_404(Post, uuid=post_serial)
 
             # Check the visibility of the post
-            if post.visibility == 2 and not request.user.is_authenticated:  # FRIENDS
-                return Response("Friend's only posts must be authenticated to view.", status=403)
-            if post.visibility == 3 and not request.user.is_authenticated:  # UNLISTED
-                return Response("Unlisted posts must be authenticated to view.", status=403)
-            if post.visibility == 4:  # DELETED
-                return Response("Post does not exist.", status=404)
+            if post.visibility == 1: # Anyone can see PUBLIC posts
+                pass
+            elif post.visibility in (2, 3):  # FRIENDS or UNLISTED
+                if not request.user.is_authenticated:
+                    return Response("Authentication required to view this post.", status=403)
+            elif post.visibility == 4:  # DELETED
+                if not (request.user.is_authenticated and request.user.is_staff):
+                    return Response("Post does not exist.", status=403) # They don't have enough permission to view this resource
             
-            # Post is public if above conditions are not met
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
         else:

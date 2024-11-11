@@ -38,7 +38,7 @@ export default function PublicProfile() {
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
   const [followersModal, setfollowersModal] = useState<FollowersModal>({
     open: false,
-    type: "follower",
+    type: "Follower",
   });
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -49,10 +49,10 @@ export default function PublicProfile() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [postCount, setPostCount] = useState(0);
   const pageSize = 10;
   const navigate = useNavigate();
 
-  // TODO: make the follow button change to unfollow if the user is already following the author, or hidden if the user is the author
   const authProvider = useAuth();
 
   const { userID } = useParams<{ userID: string }>();
@@ -69,6 +69,7 @@ export default function PublicProfile() {
     if (loading) return;
     setLoading(true);
     const { count, src } = await ProfileService.fetchAuthorPosts(userId, page);
+    setPostCount(count); // if filter is done properly, count should represent the number of public posts
 
     setPosts((prevPosts) => {
       const existingIds = new Set(prevPosts.map((post) => post.id));
@@ -114,6 +115,21 @@ export default function PublicProfile() {
       setIsFollowing(is_following);
     }
 
+    async function checkRequested() {
+      // Check inbox of the user ID
+      const userInbox = await InboxService.getInbox(userID);
+      await Promise.all(
+        userInbox.map(async (item: any) => {
+          if (item && item.type === "follow") {
+            let actorId = item.actor.id.replace(/\/+$/, '').split('/').pop();
+            if (actorId === authProvider.user.uuid) {
+              setIsRequested(true);
+            }
+          }
+        })
+      );
+    }
+
     fetchCounts();
     if (authProvider.isAuthenticated === false) {
       setIsAuthenticated(false);
@@ -121,6 +137,7 @@ export default function PublicProfile() {
       if (userID === authProvider.user.uuid) {
         setIsOwnProfile(true);
       } else {
+        checkRequested();
         checkFollowing();
       }
     }
@@ -203,8 +220,8 @@ export default function PublicProfile() {
                     isOwnProfile
                       ? handleManageProfileClick
                       : isAuthenticated
-                      ? handleButtonClick
-                      : handleLoginClick
+                        ? handleButtonClick
+                        : handleLoginClick
                   }
                   disabled={isRequested}
                   sx={{ backgroundColor: "#70ffaf", color: "black" }}
@@ -212,10 +229,10 @@ export default function PublicProfile() {
                   {isOwnProfile
                     ? "Manage Profile"
                     : isRequested
-                    ? "Requested"
-                    : isFollowing
-                    ? "Unfollow"
-                    : "Follow"}
+                      ? "Requested"
+                      : isFollowing
+                        ? "Unfollow"
+                        : "Follow"}
                 </Button>
 
                 {authorData.github && (
@@ -233,8 +250,7 @@ export default function PublicProfile() {
 
                 <div className={styles.follows}>
                   <p className={styles.posts__count}>
-                    <b>{posts.length}</b>{" "}
-                    {posts.length === 1 ? "post" : "posts"}
+                    <b>{postCount}</b> {postCount === 1 ? "post" : "posts"}
                   </p>
                   <p
                     className={styles.followers__count}
@@ -245,8 +261,7 @@ export default function PublicProfile() {
                       })
                     }
                   >
-                    <b>{followersCount}</b>{" "}
-                    {followersCount === 1 ? "follower" : "followers"}
+                    <b>{followersCount}</b> {followersCount === 1 ? "follower" : "followers"}
                   </p>
                   <p
                     className={styles.following__count}

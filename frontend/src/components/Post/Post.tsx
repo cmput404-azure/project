@@ -12,13 +12,14 @@ import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 
 import CommentInputField from "../CommentInput/CommentInput";
 import { ContentType } from "../../models/modelTypes";
-import { PostData as PostModel } from "../../models/models";
+import { PostData as PostModel, Share } from "../../models/models";
 import follow from "../../service/follow";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
 import postService from "../../service/post";
 import FollowService from "../../service/follow";
 import ProfileService from "../../service/profile";
+import ShareService from "../../service/share";
 import styles from "./Post.module.scss";
 import { useAuth } from "../../state";
 import { useNavigate, useParams } from "react-router";
@@ -37,6 +38,8 @@ import profileService from "../../service/profile";
 import { PostData } from "../../models/models";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import Avatar from "@mui/material/Avatar";
+import auth from "../../service/auth";
+import share from "../../service/share";
 
 export default function Post({
   postGiven,
@@ -78,13 +81,13 @@ export default function Post({
           // decode base64 content
           const decodedPost = decodeBase64ToUrl(postDataList);
           postData.content = decodedPost[0].content;
-
+  
           if (authProvider.user) {
             const authUser = await ProfileService.fetchAuthorData(
               authProvider.user.uuid
             );
             const url = `${authUser.host}authors/${authProvider.user.uuid}`;
-
+  
             if (url !== postData.author.id) {
               let authorId = postData.author.id
                 .replace(/\/+$/, "")
@@ -97,7 +100,7 @@ export default function Post({
               );
               if (!authProvider.user.is_staff) {
                 if (postData.visibility !== 1) {
-                  if (!is_following || postData.visibility === 2) {
+                  if (!is_following && postData.visibility === 2) {
                     setOpenSnackbar(true);
                     setShowAlert(true);
                     setTimeout(() => {
@@ -107,17 +110,25 @@ export default function Post({
                 }
               }
             }
-
+  
             setHasLiked(
               postData.likes.src.some((like) =>
                 like.id.includes(authProvider.user.uuid)
               )
             );
+
+            const checkIfShared = async () => {
+              const isShared = await ShareService.checkShare(postData.id, authProvider.user.uuid);
+              setHasShared(isShared)
+            };
+            
+            // Call the function to check the share status
+            checkIfShared();
           }
 
           console.log(postData);
           setPost(postData);
-
+  
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
@@ -132,6 +143,14 @@ export default function Post({
               like.id.includes(authProvider.user.uuid)
             )
           );
+          const checkIfShared = async () => {
+            if (!authProvider.user) return;
+            const isShared = await ShareService.checkShare(postGiven.id, authProvider.user.uuid);
+            setHasShared(isShared)
+          };
+          
+          // Call the function to check the share status
+          checkIfShared();
           setCommentList(postGiven.comments.src.reverse());
           setLikeCount(
             Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
@@ -143,7 +162,8 @@ export default function Post({
       } catch (error) {
         if (error.response && error.response.status === 403) {
           navigate("/login");
-        } else {
+        } 
+        else {
           console.error("Error fetching post data:", error);
         }
       }
@@ -195,6 +215,20 @@ export default function Post({
     }
   }, [post]);
 
+  useEffect(() => {
+    const fetchPost = async () => {
+      if (postGiven) {
+        let encodedId = encodeURIComponent(postGiven.id);
+        const postData = await postService.getPost(`api/posts/${encodedId}`);
+        setCommentList(postData.comments.src.reverse());
+        setCommentCount(
+          Array.isArray(postData.comments) ? 0 : postData.comments.count
+        );
+      }
+    }
+    fetchPost()
+  }, [isModalOpen])
+
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
   };
@@ -215,23 +249,17 @@ export default function Post({
 
   const handleNewComment = (newComment) => {
     const newCommentList = [newComment, ...commentList];
+    setCommentCount((prevCount) => prevCount + 1);
     setCommentList(newCommentList);
   };
 
   const handleSharePost = async () => {
     if (!post || hasShared) return;
-
     setIsShareDialogOpen(true);
+  };
 
-    const followers = await follow.getFollowers(authProvider.user.uuid);
-    const friends = await follow.getFriends(authProvider.user.uuid);
-    const recipients =
-      post.visibility === 1 || post.visibility === 3 ? followers : friends;
-
-    await Promise.all(
-      recipients.map(({ id }) => inbox.sendPostToInbox(id, post))
-    );
-    setHasShared(true);
+  const handleCloseShareDialog = () => {
+    setIsShareDialogOpen(false);
   };
 
   const handleLikePost = async () => {
@@ -329,14 +357,29 @@ export default function Post({
           alt={`${post.author.displayName}'s profile`}
           onClick={redirectToAuthorProfile}
         />
-        <div className={styles.headerText}>
-          <span className={styles.userName} onClick={redirectToAuthorProfile}>
-            {post.author.displayName}
-          </span>
-          <span className={styles.postTime}>
-            {new Date(post.published).toLocaleString()}
-          </span>
+        <div className={styles.headerContainer}>
+          <div className={styles.headerText}>
+            <span className={styles.userName} onClick={redirectToAuthorProfile}>
+              {post.author.displayName}
+            </span>
+            <span className={styles.postTime}>
+              {new Date(post.published).toLocaleString()}
+            </span>
+          </div>
+          <div>
+          {post.visibility === 4 && (
+            <span className={styles.deletedLabel}>
+              Deleted
+            </span>
+          )}
+            {post.type === "shared" && (
+              <span className={styles.sharedLabel}>
+                Shared by {post.shared_by}
+              </span>
+            )}
+          </div>
         </div>
+        
         <Tooltip title="Copy link">
           <i className="fas fa-link" onClick={handleCopyLink}></i>
         </Tooltip>
@@ -388,7 +431,7 @@ export default function Post({
               <i className="fas fa-share"></i>
             </div>
           ) : null}
-          <ShareDialogue post={post} isDialogOpen={isShareDialogOpen} />
+          <ShareDialogue post={post} isDialogOpen={isShareDialogOpen} setHasShared={setHasShared} onClose={handleCloseShareDialog} />
         </div>
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
@@ -471,7 +514,7 @@ export default function Post({
                   <div className={styles.commentAuthor}>
                     {comment.author.displayName}
                   </div>
-                  <div className={styles.timePosted}>{comment.published}</div>
+                  <div className={styles.timePosted}>{new Date(comment.published).toLocaleString()}</div>
                 </div>
                 <div className={styles.commentText}>{comment.comment}</div>
               </div>
@@ -492,43 +535,56 @@ export default function Post({
 interface ShareDialogueProps {
   post: PostData;
   isDialogOpen: boolean;
+  setHasShared: React.Dispatch<React.SetStateAction<boolean>>;
+  onClose: () => void;
 }
 
-function ShareDialogue({ post, isDialogOpen }: ShareDialogueProps) {
-  const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(isDialogOpen);
+function ShareDialogue({ post, isDialogOpen, setHasShared, onClose }: ShareDialogueProps) {
+  // const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(isDialogOpen);
   const authProvider = useAuth();
 
   // Update shareDialogOpen when isDialogOpen prop changes
-  useEffect(() => {
-    setShareDialogOpen(isDialogOpen);
-  }, [isDialogOpen]);
+  // useEffect(() => {
+  //   setShareDialogOpen(isDialogOpen);
+  // }, [isDialogOpen]);
 
-  const handleCloseShare = () => {
-    setShareDialogOpen(false);
-  };
+  // const handleCloseShare = () => {
+  //   setShareDialogOpen(false);
+  // };
 
   // Function to confirm sharing
   const handleConfirmShare = async () => {
-    setShareDialogOpen(false);
+    // setShareDialogOpen(false);
+    onClose();
     // Get followers and share the post
     const currentUser = await profileService.fetchAuthorData(
       authProvider.user.uuid
     );
-    const share_obj = {
-      type: "share",
-      user: currentUser.id,
-      post: post.id,
-    };
     const followers = await follow.getFollowers(authProvider.user.uuid);
+    
     for (const follower of followers) {
+      const share_obj = {
+        type: "share",
+        sharer: authProvider.user.uuid,
+        post: post.id,
+      };
+
       await inbox.sendPostToInbox(follower.id, share_obj);
     }
+
+    // Add directly to the share model with receiver as null
+    const share_obj : Share = {
+      post: post.id
+    }
+
+    await share.addShare(share_obj, authProvider.user.uuid);
+    setHasShared(true);
   };
 
   return (
     <Dialog
-      open={shareDialogOpen}
-      onClose={handleCloseShare}
+      open={isDialogOpen}
+      onClose={onClose}
       sx={{
         "& .MuiDialog-paper": {
           backgroundColor: "rgb(123, 123, 123)",
@@ -544,7 +600,7 @@ function ShareDialogue({ post, isDialogOpen }: ShareDialogueProps) {
       </DialogContent>
       <DialogActions>
         <Button
-          onClick={handleCloseShare}
+          onClick={onClose}
           sx={{
             backgroundColor: "lightcoral",
             color: "white",
@@ -553,7 +609,6 @@ function ShareDialogue({ post, isDialogOpen }: ShareDialogueProps) {
               backgroundColor: "#e57373",
             },
           }}
-          autoFocus
         >
           Cancel
         </Button>
@@ -567,7 +622,6 @@ function ShareDialogue({ post, isDialogOpen }: ShareDialogueProps) {
               backgroundColor: "#4ba578",
             },
           }}
-          autoFocus
         >
           Share
         </Button>

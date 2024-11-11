@@ -9,6 +9,7 @@ class AuthorTests(APITestCase):
     def setUp(self):
         """Create test users for the tests."""
         self.test_author = User.objects.create_user(
+            type='author',
             username='testauthor',
             display_name='Test Author',
             host='http://localhost:8000/api/',
@@ -18,6 +19,7 @@ class AuthorTests(APITestCase):
             modified_at='2024-10-21T00:00:00Z'
         )
         self.test_author2 = User.objects.create_user(
+            type='author',
             username='testauthor2',
             display_name='Test Author2',
             host='http://localhost:8000/api/',
@@ -27,6 +29,7 @@ class AuthorTests(APITestCase):
             modified_at='2024-10-21T00:00:00Z'
         )
         self.test_author3 = User.objects.create_user(
+            type='author',
             username='testauthor3',
             display_name='Test Author3',
             host='http://localhost:8000/api/',
@@ -36,6 +39,7 @@ class AuthorTests(APITestCase):
             modified_at='2024-10-21T00:00:00Z'
         )
         self.test_author4 = User.objects.create_user(
+            type='author',
             username='testauthor4',
             display_name='Test Author4',
             host='http://localhost:8000/api/',
@@ -45,6 +49,7 @@ class AuthorTests(APITestCase):
             modified_at='2024-10-21T00:00:00Z'
         )
         self.test_author5 = User.objects.create_user(
+            type='author',
             username='testauthor5',
             display_name='Test Author5',
             host='http://localhost:8000/api/',
@@ -54,6 +59,7 @@ class AuthorTests(APITestCase):
             modified_at='2024-10-21T00:00:00Z'
         )
         self.test_author6 = User.objects.create_user(
+            type='author',
             username='testauthor6',
             display_name='Test Author6',
             host='http://localhost:8000/api/',
@@ -63,6 +69,7 @@ class AuthorTests(APITestCase):
             modified_at='2024-10-21T00:00:00Z'
         )
         self.test_author7 = User.objects.create_user(
+            type='author',
             username='testauthor7',
             display_name='Test Author7',
             host='http://localhost:8000/api/',
@@ -86,13 +93,22 @@ class AuthorTests(APITestCase):
         payload = response.data
         self.assertEqual(len(payload), 6)
         for author in payload:
-            self.assertIn(str(author["id"]), [str(self.test_author.uuid), str(self.test_author2.uuid), str(self.test_author3.uuid), str(self.test_author4.uuid), str(self.test_author5.uuid), str(self.test_author6.uuid), str(self.test_author7.uuid)])
             self.assertIn(author["displayName"], ['Test Author2', 'Test Author3', 'Test Author4', 'Test Author5', 'Test Author6', 'Test Author7'])
             self.assertIn(author["host"], ['http://localhost:8000/api/'])
-            self.assertIn(author["github"], ['github.com/testauthor', 'github.com/testauthor2', 'github.com/testauthor3', 'github.com/testauthor4', 'github.com/testauthor5', 'github.com/testauthor6', 'github.com/testauthor7'])
+            self.assertIn(author["github"], ['github.com/testauthor2', 'github.com/testauthor3', 'github.com/testauthor4', 'github.com/testauthor5', 'github.com/testauthor6', 'github.com/testauthor7'])
             self.assertIn(author["page"], ['http://localhost:8000/api/authors/testauthor', 'http://localhost:8000/api/authors/testauthor2', 'http://localhost:8000/api/authors/testauthor3', 'http://localhost:8000/api/authors/testauthor4', 'http://localhost:8000/api/authors/testauthor5', 'http://localhost:8000/api/authors/testauthor6', 'http://localhost:8000/api/authors/testauthor7'])
-            self.assertEqual(author["has_requested"], False)
-    
+
+    def test_retrieve_authors_all_anonymous(self):
+        """Test retrieving all authors without pagination."""
+        url = reverse('authors_all')
+        string_uuid = 'anonymous'
+        url_with_params = f"{url}?user={string_uuid}"
+        response = self.client.get(url_with_params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        payload = response.data
+        self.assertEqual(len(payload), 7)
+          
     # test getting all authors paginated  
     def test_retrieve_authors_paginated(self):
         """Test retrieving authors with pagination."""

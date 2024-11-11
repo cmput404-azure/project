@@ -190,7 +190,7 @@ class LikesView(APIView):
     pagination_provider = LikesPagination
     @extend_schema(
             summary="Retrieve Likes of a Post or Comment (TBD).",
-            description="Retrieve multiple Like objects of a Post by `post_fqid` or a combination of `author_serial` or `post_serial`. This has",
+            description="Retrieve multiple Like objects of a Post by `post_fqid` or a combination of `author_serial` or `post_serial`. This endpoint is also used to retrieve Likes of a Comment by FQID.",
             parameters=[
                 OpenApiParameter(
                     name='author_serial',
@@ -214,8 +214,8 @@ class LikesView(APIView):
                     location=OpenApiParameter.PATH 
                 ),
                 OpenApiParameter(
-                    name='comment_serial',
-                    description='UUID of the Comment whose Likes we want to retrieve',
+                    name='comment_fqid',
+                    description='FQID of the Comment whose Likes we want to retrieve',
                     type=str,
                     required=False,
                     location=OpenApiParameter.PATH 
@@ -247,13 +247,26 @@ class LikesView(APIView):
             },
             tags=['Likes & Liked API']
     )
-    def get(self, request, author_serial=None, post_serial=None, post_fqid=None, comment_serial=None):
-        if (comment_serial and author_serial and post_serial):
+    def get(self, request, author_serial=None, post_serial=None, post_fqid=None, comment_fqid=None):
+        if (comment_fqid and author_serial and post_serial):
             """
-            URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments/{COMMENT_SERIAL}/likes
-            GET [local, remote] a list of likes from other authors on AUTHOR_SERIAL's post POST_SERIAL comment COMMENT_SERIAL
+            URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments/{COMMENT_FQID}/likes
+            GET [local, remote] a list of likes from other authors on AUTHOR_SERIAL's post POST_SERIAL comment COMMENT_FQID
             Return: likes object
             """
+
+            # Example of comment_fqid would be like http://localhost:8000/authors/1234-abcd-efgh-5678/comments/0000-0001-0002-1000
+            try:
+                path_parts = comment_fqid.strip('/').split('/')
+                
+                comment_serial = path_parts[-1]
+                UUID(comment_serial) # will raise error if not UUID
+
+            except (IndexError, ValueError):
+                return Response(
+                    {"detail": "Invalid FQID."}, status=400
+                )
+
             type = "commented"
             post = get_object_or_404(Post, uuid=post_serial)
             author = get_object_or_404(User, uuid=author_serial)

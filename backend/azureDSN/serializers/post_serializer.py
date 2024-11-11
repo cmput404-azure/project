@@ -29,6 +29,7 @@ class PostSerializer(serializers.ModelSerializer):
             'comments',
             'likes',
             'published',
+            'modified_at',
             'visibility',
         )
     def to_representation(self, instance):
@@ -88,6 +89,7 @@ class PostSerializer(serializers.ModelSerializer):
         post.contentType = validated_data.get('contentType', post.contentType)
         post.content = validated_data.get('content', post.content)
         post.published = validated_data.get('published', post.published)
+        post.modified_at = validated_data.get('modified_at', post.modified_at)
         post.visibility = validated_data.get('visibility', post.visibility)
         post.save()
         return post
@@ -101,7 +103,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True) # can be empty on post creation
     content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
     github_id = serializers.CharField(required=False, allow_null=True)
 
