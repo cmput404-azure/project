@@ -125,6 +125,7 @@ class NodeConnectionView(APIView):
         try:
             node = NodeUser.objects.get(host=node_url)
             node.is_authenticated = False
+            node.save()
             return Response({'message': 'Node connection deactivated.'}, status=status.HTTP_200_OK)
         except NodeUser.DoesNotExist:
             return Response({'error': 'Node not found.'}, status=status.HTTP_404_NOT_FOUND)
