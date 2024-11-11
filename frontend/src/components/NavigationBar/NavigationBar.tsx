@@ -11,11 +11,13 @@ import styles from "./NavigationBar.module.scss";
 interface NavigationBarProps {
   onClick: (item: string) => void;
   isLoggedIn: boolean;
+  isAdmin: boolean
 }
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
   onClick,
   isLoggedIn,
+  isAdmin,
 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false); // State to control the search modal
   const [isNotificationOpen, setIsNotificationOpen] = useState<boolean>(false); // State to control the search modal
@@ -45,8 +47,11 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
   const bottomNavigationItems = [
     { icon: <i className="fas fa-user" />, label: "profile" },
-    { icon: <i className="fas fa-gear" />, label: "settings" },
   ];
+
+  const adminNavigationItems = [
+    { icon: <i className="fas fa-gear" />, label: "settings" },
+  ]
 
   useEffect(() => {
     const handleResize = () => {
@@ -127,9 +132,19 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 </div>
               ))}
           </div>
-          {/* For bottom 2 icons */}
+          {/* For Profile Icon */}
           <div className={styles.bottomIconGroup}>
             {bottomNavigationItems.map((item) => (
+              <div
+                key={item.label}
+                className={styles.navigationItem}
+                onClick={() => onClick(item.label)}
+              >
+                {item.icon}
+              </div>
+            ))}
+          {/* For Settings Icon */}
+            {isAdmin && adminNavigationItems.map((item) => (
               <div
                 key={item.label}
                 className={styles.navigationItem}

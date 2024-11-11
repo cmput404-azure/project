@@ -123,6 +123,7 @@ function Auth() {
         .then((response) => {
           authProvider.setIsAuthenticated(true);
           authProvider.setUser(response.user);
+          authProvider.initializeAuth(); // need this to load gear icon for admins upon logging in
           navigate("/");
         })
         .catch((error) => {
@@ -331,3 +332,7 @@ export function Logout() {
 }
 
 export default Auth;
+function navigate(arg0: string) {
+  throw new Error("Function not implemented.");
+}
+
