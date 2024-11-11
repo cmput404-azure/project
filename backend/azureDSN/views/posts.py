@@ -99,8 +99,8 @@ class AuthorPostView(APIView):
                     requestUser = get_object_or_404(User, uuid=request.user.uuid)
                     if requestUser.is_staff:
                         serializer = PostSerializer(post)
-                        return Response(serializer.data, status = 200)                
-                return HttpResponse("This post does not exist.", status=404)
+                        return Response(serializer.data, status = 200)             
+                return HttpResponse("This post does not exist.", status=403) # They do not have enough clearance level to view the post
         
     @extend_schema(
         summary="Edit a post",

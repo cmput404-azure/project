@@ -186,7 +186,7 @@ class PostTests(APITestCase):
             'post_serial': self.test_post4.uuid
         })
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         
     # update post that does not exist
     def test_update_post_not_found(self):
@@ -301,7 +301,7 @@ class PostTests(APITestCase):
         host = "http://localhost:8000/api/posts/"
         url = reverse('post', kwargs={'post_fqid': f"{host}{self.test_post4.uuid}"})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     
     # ------------------------403 Forbidden------------------------
     # get a friends-only post by fqid without authentication
