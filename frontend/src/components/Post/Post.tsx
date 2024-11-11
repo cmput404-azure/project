@@ -365,6 +365,11 @@ export default function Post({
             </span>
           </div>
           <div>
+          {post.visibility === 4 && (
+            <span className={styles.deletedLabel}>
+              Deleted
+            </span>
+          )}
             {post.type === "shared" && (
               <span className={styles.sharedLabel}>
                 Shared by {post.shared_by}
