@@ -1,3 +1,5 @@
+import base64
+import os
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -54,6 +56,33 @@ class NodeView(APIView):
 
 
 class NodeConnectionView(APIView):
+    def get(self, request):
+        """
+            Check if incoming connection requests have valid credentials allowing them to connect to our node.
+        """
+        authorization_header = request.headers.get('Authorization') # e.g. Basic <base64-encoded-credentials>
+        print(authorization_header)
+
+        if not authorization_header:
+            return Response({'error': 'No Authorization header'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Extract username and password from the Authorization header (Basic Auth)
+        auth_type, auth_credentials = authorization_header.split(' ')
+
+        if auth_type.lower() != 'basic':
+            return Response({'error': 'Invalid authorization type'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        decoded_credentials = base64.b64decode(auth_credentials).decode('utf-8')
+        username, password = decoded_credentials.split(':')
+
+        expected_username = os.getenv('NODE_USERNAME')
+        expected_password = os.getenv('NODE_PASSWORD')
+
+        if username == expected_username and password == expected_password:
+            return Response({'message': 'Connected successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
     def post(self, request):
         """
             Establish a connection with remote nodes.
@@ -76,6 +105,7 @@ class NodeConnectionView(APIView):
             if response.status_code == 200:
                 node = get_object_or_404(NodeUser, host=node_url)
                 node.is_authenticated = True    # we've validated the credentials
+                node.save()
                 return Response({'message': 'Connected successfully'}, status=status.HTTP_200_OK)
             else:
                 return Response({'error': 'Failed to connect'}, status=status.HTTP_401_UNAUTHORIZED)

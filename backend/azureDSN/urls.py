@@ -62,6 +62,7 @@ urlpatterns = [
     path("api/check_auth/", CheckAuthView.as_view(), name="check_auth"),
     
     # Node connections
+    path('', NodeConnectionView.as_view(), name="handle_conn_request"),
     path('api/nodes/connect/', NodeConnectionView.as_view(), name="connect_node"),
     path('api/nodes/disconnect/', NodeConnectionView.as_view(), name="disable_node"),
     path('api/nodes/remove/', NodeView.as_view(), name="remove_node"),
