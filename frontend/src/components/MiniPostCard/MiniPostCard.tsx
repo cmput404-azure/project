@@ -172,11 +172,11 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
         <div className={styles.essentials}>
           <div className={styles.icon}>
             <i className="fas fa-heart"></i>
-            <span>{formatCount(postData.likes.src.length)}</span>
+            <span>{formatCount(postData.likes?.src ? postData.likes.src.length : 0)}</span>
           </div>
           <div className={styles.icon}>
             <i className="fas fa-comment"></i>
-            <span>{formatCount(postData.comments.src.length)}</span>
+            <span>{formatCount(postData.comments?.src ? postData.comments.src.length : 0)}</span>
           </div>
         </div>
         <div className={styles.icon}>

@@ -113,7 +113,7 @@ export default function Post({
   
             setHasLiked(
               postData.likes.src.some((like) =>
-                like.id.includes(authProvider.user.uuid)
+                like.id.includes(authProvider.user?.uuid)
               )
             );
 
@@ -220,7 +220,8 @@ export default function Post({
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
         const postData = await postService.getPost(`api/posts/${encodedId}`);
-        setCommentList(postData.comments.src.reverse());
+        const comments = postData.comments?.src ? postData.comments.src.reverse() : [];
+        setCommentList(comments);
         setCommentCount(
           Array.isArray(postData.comments) ? 0 : postData.comments.count
         );
