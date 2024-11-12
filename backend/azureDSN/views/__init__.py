@@ -9,3 +9,4 @@ from .auth import LoginView, LogoutView, RegisterView, CheckAuthView
 from .stream import PublicStreamView, AuthStreamView
 from .image import ImageView
 from .share import ShareView
+from .site_config import SiteConfigView

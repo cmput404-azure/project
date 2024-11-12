@@ -61,6 +61,9 @@ urlpatterns = [
     path('api/register/', RegisterView.as_view(), name='register'),
     path("api/check_auth/", CheckAuthView.as_view(), name="check_auth"),
 
+    # Site Configuration
+    path('api/config/', SiteConfigView.as_view(), name='registration_toggle'),
+
     # Front end injection
     path('', TemplateView.as_view(template_name='index.html')),
 ]

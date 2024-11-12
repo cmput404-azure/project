@@ -9,6 +9,8 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { styled } from '@mui/material/styles';
 import styles from './SettingsPage.module.scss';
+import setting from '../../service/setting';
+import { useEffect, useState } from 'react';
 
 const StyledTableCell = styled(TableCell)(() => ({
    [`&.${tableCellClasses.head}`]: {
@@ -33,7 +35,9 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 export default function CustomizedTables() {
-   function createData(
+   const [requireApproval, setRequireApproval] = useState(true);
+
+   function createData (
       url: string,
       username: string,
       password: string,
@@ -41,6 +45,21 @@ export default function CustomizedTables() {
    ) {
       return { url, username, password, status };
    }
+
+   const handleToggle = async () => {
+      const newStatus = !requireApproval;
+      await setting.updateToggle(newStatus);
+      setRequireApproval(newStatus);
+   }
+
+   useEffect(() => {
+      const fetchConfig = async () => {
+         const val = await setting.getToggleValue();
+         setRequireApproval(val);
+      };
+
+      fetchConfig();
+   }, []);
 
    const rows = [ // need to create endpoint to fetch the data from NodeUser
       createData('https://nodeaaa/api/', 'nodeaaa', 'nodea123', false),
@@ -53,7 +72,7 @@ export default function CustomizedTables() {
          <h1 className={styles.title}>Admin Settings</h1>
          <div className={styles.registration__toggle}>
             <p>Toggle registration approval</p>
-            <Switch />
+            <Switch checked={requireApproval} onChange={handleToggle}/>
          </div>
          <TableContainer component={Paper}>
             <Table sx={{ minWidth: 700 }} aria-label="customized table">
