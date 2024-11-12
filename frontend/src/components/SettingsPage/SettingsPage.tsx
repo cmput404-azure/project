@@ -1,6 +1,7 @@
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 
 import Paper from '@mui/material/Paper';
+import { Switch } from "@mui/material";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableContainer from '@mui/material/TableContainer';
@@ -49,6 +50,11 @@ export default function CustomizedTables() {
 
    return (
       <div className={styles.settings}>
+         <h1 className={styles.title}>Admin Settings</h1>
+         <div className={styles.registration__toggle}>
+            <p>Toggle registration approval</p>
+            <Switch />
+         </div>
          <TableContainer component={Paper}>
             <Table sx={{ minWidth: 700 }} aria-label="customized table">
                <TableHead>
