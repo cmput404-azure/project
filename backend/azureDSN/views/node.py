@@ -19,6 +19,24 @@ class NodeUserView(APIView):
 
         # List of dictionaries automatically converted into JSON by DRF
         return Response(node_users, status=status.HTTP_200_OK)
+    
+    def put(self, request):
+        """
+            Edit a single `NodeUser` entry in the database.
+        """
+
+        host = request.data.get('host')
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        node_obj = get_object_or_404(NodeUser, host=host)
+        node_obj.host = host
+        node_obj.username = username
+        node_obj.password = password
+        node_obj.save()
+
+        return Response({"message": "Node updated successfully!"}, status=status.HTTP_200_OK)
+
 
 class NodeView(APIView):
     def post(self, request):
@@ -27,7 +45,7 @@ class NodeView(APIView):
         """
         username = request.data.get('username')
         password = request.data.get('password')
-        node_url = request.data.get('url')
+        node_url = request.data.get('host')
 
         if not username or not password or not node_url:
             return Response({'error': 'Missing required fields.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -90,8 +108,10 @@ class NodeConnectionView(APIView):
         decoded_credentials = base64.b64decode(auth_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':')
 
-        expected_username = os.getenv('NODE_USERNAME')
-        expected_password = os.getenv('NODE_PASSWORD')
+        expected_username = os.getenv('NODE_USERNAME', 'default') # Need to set for local envs
+        expected_password = os.getenv('NODE_PASSWORD', 'defaultpass')
+
+        print(expected_username, expected_password)
 
         if username == expected_username and password == expected_password:
             return Response({'message': 'Connected successfully'}, status=status.HTTP_200_OK)
@@ -102,7 +122,7 @@ class NodeConnectionView(APIView):
         """
             Establish a connection with remote nodes.
         """
-        node_url = request.data.get('url')
+        node_url = request.data.get('host')
         username = request.data.get('username')
         password = request.data.get('password')
 
@@ -132,7 +152,7 @@ class NodeConnectionView(APIView):
         """
             Disable a connection with remote nodes by toggling is_authenticated flag off.
         """
-        node_url = request.data.get('url')
+        node_url = request.data.get('host')
 
         if not node_url:
             return Response({'error': 'Missing required field.'}, status=status.HTTP_400_BAD_REQUEST)
