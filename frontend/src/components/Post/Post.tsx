@@ -1,45 +1,30 @@
-import "@fortawesome/fontawesome-free/css/all.min.css";
-
-import {
-  Alert,
-  CircularProgress,
-  Snackbar,
-  Tooltip,
-  Modal,
-} from "@mui/material";
+import { Alert, CircularProgress, Snackbar, Tooltip, Modal } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from "@mui/material";
+import Avatar from "@mui/material/Avatar";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useEffect, useState } from "react";
-import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
-
-import CommentInputField from "../CommentInput/CommentInput";
+import { useNavigate, useParams } from "react-router";
+import { useAuth } from "../../state";
+import { PostData } from "../../models/models";
 import { ContentType } from "../../models/modelTypes";
 import { PostData as PostModel, Share } from "../../models/models";
-import follow from "../../service/follow";
+import CommentInputField from "../CommentInput/CommentInput";
+import { extractUUID } from "../../util/formatting/extractUUID";
 import { formatCount } from "../../util/formatting/formatCount";
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
+import { api } from "../../service/config";
+import follow from "../../service/follow";
 import inbox from "../../service/inbox";
 import postService from "../../service/post";
 import FollowService from "../../service/follow";
 import ProfileService from "../../service/profile";
 import ShareService from "../../service/share";
-import styles from "./Post.module.scss";
-import { useAuth } from "../../state";
-import { useNavigate, useParams } from "react-router";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { api } from "../../service/config";
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-} from "@mui/material";
 import profileService from "../../service/profile";
-import { PostData } from "../../models/models";
-import { extractUUID } from "../../util/formatting/extractUUID";
-import Avatar from "@mui/material/Avatar";
-import auth from "../../service/auth";
 import share from "../../service/share";
+import styles from "./Post.module.scss";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+
 
 export default function Post({
   postGiven,

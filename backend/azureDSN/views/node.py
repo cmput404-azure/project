@@ -1,8 +1,12 @@
 
+from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
+from requests.auth import HTTPBasicAuth
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from ..models.user import NodeUser
+from ..models.user import NodeUser, User
+import base64, os, requests
 
 class NodeUserView(APIView):
     def get(self, request):
@@ -14,16 +18,7 @@ class NodeUserView(APIView):
         node_users = NodeUser.objects.values('host', 'username', 'password', 'is_authenticated')
 
         # List of dictionaries automatically converted into JSON by DRF
-        return Response(node_users, status=status.HTTP_200_OK)import base64
-import os
-from django.contrib.auth.hashers import make_password
-from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from ..models.user import NodeUser, User
-from requests.auth import HTTPBasicAuth
-import requests
+        return Response(node_users, status=status.HTTP_200_OK)
 
 class NodeView(APIView):
     def post(self, request):
