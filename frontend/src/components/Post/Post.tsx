@@ -138,19 +138,18 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
-          setHasLiked(
-            postGiven.likes.src.some((like) =>
-              like.id.includes(authProvider.user?.uuid)
-            )
-          );
-          const checkIfShared = async () => {
-            if (!authProvider.user) return;
+
+          if (!authProvider.user) {
+            setHasLiked(
+              postGiven.likes.src.some((like) =>
+                like.id.includes(authProvider.user.uuid)
+              )
+            );
+
             const isShared = await ShareService.checkShare(postGiven.id, authProvider.user.uuid);
             setHasShared(isShared)
-          };
+          }
           
-          // Call the function to check the share status
-          checkIfShared();
           setCommentList(postGiven.comments.src.reverse());
           setLikeCount(
             Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count

@@ -1,3 +1,4 @@
+import os
 from rest_framework import serializers
 from ..models import Post, User
 from .user_serializer import UserSerializer
@@ -38,12 +39,15 @@ class PostSerializer(serializers.ModelSerializer):
         # Build the full URL for the id field
         author_uuid = instance.user.uuid
         post_uuid = str(instance.uuid)
-        base_url = settings.BASE_URL
-        post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
+
+        # The issue with settings.BASE_URL is that it won't work for secondary servers
+        # We assume base_url will always end in /api/, should be equivalent to host
+        base_url = os.environ.get('BASE_URL', 'http://localhost:8000/api/') # default to localhost on local env
+        post_url = f'authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
         
         # Fetch all likes of the post
-        like_url = f"{settings.BASE_URL}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
+        like_url = f"{base_url}authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
         
         try:
             response = requests.get(like_url)
@@ -55,7 +59,7 @@ class PostSerializer(serializers.ModelSerializer):
             representation['likes'] = []
             
         # Fetch all comments of the post
-        comment_url = f"{settings.BASE_URL}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
+        comment_url = f"{base_url}authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
         
         try:
             response = requests.get(comment_url)
