@@ -4,6 +4,13 @@ interface ConfigResponse {
     require_approval: boolean;
 }
 
+interface Node {
+    host: string,
+    username: string,
+    password: string,
+    is_authenticated: boolean
+}
+
 class SettingService {
     /**
      * Fetches the current value of the registration approval toggle from the server.
@@ -14,7 +21,7 @@ class SettingService {
             const request = await api.get<ConfigResponse>('/api/config/')
             return request.data.require_approval;
         } catch (err) {
-            console.error("Error fetching registration toggle value", err);
+            console.error("Error fetching registration toggle value: ", err);
             return false;
         }
     }
@@ -31,7 +38,17 @@ class SettingService {
             });
             return request.data;
         } catch (err) {
-            console.error("Error fetching registration toggle value", err);
+            console.error("Error fetching registration toggle value: ", err);
+        }
+    }
+
+    public async getNodeList() {
+        try {
+            const request = await api.get<Node[]>('/api/nodes/')
+            return request.data
+        } catch (err) {
+            console.error("Error fetching list of nodes: ", err);
+            return [];
         }
     }
 }

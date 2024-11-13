@@ -1,13 +1,11 @@
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Case, When,Value, BooleanField,F
-
-from ..models import User, FollowRequest
-from ..serializers import UserSerializer
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework import status
+from ..models import User
+from ..serializers import UserSerializer
 from uuid import UUID
 
 class AuthorsPagination(PageNumberPagination):
@@ -270,4 +268,3 @@ class AuthorsCompleteView(APIView):
  
 
         return Response(serializer.data, status=200)
-
