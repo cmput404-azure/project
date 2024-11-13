@@ -36,14 +36,10 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 export default function CustomizedTables() {
    const [requireApproval, setRequireApproval] = useState(true);
+   const [rows, setRows] = useState([]);
 
-   function createData (
-      url: string,
-      username: string,
-      password: string,
-      status: boolean
-   ) {
-      return { url, username, password, status };
+   function createData (host: string, username: string, password: string, status: boolean) {
+      return { host, username, password, status };
    }
 
    const handleToggle = async () => {
@@ -58,14 +54,19 @@ export default function CustomizedTables() {
          setRequireApproval(val);
       };
 
-      fetchConfig();
-   }, []);
+      const fetchNodeList = async () => {
+         const fetchedData = await setting.getNodeList();
+   
+         const nodeRows = fetchedData.map((node: any) => {
+            return createData(node.host, node.username, node.password, node.is_authenticated);
+         });
 
-   const rows = [ // need to create endpoint to fetch the data from NodeUser
-      createData('https://nodeaaa/api/', 'nodeaaa', 'nodea123', false),
-      createData('https://nodebbb/api/', 'nodebbb', 'nodeb123', false),
-      createData('https://azuredsn-secondary/api/', 'azuredsn-secondary', 'azuredsn2', true),
-   ]
+         setRows(nodeRows);
+      }
+
+      fetchConfig();
+      fetchNodeList();
+   }, []);
 
    return (
       <div className={styles.settings}>
@@ -87,9 +88,9 @@ export default function CustomizedTables() {
                </TableHead>
                <TableBody>
                   {rows.map((row) => (
-                     <StyledTableRow key={row.url}>
+                     <StyledTableRow key={row.host}>
                         <StyledTableCell component="th" scope="row">
-                           {row.url}
+                           {row.host}
                         </StyledTableCell>
                         <StyledTableCell>{row.username}</StyledTableCell>
                         <StyledTableCell>{row.password}</StyledTableCell>
