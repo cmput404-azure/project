@@ -1,13 +1,14 @@
 import axios from "axios";
 import getCsrfToken from "../util/auth/getCSRF";
 
-axios.defaults.withCredentials = true;
 axios.defaults.xsrfCookieName = "csrftoken";
 axios.defaults.xsrfHeaderName = "x-csrftoken";
 
+// Axios instance for internal requests (CSRF and withCredentials enabled)
 export const api = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL,
   timeout: 10000,
+  withCredentials: true,
 });
 
 // Referenced ChatGPT "csrf token upon logging in is different than the ones sent in requests" on Nov 11, 2024
@@ -21,3 +22,9 @@ api.interceptors.request.use((config) => {
 }, (error) => {
   return Promise.reject(error);
 });
+
+// Axios instance for external requests (Basic Auth only, without CSRF or credentials)
+export const basicAuthApi = axios.create({
+  timeout: 10000,
+  withCredentials: false,
+})

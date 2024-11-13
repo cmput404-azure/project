@@ -1,5 +1,5 @@
 import { Author } from "../models/models";
-import { api } from "./config";
+import { basicAuthApi } from "./config";
 
 interface PaginatedAuthorResponse {
     type: string;
@@ -15,7 +15,7 @@ class AuthorService {
                 'Authorization': `Basic ${credentials}`,
             };
 
-            const req = await api.get<PaginatedAuthorResponse>(`${nodeURL}authors?page=${page}&size=${size}`, {
+            const req = await basicAuthApi.get<PaginatedAuthorResponse>(`${nodeURL}authors?page=${page}&size=${size}`, {
                 headers
             });
             return req.data.authors;
