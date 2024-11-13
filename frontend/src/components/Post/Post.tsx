@@ -95,7 +95,7 @@ export default function Post({
                 }
               }
             }
-  
+            console.log(postData.likes.src);
             setHasLiked(
               postData.likes.src.some((like) =>
                 like.id.includes(authProvider.user?.uuid)
@@ -124,7 +124,7 @@ export default function Post({
         } else {
           setPost(postGiven);
 
-          if (!authProvider.user) {
+          if (authProvider.user) {
             setHasLiked(
               postGiven.likes.src.some((like) =>
                 like.id.includes(authProvider.user.uuid)
