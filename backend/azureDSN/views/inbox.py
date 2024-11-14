@@ -9,7 +9,9 @@ from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
 from django.utils import timezone
 from datetime import datetime
-
+from django.core.exceptions import ObjectDoesNotExist
+import requests
+from requests.auth import HTTPBasicAuth
 from ..serializers import *
 from ..models import *
 from ..utils import *
@@ -465,11 +467,24 @@ class InboxView(APIView):
         When sending/updating follow requests, body is a follow object
         All these POST object must have a "type" field
         '''
-        user_obj = get_object_or_404(User, uuid=author_serial)
+
+        # If author_serial does not exist locally, then need to dig through payload to check for the remote host
+        # user_obj = get_object_or_404(User, uuid=author_serial)
         payload = request.data
        
         if "type" not in payload:
             return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user exists locally
+        try:
+            user_obj = User.objects.get(uuid=author_serial)
+        except ObjectDoesNotExist:
+            # Handle remote author
+            if payload["type"].lower() == "follow":
+                # Send to remote inbox, passing the payload and remote host information
+                return self.send_follow_request_to_remote(payload)
+            else:
+                return Response({"error": "User not found locally and only 'follow' requests are supported for remote authors"}, status=status.HTTP_400_BAD_REQUEST)
 
         if payload["type"].lower() == "post":
             return self.create_post(user_obj, payload, request)
@@ -513,12 +528,58 @@ class InboxView(APIView):
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, remote_payload=payload)
             return Response({"message": "We have noticed other users about your post"}, status=status.HTTP_200_OK)
+        
+    def send_follow_request_to_remote(self, payload):
+        try:
+            # Assume the remote host URL is found in the payload under the "object" key
+            remote_host = payload["object"].get("host")
+            author_serial = payload["object"].get("id").rstrip('/').split('/')[-1]  # Get last part of fqid
+            parsed_url = urlparse(remote_host)
+            base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox/"
+
+            remote_node = NodeUser.objects.filter(host__contains=remote_host).first()
+            if not remote_node:
+                return Response({"error": f"Node for {remote_host} not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            print(f"Sending this payload: {payload}")
+            
+            response = requests.post(
+                remote_inbox_url,
+                json=payload,
+                auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+            )
+
+            if response.status_code == 200:
+                # If successful, make a Follow object in local regardless of whether the remote request is going to be accepted
+                local_follower = get_object_or_404(User, username=payload["actor"].get("username"))
+                follow_data = {
+                    "local_followee": None,
+                    "remote_followee": payload["object"].get("id"),
+                    "local_follower": local_follower,
+                    "remote_follower": None
+                }
+                serializer = FollowSerializer(data=follow_data)
+                if serializer.is_valid():
+                    serializer.save()
+
+                return Response({"message": "Follow request sent to remote inbox."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": f"Failed to send follow request: {response.text}"}, status=response.status_code)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     '''
     payload is a follow request object
     we return the status only cause the they dont need to know what is stored in other person's inbox
     '''
     def create_follow_request(self, user_object, payload, request):
+
+        # If user_object (followee) is local
+
+        # If user_object is remote
+
         # Validate the follow request object sent with the payload
         follow_obj = FollowRequest.objects.create(object=user_object, actor=payload["actor"])
         serializer = FollowRequestSerializer(follow_obj, data=payload, context={"request": request})
@@ -530,7 +591,6 @@ class InboxView(APIView):
             follow_instance = serializer.save()
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, follow_instance)
-            # return Response(InboxSerializer(inbox_obj.items, context={"request": request}).data, status=status.HTTP_200_OK)
             return Response({"message": "Follow request sent successfully"}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

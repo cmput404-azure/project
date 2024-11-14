@@ -4,8 +4,6 @@ import PeopleIcon from "@mui/icons-material/People";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../state";
 import { api } from "../../service/config";
-import author from "../../service/author";
-import setting from "../../service/setting";
 import stream from "../../service/stream";
 import { Author, RemoteFollowRequest } from "../../models/models";
 import Post from "../Post/Post";

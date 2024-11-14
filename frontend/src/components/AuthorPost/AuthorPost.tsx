@@ -2,10 +2,8 @@ import React from 'react';
 import styles from './AuthorPost.module.scss';
 import { Author } from '../../models/models';
 import { useAuth } from '../../state';
-import { normalizeURL } from '../../util/formatting/normalizeURL';
 import InboxService from '../../service/inbox';
 import { api } from '../../service/config';
-import remote from '../../service/remote';
 
 interface AuthorPostProps {
   author: Author;
@@ -32,43 +30,20 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
         github: `${myInfo.github}`,
         page: `${myInfo.page}`,
       },
+      object: { // person who the request is being sent to
+        type: "author",
+        id: `${author.id}`,
+        host: `${author.host}`,
+        displayName: `${author.displayName}`,
+        username: `${author.username}`,
+        bio: `${author.bio}`,
+        profileImage: `${author.profileImage}`,
+        github: `${author.github}`,
+        page: `${author.page}`,
+      }
     };
   
-    // Call different endpoint depending if the followee is remote or local
-    if (normalizeURL(author.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
-      await InboxService.sendPostToInbox(author.id, followRequest);
-    } else {
-        const success = remote.sendItemRemotely(author.host, author.id, followRequest);
-
-        // Keep this for now!
-        // if (success) {
-        //   const modifiedRequest = {
-        //     type: followRequest.type,
-        //     summary: followRequest.summary,
-        //     object: {
-        //       type: "author",
-        //       id: `${author.id}`,
-        //       host: `${author.host}`,
-        //       displayName: `${author.displayName}`,
-        //       username: `${author.username}`,
-        //       bio: `${author.bio}`,
-        //       profileImage: `${author.profileImage}`,
-        //       github: `${author.github}`,
-        //       page: `${author.page}`,
-        //     }
-        //   }
-        //   await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
-        // }
-
-        // We can directly consider the request to be accepted from the local node, even if remote author reject it
-        if (success) {
-          await remote.setRequestAsAccepted(
-            authProvider.user.uuid,
-            author.host,
-            author.id
-          );
-        }
-    }
+    await InboxService.sendPostToInbox(author.id, followRequest);
   }
 
   return (
