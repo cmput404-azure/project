@@ -119,7 +119,6 @@ class InboxService{
         }
     }
 
-
     /* 
     Send a comment into the inbox of a user
     @param uuid: string - the fqid of the user

@@ -1,45 +1,30 @@
-import "@fortawesome/fontawesome-free/css/all.min.css";
-
-import {
-  Alert,
-  CircularProgress,
-  Snackbar,
-  Tooltip,
-  Modal,
-} from "@mui/material";
+import { Alert, CircularProgress, Snackbar, Tooltip, Modal } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from "@mui/material";
+import Avatar from "@mui/material/Avatar";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useEffect, useState } from "react";
-import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
-
-import CommentInputField from "../CommentInput/CommentInput";
+import { useNavigate, useParams } from "react-router";
+import { useAuth } from "../../state";
+import { PostData } from "../../models/models";
 import { ContentType } from "../../models/modelTypes";
 import { PostData as PostModel, Share } from "../../models/models";
-import follow from "../../service/follow";
+import CommentInputField from "../CommentInput/CommentInput";
+import { extractUUID } from "../../util/formatting/extractUUID";
 import { formatCount } from "../../util/formatting/formatCount";
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
+import { api } from "../../service/config";
+import follow from "../../service/follow";
 import inbox from "../../service/inbox";
 import postService from "../../service/post";
 import FollowService from "../../service/follow";
 import ProfileService from "../../service/profile";
 import ShareService from "../../service/share";
-import styles from "./Post.module.scss";
-import { useAuth } from "../../state";
-import { useNavigate, useParams } from "react-router";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { api } from "../../service/config";
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-} from "@mui/material";
 import profileService from "../../service/profile";
-import { PostData } from "../../models/models";
-import { extractUUID } from "../../util/formatting/extractUUID";
-import Avatar from "@mui/material/Avatar";
-import auth from "../../service/auth";
 import share from "../../service/share";
+import styles from "./Post.module.scss";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+
 
 export default function Post({
   postGiven,
@@ -110,10 +95,10 @@ export default function Post({
                 }
               }
             }
-  
+            console.log(postData.likes.src);
             setHasLiked(
               postData.likes.src.some((like) =>
-                like.id.includes(authProvider.user.uuid)
+                like.id.includes(authProvider.user?.uuid)
               )
             );
 
@@ -138,19 +123,18 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
-          setHasLiked(
-            postGiven.likes.src.some((like) =>
-              like.id.includes(authProvider.user.uuid)
-            )
-          );
-          const checkIfShared = async () => {
-            if (!authProvider.user) return;
+
+          if (authProvider.user) {
+            setHasLiked(
+              postGiven.likes.src.some((like) =>
+                like.id.includes(authProvider.user.uuid)
+              )
+            );
+
             const isShared = await ShareService.checkShare(postGiven.id, authProvider.user.uuid);
             setHasShared(isShared)
-          };
+          }
           
-          // Call the function to check the share status
-          checkIfShared();
           setCommentList(postGiven.comments.src.reverse());
           setLikeCount(
             Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
@@ -162,7 +146,12 @@ export default function Post({
       } catch (error) {
         if (error.response && error.response.status === 403) {
           navigate("/login");
-        } 
+        }
+
+        else if (error.response && error.response.status === 404) {
+          navigate("/"); // back to stream since they are not an admin
+        }
+
         else {
           console.error("Error fetching post data:", error);
         }
@@ -220,7 +209,8 @@ export default function Post({
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
         const postData = await postService.getPost(`api/posts/${encodedId}`);
-        setCommentList(postData.comments.src.reverse());
+        const comments = postData.comments?.src ? postData.comments.src.reverse() : [];
+        setCommentList(comments);
         setCommentCount(
           Array.isArray(postData.comments) ? 0 : postData.comments.count
         );

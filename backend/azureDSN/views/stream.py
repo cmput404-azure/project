@@ -1,9 +1,10 @@
+from urllib.parse import urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..serializers import PostSerializer
 from django.shortcuts import get_object_or_404
-from ..models import Post, User, Follow, Share
+from ..models import Post, User, Follow, Share, Inbox, NodeUser
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 import requests
 from .posts import PostsPagination
@@ -22,26 +23,48 @@ class PublicStreamView(APIView):
         },
     )
     def get(self, request):
-        """Retrieve the public posts of the node (currently only working for nodes)"""
+        """Retrieve the public posts of the node and remote posts in the user's inbox."""
 
-        # if author is not authenticated just return the public posts
+        # Default visibility filter for public posts
         visibility_filter = [1]
 
-        if (request.user and request.user.is_authenticated):
+        # If the user is authenticated, customize the visibility filter
+        if request.user and request.user.is_authenticated:
             user = get_object_or_404(User, uuid=request.user.uuid)
             if user.is_staff:
-                visibility_filter.append(4) # Add deleted posts for admin
+                visibility_filter.append(4)  # Add deleted posts for admin
 
-        # Sort the posts by the most recent creation date
-        posts = Post.objects.filter(visibility__in=visibility_filter).order_by('-created_at')
+        remote_posts = {}
+        for inbox in Inbox.objects.all(): # Iterate through all local inboxes
+            for item in inbox.items.filter(remote_payload__isnull=False):
+                remote_payload = item.remote_payload
+                if remote_payload.get("type") == "post": # And get the public remote posts
+                    post_id = remote_payload.get("id")
+
+                    # Check if the host exists and is active in NodeUser
+                    author_host = remote_payload.get("author", {}).get("host")
+                    if author_host:
+                        base_host = urlparse(author_host).netloc
+
+                        if NodeUser.objects.filter(host__contains=base_host, is_authenticated=True).exists():
+                            if post_id and post_id not in remote_posts: # Add if this post hasn't been added
+                                remote_posts[post_id] = remote_payload
+
+        unique_remote_posts = list(remote_posts.values())
+
+        local_posts = Post.objects.filter(visibility__in=visibility_filter)
+
+        serialized_local_posts = PostSerializer(local_posts, many=True).data
+
+        all_posts = serialized_local_posts + unique_remote_posts
+
+        # Separate logic for Post objects and JSON objects
+        all_posts.sort(key=lambda post: post['published'] if isinstance(post, dict) else post['created_at'], reverse=True)
 
         pagination = PostsPagination()
+        paginated_posts = pagination.paginate_queryset(all_posts, request, view=self)
 
-        paginated_posts = pagination.paginate_queryset(posts, request, view=self)
-
-        serialized_posts = PostSerializer(paginated_posts, many=True).data
-
-        return pagination.get_paginated_response(serialized_posts)
+        return pagination.get_paginated_response(paginated_posts)
     
 class AuthStreamView(APIView):
     pagination_provider = PostsPagination

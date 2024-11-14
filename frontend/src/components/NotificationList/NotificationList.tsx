@@ -1,14 +1,15 @@
 // @ts-nocheck
-import React, { useCallback, useEffect, useState } from "react";
-
 import { CircularProgress, responsiveFontSizes } from "@mui/material";
-import ListItem from "../ListItem/ListItem";
+import React, { useCallback, useEffect, useState } from "react";
 import Modal from "react-modal";
-import PostService from "../../service/post"
-import { api } from "../../service/config";
+import { api, basicAuthApi } from "../../service/config";
 import inbox from "../../service/inbox";
-import styles from "./NotificationList.module.scss";
+import PostService from "../../service/post"
 import { useAuth } from "../../state";
+import { normalizeURL } from '../../util/formatting/normalizeURL';
+import { extractUUID } from '../../util/formatting/extractUUID';
+import ListItem from "../ListItem/ListItem";
+import styles from "./NotificationList.module.scss";
 
 interface FollowerResponse {
   followers: Follower[];
@@ -34,7 +35,11 @@ export default function NotificationList() {
           let user = null;
           let post_obj = null;
           if (item.type === "follow") {
-            user = await fetchUser(item.actor.id);
+            if (normalizeURL(item.actor.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+              user = await fetchUser(item.actor.id);
+            } else {
+              user = await fetchRemoteUser(extractUUID(item.actor.id), normalizeURL(item.actor.host))
+            }
           } else if (item.type === "like") {
             user = await fetchUser(item.author.id);
             // Expected format for host: http://host/api/
@@ -105,6 +110,18 @@ export default function NotificationList() {
     }
   };
 
+  const fetchRemoteUser = async (uuid: string, baseHost: string) => {
+    try {
+      console.log(`${baseHost}/api/authors/${uuid}/`)
+      const response = await basicAuthApi.get(`${baseHost}/api/authors/${uuid}/`);
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching user ${authProvider.user.uuid}:`, error);
+      return null;
+    }
+  }
+
   return (
     <div>
       {loading ? (
@@ -152,21 +169,6 @@ export default function NotificationList() {
                   />
                 );
               } 
-//               else if (item.type === "share") {
-//                 return (
-//                   <ListItem
-//                     key={index}
-//                     isPost={true}
-//                     isShare={true}
-//                     isUserList={false}
-//                     notif_id={item.id}
-//                     postObj={item.post_obj}
-//                     user={item.user}
-//                     onRefresh={handleRefresh}
-//                   />
-//                 );
-//               }
-
               else if (item.type === "post") {
                 return (
                   <ListItem
