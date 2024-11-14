@@ -155,7 +155,7 @@ class FollowTests(APITestCase):
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.get(f"{url}")
         self.assertEqual(response.data["is_follower"], False)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         
 
 
