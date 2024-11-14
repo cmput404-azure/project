@@ -109,13 +109,14 @@ class RemoteService {
     }
 
         /**
-         * Send objects to remote author's inbox
+         * Send a single object of type Post/FollowRequest to remote author's inbox
          * @param remoteId - the uuid of the remote user
          * @param inboxItem - the inbox item to be sent
          * @param remoteHost - the service or base url of the remote node
          * @returns a string message
         */
-        public async sendRemoteRequest(remoteHost: string, remoteId: string, inboxItem: object) {
+        public async sendItemRemotely(remoteHost: string, remoteId: string, inboxItem: object) {
+            console.log(`Sending to: ${remoteId} on ${remoteHost}`)
             try {
                 const inboxResponse = await basicAuthApi.post<{ message: string }>(
                     `${this.buildNormalPath(remoteHost, remoteId)}/inbox/`,

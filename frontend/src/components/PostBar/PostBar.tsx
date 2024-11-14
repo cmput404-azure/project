@@ -16,6 +16,8 @@ import inbox from "../../service/inbox";
 import styled from "@mui/material/styles/styled";
 import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
+import { normalizeURL } from "../../util/formatting/normalizeURL";
+import remote from "../../service/remote";
 
 interface PostBarProps {
   author?: any;
@@ -197,7 +199,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       );
       console.log("Post successfully created:", postResponse.data);
 
-      // Get friends and followers list, followers inlcude both friends and followers
+      // Get friends and followers list, followers include both friends and followers
       const followers = await follow.getFollowers(authProvider.user.uuid);
       const friends = await follow.getFriends(authProvider.user.uuid);
 
@@ -205,11 +207,21 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       // always send to friends for all type of posts
       if (visibilityNumber === 1 || visibilityNumber === 3) {
         for (const follower of followers) {
-          const inboxResponse = await inbox.sendPostToInbox(follower.id, postResponse.data);
+          // For each follower, check if it's local or remote
+          if (normalizeURL(follower.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+            const inboxResponse = await inbox.sendPostToInbox(follower.id, postResponse.data);
+          } else {
+            // Send to remote inbox
+            await remote.sendItemRemotely(follower.host, follower.id, postResponse.data);
+          }
         }
       } else {
         for (const friend of friends) {
-          const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
+          if (normalizeURL(friend.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+            const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
+          } else {
+            await remote.sendItemRemotely(friend.host, friend.id, postResponse.data);
+          }
         }
       }
 

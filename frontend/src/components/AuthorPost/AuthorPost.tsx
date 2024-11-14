@@ -38,7 +38,7 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
     if (normalizeURL(author.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
       await InboxService.sendPostToInbox(author.id, followRequest);
     } else {
-        const success = remote.sendRemoteRequest(author.host, author.id, followRequest);
+        const success = remote.sendItemRemotely(author.host, author.id, followRequest);
         if (success) {
           const modifiedRequest = {
             type: followRequest.type,

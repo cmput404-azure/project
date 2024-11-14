@@ -123,7 +123,7 @@ export default function ListItem({
         if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
           await InboxService.sendPostToInbox(user.id, followRequest);
         } else {
-            const success = await remote.sendRemoteRequest(user.host, user.id, followRequest);
+            const success = await remote.sendItemRemotely(user.host, user.id, followRequest);
             if (success) {
               // If successful, we need to track the follow request locally as well to be able to poll
               const modifiedRequest = {
