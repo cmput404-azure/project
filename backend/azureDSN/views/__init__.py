@@ -12,3 +12,4 @@ from .share import ShareView
 from .site_config import SiteConfigView
 from .node import NodeUserView, NodeView, NodeConnectionView
 from .follow_request import FollowRequestView
+from .remote import RemoteAuthorsView

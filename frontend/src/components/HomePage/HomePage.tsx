@@ -66,29 +66,12 @@ const HomePage = () => {
           setIsUserLoading(false); // user not authenticated
           return;
         }
-        const fetchedData = await setting.getNodeList();
 
-        const allRemoteAuthors: Author[] = [];
-
-        for (const node of fetchedData) {
-          const fetchRemoteAuthors = async (host: string, username: string, password: string) => {
-            let page = 1;
-            const size = 3; // just need a little for recommended section
-
-            const authors = author.getNodeAuthors(host, username, password, page, size);
-            return authors;
-          }
-
-          if (node.is_authenticated) {
-            const nodeAuthors = await fetchRemoteAuthors(node.host, node.username, node.password);
-            allRemoteAuthors.push(...nodeAuthors);
-          }
+        const response = await api.get<{ recommended_authors: Author[] }>('/api/authors/recommended/');
+        if (response.status === 200) {
+          const randomAuthors = response.data.recommended_authors;
+          setRecommended(randomAuthors);
         }
-
-        // We randomly select from the list of all remote authors
-        // If we're connected to multiple remote authors, we don't want to only recommend authors from one remote node
-        const randomAuthors = selectRandomAuthors(allRemoteAuthors, 3, 3);
-        setRecommended(randomAuthors);
         
       } catch (err) {
         console.error("Something went wrong: ", err);
