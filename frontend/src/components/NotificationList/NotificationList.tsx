@@ -2,7 +2,7 @@
 import { CircularProgress, responsiveFontSizes } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import Modal from "react-modal";
-import { api, basicAuthApi } from "../../service/config";
+import { api } from "../../service/config";
 import inbox from "../../service/inbox";
 import PostService from "../../service/post"
 import { useAuth } from "../../state";
@@ -35,11 +35,7 @@ export default function NotificationList() {
           let user = null;
           let post_obj = null;
           if (item.type === "follow") {
-            if (normalizeURL(item.actor.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
-              user = await fetchUser(item.actor.id);
-            } else {
-              user = await fetchRemoteUser(extractUUID(item.actor.id), normalizeURL(item.actor.host))
-            }
+            user = await fetchUser(item.actor.id);
           } else if (item.type === "like") {
             user = await fetchUser(item.author.id);
             // Expected format for host: http://host/api/
@@ -105,22 +101,22 @@ export default function NotificationList() {
       const response = await api.get(`/api/authors/${id}/`);
       return response.data;
     } catch (err) {
-      console.error(`Error fetching user ${authProvider.user.uuid}:`, err);
+      console.error(`Error fetching user with id: ${id}:`, err);
       return null;
     }
   };
 
-  const fetchRemoteUser = async (uuid: string, baseHost: string) => {
-    try {
-      console.log(`${baseHost}/api/authors/${uuid}/`)
-      const response = await basicAuthApi.get(`${baseHost}/api/authors/${uuid}/`);
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching user ${authProvider.user.uuid}:`, error);
-      return null;
-    }
-  }
+  // const fetchRemoteUser = async (uuid: string, baseHost: string) => {
+  //   try {
+  //     console.log(`${baseHost}/api/authors/${uuid}/`)
+  //     const response = await basicAuthApi.get(`${baseHost}/api/authors/${uuid}/`);
+  //     console.log(response.data);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error(`Error fetching user ${authProvider.user.uuid}:`, error);
+  //     return null;
+  //   }
+  // }
 
   return (
     <div>
