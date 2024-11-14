@@ -10,7 +10,8 @@ class PostService {
     */
    public async getPost(fqid: string): Promise<PostData> {
       try {
-         const response = await api.get<PostData>(fqid);
+         let encoded_fqid = encodeURIComponent(fqid);
+         const response = await api.get<PostData>(encoded_fqid);
          return response.data;
       } catch (error) {
          console.error(`Error fetching post with ID ${fqid}:`, error);
