@@ -120,7 +120,6 @@ class FollowCustomView(APIView):
         """
         user = get_object_or_404(User, uuid=user_id)
         # Get all the users where user is the follower
-        # local_followers = Follow.objects.filter(local_follower_id = user_id)
         my_followees = Follow.objects.filter(local_follower=user) # This fetches both local and remote authors that I'm following
 
         followee_data = []
@@ -130,36 +129,10 @@ class FollowCustomView(APIView):
             elif follow.remote_followee:
                 try:
                     remote_user = fetch_remote_follower_data(follow.remote_followee)
-                    print(f"Fetched remote user data: {remote_user}")
                     if remote_user:
                         followee_data.append(remote_user)
                 except Exception as e:
                     print(f"Error fetching remote followee data: {e}")
-
-        # remote_followers = Follow.objects.filter(remote_follower__contains=f"/{user_id}")
-        # userList = []
-        # all_followers = list(local_followers) + list(remote_followers)
-
-        #  combined_followers = []
-        # for follower in followers:
-        #     if follower.remote_follower:  # Remote follower handling
-        #         remote_data = fetch_remote_follower_data(follower.remote_follower)
-        #         if remote_data:
-        #             combined_followers.append(remote_data)
-        #     else:  # Local follower handling
-        #         try:
-        #             user = User.objects.get(uuid=follower.local_follower_id)
-        #             combined_followers.append(user)
-        #         except User.DoesNotExist:
-        #             raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
-
-
-        # for follower in all_followers:
-        #     try:
-        #         user = User.objects.get(uuid=follower.local_followee_id)
-        #         userList.append(user)
-        #     except User.DoesNotExist:
-        #         raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
         
         serializer = UserSerializer(followee_data, many=True)
         response_data = {
