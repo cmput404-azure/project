@@ -3,9 +3,14 @@ import { extractUUID } from "../util/formatting/extractUUID";
 import { normalizeURL } from "../util/formatting/normalizeURL";
 import { api, basicAuthApi } from "./config";
 
+// Currently contains anything to do with remote follow requests
 class RemoteService {
-    private buildAuthorPath(host, id) {
+    private buildEncodedPath(host, id) {
         return encodeURIComponent(`${normalizeURL(host)}/api/authors/${extractUUID(id)}`);
+    }
+
+    private buildNormalPath(host, id) {
+        return `${normalizeURL(host)}/api/authors/${extractUUID(id)}`;
     }
     /**
      * The remote follow request was accepted, update accordingly in our local DB.
@@ -17,7 +22,7 @@ class RemoteService {
     public async setRequestAsAccepted(uuid: string, remoteHost: string, remoteId: string) {
         try {
             const request = await api.post<{ message: string }>(
-                `/api/track/${uuid}/accepted/${this.buildAuthorPath(remoteHost, remoteId)}`
+                `/api/track/${uuid}/accepted/${this.buildEncodedPath(remoteHost, remoteId)}`
             );
             return request.data.message;
         } catch (err) {
@@ -35,7 +40,7 @@ class RemoteService {
     public async deleteStaleRequest(uuid: string, remoteHost: string, remoteId: string) {
         try {
             const request = await api.delete<{ message: string }>(
-                `/api/track/${uuid}/delete/${this.buildAuthorPath(remoteHost, remoteId)}`
+                `/api/track/${uuid}/delete/${this.buildEncodedPath(remoteHost, remoteId)}`
             );
             return request.data.message;
         } catch (err) {
@@ -48,10 +53,26 @@ class RemoteService {
      * @param uuid - UUID of local follower whose remote follow requests we want to track
      * @returns array of remote follow requests that belongs to the user with pending status = True
      */
-    public async trackRemoteRequests(uuid: string) {
+    public async checkRequestStatus(uuid: string) {
         try {
             const response = await api.get<RemoteFollowRequest[]>(
                 `/api/track/${uuid}/pending/`
+            );
+            return response.data;
+        } catch (err) {
+            console.error("Error fetching follow requests: ", err);
+        }
+    }
+
+    /**
+     * Tracking if remote requests are accepted, or still pending, or perhaps rejected
+     * @param uuid - UUID of local follower whose remote follow requests we want to track
+     * @returns array of remote follow requests that belongs to the user with pending status = True
+     */
+    public async trackRemoteRequest(uuid: string, requestObject: object) {
+        try {
+            const response = await api.post<RemoteFollowRequest[]>(
+                `/api/authors/${uuid}/track/`, requestObject
             );
             return response.data;
         } catch (err) {
@@ -86,6 +107,26 @@ class RemoteService {
             
         }
     }
+
+        /**
+         * Send objects to remote author's inbox
+         * @param remoteId - the uuid of the remote user
+         * @param inboxItem - the inbox item to be sent
+         * @param remoteHost - the service or base url of the remote node
+         * @returns a string message
+        */
+        public async sendRemoteRequest(remoteHost: string, remoteId: string, inboxItem: object) {
+            try {
+                const inboxResponse = await basicAuthApi.post<{ message: string }>(
+                    `${this.buildNormalPath(remoteHost, remoteId)}/inbox/`,
+                    inboxItem
+                );
+                return inboxResponse.data.message;
+            } catch (error) {
+                console.error(`Error sending object to inbox of ${extractUUID(remoteId)}:`, error);
+                return null;
+            }
+        }
 }
 
 const remote = new RemoteService();

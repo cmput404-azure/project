@@ -5,7 +5,7 @@ import { useAuth } from '../../state';
 import { normalizeURL } from '../../util/formatting/normalizeURL';
 import InboxService from '../../service/inbox';
 import { api } from '../../service/config';
-
+import remote from '../../service/remote';
 
 interface AuthorPostProps {
   author: Author;
@@ -15,9 +15,6 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
   const authProvider = useAuth();
 
   const handleAddButton = async () => {
-    // console.log(`Remote author we want to follow: ${author.username} on ${author.host}`);
-    // console.log(`My username: ${authProvider.user.username}`);
-
     const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
     const myInfo = userResponse.data;
 
@@ -37,42 +34,30 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
       },
     };
   
-    const normalizedHost = normalizeURL(author.host);
-    console.log("what is normalized host: ", normalizedHost);
     // Call different endpoint depending if the followee is remote or local
-    if (normalizedHost === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+    if (normalizeURL(author.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
       await InboxService.sendPostToInbox(author.id, followRequest);
     } else {
-
-      try {
-        await InboxService.sendToRemoteInbox(author.id, followRequest, normalizedHost);
-
-        // If successful
-        const modifiedRequest = {
-          type: followRequest.type,
-          summary: followRequest.summary,
-          object: {
-            type: "author",
-            id: `${author.id}`,
-            host: `${author.host}`,
-            displayName: `${author.displayName}`,
-            username: `${author.username}`,
-            bio: `${author.bio}`,
-            profileImage: `${author.profileImage}`,
-            github: `${author.github}`,
-            page: `${author.page}`,
+        const success = remote.sendRemoteRequest(author.host, author.id, followRequest);
+        if (success) {
+          const modifiedRequest = {
+            type: followRequest.type,
+            summary: followRequest.summary,
+            object: {
+              type: "author",
+              id: `${author.id}`,
+              host: `${author.host}`,
+              displayName: `${author.displayName}`,
+              username: `${author.username}`,
+              bio: `${author.bio}`,
+              profileImage: `${author.profileImage}`,
+              github: `${author.github}`,
+              page: `${author.page}`,
+            }
           }
+          await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
         }
-
-        console.log(modifiedRequest);
-
-        await api.post<{ message: string }>(`/api/authors/${authProvider.user.uuid}/track/`, modifiedRequest);
-
-      } catch (error) {
-        console.error("Something went wrong. ", error);
-      }
-    } 
-    console.log("request sent...");
+    }
   }
 
   return (

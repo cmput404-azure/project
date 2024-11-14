@@ -12,6 +12,7 @@ import InboxService from "../../service/inbox";
 import ProfileService from "../../service/profile";
 import { PostData, Author } from "../../models/models"
 import { normalizeURL } from "../../util/formatting/normalizeURL";
+import remote from "../../service/remote";
 interface ListItemProps {
   isRequest?: boolean;
   isPost?: boolean;
@@ -118,49 +119,42 @@ export default function ListItem({
           },
         };
 
-        const normalizedHost = normalizeURL(userInfo.host);
-        // Call different endpoint depending if the followee is remote or local
-        if (normalizedHost === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+        // Call different endpoint depending if the followee (user) is remote or local
+        if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
           await InboxService.sendPostToInbox(user.id, followRequest);
         } else {
-
-          try {
-            await InboxService.sendToRemoteInbox(user.id, followRequest, normalizedHost);
-
-            // If successful, we need to track the follow request locally as well to be able to poll
-            const modifiedRequest = {
-              type: followRequest.type,
-              summary: followRequest.summary,
-              object: {
-                type: "author",
-                id: `${user.id}`,
-                host: `${user.host}`,
-                displayName: `${user.displayName}`,
-                username: `${user.username}`,
-                bio: `${user.bio}`,
-                profileImage: `${user.profileImage}`,
-                github: `${user.github}`,
-                page: `${user.page}`,
+            const success = await remote.sendRemoteRequest(user.host, user.id, followRequest);
+            if (success) {
+              // If successful, we need to track the follow request locally as well to be able to poll
+              const modifiedRequest = {
+                type: followRequest.type,
+                summary: followRequest.summary,
+                object: {
+                  type: "author",
+                  id: `${user.id}`,
+                  host: `${user.host}`,
+                  displayName: `${user.displayName}`,
+                  username: `${user.username}`,
+                  bio: `${user.bio}`,
+                  profileImage: `${user.profileImage}`,
+                  github: `${user.github}`,
+                  page: `${user.page}`,
+                }
               }
+              await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
             }
-
-            await api.post<{ message: string }>(`/api/authors/${authProvider.user.uuid}/track/`, modifiedRequest);
-
-          } catch (error) {
-            console.error("Something went wrong. ", error);
-          }
-        } 
-
-        setIsRequested(true);
-
+        }
       } catch (error) {
         console.error("Fetch error:", error);
-      }
+      } 
+
+      setIsRequested(true);
+
     } else {
       closeModal?.();
       navigate("/login");
     }
-  };
+  }
 
   const addFollower = async () => {
     const encodedId = encodeURIComponent(user.id);
@@ -185,7 +179,6 @@ export default function ListItem({
 
   let additionalText = "";
   if (isRequest) additionalText = "wants to follow you";
-  // else if (isShare) additionalText = `shared a post with you titled: ${postObj.title}`;
   else if (isLike) additionalText = `liked your post titled: ${postObj.title}`;
   else if (isComment) additionalText = `commented on your post titled: ${postObj.title}`;
   else if (isUpdatedPost) additionalText = `updated their post titled: ${postObj.title}`;

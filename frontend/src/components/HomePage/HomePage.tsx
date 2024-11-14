@@ -176,8 +176,7 @@ const HomePage = () => {
     }
 
     try {
-      const requests: RemoteFollowRequest[] = await remote.trackRemoteRequests(authProvider.user.uuid);
-
+      const requests: RemoteFollowRequest[] = await remote.checkRequestStatus(authProvider.user.uuid);
       for (let request of requests) {
         // Check if follow request is accepted
         const isFollower = remote.checkRemoteNode(
