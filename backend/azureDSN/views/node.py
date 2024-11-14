@@ -127,8 +127,8 @@ class NodeConnectionView(APIView):
         decoded_credentials = base64.b64decode(auth_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':')
 
-        expected_username = os.getenv(settings.NODE_USERNAME, 'default')
-        expected_password = os.getenv(settings.NODE_PASSWORD, 'defaultpass')
+        expected_username = os.getenv("NodeA", 'default')
+        expected_password = os.getenv("!Summer2024!", 'defaultpass')
 
         print(expected_username, expected_password)
 
