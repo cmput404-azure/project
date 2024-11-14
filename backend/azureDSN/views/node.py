@@ -1,4 +1,5 @@
 
+from urllib.parse import urlparse
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
 from requests.auth import HTTPBasicAuth
@@ -6,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from ..models.user import NodeUser, User
+from ..models import InboxItem
 import base64, os, requests
 
 class NodeUserView(APIView):
@@ -68,7 +70,6 @@ class NodeView(APIView):
             return Response({'message': 'Node added successfully'}, status=status.HTTP_201_CREATED)
         else:
             return Response({'message': 'Node already exists'}, status=status.HTTP_400_BAD_REQUEST)
-        
 
     def delete(self, request):
         """
@@ -79,14 +80,31 @@ class NodeView(APIView):
 
         if not node_url:
             return Response({'error': 'Missing required field.'}, status=status.HTTP_400_BAD_REQUEST)
-
+        
         try:
             node = NodeUser.objects.get(host=node_url)
             node.delete()
+
+            # Delete all InboxItems linked to the deleted remote node.
+            self.delete_related_items(node_url)
+
             return Response({'message': 'Node removed successfully'}, status=status.HTTP_200_OK)
         except NodeUser.DoesNotExist:
             return Response({'error': 'Node not found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+    def delete_related_items(self, node_url):
+        base_host = urlparse(node_url).netloc # For consistent comparison
 
+        inbox_items = InboxItem.objects.filter(remote_payload__isnull=False)
+        for item in inbox_items:
+            if item.remote_payload.get("type") == "follow": # TBD
+                pass
+            else: # Post, Like, or Comment each have author inside
+                author_host = item.remote_payload.get("author", {}).get("host")
+                if author_host and urlparse(author_host).netloc == base_host:
+                    item.delete()
+
+        return
 
 class NodeConnectionView(APIView):
     def get(self, request):
@@ -108,7 +126,7 @@ class NodeConnectionView(APIView):
         decoded_credentials = base64.b64decode(auth_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':')
 
-        expected_username = os.getenv('NODE_USERNAME', 'default') # Need to set for local envs
+        expected_username = os.getenv('NODE_USERNAME', 'default')
         expected_password = os.getenv('NODE_PASSWORD', 'defaultpass')
 
         print(expected_username, expected_password)
@@ -161,6 +179,9 @@ class NodeConnectionView(APIView):
             node = NodeUser.objects.get(host=node_url)
             node.is_authenticated = False
             node.save()
+
+            # Don't delete InboxItems, so that if reactivated, we still have past data
+
             return Response({'message': 'Node connection deactivated.'}, status=status.HTTP_200_OK)
         except NodeUser.DoesNotExist:
             return Response({'error': 'Node not found.'}, status=status.HTTP_404_NOT_FOUND)

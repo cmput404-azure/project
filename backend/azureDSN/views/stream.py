@@ -1,9 +1,10 @@
+from urllib.parse import urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..serializers import PostSerializer
 from django.shortcuts import get_object_or_404
-from ..models import Post, User, Follow, Share, Inbox
+from ..models import Post, User, Follow, Share, Inbox, NodeUser
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 import requests
 from .posts import PostsPagination
@@ -39,8 +40,15 @@ class PublicStreamView(APIView):
                 remote_payload = item.remote_payload
                 if remote_payload.get("type") == "post": # And get the public remote posts
                     post_id = remote_payload.get("id")
-                    if post_id and post_id not in remote_posts:
-                        remote_posts[post_id] = remote_payload
+
+                    # Check if the host exists and is active in NodeUser
+                    author_host = remote_payload.get("author", {}).get("host")
+                    if author_host:
+                        base_host = urlparse(author_host).netloc
+
+                        if NodeUser.objects.filter(host__contains=base_host, is_authenticated=True).exists():
+                            if post_id and post_id not in remote_posts: # Add if this post hasn't been added
+                                remote_posts[post_id] = remote_payload
 
         unique_remote_posts = list(remote_posts.values())
 
