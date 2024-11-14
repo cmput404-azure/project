@@ -1,5 +1,5 @@
 import { Inbox, InboxItem } from "../models/models";
-import { api } from "./config";
+import { api, basicAuthApi } from "./config";
 
 class InboxService{
     /* 
@@ -112,6 +112,25 @@ class InboxService{
         uuid = uuid.split('/').pop()
         try {
             const inboxResponse = await api.post<{ message: string }>(`/api/authors/${uuid}/inbox/`, inbox_item);
+            return inboxResponse.data.message;
+        } catch (error) {
+            console.error(`Error sending object to inbox of ${uuid}:`, error);
+            return "Error";
+        }
+    }
+
+    /**
+      * Send objects to remote author's inbox
+      * @param fqid - the uuid of the remote user
+      * @param inboxItem - the inbox item to be sent
+      * @param remoteHost - the service or base url of the remote node
+      * @returns a string message
+   */
+    public async sendToRemoteInbox(fqid: string, inboxItem: object, remoteHost: string) {
+        const uuid = fqid.split('/').pop()
+
+        try {
+            const inboxResponse = await basicAuthApi.post<{ message: string }>(`${remoteHost}/api/authors/${uuid}/inbox/`, inboxItem);
             return inboxResponse.data.message;
         } catch (error) {
             console.error(`Error sending object to inbox of ${uuid}:`, error);

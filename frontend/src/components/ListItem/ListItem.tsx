@@ -11,6 +11,7 @@ import FollowService from "../../service/follow";
 import InboxService from "../../service/inbox";
 import ProfileService from "../../service/profile";
 import { PostData, Author } from "../../models/models"
+import { normalizeURL } from "../../util/formatting/normalizeURL";
 interface ListItemProps {
   isRequest?: boolean;
   isPost?: boolean;
@@ -117,7 +118,39 @@ export default function ListItem({
           },
         };
 
-        await InboxService.sendPostToInbox(user.id, followRequest);
+        const normalizedHost = normalizeURL(userInfo.host);
+        // Call different endpoint depending if the followee is remote or local
+        if (normalizedHost === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+          await InboxService.sendPostToInbox(user.id, followRequest);
+        } else {
+
+          try {
+            await InboxService.sendToRemoteInbox(user.id, followRequest, normalizedHost);
+
+            // If successful, we need to track the follow request locally as well to be able to poll
+            const modifiedRequest = {
+              type: followRequest.type,
+              summary: followRequest.summary,
+              object: {
+                type: "author",
+                id: `${user.id}`,
+                host: `${user.host}`,
+                displayName: `${user.displayName}`,
+                username: `${user.username}`,
+                bio: `${user.bio}`,
+                profileImage: `${user.profileImage}`,
+                github: `${user.github}`,
+                page: `${user.page}`,
+              }
+            }
+
+            await api.post<{ message: string }>(`/api/authors/${authProvider.user.uuid}/track/`, modifiedRequest);
+
+          } catch (error) {
+            console.error("Something went wrong. ", error);
+          }
+        } 
+
         setIsRequested(true);
 
       } catch (error) {

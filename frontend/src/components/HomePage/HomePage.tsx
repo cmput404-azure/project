@@ -7,11 +7,12 @@ import { api } from "../../service/config";
 import author from "../../service/author";
 import setting from "../../service/setting";
 import stream from "../../service/stream";
-import { Author } from "../../models/models";
+import { Author, RemoteFollowRequest } from "../../models/models";
 import Post from "../Post/Post";
 import PostBar from "../PostBar/PostBar";
 import styles from "./HomePage.module.scss";
 import AuthorPost from "../AuthorPost/AuthorPost";
+import remote from "../../service/remote";
 
 type ViewType = "all" | "unlisted_friends-only";
 
@@ -138,12 +139,21 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    fetchPosts(publicPage, privatePage); // fetch initial
+    fetchPosts(publicPage, privatePage);
     const interval = setInterval(() => {
       fetchPosts(publicPage, privatePage);
     }, 60000);
-    return () => clearInterval(interval); // Clean up the interval on component unmount
+    return () => clearInterval(interval);
   }, [isUserLoading, privatePage, publicPage]);
+
+  useEffect(() => {
+    checkRemoteRequestStatus();
+    const interval = setInterval(() => {
+      checkRemoteRequestStatus();
+    }, 60000);
+  
+    return () => clearInterval(interval);
+  }, []);
 
   const nextPublicPage = async () => {
     if (isLoading || publicPage >= totalPublicPages) return;
@@ -157,6 +167,43 @@ const HomePage = () => {
 
   function handleFilterPost(icon: ViewType) {
     setActiveFilterPost(icon);
+  }
+
+  // Checks if any remote pending requests (locally) has been accepted remotely
+  const checkRemoteRequestStatus = async () => {
+    if (!authProvider.user) {
+      return;
+    }
+
+    try {
+      const requests: RemoteFollowRequest[] = await remote.trackRemoteRequests(authProvider.user.uuid);
+
+      for (let request of requests) {
+        // Check if follow request is accepted
+        const isFollower = remote.checkRemoteNode(
+          request.remote_object.host,
+          request.remote_object.id,
+          request.actor.host,
+          request.actor.id
+        );
+
+        if (isFollower) {
+          await remote.setRequestAsAccepted(
+            authProvider.user.uuid,
+            request.remote_object.host,
+            request.remote_object.id
+          );
+
+          await remote.deleteStaleRequest(
+            authProvider.user.uuid,
+            request.remote_object.host,
+            request.remote_object.id
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching follow requests:', error);
+    }
   }
 
   if (isLoading)

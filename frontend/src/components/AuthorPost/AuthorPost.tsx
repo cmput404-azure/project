@@ -1,12 +1,80 @@
 import React from 'react';
 import styles from './AuthorPost.module.scss';
 import { Author } from '../../models/models';
+import { useAuth } from '../../state';
+import { normalizeURL } from '../../util/formatting/normalizeURL';
+import InboxService from '../../service/inbox';
+import { api } from '../../service/config';
+
 
 interface AuthorPostProps {
   author: Author;
 }
 
 const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
+  const authProvider = useAuth();
+
+  const handleAddButton = async () => {
+    // console.log(`Remote author we want to follow: ${author.username} on ${author.host}`);
+    // console.log(`My username: ${authProvider.user.username}`);
+
+    const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
+    const myInfo = userResponse.data;
+
+    const followRequest = {
+      type: "follow",
+      summary: `${myInfo.username} wants to follow ${author.username}`,
+      actor: { // person who sends the request
+        type: "author",
+        id: `${myInfo.id}`,
+        host: `${myInfo.host}`,
+        displayName: `${myInfo.displayName}`,
+        username: `${myInfo.username}`,
+        bio: `${myInfo.bio}`,
+        profileImage: `${myInfo.profileImage}`,
+        github: `${myInfo.github}`,
+        page: `${myInfo.page}`,
+      },
+    };
+  
+    const normalizedHost = normalizeURL(author.host);
+    console.log("what is normalized host: ", normalizedHost);
+    // Call different endpoint depending if the followee is remote or local
+    if (normalizedHost === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+      await InboxService.sendPostToInbox(author.id, followRequest);
+    } else {
+
+      try {
+        await InboxService.sendToRemoteInbox(author.id, followRequest, normalizedHost);
+
+        // If successful
+        const modifiedRequest = {
+          type: followRequest.type,
+          summary: followRequest.summary,
+          object: {
+            type: "author",
+            id: `${author.id}`,
+            host: `${author.host}`,
+            displayName: `${author.displayName}`,
+            username: `${author.username}`,
+            bio: `${author.bio}`,
+            profileImage: `${author.profileImage}`,
+            github: `${author.github}`,
+            page: `${author.page}`,
+          }
+        }
+
+        console.log(modifiedRequest);
+
+        await api.post<{ message: string }>(`/api/authors/${authProvider.user.uuid}/track/`, modifiedRequest);
+
+      } catch (error) {
+        console.error("Something went wrong. ", error);
+      }
+    } 
+    console.log("request sent...");
+  }
+
   return (
     <div className={styles['author-post']}>
       <div className={styles['post-header']}>
@@ -21,7 +89,7 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
             <p>@{author.username}</p>
           </div>
         </div>
-        <button className={styles['add-button']}>
+        <button className={styles['add-button']} onClick={handleAddButton}>
           <span>+</span>
         </button>
       </div>

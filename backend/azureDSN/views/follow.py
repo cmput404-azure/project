@@ -1,6 +1,7 @@
 import json
 from django.http import Http404
 from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 import http.client
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from drf_spectacular.utils import inline_serializer
@@ -117,11 +118,27 @@ class FollowCustomView(APIView):
         """
         Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/following/?action=following
         """
+        user = get_object_or_404(User, uuid=user_id)
         # Get all the users where user is the follower
-        local_followers = Follow.objects.filter(local_follower_id = user_id)
-        remote_followers = Follow.objects.filter(remote_follower__contains=f"/{user_id}")
-        userList = []
-        all_followers = list(local_followers) + list(remote_followers)
+        # local_followers = Follow.objects.filter(local_follower_id = user_id)
+        my_followees = Follow.objects.filter(local_follower=user) # This fetches both local and remote authors that I'm following
+
+        followee_data = []
+        for follow in my_followees:
+            if follow.local_followee:
+                followee_data.append(follow.local_followee)
+            elif follow.remote_followee:
+                try:
+                    remote_user = fetch_remote_follower_data(follow.remote_followee)
+                    print(f"Fetched remote user data: {remote_user}")
+                    if remote_user:
+                        followee_data.append(remote_user)
+                except Exception as e:
+                    print(f"Error fetching remote followee data: {e}")
+
+        # remote_followers = Follow.objects.filter(remote_follower__contains=f"/{user_id}")
+        # userList = []
+        # all_followers = list(local_followers) + list(remote_followers)
 
         #  combined_followers = []
         # for follower in followers:
@@ -137,18 +154,18 @@ class FollowCustomView(APIView):
         #             raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
 
 
-        for follower in all_followers:
-            try:
-                user = User.objects.get(uuid=follower.local_followee_id)
-                userList.append(user)
-            except User.DoesNotExist:
-                raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
+        # for follower in all_followers:
+        #     try:
+        #         user = User.objects.get(uuid=follower.local_followee_id)
+        #         userList.append(user)
+        #     except User.DoesNotExist:
+        #         raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
         
-        serializer = UserSerializer(userList, many=True)
+        serializer = UserSerializer(followee_data, many=True)
         response_data = {
-                "type": "followers",
-                "followers": serializer.data,
-                }
+            "type": "followers",
+            "followers": serializer.data,
+        }
         return Response(response_data)
     
     def get_friends(self, user_id):
@@ -455,8 +472,25 @@ class FollowView(APIView):
             follower_id = parts[-1]
             follower = Follow.objects.filter(local_followee_id = user_id, local_follower_id=follower_id)
         else:
-            return Response({"is_follower": True}, status=200)
-        if not follower:  # neither local nor remote
-            return Response({"is_follower": False}, status=200)
+            return Response({"is_follower": True}, status=200) # is remote follower
+        if not follower:
+            return Response({"is_follower": False}, status=404) # neither local nor remote
         else:
-            return Response({"is_follower": True},status=200)
+            return Response({"is_follower": True},status=200) # is local follower
+        
+class RemoteFollowView(APIView):
+    def post(self, request, author_serial, followee_url):
+        """
+            For outgoing requests to remote authors that were accepted. Creates a Follow object for it.
+        """
+
+        local_user = get_object_or_404(User, uuid=author_serial)
+
+        decoded_url = unquote(followee_url)
+
+        follow_obj = Follow.objects.create(
+            local_follower=local_user,
+            remote_followee=decoded_url
+        )
+
+        return Response({ "Message: Successfully added. "}, status=status.HTTP_200_OK)

@@ -18,6 +18,12 @@ urlpatterns = [
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
 
+    # Remote Follows
+    path("api/authors/<uuid:author_serial>/track/", FollowRequestView.as_view(), name="save_remote_requests"),
+    path("api/track/<uuid:author_serial>/pending/", FollowRequestView.as_view(), name="get_pending_requests"),
+    path("api/track/<uuid:author_serial>/accepted/<path:followee_url>", RemoteFollowView.as_view(), name="save_remote_followee"),
+    path("api/track/<uuid:author_serial>/delete/<path:followee_url>", FollowRequestView.as_view(), name="delete_accepted_request"),
+
     # Likes on Posts or Comments
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", LikesView.as_view(), name="get_likes_by_serial"),
     path("api/posts/<path:post_fqid>/likes/", LikesView.as_view(), name="get_likes_by_fqid"),
