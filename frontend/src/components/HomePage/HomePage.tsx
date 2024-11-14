@@ -146,14 +146,14 @@ const HomePage = () => {
     return () => clearInterval(interval);
   }, [isUserLoading, privatePage, publicPage]);
 
-  useEffect(() => {
-    checkRemoteRequestStatus();
-    const interval = setInterval(() => {
-      checkRemoteRequestStatus();
-    }, 60000);
+  // useEffect(() => {
+  //   checkRemoteRequestStatus();
+  //   const interval = setInterval(() => {
+  //     checkRemoteRequestStatus();
+  //   }, 60000);
   
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const nextPublicPage = async () => {
     if (isLoading || publicPage >= totalPublicPages) return;

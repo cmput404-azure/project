@@ -124,24 +124,32 @@ export default function ListItem({
           await InboxService.sendPostToInbox(user.id, followRequest);
         } else {
             const success = await remote.sendItemRemotely(user.host, user.id, followRequest);
+            // if (success) {
+            //   // If successful, we need to track the follow request locally as well to be able to poll
+            //   const modifiedRequest = {
+            //     type: followRequest.type,
+            //     summary: followRequest.summary,
+            //     object: {
+            //       type: "author",
+            //       id: `${user.id}`,
+            //       host: `${user.host}`,
+            //       displayName: `${user.displayName}`,
+            //       username: `${user.username}`,
+            //       bio: `${user.bio}`,
+            //       profileImage: `${user.profileImage}`,
+            //       github: `${user.github}`,
+            //       page: `${user.page}`,
+            //     }
+            //   }
+            //   await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
+            // }
+
             if (success) {
-              // If successful, we need to track the follow request locally as well to be able to poll
-              const modifiedRequest = {
-                type: followRequest.type,
-                summary: followRequest.summary,
-                object: {
-                  type: "author",
-                  id: `${user.id}`,
-                  host: `${user.host}`,
-                  displayName: `${user.displayName}`,
-                  username: `${user.username}`,
-                  bio: `${user.bio}`,
-                  profileImage: `${user.profileImage}`,
-                  github: `${user.github}`,
-                  page: `${user.page}`,
-                }
-              }
-              await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
+              await remote.setRequestAsAccepted(
+                authProvider.user.uuid,
+                author.host,
+                author.id
+              );
             }
         }
       } catch (error) {

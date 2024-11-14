@@ -2,11 +2,12 @@
 import { CircularProgress, responsiveFontSizes } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import Modal from "react-modal";
-import { api } from "../../service/config";
+import { api, basicAuthApi } from "../../service/config";
 import inbox from "../../service/inbox";
 import PostService from "../../service/post"
 import { useAuth } from "../../state";
 import { normalizeURL } from '../../util/formatting/normalizeURL';
+import { extractUUID } from '../../util/formatting/extractUUID';
 import ListItem from "../ListItem/ListItem";
 import styles from "./NotificationList.module.scss";
 
@@ -111,10 +112,12 @@ export default function NotificationList() {
 
   const fetchRemoteUser = async (uuid: string, baseHost: string) => {
     try {
+      console.log(`${baseHost}/api/authors/${uuid}/`)
       const response = await basicAuthApi.get(`${baseHost}/api/authors/${uuid}/`);
+      console.log(response.data);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching user ${authProvider.user.uuid}:`, err);
+      console.error(`Error fetching user ${authProvider.user.uuid}:`, error);
       return null;
     }
   }

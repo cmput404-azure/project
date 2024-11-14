@@ -39,23 +39,34 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
       await InboxService.sendPostToInbox(author.id, followRequest);
     } else {
         const success = remote.sendItemRemotely(author.host, author.id, followRequest);
+
+        // Keep this for now!
+        // if (success) {
+        //   const modifiedRequest = {
+        //     type: followRequest.type,
+        //     summary: followRequest.summary,
+        //     object: {
+        //       type: "author",
+        //       id: `${author.id}`,
+        //       host: `${author.host}`,
+        //       displayName: `${author.displayName}`,
+        //       username: `${author.username}`,
+        //       bio: `${author.bio}`,
+        //       profileImage: `${author.profileImage}`,
+        //       github: `${author.github}`,
+        //       page: `${author.page}`,
+        //     }
+        //   }
+        //   await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
+        // }
+
+        // We can directly consider the request to be accepted from the local node, even if remote author reject it
         if (success) {
-          const modifiedRequest = {
-            type: followRequest.type,
-            summary: followRequest.summary,
-            object: {
-              type: "author",
-              id: `${author.id}`,
-              host: `${author.host}`,
-              displayName: `${author.displayName}`,
-              username: `${author.username}`,
-              bio: `${author.bio}`,
-              profileImage: `${author.profileImage}`,
-              github: `${author.github}`,
-              page: `${author.page}`,
-            }
-          }
-          await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
+          await remote.setRequestAsAccepted(
+            authProvider.user.uuid,
+            author.host,
+            author.id
+          );
         }
     }
   }
