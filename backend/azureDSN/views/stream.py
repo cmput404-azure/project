@@ -33,24 +33,22 @@ class PublicStreamView(APIView):
             if user.is_staff:
                 visibility_filter.append(4)  # Add deleted posts for admin
 
-            # Check remote posts in user's inbox
-            user_inbox = get_object_or_404(Inbox, user=user)
+        remote_posts = {}
+        for inbox in Inbox.objects.all(): # Iterate through all local inboxes
+            for item in inbox.items.filter(remote_payload__isnull=False):
+                remote_payload = item.remote_payload
+                if remote_payload.get("type") == "post": # And get the public remote posts
+                    post_id = remote_payload.get("id")
+                    if post_id and post_id not in remote_posts:
+                        remote_posts[post_id] = remote_payload
 
-            # Filter remote posts
-            remote_posts = [
-                item.remote_payload
-                for item in user_inbox.items.filter(remote_payload__isnull=False)
-                if item.remote_payload.get("type") == "post"
-            ]
+        unique_remote_posts = list(remote_posts.values())
 
-        else:
-            remote_posts = []
+        local_posts = Post.objects.filter(visibility__in=visibility_filter)
 
-        posts = Post.objects.filter(visibility__in=visibility_filter)
+        serialized_local_posts = PostSerializer(local_posts, many=True).data
 
-        serialized_posts = PostSerializer(posts, many=True).data
-
-        all_posts = serialized_posts + remote_posts
+        all_posts = serialized_local_posts + unique_remote_posts
 
         # Separate logic for Post objects and JSON objects
         all_posts.sort(key=lambda post: post['published'] if isinstance(post, dict) else post['created_at'], reverse=True)
