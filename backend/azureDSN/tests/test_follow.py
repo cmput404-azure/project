@@ -13,7 +13,7 @@ class FollowTests(APITestCase):
             "display_name": "TestUser1",
             "username":"TestUser1",
             "github": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
-            "host": f"{settings.BASE_URL}/api/",
+            "host": f"{settings.BASE_URL}",
             "page": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
             "profile_image":"profile_pictures/seabackground.jpg"
         }
@@ -21,7 +21,7 @@ class FollowTests(APITestCase):
             "display_name": "TestUser2",
             "username":"TestUser2",
             "github": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
-            "host": f"{settings.BASE_URL}/api/",
+            "host": f"{settings.BASE_URL}",
             "page": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
             "profile_image":"profile_pictures/seabackground.jpg"
         }
@@ -29,7 +29,7 @@ class FollowTests(APITestCase):
             "display_name": "TestUser3",
             "username":"TestUser3",
             "github": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
-            "host": f"{settings.BASE_URL}/api/",
+            "host": f"{settings.BASE_URL}",
             "page": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
             "profile_image":"profile_pictures/seabackground.jpg"
         }
@@ -97,7 +97,7 @@ class FollowTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_add_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user3.uuid}'
+        follower_url = f'{settings.BASE_URL}authors/{self.user3.uuid}'
         encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user2.uuid, encoded_url])  
         response = self.client.put(f"{url}")
@@ -110,7 +110,7 @@ class FollowTests(APITestCase):
         self.assertEqual(len(follower_response.data["followers"]), 2)
 
     def test_add_existing_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user2.uuid}'
+        follower_url = f'{settings.BASE_URL}authors/{self.user2.uuid}'
         encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.put(f"{url}")
@@ -123,7 +123,7 @@ class FollowTests(APITestCase):
         self.assertEqual(len(follower_response.data["followers"]), 1)
 
     def test_delete_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user2.uuid}'
+        follower_url = f'{settings.BASE_URL}authors/{self.user2.uuid}'
         encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.delete(f"{url}")
@@ -136,21 +136,21 @@ class FollowTests(APITestCase):
         self.assertEqual(len(follower_response.data["followers"]), 0)
 
     def test_delete_non_existing_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user3.uuid}'
+        follower_url = f'{settings.BASE_URL}authors/{self.user3.uuid}'
         encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.delete(f"{url}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_check_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user2.uuid}'
+        follower_url = f'{settings.BASE_URL}authors/{self.user2.uuid}'
         encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.get(f"{url}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_check_no_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user3.uuid}'
+        follower_url = f'{settings.BASE_URL}authors/{self.user3.uuid}'
         encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.get(f"{url}")

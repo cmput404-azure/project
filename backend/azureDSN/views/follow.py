@@ -404,7 +404,7 @@ class FollowView(APIView):
         
         follower_local = False
         
-        base_url = settings.BASE_URL.rstrip('/')
+        base_url = settings.BASE_URL.rstrip('/api/') # we assume all host ends with /api/
 
         if follower_host.find(base_url)!=-1:
             follower_local = True
