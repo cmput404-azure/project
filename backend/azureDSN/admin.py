@@ -38,6 +38,25 @@ class UserAdmin(BaseUserAdmin):
 
 class NodeUserAdmin(admin.ModelAdmin):
     list_display = ('username', 'host', 'password', 'is_authenticated')
+    actions = ['authenticate_nodes', 'deauthenticate_nodes']
+
+    def authenticate_nodes(self, request, queryset):
+        """
+        To authenticate connections (set `is_authenticated=True`).
+        Allow sharing to selected nodes.
+        """
+        queryset.update(is_authenticated=True)
+        self.message_user(request, f"{queryset.count()} user(s) have been approved.")
+    authenticate_nodes.short_description = "Allow sharing to selected nodes"
+
+    def deauthenticate_nodes(self, request, queryset):
+        """
+        To break/stop connections (set `is_authenticated=False`).
+        Stop sharing to the selected nodes.
+        """
+        queryset.update(is_authenticated=True)
+        self.message_user(request, f"{queryset.count()} user(s) have been approved.")
+    deauthenticate_nodes.short_description = "Disable sharing to selected nodes"
 
 class PostAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'content_type', 'visibility')
