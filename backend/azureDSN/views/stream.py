@@ -1,3 +1,4 @@
+from urllib.parse import urljoin, urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +8,8 @@ from ..serializers import PostSerializer
 from ..models import Post, User, Follow, Share, Inbox
 from .posts import PostsPagination
 import requests
+import http.client
+import json
 
 class PublicStreamView(APIView):
     pagination_provider = PostsPagination
@@ -43,7 +46,28 @@ class PublicStreamView(APIView):
                     
                     if visibility == "PUBLIC":
                         if post_id and post_id not in remote_posts: # Add if this post hasn't been added
-                            remote_posts[post_id] = remote_payload
+                            author_host = remote_payload["author"]["host"]
+                            post_url = urljoin(author_host, f"posts/{post_id}")
+                            
+                            # Parse the URL for the GET request
+                            parsed_url = urlparse(post_url)
+                            connection = http.client.HTTPConnection(parsed_url.netloc)
+                            
+                            try:
+                                # Perform the GET request
+                                connection.request("GET", parsed_url.path)
+                                response = connection.getresponse()
+                                
+                                if response.status == 200:
+                                    post_data = json.loads(response.read().decode())
+                                    if post_id not in remote_posts:  # Add only if not already added
+                                        remote_posts[post_id] = post_data
+                                else:
+                                    print(f"Failed to fetch post from {post_url}, status: {response.status}")
+                            except Exception as e:
+                                print(f"Error fetching remote post {post_url}: {e}")
+                            finally:
+                                connection.close()
 
         unique_remote_posts = list(remote_posts.values())
 
