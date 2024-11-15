@@ -12,7 +12,7 @@ import InboxService from "../../service/inbox";
 import ProfileService from "../../service/profile";
 import { PostData, Author } from "../../models/models"
 import { normalizeURL } from "../../util/formatting/normalizeURL";
-import remote from "../../service/remote";
+
 interface ListItemProps {
   isRequest?: boolean;
   isPost?: boolean;
