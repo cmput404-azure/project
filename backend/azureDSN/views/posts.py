@@ -1,4 +1,6 @@
-from urllib.parse import unquote
+import json
+from urllib.parse import unquote, urlparse
+import http.client
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from ..models import User, Post, Follow
@@ -10,6 +12,7 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
+from django.conf import settings
 import requests
 
 class AuthorPostView(APIView):
@@ -559,22 +562,45 @@ class PostView(APIView):
         """
         if post_fqid:
             decoded_post_fqid = unquote(post_fqid)
+            print(decoded_post_fqid)
             post_serial = decoded_post_fqid.split("/")[-1]
             print("POST_SERIAL", post_serial)
             UUID(post_serial)
-            post = get_object_or_404(Post, uuid=post_serial)
+
+            post_visibility = ""
+            post_data = ""
+
+            # Checks for remote first
+            parsed_url = urlparse(decoded_post_fqid)
+            host = f"{parsed_url.scheme}://{parsed_url.netloc}/api/"
+            post_url = f"{host}posts/{post_fqid}/"
+            parsed_post_url = urlparse(post_url)
+
+            if host!=settings.BASE_URL:
+                connection = http.client.HTTPConnection(parsed_url.netloc)
+                # Perform the GET request
+                connection.request("GET", parsed_post_url.path)
+                response = connection.getresponse()
+                data = json.loads(response.read().decode()) 
+                post_visibility=data.get("visibility")       
+                post_data = data        
+            else:
+                post = get_object_or_404(Post, uuid=post_serial)
+                post_visibility = post.visibility
+                serializer = PostSerializer(post)
+                post_data = serializer.data
+
 
             # Check the visibility of the post
-            if post.visibility == 1: # Anyone can see PUBLIC posts
+            if post_visibility in (1, "PUBLIC"): # Anyone can see PUBLIC posts
                 pass
-            elif post.visibility in (2, 3):  # FRIENDS or UNLISTED
+            elif post_visibility in (2, 3):  # FRIENDS or UNLISTED
                 if not request.user.is_authenticated:
                     return Response("Authentication required to view this post.", status=403)
-            elif post.visibility == 4:  # DELETED
+            elif post_visibility == 4:  # DELETED
                 if not (request.user.is_authenticated and request.user.is_staff):
                     return Response("Post does not exist.", status=404) # Don't disclose information for security purposes
             
-            serializer = PostSerializer(post)
-            return Response(serializer.data, status=200)
+            return Response(post_data, status=200)
         else:
             return Response("No post ID specified", status=400)

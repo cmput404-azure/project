@@ -57,7 +57,9 @@ export default function Post({
 
   useEffect(() => {
     const fetchPost = async () => {
+
       try {
+
         if (postID) {
           const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
@@ -207,7 +209,11 @@ export default function Post({
   useEffect(() => {
     const fetchPost = async () => {
       if (postGiven) {
-        let encodedId = encodeURIComponent(postGiven.id);
+        let encodedId = null;
+        encodedId = encodeURIComponent(postGiven.id);
+        if (postGiven.author.host != process.env.REACT_APP_API_BASE_URL){
+          encodedId = encodeURIComponent(`${postGiven.author.id}/posts/${postGiven.id}`);
+        }
         const postData = await postService.getPost(`api/posts/${encodedId}`);
         const comments = postData.comments?.src ? postData.comments.src.reverse() : [];
         setCommentList(comments);

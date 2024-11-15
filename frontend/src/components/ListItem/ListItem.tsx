@@ -53,7 +53,6 @@ export default function ListItem({
     const fetchData = async () => {
       const userListId = extractUUID(user.id);
       setUserId(userListId);
-      
       let following = false;
       if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
         // check if current user is already following the (local) user  
