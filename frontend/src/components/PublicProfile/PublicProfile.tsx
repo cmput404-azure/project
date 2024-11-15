@@ -54,8 +54,13 @@ export default function PublicProfile() {
   const navigate = useNavigate();
 
   const authProvider = useAuth();
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const { userID } = useParams<{ userID: string }>();
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [userID]);
 
   const fetchProfileData = async () => {
     if (userID) {
@@ -88,10 +93,14 @@ export default function PublicProfile() {
   };
 
   useEffect(() => {
-    fetchProfileData();
-  }, [userID]);
+    // Wait for authProvider to initialize
+    if (authProvider.isAuthenticated === undefined) {
+      setIsAuthLoading(true);
+      return;
+    }
 
-  useEffect(() => {
+    setIsAuthLoading(false);
+
     async function fetchCounts() {
       try {
         const followers = await FollowService.getFollowers(userID);
@@ -121,7 +130,7 @@ export default function PublicProfile() {
       await Promise.all(
         userInbox.map(async (item: any) => {
           if (item && item.type === "follow") {
-            let actorId = item.actor.id.replace(/\/+$/, '').split('/').pop();
+            let actorId = item.actor.id.replace(/\/+$/, "").split("/").pop();
             if (actorId === authProvider.user.uuid) {
               setIsRequested(true);
             }
@@ -131,9 +140,12 @@ export default function PublicProfile() {
     }
 
     fetchCounts();
+
     if (authProvider.isAuthenticated === false) {
       setIsAuthenticated(false);
     } else {
+      console.log("here");
+      console.log("authProvider.user.uuid", authProvider.user.uuid);
       if (userID === authProvider.user.uuid) {
         setIsOwnProfile(true);
       } else {
@@ -141,7 +153,16 @@ export default function PublicProfile() {
         checkFollowing();
       }
     }
-  }, [userID]);
+  }, [userID, authProvider]);
+
+  // Render loading indicator until authProvider is ready
+  if (isAuthLoading) {
+    return (
+      <div className="loading">
+        <CircularProgress sx={{ color: "#70ffaf" }} />
+      </div>
+    );
+  }
 
   function getLink() {
     const currentURL = window.location.href;
@@ -185,6 +206,8 @@ export default function PublicProfile() {
     navigate("/login");
   }
 
+  // just refresh the page for now
+
   if (!authorData)
     return (
       <div className="loading">
@@ -220,8 +243,8 @@ export default function PublicProfile() {
                     isOwnProfile
                       ? handleManageProfileClick
                       : isAuthenticated
-                        ? handleButtonClick
-                        : handleLoginClick
+                      ? handleButtonClick
+                      : handleLoginClick
                   }
                   disabled={isRequested}
                   sx={{ backgroundColor: "#70ffaf", color: "black" }}
@@ -229,10 +252,10 @@ export default function PublicProfile() {
                   {isOwnProfile
                     ? "Manage Profile"
                     : isRequested
-                      ? "Requested"
-                      : isFollowing
-                        ? "Unfollow"
-                        : "Follow"}
+                    ? "Requested"
+                    : isFollowing
+                    ? "Unfollow"
+                    : "Follow"}
                 </Button>
 
                 {authorData.github && (
@@ -261,7 +284,8 @@ export default function PublicProfile() {
                       })
                     }
                   >
-                    <b>{followersCount}</b> {followersCount === 1 ? "follower" : "followers"}
+                    <b>{followersCount}</b>{" "}
+                    {followersCount === 1 ? "follower" : "followers"}
                   </p>
                   <p
                     className={styles.following__count}
