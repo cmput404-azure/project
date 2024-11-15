@@ -6,7 +6,7 @@ axios.defaults.xsrfHeaderName = "x-csrftoken";
 
 // Axios instance for internal requests (CSRF and withCredentials enabled)
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL,
+  baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:8000",
   timeout: 10000,
   withCredentials: true,
 });
