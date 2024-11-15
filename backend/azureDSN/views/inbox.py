@@ -487,7 +487,8 @@ class InboxView(APIView):
                 # New post created locally but the followers/friends are remote...
                 # remote follower info is in the payload
                 return self.send_post_to_remote(payload)
-
+            elif payload["type"].lower() == "like":
+                pass
             else:
                 return Response({"error": "User not found locally and only 'follow' requests are supported for remote authors"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -611,6 +612,24 @@ class InboxView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def send_like_to_remote(self, payload):
+        parsed_url = urlparse(payload["object"]) 
+        post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+        post_obj = Post.objects.get(uuid=post_id)
+        like_obj = Like.objects.create(user=payload["author"], 
+                                       created_at=payload["published"], 
+                                       post=post_obj)
+        serializer = LikeSerializer(like_obj, data=payload, context={"request": request})
+
+        if serializer.is_valid():
+            like_instance =serializer.save()
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, like_instance)
+            return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
+    
+    
     '''
     payload is a follow request object
     we return the status only cause the they dont need to know what is stored in other person's inbox
@@ -636,7 +655,7 @@ class InboxView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    
+
     '''
     payload is a comment object
     id is http://{server}/api/authors/{user_id}/commented/{comment_id}

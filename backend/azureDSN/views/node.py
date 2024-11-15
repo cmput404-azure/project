@@ -126,9 +126,11 @@ class NodeConnectionView(APIView):
         decoded_credentials = base64.b64decode(auth_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':')
 
-        expected_username = os.getenv('NODE_USERNAME', 'default')
-        expected_password = os.getenv('NODE_PASSWORD', 'defaultpass')
+        # expected_username = os.getenv('NODE_USERNAME', 'default')
+        # expected_password = os.getenv('NODE_PASSWORD', 'defaultpass')
 
+        expected_username = "NodeA"
+        expected_password = "!Summer2024!"
         print(expected_username, expected_password)
 
         if username == expected_username and password == expected_password:
