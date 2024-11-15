@@ -17,11 +17,11 @@ class RemoteAuthorsView(APIView):
             node_users = NodeUser.objects.all()
 
             for node in node_users:
-                if node.is_authenticated:
-                    authors = self.fetch_remote_authors(node.host, node.username, node.password)
-                    all_remote_authors.extend(authors)
+                # We send our local credentials to the remote host
+                authors = self.fetch_remote_authors(node.host, os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                all_remote_authors.extend(authors)
 
-            random_authors = self.select_random_authors(all_remote_authors)
+            random_authors = self.select_random_authors(all_remote_authors) if all_remote_authors else []
             
             return Response({"recommended_authors": random_authors}, status=status.HTTP_200_OK)
         except Exception as e:
