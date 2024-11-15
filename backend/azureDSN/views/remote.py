@@ -22,7 +22,6 @@ class RemoteAuthorsView(APIView):
                     all_remote_authors.extend(authors)
 
             random_authors = self.select_random_authors(all_remote_authors)
-            print(f"Selected authors: {random_authors}")
             
             return Response({"recommended_authors": random_authors}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -41,14 +40,14 @@ class RemoteAuthorsView(APIView):
                 f"{base_host}/api/authors/",
                 auth=HTTPBasicAuth(username, password),
                 params={"page": page, "size": size},
+                headers={"Origin": os.getenv('BASE_URL')},
                 timeout=5
             )
             
-            # Check if request was successful
             if response.status_code == 200:
-                # Extract authors list from JSON response
                 return response.json().get("authors", [])
             else:
+                # This could mean the remote node does not grant us access to their data
                 print(f"Failed to fetch authors from {host}: {response.status_code}")
                 return []
 
@@ -86,17 +85,15 @@ class RemoteFolloweeView(APIView):
 
             api_url = f"{base_host}/api/authors/{remote_serial}/followers/{base_local}/api/authors/{local_serial}"
 
-            print(f"Calling to: {api_url}")
-
             try:
                 node_user = NodeUser.objects.get(host__contains=base_host)
-                print(f"Do I have node? {node_user}")
             except ObjectDoesNotExist :
                 return Response({'error': 'Node not found for the provided host'}, status=404)
 
             response = requests.get(
                 api_url,
-                auth=HTTPBasicAuth(node_user.username, node_user.password)
+                auth=HTTPBasicAuth(node_user.username, node_user.password),
+                headers={"Origin": os.getenv('BASE_URL')},
             )
 
             if response.status_code == 404:
@@ -106,6 +103,7 @@ class RemoteFolloweeView(APIView):
                 # User is a follower
                 return Response({'is_follower': True}, status=200)
             else:
+                # No permission from remote node
                 return Response({'error': 'Unable to check following status'}, status=response.status_code)
 
         except Exception as e:
