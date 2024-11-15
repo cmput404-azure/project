@@ -115,7 +115,6 @@ class AuthorsSpecificView(APIView):
 
         if(author_serial):
             # if uuid provided
-            print(author_serial)
             author = get_object_or_404(User, uuid=author_serial)
             
             serializer = UserSerializer(author)

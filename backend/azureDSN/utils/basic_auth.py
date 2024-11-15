@@ -10,8 +10,6 @@ class IsAuthenticatedNode(BasePermission):
         base_url = os.getenv('BASE_URL', '')
         origin_header = request.headers.get('Origin', '')
 
-        print(f"{base_url}, {origin_header}")
-
         def ensure_scheme(url):
             if not url.startswith(('http://', 'https://')):
                 return f'http://{url}'
@@ -19,8 +17,6 @@ class IsAuthenticatedNode(BasePermission):
 
         parsed_base_url = urlparse(ensure_scheme(base_url))
         parsed_origin = urlparse(ensure_scheme(origin_header))
-
-        print(f"{parsed_base_url}, {parsed_origin}")
 
         # Only allow unauthenticated requests that exactly match BASE_URL
         if origin_header and parsed_origin.netloc == parsed_base_url.netloc:
@@ -35,7 +31,6 @@ class IsAuthenticatedNode(BasePermission):
             encoded_credentials = auth_header.split(' ')[1]
             decoded_credentials = b64decode(encoded_credentials).decode('utf-8')
             username, password = decoded_credentials.split(':')
-            print(username, password)
         except (IndexError, ValueError):
             return False
 

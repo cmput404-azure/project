@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from ..models import User
-from django.conf import settings
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
 
@@ -93,7 +92,6 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Check if the payload have the expected fields.
         """
-        print(data)
         required_fields = ['uuid', 'host', 'display_name', 'github', 'page'] # based on DB schema (image not included right now)
         missing_fields = [field for field in required_fields if field not in data]
 

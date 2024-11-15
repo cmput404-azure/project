@@ -129,8 +129,6 @@ class NodeConnectionView(APIView):
         expected_username = os.getenv('NODE_USERNAME', 'default')
         expected_password = os.getenv('NODE_PASSWORD', 'defaultpass')
 
-        print(expected_username, expected_password)
-
         if username == expected_username and password == expected_password:
             return Response({'message': 'Connected successfully'}, status=status.HTTP_200_OK)
         else:

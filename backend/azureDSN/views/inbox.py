@@ -1,17 +1,13 @@
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes, OpenApiExample, inline_serializer
+from rest_framework import status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.contenttypes.models import ContentType
-from urllib.parse import urlparse
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes, OpenApiExample
-from drf_spectacular.utils import inline_serializer
-from rest_framework import serializers
-from django.utils import timezone
-from datetime import datetime
-from django.core.exceptions import ObjectDoesNotExist
-import requests
 from requests.auth import HTTPBasicAuth
+import requests
+from urllib.parse import urlparse
 from ..serializers import *
 from ..models import *
 from ..utils import *
@@ -548,8 +544,6 @@ class InboxView(APIView):
             
             # remove follower from payload to return to original post structure
             del payload["follower"]
-
-            print(f"Payload is now: {remote_follower}")
             
             follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
             remote_host = remote_follower.get("host")
