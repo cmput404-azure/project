@@ -580,8 +580,6 @@ class InboxView(APIView):
             remote_node = NodeUser.objects.filter(host__contains=remote_host).first()
             if not remote_node:
                 return Response({"error": f"Node for {remote_host} not found."}, status=status.HTTP_404_NOT_FOUND)
-
-            print(f"Sending this payload: {payload}")
             
             response = requests.post(
                 remote_inbox_url,
@@ -591,18 +589,22 @@ class InboxView(APIView):
 
             if response.status_code == 200:
                 # If successful, make a Follow object in local regardless of whether the remote request is going to be accepted
-                local_follower = get_object_or_404(User, username=payload["actor"].get("username"))
+                local_follower_uuid = payload["actor"].get("id").split('/')[-1]
+                
                 follow_data = {
                     "local_followee": None,
                     "remote_followee": payload["object"].get("id"),
-                    "local_follower": local_follower,
+                    "local_follower": local_follower_uuid,
                     "remote_follower": None
                 }
+
                 serializer = FollowSerializer(data=follow_data)
                 if serializer.is_valid():
                     serializer.save()
-
-                return Response({"message": "Follow request sent to remote inbox."}, status=status.HTTP_200_OK)
+                    return Response({"message": "Follow request sent to remote inbox."}, status=status.HTTP_200_OK)
+                else:
+                    print(serializer.errors)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"error": f"Failed to send follow request: {response.text}"}, status=response.status_code)
 
