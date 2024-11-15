@@ -38,4 +38,4 @@ class Post(models.Model):
     
     def __str__(self):
         """String representation for the post object (useful for admin panels)."""
-        return f"{self.title} by ({self.user.display_name})"
+        return f"{self.title} ({self.uuid}) by ({self.user.display_name})"

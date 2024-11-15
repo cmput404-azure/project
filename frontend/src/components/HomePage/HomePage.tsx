@@ -1,18 +1,20 @@
 import { Button, CircularProgress } from "@mui/material";
-// HomePage.jsx
-import { useEffect, useState } from "react";
-
-import PeopleIcon from "@mui/icons-material/People";
-import Post from "../Post/Post";
-import PostBar from "../PostBar/PostBar";
 import PublicIcon from "@mui/icons-material/Public";
+import PeopleIcon from "@mui/icons-material/People";
+import { useEffect, useState } from "react";
+import { useAuth } from "../../state";
 import { api } from "../../service/config";
 import stream from "../../service/stream";
+import { Author } from "../../models/models";
+import Post from "../Post/Post";
+import PostBar from "../PostBar/PostBar";
 import styles from "./HomePage.module.scss";
-import { useAuth } from "../../state";
+import AuthorPost from "../AuthorPost/AuthorPost";
 
 type ViewType = "all" | "unlisted_friends-only";
+
 const HomePage = () => {
+  const [recommended, setRecommended] = useState<Author[]>([]); // list of remote authors for now, but should make it local if no remote connection, and make sure it's only people
   const [publicPosts, setPublicPosts] = useState<any[]>([]);
   const [privatePosts, setPrivatePosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -48,7 +50,26 @@ const HomePage = () => {
       }
     };
 
+    const fetchRecommended = async () => {
+      try {
+        if (!authProvider.user) {
+          setIsUserLoading(false); // user not authenticated
+          return;
+        }
+
+        const response = await api.get<{ recommended_authors: Author[] }>('/api/authors/recommended/');
+        if (response.status === 200) {
+          const randomAuthors = response.data.recommended_authors;
+          setRecommended(randomAuthors);
+        }
+        
+      } catch (err) {
+        console.error("Something went wrong: ", err);
+      }
+    }
+    
     fetchUser();
+    fetchRecommended();
   }, [authProvider.user]); // This effect runs when authProvider.user changes
 
   const fetchPosts = async (
@@ -91,11 +112,11 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    fetchPosts(publicPage, privatePage); // fetch initial
+    fetchPosts(publicPage, privatePage);
     const interval = setInterval(() => {
       fetchPosts(publicPage, privatePage);
     }, 60000);
-    return () => clearInterval(interval); // Clean up the interval on component unmount
+    return () => clearInterval(interval);
   }, [isUserLoading, privatePage, publicPage]);
 
   const nextPublicPage = async () => {
@@ -183,6 +204,14 @@ const HomePage = () => {
           </Button>
         )}
       </div>
+
+
+      {authProvider.isAuthenticated && <div className={styles.authorSection}>
+          <h2 className={styles.recommendedTitle}>Recommended for you</h2>
+          {recommended.map((author) => (
+            <AuthorPost key={author.id} author={author}/>
+          ))}
+      </div>}
     </div>
   );
 };

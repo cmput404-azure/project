@@ -1,3 +1,4 @@
+import os
 from rest_framework import serializers
 from ..models import Post, User
 from .user_serializer import UserSerializer
@@ -29,20 +30,27 @@ class PostSerializer(serializers.ModelSerializer):
             'comments',
             'likes',
             'published',
+            'modified_at',
             'visibility',
         )
     def to_representation(self, instance):
         representation = super().to_representation(instance)
 
+        visibility_map = dict(Post.VISIBILITY_CHOICES)
+        visibility_value = instance.visibility
+        representation['visibility'] = visibility_map[visibility_value] # Need to convert back to string
+
         # Build the full URL for the id field
         author_uuid = instance.user.uuid
         post_uuid = str(instance.uuid)
+
+        # settings.BASE_URL will always work as long as you have .env file now
         base_url = settings.BASE_URL
-        post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
+        post_url = f'authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
         
         # Fetch all likes of the post
-        like_url = f"{settings.BASE_URL}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
+        like_url = f"{base_url}authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
         
         try:
             response = requests.get(like_url)
@@ -54,7 +62,7 @@ class PostSerializer(serializers.ModelSerializer):
             representation['likes'] = []
             
         # Fetch all comments of the post
-        comment_url = f"{settings.BASE_URL}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
+        comment_url = f"{base_url}authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
         
         try:
             response = requests.get(comment_url)
@@ -88,6 +96,7 @@ class PostSerializer(serializers.ModelSerializer):
         post.contentType = validated_data.get('contentType', post.contentType)
         post.content = validated_data.get('content', post.content)
         post.published = validated_data.get('published', post.published)
+        post.modified_at = validated_data.get('modified_at', post.modified_at)
         post.visibility = validated_data.get('visibility', post.visibility)
         post.save()
         return post
@@ -95,15 +104,16 @@ class PostSerializer(serializers.ModelSerializer):
     def delete(self, post):
         post.delete()
         return post
-    
+     
 class CreatePostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
     published = serializers.DateTimeField(source='created_at')
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True) # can be empty on post creation
     content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
     github_id = serializers.CharField(required=False, allow_null=True)
+    visibility = serializers.ChoiceField(choices=Post.VISIBILITY_CHOICES, default=1)
 
     class Meta:
         model = Post
@@ -149,3 +159,12 @@ class CreatePostSerializer(serializers.ModelSerializer):
 
         post = Post.objects.create(user=user, **validated_data)
         return post
+    
+    # Convert the integer visibility back to string when serializing the response
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        
+        visibility_str = dict(Post.VISIBILITY_CHOICES).get(instance.visibility)
+        representation['visibility'] = visibility_str
+        
+        return representation

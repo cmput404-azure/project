@@ -1,7 +1,7 @@
 import { Inbox, InboxItem } from "../models/models";
 import { api } from "./config";
 
-class InboxService{
+class InboxService {
     /* 
         Get all the inbox items of the user (including posts, follow requests, comments and likes)
         @param uuid: string - the uuid of the user
@@ -11,7 +11,7 @@ class InboxService{
         try {
             const response = await api.get<Inbox>(`/api/authors/${uuid}/inbox/`);
             return response.data.items;
-        } 
+        }
         catch (error) {
             console.error('Fetch inbox error:', error);
             return [];
@@ -43,7 +43,7 @@ class InboxService{
                 content,
                 visibility,
             });
-          
+
             return response.data.message;
         } catch (error) {
             console.error("Update post in inbox error:", error);
@@ -68,9 +68,9 @@ class InboxService{
                     type: "post",
                 },
             };
-          
+
             const response = await api.delete<{ message: string }>(`/api/authors/${uuid}/inbox/`, config);
-          
+
             return response.data.message;
         } catch (error) {
             console.error("Delete post in inbox error:", error);
@@ -108,17 +108,17 @@ class InboxService{
            inbox_item: object - the inbox item to be sent
     @returns: message: string 
     */
-    public async sendPostToInbox(uuid: string, inbox_item: object): Promise<string> {
-        uuid = uuid.split('/').pop()
+    public async sendPostToInbox(fqid: string, inbox_item: object): Promise<string> {
+        const uuid = fqid.split('/').pop()
+        // handle local/remote in backend
         try {
             const inboxResponse = await api.post<{ message: string }>(`/api/authors/${uuid}/inbox/`, inbox_item);
             return inboxResponse.data.message;
         } catch (error) {
-            console.error(`Error sending object to inbox of ${uuid}:`, error);
+            console.error(`Error sending object to inbox of ${fqid}:`, error);
             return "Error";
         }
     }
-
 
     /* 
     Send a comment into the inbox of a user

@@ -7,3 +7,4 @@ from .inbox_serializer import InboxSerializer
 from .follow_serializer import FollowSerializer
 from .follow_request_serializer import FollowRequestSerializer
 from .share_serializer import ShareSerializer
+from .site_config_serializer import SiteConfigSerializer

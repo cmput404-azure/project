@@ -21,4 +21,5 @@ class InboxItem(models.Model):
     content_object = GenericForeignKey("content_type", "object_id")
     remote_payload = models.JSONField(null=True, blank=True)
     time = models.DateTimeField(default=datetime.now)
+    post_status = models.CharField(default=None, blank=True, null=True, max_length=10)
     
