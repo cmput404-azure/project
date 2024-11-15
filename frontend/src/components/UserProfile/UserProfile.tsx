@@ -257,6 +257,7 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
          setSuccess(true);
          setLoading(false);
          setDisabled(true);
+         window.location.reload()
 
       } catch (error: any) {
          setError(error.message);
