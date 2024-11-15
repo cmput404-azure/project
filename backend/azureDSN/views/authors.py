@@ -1,4 +1,3 @@
-from urllib.parse import urlparse
 from requests.auth import HTTPBasicAuth
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from django.shortcuts import get_object_or_404
@@ -8,10 +7,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from ..models import User, NodeUser
 from ..serializers import UserSerializer
-
-import json
-import http.client
-from urllib.parse import unquote, urlparse
+from ..utils.basic_auth import IsAuthenticatedNode
+from urllib.parse import urlparse
 from uuid import UUID
 import requests
 
@@ -21,6 +18,7 @@ class AuthorsPagination(PageNumberPagination):
     max_page_size = 100
 
 class AuthorsView(APIView):
+    permission_classes = [IsAuthenticatedNode]
     pagination_provider  = AuthorsPagination
    
     @extend_schema(
