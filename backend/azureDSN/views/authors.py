@@ -298,19 +298,18 @@ class AuthorsCompleteView(APIView):
             local_serializer = UserSerializer(local_users, many=True)
             users.extend(local_serializer.data)
 
-            remote_users = User.objects.filter(type="node")
-            for r in remote_users:
-                author_url = r.host +'authors/'
-                parsed_url = urlparse(author_url)
+            remote_node = User.objects.filter(type="node")
+            for node in remote_node:
+                parsed_url = urlparse(node.host)
+                base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                api_url = f"{base_url}/api/authors/"
 
-                connection = http.client.HTTPConnection(parsed_url.netloc)
+                response = requests.get(
+                    api_url,
+                    auth=HTTPBasicAuth(node.username, node.password)
+                )
 
-                # GET all users on remote node
-                connection.request("GET", parsed_url.path)
-                response = connection.getresponse()
-                data = json.loads(response.read().decode()) 
-
+                data = response.json()
                 users.extend(data["authors"])
-                print(data)
                 
         return Response(users, status=200)

@@ -1,5 +1,4 @@
 import { Inbox, InboxItem } from "../models/models";
-import axios from "axios";
 import { api } from "./config";
 
 class InboxService {
@@ -18,23 +17,6 @@ class InboxService {
             return [];
         }
     }
-
-    /* 
-    Get all the inbox items of the user (including posts, follow requests, comments and likes)
-    @param uuid: string - the uuid of the user
-    @returns: InboxItem[] - inbox type
-*/
-    public async getRemoteInbox(host: string, uuid: string): Promise<InboxItem[]> {
-        try {
-            const response = await axios.get<Inbox>(`${host}authors/${uuid}/inbox/`);
-            return response.data.items;
-        }
-        catch (error) {
-            console.error('Fetch inbox error:', error);
-            return [];
-        }
-    }
-
 
     /* 
         Update the post in inbox
