@@ -1,16 +1,17 @@
 import { Alert, Avatar, Box, Button, CircularProgress, Drawer, IconButton, Snackbar, TextField, styled } from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete';
-import Tooltip from '@mui/material/Tooltip';
 import { Author, PostData as Post } from "../../models/models";
+import { CloudUpload, GitHub } from "@mui/icons-material";
 import { useEffect, useRef, useState } from "react";
+
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import FollowList from "../FollowList/FollowList";
 import { FollowerModalTypes } from "../../models/modelTypes";
-import { CloudUpload, GitHub } from "@mui/icons-material";
 import LinkIcon from '@mui/icons-material/Link';
 import MiniPostCard from "../MiniPostCard/MiniPostCard";
 import ProfileService from "../../service/profile";
+import Tooltip from '@mui/material/Tooltip';
 import { extractUUID } from "../../util/formatting/extractUUID";
 import followService from "../../service/follow";
 import profileService from "../../service/profile";
@@ -220,6 +221,8 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
    const fileInputRef = useRef<HTMLInputElement | null>(null);
    const [hovered, setHovered] = useState(false);
 
+   const auth = useAuth();
+
    user.id = extractUUID(user.id);
 
    async function handleUpdate() {
@@ -257,8 +260,9 @@ export function EditProfile({ user, toggleDrawer }: { user: Author, toggleDrawer
          setSuccess(true);
          setLoading(false);
          setDisabled(true);
-         window.location.reload()
-
+         
+         // Set new auth user with updated user data
+         auth.initializeAuth();
       } catch (error: any) {
          setError(error.message);
          setLoading(false);
