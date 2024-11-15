@@ -6,7 +6,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from ..models import User
 from ..serializers import UserSerializer
-from ..utils.remote_util import fetch_remote_user
 
 import json
 import http.client
