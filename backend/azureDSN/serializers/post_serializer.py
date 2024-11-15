@@ -36,6 +36,10 @@ class PostSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
 
+        visibility_map = dict(Post.VISIBILITY_CHOICES)
+        visibility_value = instance.visibility
+        representation['visibility'] = visibility_map[visibility_value] # Need to convert back to string
+
         # Build the full URL for the id field
         author_uuid = instance.user.uuid
         post_uuid = str(instance.uuid)
@@ -100,7 +104,7 @@ class PostSerializer(serializers.ModelSerializer):
     def delete(self, post):
         post.delete()
         return post
-    
+     
 class CreatePostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
     id = serializers.UUIDField(source='uuid', read_only=True)
@@ -109,6 +113,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False, allow_blank=True) # can be empty on post creation
     content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
     github_id = serializers.CharField(required=False, allow_null=True)
+    visibility = serializers.ChoiceField(choices=Post.VISIBILITY_CHOICES, default=1)
 
     class Meta:
         model = Post
@@ -154,3 +159,12 @@ class CreatePostSerializer(serializers.ModelSerializer):
 
         post = Post.objects.create(user=user, **validated_data)
         return post
+    
+    # Convert the integer visibility back to string when serializing the response
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        
+        visibility_str = dict(Post.VISIBILITY_CHOICES).get(instance.visibility)
+        representation['visibility'] = visibility_str
+        
+        return representation

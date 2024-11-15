@@ -1,16 +1,19 @@
+from urllib.parse import urlparse
+from requests.auth import HTTPBasicAuth
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
-from ..models import User
+from ..models import User, NodeUser
 from ..serializers import UserSerializer
 
 import json
 import http.client
 from urllib.parse import unquote, urlparse
 from uuid import UUID
+import requests
 
 class AuthorsPagination(PageNumberPagination):
     page_size = 5
@@ -120,15 +123,36 @@ class AuthorsSpecificView(APIView):
             serializer = UserSerializer(author)
             return Response(serializer.data, status=200)
         elif(author_fqid):
-            # if fqid provided
-            author_serial = author_fqid.split('/')[-1]
-            UUID(author_serial)
+            try:
+                author_serial = author_fqid.split('/')[-1]
+                UUID(author_serial)
 
-            # TODO: In future need to send request to remote server to get author
-            author = get_object_or_404(User, uuid=author_serial)
+                try:
+                    # Check if local or remote user
+                    local_user = User.objects.get(uuid=author_serial)
+                    serializer = UserSerializer(local_user)
+                    return Response(serializer.data, status=200)
+                except User.DoesNotExist:
+                    # Send request to remote server to get remote author's info
+                    parsed_url = urlparse(author_fqid)
+                    base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-            serializer = UserSerializer(author)
-            return Response(serializer.data, status=200)
+                    remote_node = NodeUser.objects.filter(host__contains=base_host).first()
+                    if not remote_node:
+                        return Response({"error": "Node credentials not found."}, status=status.HTTP_404_NOT_FOUND)
+
+                    remote_author_url = f"{base_host}/api/authors/{author_serial}"
+                    response = requests.get(
+                        remote_author_url,
+                        auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                    )
+                    if response.status_code == 200:
+                        return Response(response.json(), status=status.HTTP_200_OK)
+                    else:
+                        return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
+                
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @extend_schema(
         summary="Update Author Profile",

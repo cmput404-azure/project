@@ -2,7 +2,7 @@
 import { CircularProgress, responsiveFontSizes } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import Modal from "react-modal";
-import { api, basicAuthApi } from "../../service/config";
+import { api } from "../../service/config";
 import inbox from "../../service/inbox";
 import PostService from "../../service/post"
 import { useAuth } from "../../state";
@@ -35,17 +35,13 @@ export default function NotificationList() {
           let user = null;
           let post_obj = null;
           if (item.type === "follow") {
-            if (normalizeURL(item.actor.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
-              user = await fetchUser(item.actor.id);
-            } else {
-              user = await fetchRemoteUser(extractUUID(item.actor.id), normalizeURL(item.actor.host))
-            }
+            user = await fetchUser(item.actor.id);
           } else if (item.type === "like") {
             user = await fetchUser(item.author.id);
             // Expected format for host: http://host/api/
             // Expected format for object: api/authors/author_id/posts/post_id
             const objectPath = item.object.startsWith("api/") ? item.object.slice(4) : item.object;
-            try{
+            try {
               let post_resp = await api.get(`${item.author.host}${objectPath}`);
               post_obj = post_resp.data;
               
@@ -53,14 +49,14 @@ export default function NotificationList() {
                 // user liked their own post, don't need to notify
                 return null
               }
-            }catch{
+            } catch{
               // post got deleted
               return null
             }
           } else if (item.type === "comment") {
             let encodedId = encodeURIComponent(item.author.id);
             user = await fetchUser(encodedId);
-            try{
+            try {
               let post_resp = await api.get(item.post);
               post_obj = post_resp.data;
 
@@ -68,7 +64,7 @@ export default function NotificationList() {
                 // user commented on their own post, don't need to notify
                 return null
               }
-            }catch{
+            } catch{
               // post got deleted
               return null
             }
@@ -105,22 +101,10 @@ export default function NotificationList() {
       const response = await api.get(`/api/authors/${id}/`);
       return response.data;
     } catch (err) {
-      console.error(`Error fetching user ${authProvider.user.uuid}:`, err);
+      console.error(`Error fetching user with id: ${id}:`, err);
       return null;
     }
   };
-
-  const fetchRemoteUser = async (uuid: string, baseHost: string) => {
-    try {
-      console.log(`${baseHost}/api/authors/${uuid}/`)
-      const response = await basicAuthApi.get(`${baseHost}/api/authors/${uuid}/`);
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching user ${authProvider.user.uuid}:`, error);
-      return null;
-    }
-  }
 
   return (
     <div>
