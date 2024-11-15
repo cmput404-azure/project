@@ -23,8 +23,8 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Axios instance for external requests (Basic Auth only, without CSRF or credentials)
-export const basicAuthApi = axios.create({
-  timeout: 10000,
-  withCredentials: false,
-})
+// // Axios instance for external requests (Basic Auth only, without CSRF or credentials)
+// export const basicAuthApi = axios.create({
+//   timeout: 10000,
+//   withCredentials: false,
+// })
