@@ -1,18 +1,22 @@
 import { Button, CircularProgress } from "@mui/material";
-// HomePage.jsx
-import { useEffect, useState } from "react";
-
+import PublicIcon from "@mui/icons-material/Public";
 import PeopleIcon from "@mui/icons-material/People";
+import { useEffect, useState } from "react";
+import { useAuth } from "../../state";
+import { api } from "../../service/config";
+import author from "../../service/author";
+import setting from "../../service/setting";
+import stream from "../../service/stream";
+import { Author } from "../../models/models";
 import Post from "../Post/Post";
 import PostBar from "../PostBar/PostBar";
-import PublicIcon from "@mui/icons-material/Public";
-import { api } from "../../service/config";
-import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
-import { useAuth } from "../../state";
+import AuthorPost from "../AuthorPost/AuthorPost";
 
 type ViewType = "all" | "unlisted_friends-only";
+
 const HomePage = () => {
+  const [recommended, setRecommended] = useState<Author[]>([]); // list of remote authors for now, but should make it local if no remote connection, and make sure it's only people
   const [publicPosts, setPublicPosts] = useState<any[]>([]);
   const [privatePosts, setPrivatePosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -27,6 +31,13 @@ const HomePage = () => {
   const authProvider = useAuth();
 
   const [isUserLoading, setIsUserLoading] = useState(true);
+
+  // Function to randomly select authors from an array
+  const selectRandomAuthors = (authors: Author[], minCount: number, maxCount: number): Author[] => {
+    const count = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+    const shuffled = authors.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -48,7 +59,43 @@ const HomePage = () => {
       }
     };
 
+    const fetchRecommended = async () => {
+      try {
+        if (!authProvider.user) {
+          setIsUserLoading(false); // user not authenticated
+          return;
+        }
+        const fetchedData = await setting.getNodeList();
+
+        const allRemoteAuthors: Author[] = [];
+
+        for (const node of fetchedData) {
+          const fetchRemoteAuthors = async (host: string, username: string, password: string) => {
+            let page = 1;
+            const size = 3; // just need a little for recommended section
+
+            const authors = author.getNodeAuthors(host, username, password, page, size);
+            return authors;
+          }
+
+          if (node.is_authenticated) {
+            const nodeAuthors = await fetchRemoteAuthors(node.host, node.username, node.password);
+            allRemoteAuthors.push(...nodeAuthors);
+          }
+        }
+
+        // We randomly select from the list of all remote authors
+        // If we're connected to multiple remote authors, we don't want to only recommend authors from one remote node
+        const randomAuthors = selectRandomAuthors(allRemoteAuthors, 3, 3);
+        setRecommended(randomAuthors);
+        
+      } catch (err) {
+        console.error("Something went wrong: ", err);
+      }
+    }
+    
     fetchUser();
+    fetchRecommended();
   }, [authProvider.user]); // This effect runs when authProvider.user changes
 
   const fetchPosts = async (
@@ -183,6 +230,14 @@ const HomePage = () => {
           </Button>
         )}
       </div>
+
+
+      {authProvider.isAuthenticated && <div className={styles.authorSection}>
+          <h2 className={styles.recommendedTitle}>Recommended for you</h2>
+          {recommended.map((author) => (
+            <AuthorPost key={author.id} author={author}/>
+          ))}
+      </div>}
     </div>
   );
 };
