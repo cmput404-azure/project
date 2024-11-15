@@ -34,12 +34,6 @@ export interface FollowRequest {
     object: Author
 }
 
-export interface RemoteFollowRequest {
-    actor: Author;
-    remote_object: Author;
-    remote_pending: boolean;
-}
-
 export interface Follower {
     displayName: string;
     github: string;
