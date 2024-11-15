@@ -121,23 +121,29 @@ class AuthorsSpecificView(APIView):
                 author_serial = author_fqid.split('/')[-1]
                 UUID(author_serial)
 
-                # Send request to remote server to get remote author's info
-                parsed_url = urlparse(author_fqid)
-                base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                try:
+                    # Check if local or remote user
+                    local_user = User.objects.get(uuid=author_serial)
+                    serializer = UserSerializer(local_user)
+                    return Response(serializer.data, status=200)
+                except User.DoesNotExist:
+                    # Send request to remote server to get remote author's info
+                    parsed_url = urlparse(author_fqid)
+                    base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-                remote_node = NodeUser.objects.filter(host__contains=base_host).first()
-                if not remote_node:
-                    return Response({"error": "Node credentials not found."}, status=status.HTTP_400_BAD_REQUEST)
+                    remote_node = NodeUser.objects.filter(host__contains=base_host).first()
+                    if not remote_node:
+                        return Response({"error": "Node credentials not found."}, status=status.HTTP_404_NOT_FOUND)
 
-                remote_author_url = f"{base_host}/api/authors/{author_serial}"
-                response = requests.get(
-                    remote_author_url,
-                    auth=HTTPBasicAuth(remote_node.username, remote_node.password)
-                )
-                if response.status_code == 200:
-                    return Response(response.json(), status=status.HTTP_200_OK)
-                else:
-                    return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
+                    remote_author_url = f"{base_host}/api/authors/{author_serial}"
+                    response = requests.get(
+                        remote_author_url,
+                        auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                    )
+                    if response.status_code == 200:
+                        return Response(response.json(), status=status.HTTP_200_OK)
+                    else:
+                        return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
                 
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
