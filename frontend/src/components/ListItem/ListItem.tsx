@@ -47,6 +47,7 @@ export default function ListItem({
   const [isDeletedPost, setIsDeletedPost] = useState(false);
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
+  const [isRemote, setIsRemote] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,8 +55,17 @@ export default function ListItem({
       let formatted_userId = user.id.replace(/\/+$/, '').split('/').pop();
       setUserId(formatted_userId);
 
+      let test_host = user.host.replace("api/", "");
+      if (test_host != process.env.REACT_APP_API_BASE_URL) {
+        setIsRemote(true);
+      }
       // Check inbox of the user ID
-      const userInbox = await InboxService.getInbox(formatted_userId);
+      let userInbox = null;
+      if (isRemote === true){
+        userInbox = await InboxService.getRemoteInbox(user.host, formatted_userId)
+      }else{
+        userInbox = await InboxService.getInbox(formatted_userId);
+      }
       await Promise.all(
         userInbox.map(async (item: any) => {
           if (item && item.type === "follow") {
@@ -85,7 +95,7 @@ export default function ListItem({
       if (postObj != null) {
         if (postObj.post_status === "update") {
           setIsUpdatedPost(true);
-        }else if (postObj.post_status === "delete"){
+        } else if (postObj.post_status === "delete") {
           setIsDeletedPost(true);
         }
       }
@@ -123,38 +133,38 @@ export default function ListItem({
         if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
           await InboxService.sendPostToInbox(user.id, followRequest);
         } else {
-            const success = await remote.sendItemRemotely(user.host, user.id, followRequest);
-            // if (success) {
-            //   // If successful, we need to track the follow request locally as well to be able to poll
-            //   const modifiedRequest = {
-            //     type: followRequest.type,
-            //     summary: followRequest.summary,
-            //     object: {
-            //       type: "author",
-            //       id: `${user.id}`,
-            //       host: `${user.host}`,
-            //       displayName: `${user.displayName}`,
-            //       username: `${user.username}`,
-            //       bio: `${user.bio}`,
-            //       profileImage: `${user.profileImage}`,
-            //       github: `${user.github}`,
-            //       page: `${user.page}`,
-            //     }
-            //   }
-            //   await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
-            // }
+          const success = await remote.sendItemRemotely(user.host, user.id, followRequest);
+          // if (success) {
+          //   // If successful, we need to track the follow request locally as well to be able to poll
+          //   const modifiedRequest = {
+          //     type: followRequest.type,
+          //     summary: followRequest.summary,
+          //     object: {
+          //       type: "author",
+          //       id: `${user.id}`,
+          //       host: `${user.host}`,
+          //       displayName: `${user.displayName}`,
+          //       username: `${user.username}`,
+          //       bio: `${user.bio}`,
+          //       profileImage: `${user.profileImage}`,
+          //       github: `${user.github}`,
+          //       page: `${user.page}`,
+          //     }
+          //   }
+          //   await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
+          // }
 
-            if (success) {
-              await remote.setRequestAsAccepted(
-                authProvider.user.uuid,
-                author.host,
-                author.id
-              );
-            }
+          if (success) {
+            await remote.setRequestAsAccepted(
+              authProvider.user.uuid,
+              author.host,
+              author.id
+            );
+          }
         }
       } catch (error) {
         console.error("Fetch error:", error);
-      } 
+      }
 
       setIsRequested(true);
 

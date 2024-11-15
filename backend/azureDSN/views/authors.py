@@ -6,6 +6,11 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from ..models import User
 from ..serializers import UserSerializer
+from ..utils.remote_util import fetch_remote_user
+
+import json
+import http.client
+from urllib.parse import unquote, urlparse
 from uuid import UUID
 
 class AuthorsPagination(PageNumberPagination):
@@ -49,6 +54,7 @@ class AuthorsView(APIView):
         """
         GET [local, remote] get all authors on the node
         """
+       
         authors = User.objects.all()
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(authors, request)
@@ -106,6 +112,7 @@ class AuthorsSpecificView(APIView):
         """
         GET [local, remote] get the public authors
         """
+
         if(author_serial):
             # if uuid provided
             print(author_serial)
@@ -257,14 +264,30 @@ class AuthorsCompleteView(APIView):
         """
         user_uuid = request.query_params.get('user')
 
-        if user_uuid =='anonymous':
-            users = User.objects.filter(type="author")
+        users = []
+        if user_uuid == 'anonymous':
+            local_users = User.objects.filter(type="author")
+            local_serializer = UserSerializer(local_users, many=True)
+            users.extend(local_serializer.data)
         else:
-        # Query all users of type 'author' and exclude the current user
-            users = User.objects.exclude(uuid=user_uuid).filter(type="author")
+            # Query all users of type 'author' and exclude the current user
+            local_users = User.objects.exclude(uuid=user_uuid).filter(type="author")
+            local_serializer = UserSerializer(local_users, many=True)
+            users.extend(local_serializer.data)
 
-        # # Serialize the users
-        serializer = UserSerializer(users, many=True)
- 
+            remote_users = User.objects.filter(type="node")
+            for r in remote_users:
+                author_url = r.host +'authors/'
+                parsed_url = urlparse(author_url)
 
-        return Response(serializer.data, status=200)
+                connection = http.client.HTTPConnection(parsed_url.netloc)
+
+                # GET all users on remote node
+                connection.request("GET", parsed_url.path)
+                response = connection.getresponse()
+                data = json.loads(response.read().decode()) 
+
+                users.extend(data["authors"])
+                print(data)
+                
+        return Response(users, status=200)

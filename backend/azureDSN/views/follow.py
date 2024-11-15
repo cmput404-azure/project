@@ -15,45 +15,47 @@ from ..models import Follow
 from ..models import User
 from urllib.parse import unquote, urlparse
 from django.db.models import Q
+from ..utils.remote_util import fetch_remote_user
 
-def fetch_remote_follower_data(remote_url):
-    """
-    Fetches remote follower data by sending a get request using the remote_url
-    """
-    try:
-        # Parse the remote URL to get the host and path
-        parsed_url = urlparse(remote_url)
 
-        if not parsed_url.path.endswith('/'):
-            parsed_url = parsed_url._replace(path=parsed_url.path + '/')
-        connection = http.client.HTTPConnection(parsed_url.netloc)
+# def fetch_remote_follower_data(remote_url):
+#     """
+#     Fetches remote follower data by sending a get request using the remote_url
+#     """
+#     try:
+#         # Parse the remote URL to get the host and path
+#         parsed_url = urlparse(remote_url)
 
-        # Perform the GET request
-        connection.request("GET", parsed_url.path)
-        response = connection.getresponse()
-        data = json.loads(response.read().decode())       
-        parts = data.get("id").strip("/").split("/")
+#         if not parsed_url.path.endswith('/'):
+#             parsed_url = parsed_url._replace(path=parsed_url.path + '/')
+#         connection = http.client.HTTPConnection(parsed_url.netloc)
 
-        userData={ 
-            "id": parts[-1],
-            "host": data.get("host"),
-            "displayName": data.get("displayName"),
-            "username": data.get("username"),
-            "bio":data.get("bio"),
-            "github": data.get("github"),
-            "profile_image": data.get("profileImage"),
-            "page": data.get("page")
-            }
-        serializer = UserSerializer(data = userData)
-        if serializer.is_valid():
-            user = User(**serializer.validated_data)  # Create an unsaved User instance
-            return user
-        else:
-            print("Errors:", serializer.errors)
+#         # Perform the GET request
+#         connection.request("GET", parsed_url.path)
+#         response = connection.getresponse()
+#         data = json.loads(response.read().decode())       
+#         parts = data.get("id").strip("/").split("/")
+
+#         userData={ 
+#             "id": parts[-1],
+#             "host": data.get("host"),
+#             "displayName": data.get("displayName"),
+#             "username": data.get("username"),
+#             "bio":data.get("bio"),
+#             "github": data.get("github"),
+#             "profile_image": data.get("profileImage"),
+#             "page": data.get("page")
+#             }
+#         serializer = UserSerializer(data = userData)
+#         if serializer.is_valid():
+#             user = User(**serializer.validated_data)  # Create an unsaved User instance
+#             return user
+#         else:
+#             print("Errors:", serializer.errors)
         
-    except Exception as e:
-        print(f"Error fetching remote follower {remote_url}: {str(e)}")
-        return None
+#     except Exception as e:
+#         print(f"Error fetching remote follower {remote_url}: {str(e)}")
+#         return None
         
 class FollowCustomView(APIView):
     @extend_schema(
@@ -128,7 +130,7 @@ class FollowCustomView(APIView):
                 followee_data.append(follow.local_followee)
             elif follow.remote_followee:
                 try:
-                    remote_user = fetch_remote_follower_data(follow.remote_followee)
+                    remote_user = fetch_remote_user(follow.remote_followee)
                     if remote_user:
                         followee_data.append(remote_user)
                 except Exception as e:
@@ -183,7 +185,7 @@ class FollowCustomView(APIView):
         remote_friend_ids = mutual_followers.values_list('remote_follower', flat = True)
         # remote
         for remote_friend in remote_friend_ids:
-            remote_follower_data = fetch_remote_follower_data(remote_friend)
+            remote_follower_data = fetch_remote_user(remote_friend)
             if remote_follower_data:  # Ensure the data is not None or empty
                 combined_friends.append(remote_follower_data)
 
@@ -233,7 +235,7 @@ class FollowerView(APIView):
         combined_followers = []
         for follower in followers:
             if follower.remote_follower:  # Remote follower handling
-                remote_data = fetch_remote_follower_data(follower.remote_follower)
+                remote_data = fetch_remote_user(follower.remote_follower)
                 if remote_data:
                     combined_followers.append(remote_data)
             else:  # Local follower handling
@@ -447,7 +449,7 @@ class FollowView(APIView):
         else:
             return Response({"is_follower": True}, status=200) # is remote follower
         if not follower:
-            return Response({"is_follower": False}, status=404) # neither local nor remote
+            return Response({"is_follower": False}, status=200) # neither local nor remote
         else:
             return Response({"is_follower": True},status=200) # is local follower
         

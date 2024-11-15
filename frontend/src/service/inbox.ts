@@ -1,7 +1,8 @@
 import { Inbox, InboxItem } from "../models/models";
+import axios from "axios";
 import { api } from "./config";
 
-class InboxService{
+class InboxService {
     /* 
         Get all the inbox items of the user (including posts, follow requests, comments and likes)
         @param uuid: string - the uuid of the user
@@ -11,12 +12,29 @@ class InboxService{
         try {
             const response = await api.get<Inbox>(`/api/authors/${uuid}/inbox/`);
             return response.data.items;
-        } 
+        }
         catch (error) {
             console.error('Fetch inbox error:', error);
             return [];
         }
     }
+
+    /* 
+    Get all the inbox items of the user (including posts, follow requests, comments and likes)
+    @param uuid: string - the uuid of the user
+    @returns: InboxItem[] - inbox type
+*/
+    public async getRemoteInbox(host: string, uuid: string): Promise<InboxItem[]> {
+        try {
+            const response = await axios.get<Inbox>(`${host}authors/${uuid}/inbox/`);
+            return response.data.items;
+        }
+        catch (error) {
+            console.error('Fetch inbox error:', error);
+            return [];
+        }
+    }
+
 
     /* 
         Update the post in inbox
@@ -43,7 +61,7 @@ class InboxService{
                 content,
                 visibility,
             });
-          
+
             return response.data.message;
         } catch (error) {
             console.error("Update post in inbox error:", error);
@@ -68,9 +86,9 @@ class InboxService{
                     type: "post",
                 },
             };
-          
+
             const response = await api.delete<{ message: string }>(`/api/authors/${uuid}/inbox/`, config);
-          
+
             return response.data.message;
         } catch (error) {
             console.error("Delete post in inbox error:", error);
