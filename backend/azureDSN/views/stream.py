@@ -1,13 +1,12 @@
-from urllib.parse import urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ..serializers import PostSerializer
-from django.shortcuts import get_object_or_404
-from ..models import Post, User, Follow, Share, Inbox, NodeUser
 from drf_spectacular.utils import extend_schema, OpenApiResponse
-import requests
+from django.shortcuts import get_object_or_404
+from ..serializers import PostSerializer
+from ..models import Post, User, Follow, Share, Inbox
 from .posts import PostsPagination
+import requests
 
 class PublicStreamView(APIView):
     pagination_provider = PostsPagination
@@ -167,7 +166,6 @@ class AuthStreamView(APIView):
                             if post_id and post_id not in [post["id"] for post in remote_posts]:
                                 remote_posts.append(remote_payload)
 
-            # serialized_posts = serialized_posts | Post.objects.filter(id__in=[post["id"] for post in remote_posts])
             combined_posts = serialized_local_posts.copy()
             for remote_post in remote_posts:
                 combined_posts.append(remote_post)
