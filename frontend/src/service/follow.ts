@@ -81,7 +81,9 @@ class FollowService{
          return response.data.is_follower;;
       } 
       catch (error) {
-         console.error('Fetch following error:', error);
+         if (error.response.status !== 404) {
+            console.error('Fetch following error:', error);
+        }
          return false;
       }
    }

@@ -211,7 +211,7 @@ class FollowerView(APIView):
         combined_followers = []
         for follower in followers:
             if follower.remote_follower:  # Remote follower handling
-                remote_data = fetch_remote_user(follower.remote_follower)
+                remote_data = fetch_remote_follower_data(follower.remote_follower)
                 if remote_data:
                     combined_followers.append(remote_data)
             else:  # Local follower handling
@@ -414,14 +414,14 @@ class FollowView(APIView):
         parts = decoded_url.strip("/").split("/")
         follower_id = parts[-1]
    
-        follower = Follow.objects.filter(local_followee_id = user_id, remote_follower__contains=follower_id)
+        follower = Follow.objects.filter(local_followee_id=user_id, remote_follower__contains=follower_id)
 
         # local follower
         if not follower:
             decoded_url = unquote(follower_url)
             parts = decoded_url.strip("/").split("/")
             follower_id = parts[-1]
-            follower = Follow.objects.filter(local_followee_id = user_id, local_follower_id=follower_id)
+            follower = Follow.objects.filter(local_followee_id=user_id, local_follower__uuid=follower_id)
         else:
             return Response({"is_follower": True}, status=200) # is remote follower
         if not follower:

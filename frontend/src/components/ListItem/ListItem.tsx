@@ -51,44 +51,32 @@ export default function ListItem({
 
   useEffect(() => {
     const fetchData = async () => {
-      // Format the user ID
-      let formatted_userId = user.id.replace(/\/+$/, '').split('/').pop();
-      setUserId(formatted_userId);
-
-      let test_host = user.host.replace("api/", "");
-      if (test_host != process.env.REACT_APP_API_BASE_URL) {
-        setIsRemote(true);
-      }
-      // Check inbox of the user ID
-      let userInbox = null;
-      if (isRemote === true){
-        userInbox = await InboxService.getRemoteInbox(user.host, formatted_userId)
-      }else{
-        userInbox = await InboxService.getInbox(formatted_userId);
-      }
-      await Promise.all(
-        userInbox.map(async (item: any) => {
-          if (item && item.type === "follow") {
-            let actorId = item.actor.id.replace(/\/+$/, '').split('/').pop();
-            if (actorId === authProvider.user.uuid) {
-              setIsRequested(true);
-            }
+      const userListId = extractUUID(user.id);
+      setUserId(userListId);
+      
+      let following = false;
+      if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+        // check if current user is already following the (local) user  
+        const currentUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
+        const encodedURL = encodeURIComponent(currentUser.id);
+        following = await FollowService.checkFollowing(userListId, encodedURL);
+      } else {
+        try {
+          following = await api.get(`/api/check/${authProvider.user.uuid}/follows/${user.id}`);
+          console.log(following)
+        } catch (err) {
+          if (err.response.status !== 404) {
+            console.error('Fetch following error:', error);
           }
-        })
-      );
+        }
+      }
 
-      // check if current user is already following the user
-      const currentUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
-      const encoded_url = encodeURIComponent(currentUser.id);
-      const following = await FollowService.checkFollowing(formatted_userId, encoded_url);
-
-      if (following === true) {
+      if (following) {
         setIsFollowing(true);
       }
-
     };
 
-    if (authProvider.isAuthenticated === true) {
+    if (authProvider.isAuthenticated) {
       if (isUserList) {
         fetchData(); // Call the async function
       }
@@ -102,7 +90,7 @@ export default function ListItem({
     }
   }, []);
 
-  const unFollow = async () => {
+  const unfollow = async () => {
     await FollowService.unfollow(user.id, authProvider.user);
     onRefresh();
   };
@@ -191,7 +179,7 @@ export default function ListItem({
           </div>
         </div>
 
-        {isFollowerList && <button onClick={unFollow}>Unfollow</button>}
+        {isFollowerList && <button onClick={unfollow}>Unfollow</button>}
 
         {isUserList && (
           <button

@@ -20,6 +20,7 @@ urlpatterns = [
 
     # Remote API
     path("api/authors/recommended/", RemoteAuthorsView.as_view(), name="get_recommended_authors"),
+    path("api/check/<uuid:local_serial>/follows/<path:remote_fqid>", RemoteFolloweeView.as_view(), name="check_following_status"),
 
     # Likes on Posts or Comments
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", LikesView.as_view(), name="get_likes_by_serial"),
