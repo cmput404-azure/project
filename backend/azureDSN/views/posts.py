@@ -583,7 +583,7 @@ class PostView(APIView):
                 response = connection.getresponse()
                 data = json.loads(response.read().decode()) 
                 post_visibility=data.get("visibility")       
-                post_data = data        
+                post_data = data     
             else:
                 post = get_object_or_404(Post, uuid=post_serial)
                 post_visibility = post.visibility
