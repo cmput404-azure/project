@@ -24,6 +24,7 @@ import profileService from "../../service/profile";
 import share from "../../service/share";
 import styles from "./Post.module.scss";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import userEvent from "@testing-library/user-event";
 
 
 export default function Post({
@@ -275,6 +276,7 @@ export default function Post({
         author: currentUser.data,
         published: new Date(post.published).toISOString(),
         object: post.id,
+        post_host: postGiven.author.host
       };
 
       await inbox.sendPostToInbox(post.author.id, like_obj);

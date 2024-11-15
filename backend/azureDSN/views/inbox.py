@@ -1,3 +1,5 @@
+import http.client
+import json
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -490,7 +492,7 @@ class InboxView(APIView):
             
             elif payload["type"].lower() == "like":
                 # To-do: Liking a remote post in my local stream
-                pass
+                return self.send_like_to_remote(payload, request)
 
             elif payload["type"].lower() == "comment":
                 # To-do: Commenting on a remote post in my local stream
@@ -619,22 +621,31 @@ class InboxView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def send_like_to_remote(self, payload):
-        parsed_url = urlparse(payload["object"]) 
-        post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
-        post_obj = Post.objects.get(uuid=post_id)
-        like_obj = Like.objects.create(user=payload["author"], 
-                                       created_at=payload["published"], 
-                                       post=post_obj)
-        serializer = LikeSerializer(like_obj, data=payload, context={"request": request})
+    def send_like_to_remote(self, payload, request):
 
-        if serializer.is_valid():
-            like_instance =serializer.save()
-            inbox_obj = get_object_or_404(Inbox, user=user_object)
-            create_inbox_item(inbox_obj, like_instance)
-            return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
+        # use the request url to get the correct uuid of the post author
+        full_url = request.build_absolute_uri()
+        parsed_url = urlparse(full_url)
+
+        payload_json = json.dumps(payload)
+
+        # Remove 'api/' from author_host
+        author_host = payload["post_host"].rstrip("/")
+        if author_host.endswith("/api"):
+            author_host = author_host[:-4]
+        headers = {
+            "Content-Type": "application/json",
+            "Content-Length": str(len(payload_json))
+        }
+        # Replace the netloc (host) in full_url with author_host
+        inbox_url = parsed_url._replace(netloc=urlparse(author_host).netloc)
+
+        connection = http.client.HTTPConnection(inbox_url.netloc)
+        connection.request("POST", inbox_url.path, body=payload_json, headers = headers)
+        response = connection.getresponse()
+        data = json.loads(response.read().decode()) 
+
+        return Response(data,200)  
     
     
     '''
@@ -692,6 +703,7 @@ class InboxView(APIView):
     '''
     def create_like(self, user_object, payload, request):
         parsed_url = urlparse(payload["object"]) 
+        del payload["post_host"]
         post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
         post_obj = Post.objects.get(uuid=post_id)
         like_obj = Like.objects.create(user=payload["author"], 
