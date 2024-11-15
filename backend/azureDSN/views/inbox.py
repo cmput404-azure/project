@@ -483,6 +483,11 @@ class InboxView(APIView):
             if payload["type"].lower() == "follow":
                 # Send to remote inbox, passing the payload and remote host information
                 return self.send_follow_request_to_remote(payload)
+            elif payload["type"].lower() == "post":
+                # New post created locally but the followers/friends are remote...
+                # remote follower info is in the payload
+                return self.send_post_to_remote(payload)
+
             else:
                 return Response({"error": "User not found locally and only 'follow' requests are supported for remote authors"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -528,6 +533,40 @@ class InboxView(APIView):
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, remote_payload=payload)
             return Response({"message": "We have noticed other users about your post"}, status=status.HTTP_200_OK)
+        
+    def send_post_to_remote(self, payload):
+        try:
+            remote_follower = payload["follower"]
+            
+            # remove follower from payload to return to original post structure
+            del payload["follower"]
+
+            print(f"Payload is now: {remote_follower}")
+            
+            follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
+            remote_host = remote_follower.get("host")
+            parsed_url = urlparse(remote_host)
+            base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
+
+            remote_node = NodeUser.objects.filter(host__contains=remote_host).first()
+            if not remote_node:
+                return Response({"error": f"Node for {remote_host} not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            response = requests.post(
+                    remote_inbox_url,
+                    json=payload,
+                    auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                )
+
+            if response.status_code == 200:
+                return Response({"message": "Post successfully sent to remote inbox."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": f"Failed to send post: {response.text}"}, status=response.status_code)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
     def send_follow_request_to_remote(self, payload):
         try:

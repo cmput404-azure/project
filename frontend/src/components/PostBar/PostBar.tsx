@@ -198,6 +198,9 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
         newPost
       );
       console.log("Post successfully created:", postResponse.data);
+      console.log("with id: ", postResponse.data.id);
+
+      
 
       // Get friends and followers list, followers include both friends and followers
       const followers = await follow.getFollowers(authProvider.user.uuid);
@@ -207,21 +210,35 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       // always send to friends for all type of posts
       if (visibilityNumber === 1 || visibilityNumber === 3) {
         for (const follower of followers) {
-          // For each follower, check if it's local or remote
+          console.log(follower);
           if (normalizeURL(follower.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
-            const inboxResponse = await inbox.sendPostToInbox(follower.id, postResponse.data);
+            await inbox.sendPostToInbox(follower.id, postResponse.data);
           } else {
-            // Send to remote inbox
-            await remote.sendItemRemotely(follower.host, follower.id, postResponse.data);
+            const enrichedPost = { // to handle remote followers
+              ...postResponse.data,
+              follower: {
+                type: "author",
+                id: follower.id,
+                host: follower.host,
+                displayName: follower.displayName,
+                page: follower.page,
+                github: follower.github,
+                profileImage: follower.profileImage
+              }
+            };
+            await inbox.sendPostToInbox(follower.id, enrichedPost);
           }
+          
+          
         }
       } else {
         for (const friend of friends) {
-          if (normalizeURL(friend.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
-            const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
-          } else {
-            await remote.sendItemRemotely(friend.host, friend.id, postResponse.data);
-          }
+          // if (normalizeURL(friend.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+          //   const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
+          // } else {
+          //   await remote.sendItemRemotely(friend.host, friend.id, postResponse.data);
+          // }
+          await inbox.sendPostToInbox(friend.id, postResponse.data);
         }
       }
 
