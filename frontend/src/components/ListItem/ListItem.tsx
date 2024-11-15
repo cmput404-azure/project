@@ -119,39 +119,8 @@ export default function ListItem({
           },
         };
 
-        // Call different endpoint depending if the followee (user) is remote or local
-        if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
           await InboxService.sendPostToInbox(user.id, followRequest);
-        } else {
-            const success = await remote.sendItemRemotely(user.host, user.id, followRequest);
-            // if (success) {
-            //   // If successful, we need to track the follow request locally as well to be able to poll
-            //   const modifiedRequest = {
-            //     type: followRequest.type,
-            //     summary: followRequest.summary,
-            //     object: {
-            //       type: "author",
-            //       id: `${user.id}`,
-            //       host: `${user.host}`,
-            //       displayName: `${user.displayName}`,
-            //       username: `${user.username}`,
-            //       bio: `${user.bio}`,
-            //       profileImage: `${user.profileImage}`,
-            //       github: `${user.github}`,
-            //       page: `${user.page}`,
-            //     }
-            //   }
-            //   await remote.trackRemoteRequest(authProvider.user.uuid, modifiedRequest);
-            // }
 
-            if (success) {
-              await remote.setRequestAsAccepted(
-                authProvider.user.uuid,
-                author.host,
-                author.id
-              );
-            }
-        }
       } catch (error) {
         console.error("Fetch error:", error);
       } 
