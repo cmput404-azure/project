@@ -168,7 +168,6 @@ class FollowCustomView(APIView):
             if remote_follower_data:
                 combined_friends.append(remote_follower_data)
 
-        # Serialize combined friends
         serializer = UserSerializer(combined_friends, many=True)
         return Response(serializer.data)
     
