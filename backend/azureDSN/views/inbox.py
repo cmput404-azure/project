@@ -9,7 +9,9 @@ from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
 from django.utils import timezone
 from datetime import datetime
-
+from django.core.exceptions import ObjectDoesNotExist
+import requests
+from requests.auth import HTTPBasicAuth
 from ..serializers import *
 from ..models import *
 from ..utils import *
@@ -244,28 +246,26 @@ class InboxView(APIView):
             return Response({"error": "A 'type' field must be either follow or post"}, status=status.HTTP_400_BAD_REQUEST)
     
     '''
-    The deleted post is definitely a local post
+    The deleted post might be local or remote
     payload is a post object
     id is in format: http://{server}/api/authors/{user_id}/posts/{post_id}
     '''
     def delete_post(self, user_object, payload, request):
-        parsed_url = urlparse(payload["id"]) 
-        post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
-        # Validate the post object sent with the payload
-        post_obj = Post.objects.get(uuid=post_id)
-        serializer = PostSerializer(post_obj, data=payload, context={"request": request})
-
-        '''
-        Here when delete the a post we need to remove that post from other people inbox
-        Other endpoint will be in charge of update the post database 
-        '''
-        if True:
-        # if serializer.is_valid():
+        try: 
+            parsed_url = urlparse(payload["id"]) 
+            post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+            post_obj = Post.objects.get(uuid=post_id)
+            serializer = PostSerializer(post_obj, data=payload, context={"request": request})
+            # local post
             inbox_obj = get_object_or_404(Inbox, user=user_object)
-            delete_inbox_item(inbox_obj, post_obj)
-            return Response(InboxSerializer(inbox_obj, context={"request": request}).data, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            create_inbox_item(inbox_obj, post_obj, post_status="delete")
+            return Response({"message": "We have noticed other users about your deleted post"}, status=status.HTTP_200_OK)
+        
+        except Post.DoesNotExist: # remote post
+            # If post is from remote user, treat it as a json object
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, remote_payload=payload, post_status="delete")
+            return Response({"message": "We have noticed other users about your deleted post"}, status=status.HTTP_200_OK)
         
     
     '''
@@ -319,48 +319,24 @@ class InboxView(APIView):
         tags=['Inbox API']
     )
     def put(self, request, author_serial):
-        user_obj = get_object_or_404(User, uuid=author_serial)
-        inbox_obj = get_object_or_404(Inbox, user=user_obj)
+        user_object = get_object_or_404(User, uuid=author_serial)
+        inbox_obj = get_object_or_404(Inbox, user=user_object)
         payload = request.data
+        try: 
+            parsed_url = urlparse(payload["id"]) 
+            post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+            post_obj = Post.objects.get(uuid=post_id)
+            # local post
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, post_obj, post_status="update")
+            return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
         
-        post_content_type = ContentType.objects.get(model="post")
-        inbox_item_obj = InboxItem.objects.filter(
-                                                    inbox=inbox_obj,
-                                                    content_type=post_content_type,
-                                                    object_id=payload['id']  # Filtering by the specific post ID
-                                                ).order_by("-id")
-
-        if inbox_item_obj.exists():
-            for item in inbox_item_obj:
-                # item = inbox_item_obj.content_object
-                item.content_object.title = request.data.get('title', item.content_object.title)
-                item.content_object.content = request.data.get('content', item.content_object.content)
-                item.content_object.visibility = request.data.get('visibility', item.content_object.content)
-                item.content_object.modified_at = timezone.now()
-                item.time = datetime.now()
-                item.save()
-                item.content_object.save()
-            
-            return Response({"message": "Update post successfully."}, status=status.HTTP_200_OK)
-
-        else:
-            # No matching inbox item found, store the payload as a JSON object
-            existing_item = InboxItem.objects.filter(
-            inbox=inbox_obj,
-            remote_payload__id=payload['id']  # Check if remote_payload's id matches the incoming id
-            ).first()
-
-            if existing_item:
-                # Update the remote_payload with the new data
-                existing_item.remote_payload['title'] = request.data.get('title', existing_item.remote_payload.get('title'))
-                existing_item.remote_payload['content'] = request.data.get('content', existing_item.remote_payload.get('content'))
-                existing_item.remote_payload['visibility'] = request.data.get('visibility', existing_item.remote_payload.get('visibility'))
-                existing_item.time = datetime.now()  
-                existing_item.save()
-
-                return Response({"message": "Update post successfully."}, status=status.HTTP_200_OK)
-            else:
-                return Response({"message": "No post founded"}, status=status.HTTP_404_NOT_FOUND)
+        except Post.DoesNotExist: # remote post
+            # If post is from remote user, treat it as a json object
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, remote_payload=payload, post_status="update")
+            return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
+        
         
     
     @extend_schema(
@@ -491,11 +467,37 @@ class InboxView(APIView):
         When sending/updating follow requests, body is a follow object
         All these POST object must have a "type" field
         '''
-        user_obj = get_object_or_404(User, uuid=author_serial)
+
+        # If author_serial does not exist locally, then need to dig through payload to check for the remote host
+        # user_obj = get_object_or_404(User, uuid=author_serial)
         payload = request.data
        
         if "type" not in payload:
             return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user exists locally
+        try:
+            user_obj = User.objects.get(uuid=author_serial)
+        except ObjectDoesNotExist:
+            # Handle remote author
+            if payload["type"].lower() == "follow":
+                # Send to remote inbox, passing the payload and remote host information
+                return self.send_follow_request_to_remote(payload)
+            elif payload["type"].lower() == "post":
+                # New post created locally but the followers/friends are remote
+                # remote follower info is in the payload
+                return self.send_post_to_remote(payload)
+            
+            elif payload["type"].lower() == "like":
+                # To-do: Liking a remote post in my local stream
+                pass
+
+            elif payload["type"].lower() == "comment":
+                # To-do: Commenting on a remote post in my local stream
+                pass
+
+            else:
+                return Response({"error": "User not found locally and type not supported for remote authors."}, status=status.HTTP_400_BAD_REQUEST)
 
         if payload["type"].lower() == "post":
             return self.create_post(user_obj, payload, request)
@@ -539,12 +541,94 @@ class InboxView(APIView):
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, remote_payload=payload)
             return Response({"message": "We have noticed other users about your post"}, status=status.HTTP_200_OK)
+        
+    def send_post_to_remote(self, payload):
+        try:
+            remote_follower = payload["follower"]
+            
+            # remove follower from payload to return to original post structure
+            del payload["follower"]
+
+            print(f"Payload is now: {remote_follower}")
+            
+            follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
+            remote_host = remote_follower.get("host")
+            parsed_url = urlparse(remote_host)
+            base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
+
+            remote_node = NodeUser.objects.filter(host__contains=remote_host).first()
+            if not remote_node:
+                return Response({"error": f"Node for {remote_host} not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            response = requests.post(
+                    remote_inbox_url,
+                    json=payload,
+                    auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                )
+
+            if response.status_code == 200:
+                return Response({"message": "Post successfully sent to remote inbox."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": f"Failed to send post: {response.text}"}, status=response.status_code)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        
+    def send_follow_request_to_remote(self, payload):
+        try:
+            # Assume the remote host URL is found in the payload under the "object" key
+            remote_host = payload["object"].get("host")
+            author_serial = payload["object"].get("id").rstrip('/').split('/')[-1]  # Get last part of fqid
+            parsed_url = urlparse(remote_host)
+            base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox/"
+
+            remote_node = NodeUser.objects.filter(host__contains=remote_host).first()
+            if not remote_node:
+                return Response({"error": f"Node for {remote_host} not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            response = requests.post(
+                remote_inbox_url,
+                json=payload,
+                auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+            )
+
+            if response.status_code == 200:
+                # If successful, make a Follow object in local regardless of whether the remote request is going to be accepted
+                local_follower_uuid = payload["actor"].get("id").split('/')[-1]
+                
+                follow_data = {
+                    "local_followee": None,
+                    "remote_followee": payload["object"].get("id"),
+                    "local_follower": local_follower_uuid,
+                    "remote_follower": None
+                }
+
+                serializer = FollowSerializer(data=follow_data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"message": "Follow request sent to remote inbox."}, status=status.HTTP_200_OK)
+                else:
+                    print(serializer.errors)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"error": f"Failed to send follow request: {response.text}"}, status=response.status_code)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     '''
     payload is a follow request object
     we return the status only cause the they dont need to know what is stored in other person's inbox
     '''
     def create_follow_request(self, user_object, payload, request):
+
+        # If user_object (followee) is local
+
+        # If user_object is remote
+
         # Validate the follow request object sent with the payload
         follow_obj = FollowRequest.objects.create(object=user_object, actor=payload["actor"])
         serializer = FollowRequestSerializer(follow_obj, data=payload, context={"request": request})
@@ -556,7 +640,6 @@ class InboxView(APIView):
             follow_instance = serializer.save()
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, follow_instance)
-            # return Response(InboxSerializer(inbox_obj.items, context={"request": request}).data, status=status.HTTP_200_OK)
             return Response({"message": "Follow request sent successfully"}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -658,13 +741,13 @@ class InboxView(APIView):
 This create an inbox item referenced to one of the four model except from case where a post make by a remote user
 sending to local nodes, then treat it as a JSON data because we don't want to store/have it in our database
 '''
-def create_inbox_item(inbox, content=None, remote_payload=None):
+def create_inbox_item(inbox, content=None, remote_payload=None, post_status=None):
     if content:
         content_type = ContentType.objects.get_for_model(content)
         id = getattr(content, 'uuid', getattr(content, 'id', None))
-        inbox_item_object = InboxItem.objects.create(content_type=content_type, object_id=id, content_object=content)
+        inbox_item_object = InboxItem.objects.create(content_type=content_type, object_id=id, content_object=content, post_status=post_status)
     else:
-        inbox_item_object = InboxItem.objects.create(remote_payload=remote_payload)
+        inbox_item_object = InboxItem.objects.create(remote_payload=remote_payload, post_status=post_status)
     inbox.items.add(inbox_item_object)
     
     

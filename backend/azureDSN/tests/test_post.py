@@ -2,7 +2,7 @@ from uuid import uuid4
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from ..models import User, Post
+from ..models import User, Post, Follow
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
 
@@ -368,6 +368,8 @@ class PostTests(APITestCase):
     def test_get_all_posts_authenticated_as_friend(self):
         """Test retrieving all posts when authenticated as a friend of the author."""
         self.client.force_authenticate(user=self.test_author2)
+        Follow.objects.create(local_follower_id=self.test_author2.uuid, local_followee_id=self.test_author.uuid)
+        Follow.objects.create(local_follower_id=self.test_author.uuid, local_followee_id=self.test_author2.uuid)
         
         url = reverse('create_post', kwargs={'author_serial': self.test_author.uuid})
         response = self.client.get(url)
@@ -396,7 +398,7 @@ class PostTests(APITestCase):
             "contentType": "text/plain",
             "content": "This is the content of the post.",
             "published": timezone.now().isoformat(),
-            "visibility": 1
+            "visibility": 1 # We supply number, but it will be converted to string to adhere to response structure
         }
         response = self.client.post(url, post_data, format='json')
         
@@ -406,7 +408,7 @@ class PostTests(APITestCase):
         self.assertTrue(Post.objects.filter(title=post_data['title']).exists())
         self.assertEqual(response.data['title'], post_data['title'])
         self.assertEqual(response.data['content'], post_data['content'])
-        self.assertEqual(response.data['visibility'], post_data['visibility'])
+        self.assertEqual(response.data['visibility'], "PUBLIC")
         
     # ------------------------404 Not Found------------------------
     # test getting all posts from an author that does not exist

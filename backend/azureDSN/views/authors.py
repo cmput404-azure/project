@@ -1,14 +1,19 @@
+from urllib.parse import urlparse
+from requests.auth import HTTPBasicAuth
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Case, When,Value, BooleanField,F
-
-from ..models import User, FollowRequest
-from ..serializers import UserSerializer
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework import status
+from ..models import User, NodeUser
+from ..serializers import UserSerializer
+
+import json
+import http.client
+from urllib.parse import unquote, urlparse
 from uuid import UUID
+import requests
 
 class AuthorsPagination(PageNumberPagination):
     page_size = 5
@@ -51,6 +56,7 @@ class AuthorsView(APIView):
         """
         GET [local, remote] get all authors on the node
         """
+       
         authors = User.objects.all()
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(authors, request)
@@ -108,6 +114,7 @@ class AuthorsSpecificView(APIView):
         """
         GET [local, remote] get the public authors
         """
+
         if(author_serial):
             # if uuid provided
             print(author_serial)
@@ -116,15 +123,36 @@ class AuthorsSpecificView(APIView):
             serializer = UserSerializer(author)
             return Response(serializer.data, status=200)
         elif(author_fqid):
-            # if fqid provided
-            author_serial = author_fqid.split('/')[-1]
-            UUID(author_serial)
+            try:
+                author_serial = author_fqid.split('/')[-1]
+                UUID(author_serial)
 
-            # TODO: In future need to send request to remote server to get author
-            author = get_object_or_404(User, uuid=author_serial)
+                try:
+                    # Check if local or remote user
+                    local_user = User.objects.get(uuid=author_serial)
+                    serializer = UserSerializer(local_user)
+                    return Response(serializer.data, status=200)
+                except User.DoesNotExist:
+                    # Send request to remote server to get remote author's info
+                    parsed_url = urlparse(author_fqid)
+                    base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-            serializer = UserSerializer(author)
-            return Response(serializer.data, status=200)
+                    remote_node = NodeUser.objects.filter(host__contains=base_host).first()
+                    if not remote_node:
+                        return Response({"error": "Node credentials not found."}, status=status.HTTP_404_NOT_FOUND)
+
+                    remote_author_url = f"{base_host}/api/authors/{author_serial}"
+                    response = requests.get(
+                        remote_author_url,
+                        auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                    )
+                    if response.status_code == 200:
+                        return Response(response.json(), status=status.HTTP_200_OK)
+                    else:
+                        return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
+                
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @extend_schema(
         summary="Update Author Profile",
@@ -259,36 +287,29 @@ class AuthorsCompleteView(APIView):
         """
         user_uuid = request.query_params.get('user')
 
-        # Query all users of type 'author' and exclude the current user
-        users = User.objects.exclude(uuid=user_uuid).filter(type="author")
-        formatted_uuid = str(UUID(user_uuid))
+        users = []
+        if user_uuid == 'anonymous':
+            local_users = User.objects.filter(type="author")
+            local_serializer = UserSerializer(local_users, many=True)
+            users.extend(local_serializer.data)
+        else:
+            # Query all users of type 'author' and exclude the current user
+            local_users = User.objects.exclude(uuid=user_uuid).filter(type="author")
+            local_serializer = UserSerializer(local_users, many=True)
+            users.extend(local_serializer.data)
 
-        # Query FollowRequest to check if the current user has sent a request
-        follow_requests = FollowRequest.objects.filter(
-            actor__id=formatted_uuid
-        ).values_list('object_id', flat=True)
+            remote_node = User.objects.filter(type="node")
+            for node in remote_node:
+                parsed_url = urlparse(node.host)
+                base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                api_url = f"{base_url}/api/authors/"
 
-        # Annotate users with `has_requested` based on follow request existence
-        users = users.annotate(
-            has_requested=Case(
-                When(uuid__in=follow_requests, then=Value(True)),
-                default=Value(False),
-                output_field=BooleanField()
-            ),
-            id=F('uuid'),
-            displayName=F('display_name'),  # Rename displayName to display_name
-            profileImage=F('profile_image')  # Rename profile_image to profileImage
-        )
+                response = requests.get(
+                    api_url,
+                    auth=HTTPBasicAuth(node.username, node.password)
+                )
 
-        user_data = users.values(
-            'id',
-            'host',
-            'displayName',  # Rename the field
-            'github',
-            'page',
-            'profileImage', 
-            'has_requested'
-        )     
-
-        return Response(list(user_data), status=200)
-
+                data = response.json()
+                users.extend(data["authors"])
+                
+        return Response(users, status=200)

@@ -1,12 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ..serializers import PostSerializer
-from django.shortcuts import get_object_or_404
-from ..models import Post, User, Follow, Share
 from drf_spectacular.utils import extend_schema, OpenApiResponse
-import requests
+from django.shortcuts import get_object_or_404
+from ..serializers import PostSerializer
+from ..models import Post, User, Follow, Share, Inbox
 from .posts import PostsPagination
+import requests
 
 class PublicStreamView(APIView):
     pagination_provider = PostsPagination
@@ -22,26 +22,44 @@ class PublicStreamView(APIView):
         },
     )
     def get(self, request):
-        """Retrieve the public posts of the node (currently only working for nodes)"""
+        """Retrieve the public posts of the node and remote posts in the user's inbox."""
 
-        # if author is not authenticated just return the public posts
+        # Default visibility filter for public posts
         visibility_filter = [1]
 
-        if (request.user and request.user.is_authenticated):
+        # If the user is authenticated, customize the visibility filter
+        if request.user and request.user.is_authenticated:
             user = get_object_or_404(User, uuid=request.user.uuid)
             if user.is_staff:
-                visibility_filter.append(4) # Add deleted posts for admin
+                visibility_filter.append(4)  # Add deleted posts for admin
 
-        # Sort the posts by the most recent creation date
-        posts = Post.objects.filter(visibility__in=visibility_filter).order_by('-created_at')
+        remote_posts = {}
+        for inbox in Inbox.objects.all(): # Iterate through all local inboxes
+            for item in inbox.items.filter(remote_payload__isnull=False):
+                remote_payload = item.remote_payload
+                if remote_payload.get("type") == "post": # And get the public remote posts
+                    post_id = remote_payload.get("id")
+                    visibility = remote_payload.get("visibility")
+                    
+                    if visibility == "PUBLIC":
+                        if post_id and post_id not in remote_posts: # Add if this post hasn't been added
+                            remote_posts[post_id] = remote_payload
+
+        unique_remote_posts = list(remote_posts.values())
+
+        local_posts = Post.objects.filter(visibility__in=visibility_filter)
+
+        serialized_local_posts = PostSerializer(local_posts, many=True).data
+
+        all_posts = serialized_local_posts + unique_remote_posts
+
+        # Separate logic for Post objects and JSON objects
+        all_posts.sort(key=lambda post: post['published'] if isinstance(post, dict) else post['created_at'], reverse=True)
 
         pagination = PostsPagination()
+        paginated_posts = pagination.paginate_queryset(all_posts, request, view=self)
 
-        paginated_posts = pagination.paginate_queryset(posts, request, view=self)
-
-        serialized_posts = PostSerializer(paginated_posts, many=True).data
-
-        return pagination.get_paginated_response(serialized_posts)
+        return pagination.get_paginated_response(paginated_posts)
     
 class AuthStreamView(APIView):
     pagination_provider = PostsPagination
@@ -88,54 +106,69 @@ class AuthStreamView(APIView):
 
         if request.user.is_authenticated:
             author_uuid = request.user.uuid
-            print(f"the user uuid: {author_uuid}")
             user = get_object_or_404(User, uuid=author_uuid)
 
-            # Query for unlisted and friends-only posts of this user (visibility=2 and visibility=3)
+            # Query for friends-only and unlisted posts authored by this user
             unlisted_and_friends_posts = Post.objects.filter(
                 visibility__in=[2, 3], 
                 user=user
             )
 
-            # Retrieve the followees (users the current user is following)
-            followee_uuids = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True) # need to change to account for remote followees in the future
+            # Retrieve the local followees (users the current user is following)
+            followee_uuids = Follow.objects.filter(local_follower=user).values_list('local_followee', flat=True)
 
             # Get the actual User objects of the followees based on their UUIDs
-            followees = User.objects.filter(uuid__in=followee_uuids)
-
-            print(f"People I'm following: {followees}")
+            local_followees = User.objects.filter(uuid__in=followee_uuids)
 
             # Retrieve mutual followers (friends: both following each other)
-            # Referenced FollowCustomView for this query
             friends = Follow.objects.filter(
                 local_followee=user,
-                local_follower__in=followees
+                local_follower__in=local_followees
             ).values_list('local_follower_id', flat=True)
 
             print(f"People I'm friends with: {friends}")
 
-            # Query for followees' unlisted posts
+            # Query for local followees' unlisted posts
             followees_unlisted_posts = Post.objects.filter(
-                user__in=followees,
+                user__in=local_followees,
                 visibility=3
             )
 
-            # Query for friends' friends-only posts
+            # Query for local friends' friends-only posts
             friends_only_posts = Post.objects.filter(
                 user__in=friends,
                 visibility=2
             )
 
-            all_relevant_posts = unlisted_and_friends_posts | followees_unlisted_posts | friends_only_posts
+            all_relevant_local_posts = unlisted_and_friends_posts | followees_unlisted_posts | friends_only_posts
 
-            # Remove duplicates and sort by creation date
-            all_relevant_posts = all_relevant_posts.order_by("-created_at").distinct()
+            # Remove local duplicates and sort by creation date
+            all_relevant_local_posts = all_relevant_local_posts.order_by("-created_at").distinct()
                   
             pagination = PostsPagination()
 
-            paginated_posts = pagination.paginate_queryset(all_relevant_posts, request, view=self)
+            paginated_posts = pagination.paginate_queryset(all_relevant_local_posts, request, view=self)
 
-            serialized_posts = PostSerializer(paginated_posts, many=True).data
+            serialized_local_posts = PostSerializer(paginated_posts, many=True).data
+
+            # Handle remote posts from the user's inbox
+            remote_posts = []
+            user_inbox = Inbox.objects.filter(user=user)
+
+            for inbox in user_inbox:
+                for item in inbox.items.filter(remote_payload__isnull=False):
+                    remote_payload = item.remote_payload
+                    if remote_payload.get("type") == "post":
+                        visibility = remote_payload.get("visibility")
+                        if visibility == "FRIENDS" or visibility == "UNLISTED":
+                            post_id = remote_payload.get("id")
+
+                            if post_id and post_id not in [post["id"] for post in remote_posts]:
+                                remote_posts.append(remote_payload)
+
+            combined_posts = serialized_local_posts.copy()
+            for remote_post in remote_posts:
+                combined_posts.append(remote_post)
 
             """
                 In this stream, there is also a case where user also see posts shared by people they follow
@@ -145,7 +178,7 @@ class AuthStreamView(APIView):
             distinct_shared_posts = {} # can remove distinct if we decided to not have notification for shared post (not required per specification) --> remove receiver in Share model
             
             # Query all shared posts where the user who shared it is in the followees list
-            shared_posts = Share.objects.filter(user__in=followees)
+            shared_posts = Share.objects.filter(user__in=local_followees)
             for shared in shared_posts:
                 response = requests.get(shared.post) # Post if FQID, we send a request to fetch the Post data
                 if response.status_code == 200:
@@ -158,10 +191,10 @@ class AuthStreamView(APIView):
                     if unique_key not in distinct_shared_posts:
                         distinct_shared_posts[unique_key] = shared_data
 
-            serialized_posts.extend(distinct_shared_posts.values())
-            serialized_posts = sorted(serialized_posts, key=lambda x: x.get("published"), reverse=True)
+            combined_posts.extend(distinct_shared_posts.values())
+            combined_posts = sorted(combined_posts, key=lambda x: x.get("published"), reverse=True)
 
-            return pagination.get_paginated_response(serialized_posts)
+            return pagination.get_paginated_response(combined_posts)
 
         else:
             # Return an empty paginated response if not authenticated

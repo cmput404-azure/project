@@ -1,26 +1,24 @@
-import { Author, PostData as Post } from "../../models/models";
 import React, { useEffect, useRef, useState } from "react";
-import { TextField, TextareaAutosize, Tooltip } from "@mui/material";
-import {
-  VisibilityChoices,
-  getVisibilityNumber,
-} from "../../models/modelTypes";
-
+import { TextField, Tooltip } from "@mui/material";
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import LinkIcon from '@mui/icons-material/Link';
 import PeopleIcon from '@mui/icons-material/People';
 import PublicIcon from '@mui/icons-material/Public';
+import styled from "@mui/material/styles/styled";
+import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
+import { PostData as Post } from "../../models/models";
 import { api } from "../../service/config";
 import follow from "../../service/follow";
 import inbox from "../../service/inbox";
-import styled from "@mui/material/styles/styled";
-import styles from "./PostBar.module.scss";
 import { useAuth } from "../../state";
+import { normalizeURL } from "../../util/formatting/normalizeURL";
+import styles from "./PostBar.module.scss";
 
 interface PostBarProps {
   author?: any;
   fetchPosts: any;
 }
+
 type IconType = "public" | "friends" | "unlisted";
 
 // Max character limits
@@ -89,6 +87,7 @@ const PostTitleField = styled(TextField)({
 });
 
 const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
+  const postBarRef = useRef<HTMLDivElement>(null); // Ref for the component
   const [activeIcon, setActiveIcon] = useState<IconType>("public");
   const [title, setTitle] = useState("");
   const [showDetail, setShowDetail] = useState(false);
@@ -98,9 +97,9 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [contentType, setContentType] = useState("");
+  const isPostDisabled = title.length === 0 || (!content && !imageBase64);
   const authProvider = useAuth();
 
-  const postBarRef = useRef<HTMLDivElement>(null); // Ref for the component
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (postBarRef.current && !postBarRef.current.contains(event.target as Node)) {
@@ -113,7 +112,6 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, []);
-
 
   // To update the activeIcon
   const handleIconClick = (icon: IconType) => {
@@ -134,9 +132,6 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
   ) => setDescription(event.target.value);
 
   const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // if (event.target.value.length <= CONTENT_MAX_LENGTH) {
-    //   setContent(event.target.value);
-    // }
     setContent(event.target.value);
     if (imageBase64) {
       setImageBase64(null); // Clear image base64 if user types text
@@ -168,9 +163,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
 
   const handleCombinedClick = async () => {
     try {
-      console.log(authProvider.isAuthenticated);
       if (!authProvider.isAuthenticated) {
-        console.error("User not loaded yet.");
         return;
       }
 
@@ -189,27 +182,55 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
         visibility: visibilityNumber,
       };
 
-      console.log("Need to know what newPost is: ", newPost);
-
       const postResponse = await api.post<Post>(
         `/api/authors/${authProvider.user.uuid}/posts/`,
         newPost
       );
-      console.log("Post successfully created:", postResponse.data);
 
-      // Get friends and followers list, followers inlcude both friends and followers
+      // Get friends and followers list, followers include both friends and followers
       const followers = await follow.getFollowers(authProvider.user.uuid);
       const friends = await follow.getFriends(authProvider.user.uuid);
 
-      // send to followers if post is public or unlisted
-      // always send to friends for all type of posts
+      // Send to followers if post is public or unlisted
       if (visibilityNumber === 1 || visibilityNumber === 3) {
         for (const follower of followers) {
-          const inboxResponse = await inbox.sendPostToInbox(follower.id, postResponse.data);
+          if (normalizeURL(follower.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+            await inbox.sendPostToInbox(follower.id, postResponse.data);
+          } else {
+            const enrichedPost = { // to handle remote followers
+              ...postResponse.data,
+              follower: {
+                type: "author",
+                id: follower.id,
+                host: follower.host,
+                displayName: follower.displayName,
+                page: follower.page,
+                github: follower.github,
+                profileImage: follower.profileImage
+              }
+            };
+            await inbox.sendPostToInbox(follower.id, enrichedPost);
+          }
         }
       } else {
         for (const friend of friends) {
-          const inboxResponse = await inbox.sendPostToInbox(friend.id, postResponse.data);
+          if (normalizeURL(friend.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+            await inbox.sendPostToInbox(friend.id, postResponse.data);
+          } else {
+            const enrichedPost = { // to handle remote followers
+              ...postResponse.data,
+              follower: {
+                type: "author",
+                id: friend.id,
+                host: friend.host,
+                displayName: friend.displayName,
+                page: friend.page,
+                github: friend.github,
+                profileImage: friend.profileImage
+              }
+            };
+            await inbox.sendPostToInbox(friend.id, enrichedPost);
+          }
         }
       }
 
@@ -229,8 +250,6 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       console.error("Error in combined request flow:", error);
     }
   };
-
-  const isPostDisabled = title.length === 0 || (!content && !imageBase64);
 
   if (!authProvider.isAuthenticated) {
     return <></>;
@@ -314,31 +333,31 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
           <div className={styles.left_bar}>
             <div className={styles.icon_bar}>
               <div
-                className={`${styles.icon_section} ${activeIcon === "public" ? styles.active : ""
-                  }`}
+                className={`${styles.icon_section} ${activeIcon === "public" ? styles.active : ""}`}
                 onClick={() => handleIconClick("public")}
               >
                 <PublicIcon className={styles.icon}/>
               </div>
               <div className={styles.vertical_divider}></div>
               <div
-                className={`${styles.icon_section} ${activeIcon === "friends" ? styles.active : ""
-                  }`}
+                className={`${styles.icon_section} ${activeIcon === "friends" ? styles.active : ""}`}
                 onClick={() => handleIconClick("friends")}
               >
                 <PeopleIcon className={styles.icon}/>
               </div>
               <div className={styles.vertical_divider}></div>
               <div
-                className={`${styles.icon_section} ${activeIcon === "unlisted" ? styles.active : ""
-                  }`}
+                className={`${styles.icon_section} ${activeIcon === "unlisted" ? styles.active : ""}`}
                 onClick={() => handleIconClick("unlisted")}
               >
                 <LinkIcon className={styles.icon}/>
               </div>
             </div>
             <Tooltip title="toggle markdown">
-              <button className={`${styles.mark_button} ${activeCommonMark ? styles.active : ""}`} onClick={() => setActiveCommonMark(!activeCommonMark)}>
+              <button
+                className={`${styles.mark_button} ${activeCommonMark ? styles.active : ""}`}
+                onClick={() => setActiveCommonMark(!activeCommonMark)}
+              >
                 <EditNoteIcon className={styles.icon}/>
               </button>
             </Tooltip>
@@ -355,7 +374,5 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
     </div>
   );
 };
-
-
 
 export default PostBar;

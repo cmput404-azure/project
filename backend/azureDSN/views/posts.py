@@ -1,6 +1,7 @@
+from urllib.parse import unquote
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from ..models import User, Post, Comment, Like
+from ..models import User, Post, Follow
 from ..serializers import PostSerializer, UserSerializer, CreatePostSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -95,7 +96,12 @@ class AuthorPostView(APIView):
 
             elif post.visibility == 4:  # DELETED
                 # Deleted posts should return a 404 error
-                return HttpResponse("This post does not exist.", status=404)
+                if request.user.is_authenticated:
+                    requestUser = get_object_or_404(User, uuid=request.user.uuid)
+                    if requestUser.is_staff:
+                        serializer = PostSerializer(post)
+                        return Response(serializer.data, status = 200)             
+                return HttpResponse("This post does not exist.", status=404) # We don't want to disclose information that this post still exists technically
         
     @extend_schema(
         summary="Edit a post",
@@ -292,53 +298,42 @@ class AuthorPostsAllView(APIView):
         """
         if not author_serial:
             return Response("Need to specify at least an author ID", status=400)
-
-        # make sure the author exists
-        if not User.objects.filter(uuid=author_serial).exists():
-            return Response("Author does not exist.", status=404)
         
-        # make sure the author exists
         author = get_object_or_404(User, uuid=author_serial)
 
-        # check for github activity
         self.fetch_github_activity(author)
 
-        # retrieve all posts by the author
         posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3]).order_by('-created_at')
+        # Likes and Comments will be handled in PostSerializer below
 
-        
+        if request.user.is_authenticated:
+            if request.user == author:  # "I want to view my own public profile page"
+                pass
+            else:
+                # Retrieve the followees (users the current user who made the request is following)
+                followee_uuids = Follow.objects.filter(local_follower=request.user).values_list('local_followee', flat=True)
+                followees = User.objects.filter(uuid__in=followee_uuids)
 
-        comments = Comment.objects.filter(post__in=posts)
-        likes = Like.objects.filter(post__in=posts)
+                friends = Follow.objects.filter(
+                    local_followee=request.user,
+                    local_follower__in=followees
+                ).values_list('local_follower_id', flat=True)
 
-        # put the comments into the corresponding post
-        for post in posts:
-            # comment_serializer = CommentArraySerializer(comments=comments.filter(post=post))
-            # post.comments = comment_serializer.get_comments(post)
-            # post.likes = likes.filter(post=post)
-            post.comments = []
-            post.likes = []
-
-
-        # if user is not authenticated
-        if not request.user.is_authenticated:
-            posts = posts.filter(visibility=1)
-        # if user is authenticated locally as author
-        elif request.user == author and request.user.is_authenticated:
-            posts = posts.all()
-        # if user is authenticated as friend of author
+                if author.uuid in friends:
+                    posts = posts.filter(visibility__in=[1, 2])
+                else:
+                    # The user who made the request has no relationship with the author whose profile page they want to view
+                    posts = posts.filter(visibility=1)
         else:
-            posts = posts.filter(visibility__in=[1, 2])
+            # Unauthenticated users should only see public posts
+            posts = posts.filter(visibility=1)
         
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(posts, request)
         serialized_posts = PostSerializer(page, many=True).data
 
-        
-        # return Response(PostSerializer(posts_page, many=True).data, status=200)   
         return pagination.get_paginated_response(serialized_posts)
     
-
     @extend_schema(
         summary="Create a new post",
         description="Create a new post. Currently, likes and comments are not created since there's no reason to have likes, comments, etc. because it doesn't exist yet",
@@ -563,19 +558,22 @@ class PostView(APIView):
             - friends-only posts: must be authenticated
         """
         if post_fqid:
-            post_serial = post_fqid.split("/")[-1]
+            decoded_post_fqid = unquote(post_fqid)
+            post_serial = decoded_post_fqid.split("/")[-1]
+            print("POST_SERIAL", post_serial)
             UUID(post_serial)
             post = get_object_or_404(Post, uuid=post_serial)
 
             # Check the visibility of the post
-            if post.visibility == 2 and not request.user.is_authenticated:  # FRIENDS
-                return Response("Friend's only posts must be authenticated to view.", status=403)
-            if post.visibility == 3 and not request.user.is_authenticated:  # UNLISTED
-                return Response("Unlisted posts must be authenticated to view.", status=403)
-            if post.visibility == 4:  # DELETED
-                return Response("Post does not exist.", status=404)
+            if post.visibility == 1: # Anyone can see PUBLIC posts
+                pass
+            elif post.visibility in (2, 3):  # FRIENDS or UNLISTED
+                if not request.user.is_authenticated:
+                    return Response("Authentication required to view this post.", status=403)
+            elif post.visibility == 4:  # DELETED
+                if not (request.user.is_authenticated and request.user.is_staff):
+                    return Response("Post does not exist.", status=404) # Don't disclose information for security purposes
             
-            # Post is public if above conditions are not met
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
         else:

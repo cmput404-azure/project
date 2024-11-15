@@ -18,6 +18,10 @@ urlpatterns = [
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
 
+    # Remote API
+    path("api/authors/recommended/", RemoteAuthorsView.as_view(), name="get_recommended_authors"),
+    path("api/check/<uuid:local_serial>/follows/<path:remote_fqid>", RemoteFolloweeView.as_view(), name="check_following_status"),
+
     # Likes on Posts or Comments
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", LikesView.as_view(), name="get_likes_by_serial"),
     path("api/posts/<path:post_fqid>/likes/", LikesView.as_view(), name="get_likes_by_fqid"),
@@ -60,6 +64,17 @@ urlpatterns = [
     path('api/logout/', LogoutView.as_view(), name='logout'),
     path('api/register/', RegisterView.as_view(), name='register'),
     path("api/check_auth/", CheckAuthView.as_view(), name="check_auth"),
+    
+    # Node connections
+    path('api/', NodeConnectionView.as_view(), name="handle_conn_request"),
+    path('api/nodes/connect/', NodeConnectionView.as_view(), name="connect_node"),
+    path('api/nodes/disconnect/', NodeConnectionView.as_view(), name="disable_node"),
+    path('api/nodes/remove/', NodeView.as_view(), name="remove_node"),
+    path('api/nodes/add/', NodeView.as_view(), name="add_node"),
+
+    # Site Configuration
+    path('api/config/', SiteConfigView.as_view(), name='registration_toggle'),
+    path('api/nodes/', NodeUserView.as_view(), name="get_nodes"),
 
     # Front end injection
     path('', TemplateView.as_view(template_name='index.html')),

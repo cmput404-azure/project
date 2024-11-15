@@ -123,6 +123,7 @@ function Auth() {
         .then((response) => {
           authProvider.setIsAuthenticated(true);
           authProvider.setUser(response.user);
+          authProvider.initializeAuth(); // need this to load gear icon for admins upon logging in
           navigate("/");
         })
         .catch((error) => {
