@@ -41,7 +41,7 @@ export default function NotificationList() {
             // Expected format for host: http://host/api/
             // Expected format for object: api/authors/author_id/posts/post_id
             const objectPath = item.object.startsWith("api/") ? item.object.slice(4) : item.object;
-            try{
+            try {
               let post_resp = await api.get(`${item.author.host}${objectPath}`);
               post_obj = post_resp.data;
               
@@ -49,14 +49,14 @@ export default function NotificationList() {
                 // user liked their own post, don't need to notify
                 return null
               }
-            }catch{
+            } catch{
               // post got deleted
               return null
             }
           } else if (item.type === "comment") {
             let encodedId = encodeURIComponent(item.author.id);
             user = await fetchUser(encodedId);
-            try{
+            try {
               let post_resp = await api.get(item.post);
               post_obj = post_resp.data;
 
@@ -64,7 +64,7 @@ export default function NotificationList() {
                 // user commented on their own post, don't need to notify
                 return null
               }
-            }catch{
+            } catch{
               // post got deleted
               return null
             }
@@ -105,18 +105,6 @@ export default function NotificationList() {
       return null;
     }
   };
-
-  // const fetchRemoteUser = async (uuid: string, baseHost: string) => {
-  //   try {
-  //     console.log(`${baseHost}/api/authors/${uuid}/`)
-  //     const response = await basicAuthApi.get(`${baseHost}/api/authors/${uuid}/`);
-  //     console.log(response.data);
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error(`Error fetching user ${authProvider.user.uuid}:`, error);
-  //     return null;
-  //   }
-  // }
 
   return (
     <div>
