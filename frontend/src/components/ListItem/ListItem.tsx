@@ -127,6 +127,17 @@ export default function ListItem({
             github: `${userInfo.github}`,
             page: `${userInfo.page}`,
           },
+          object: {
+            type:"author",
+            id: `${user.id}`,
+            host: `${user.host}`,
+            displayName: `${user.displayName}`,
+            username: `${user.username}`,
+            bio: `${user.bio}`,
+            profileImage: `${user.profileImage}`,
+            github: `${user.github}`,
+            page: `${user.page}`,
+          }
         };
 
           await InboxService.sendPostToInbox(user.id, followRequest);

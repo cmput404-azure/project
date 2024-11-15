@@ -211,7 +211,7 @@ class FollowerView(APIView):
         combined_followers = []
         for follower in followers:
             if follower.remote_follower:  # Remote follower handling
-                remote_data = fetch_remote_user(follower.remote_follower)
+                remote_data = fetch_remote_follower_data(follower.remote_follower)
                 if remote_data:
                     combined_followers.append(remote_data)
             else:  # Local follower handling
