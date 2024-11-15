@@ -20,9 +20,6 @@ env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 BASE_URL = env('BASE_URL', default='http://localhost:8000/api/') # keep it consistent that our url ends with /api/
 
-NODE_USERNAME = env("NODE_USERNAME", default = "default")
-NODE_PASSWORD = env("NODE_PASSWORD", default = "defaultpass")
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 

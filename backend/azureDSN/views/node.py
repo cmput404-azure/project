@@ -9,7 +9,6 @@ from rest_framework import status
 from ..models.user import NodeUser, User
 from ..models import InboxItem
 import base64, os, requests
-from django.conf import settings
 
 class NodeUserView(APIView):
     def get(self, request):
@@ -127,8 +126,8 @@ class NodeConnectionView(APIView):
         decoded_credentials = base64.b64decode(auth_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':')
 
-        expected_username = os.getenv("NodeA", 'default')
-        expected_password = os.getenv("!Summer2024!", 'defaultpass')
+        expected_username = os.getenv('NODE_USERNAME', 'default')
+        expected_password = os.getenv('NODE_PASSWORD', 'defaultpass')
 
         print(expected_username, expected_password)
 
