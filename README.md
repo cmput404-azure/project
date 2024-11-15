@@ -88,7 +88,7 @@ You must `cd` into each directory separately. Two terminals are required to run 
 3. Create a `.env` file in the root directory of the frontend directory
    - The `.env` file should contain the following variables:
      ```
-         REACT_APP_SOMETHING = 'something'
+         REACT_APP_API_BASE_URL="http://localhost:8000" # Change this to the correct URL in prod
      ```
 4. Run `npm start` to start the development server
 
