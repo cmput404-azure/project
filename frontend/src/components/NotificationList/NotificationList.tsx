@@ -1,14 +1,15 @@
 // @ts-nocheck
-import React, { useCallback, useEffect, useState } from "react";
-
 import { CircularProgress, responsiveFontSizes } from "@mui/material";
-import ListItem from "../ListItem/ListItem";
+import React, { useCallback, useEffect, useState } from "react";
 import Modal from "react-modal";
-import PostService from "../../service/post"
 import { api } from "../../service/config";
 import inbox from "../../service/inbox";
-import styles from "./NotificationList.module.scss";
+import PostService from "../../service/post"
 import { useAuth } from "../../state";
+import { normalizeURL } from '../../util/formatting/normalizeURL';
+import { extractUUID } from '../../util/formatting/extractUUID';
+import ListItem from "../ListItem/ListItem";
+import styles from "./NotificationList.module.scss";
 
 interface FollowerResponse {
   followers: Follower[];
@@ -40,7 +41,7 @@ export default function NotificationList() {
             // Expected format for host: http://host/api/
             // Expected format for object: api/authors/author_id/posts/post_id
             const objectPath = item.object.startsWith("api/") ? item.object.slice(4) : item.object;
-            try{
+            try {
               let post_resp = await api.get(`${item.author.host}${objectPath}`);
               post_obj = post_resp.data;
               
@@ -48,14 +49,14 @@ export default function NotificationList() {
                 // user liked their own post, don't need to notify
                 return null
               }
-            }catch{
+            } catch{
               // post got deleted
               return null
             }
           } else if (item.type === "comment") {
             let encodedId = encodeURIComponent(item.author.id);
             user = await fetchUser(encodedId);
-            try{
+            try {
               let post_resp = await api.get(item.post);
               post_obj = post_resp.data;
 
@@ -63,7 +64,7 @@ export default function NotificationList() {
                 // user commented on their own post, don't need to notify
                 return null
               }
-            }catch{
+            } catch{
               // post got deleted
               return null
             }
@@ -100,7 +101,7 @@ export default function NotificationList() {
       const response = await api.get(`/api/authors/${id}/`);
       return response.data;
     } catch (err) {
-      console.error(`Error fetching user ${authProvider.user.uuid}:`, err);
+      console.error(`Error fetching user with id: ${id}:`, err);
       return null;
     }
   };
@@ -152,21 +153,6 @@ export default function NotificationList() {
                   />
                 );
               } 
-//               else if (item.type === "share") {
-//                 return (
-//                   <ListItem
-//                     key={index}
-//                     isPost={true}
-//                     isShare={true}
-//                     isUserList={false}
-//                     notif_id={item.id}
-//                     postObj={item.post_obj}
-//                     user={item.user}
-//                     onRefresh={handleRefresh}
-//                   />
-//                 );
-//               }
-
               else if (item.type === "post") {
                 return (
                   <ListItem

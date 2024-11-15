@@ -4,8 +4,6 @@ import PeopleIcon from "@mui/icons-material/People";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../state";
 import { api } from "../../service/config";
-import author from "../../service/author";
-import setting from "../../service/setting";
 import stream from "../../service/stream";
 import { Author } from "../../models/models";
 import Post from "../Post/Post";
@@ -31,13 +29,6 @@ const HomePage = () => {
   const authProvider = useAuth();
 
   const [isUserLoading, setIsUserLoading] = useState(true);
-
-  // Function to randomly select authors from an array
-  const selectRandomAuthors = (authors: Author[], minCount: number, maxCount: number): Author[] => {
-    const count = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
-    const shuffled = authors.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -65,29 +56,12 @@ const HomePage = () => {
           setIsUserLoading(false); // user not authenticated
           return;
         }
-        const fetchedData = await setting.getNodeList();
 
-        const allRemoteAuthors: Author[] = [];
-
-        for (const node of fetchedData) {
-          const fetchRemoteAuthors = async (host: string, username: string, password: string) => {
-            let page = 1;
-            const size = 3; // just need a little for recommended section
-
-            const authors = author.getNodeAuthors(host, username, password, page, size);
-            return authors;
-          }
-
-          if (node.is_authenticated) {
-            const nodeAuthors = await fetchRemoteAuthors(node.host, node.username, node.password);
-            allRemoteAuthors.push(...nodeAuthors);
-          }
+        const response = await api.get<{ recommended_authors: Author[] }>('/api/authors/recommended/');
+        if (response.status === 200) {
+          const randomAuthors = response.data.recommended_authors;
+          setRecommended(randomAuthors);
         }
-
-        // We randomly select from the list of all remote authors
-        // If we're connected to multiple remote authors, we don't want to only recommend authors from one remote node
-        const randomAuthors = selectRandomAuthors(allRemoteAuthors, 3, 3);
-        setRecommended(randomAuthors);
         
       } catch (err) {
         console.error("Something went wrong: ", err);
@@ -138,11 +112,11 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    fetchPosts(publicPage, privatePage); // fetch initial
+    fetchPosts(publicPage, privatePage);
     const interval = setInterval(() => {
       fetchPosts(publicPage, privatePage);
     }, 60000);
-    return () => clearInterval(interval); // Clean up the interval on component unmount
+    return () => clearInterval(interval);
   }, [isUserLoading, privatePage, publicPage]);
 
   const nextPublicPage = async () => {

@@ -1,6 +1,7 @@
 import json
 from django.http import Http404
 from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 import http.client
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from drf_spectacular.utils import inline_serializer
@@ -14,6 +15,7 @@ from ..models import Follow
 from ..models import User
 from urllib.parse import unquote, urlparse
 from django.db.models import Q
+
 
 def fetch_remote_follower_data(remote_url):
     """
@@ -117,89 +119,55 @@ class FollowCustomView(APIView):
         """
         Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/following/?action=following
         """
+        user = get_object_or_404(User, uuid=user_id)
         # Get all the users where user is the follower
-        local_followers = Follow.objects.filter(local_follower_id = user_id)
-        remote_followers = Follow.objects.filter(remote_follower__contains=f"/{user_id}")
-        userList = []
-        all_followers = list(local_followers) + list(remote_followers)
+        my_followees = Follow.objects.filter(local_follower=user) # This fetches both local and remote authors that I'm following
 
-        #  combined_followers = []
-        # for follower in followers:
-        #     if follower.remote_follower:  # Remote follower handling
-        #         remote_data = fetch_remote_follower_data(follower.remote_follower)
-        #         if remote_data:
-        #             combined_followers.append(remote_data)
-        #     else:  # Local follower handling
-        #         try:
-        #             user = User.objects.get(uuid=follower.local_follower_id)
-        #             combined_followers.append(user)
-        #         except User.DoesNotExist:
-        #             raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
-
-
-        for follower in all_followers:
-            try:
-                user = User.objects.get(uuid=follower.local_followee_id)
-                userList.append(user)
-            except User.DoesNotExist:
-                raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
+        followee_data = []
+        for follow in my_followees:
+            if follow.local_followee:
+                followee_data.append(follow.local_followee)
+            elif follow.remote_followee:
+                try:
+                    remote_user = fetch_remote_follower_data(follow.remote_followee)
+                    if remote_user:
+                        followee_data.append(remote_user)
+                except Exception as e:
+                    print(f"Error fetching remote followee data: {e}")
         
-        serializer = UserSerializer(userList, many=True)
+        serializer = UserSerializer(followee_data, many=True)
         response_data = {
-                "type": "followers",
-                "followers": serializer.data,
-                }
+            "type": "followers",
+            "followers": serializer.data,
+        }
         return Response(response_data)
     
     def get_friends(self, user_id):
         """
         Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/following/?action=following
-        """
-        # get ids that user_id follows
-        # followee_ids = Follow.objects.filter(local_follower_id=user_id).values_list('local_followee_id', flat=True)
-        # remote_followee_ids = Follow.objects.filter(remote_follower__contains = user_id).values_list('local_followee_id', flat = True)
+        """   
+        # Fetch all local and remote followee
+        local_followee_ids = set(Follow.objects.filter(local_follower_id=user_id).values_list('local_followee_id', flat=True))
+        remote_followee_urls = set(Follow.objects.filter(local_follower_id=user_id).values_list('remote_followee', flat=True))
         
-       # Get followee_ids of users that user_id follows
-        followee_ids = list(Follow.objects.filter(local_follower_id=user_id).values_list('local_followee_id', flat=True))
+        # Fetch all local and remote follower
+        local_follower_ids = set(Follow.objects.filter(local_followee_id=user_id).values_list('local_follower_id', flat=True))
+        remote_follower_urls = set(Follow.objects.filter(local_followee_id=user_id).values_list('remote_follower', flat=True))
 
-        # Get remote followee_ids that are in the remote followers URLs
-        remote_followee_ids = list(Follow.objects.filter(remote_follower__contains=user_id).values_list('local_followee_id', flat=True))
+        # Find mutual relationships (local & remote friends)
+        mutual_local_friends = local_followee_ids.intersection(local_follower_ids)
+        mutual_remote_friends = remote_followee_urls.intersection(remote_follower_urls)
 
-        # Combine both lists of followees
-        all_followee_ids = set(followee_ids) | set(remote_followee_ids)  # Using set to ensure uniqueness
-        
-        # Build the Q object for the remote follower check
-        remote_follower_q = Q()  # Start with an empty Q object
-
-        # Dynamically create Q objects for each followee ID to check if it is at the end of the remote_follower URLs
-        for followee_id in all_followee_ids:
-            remote_follower_q |= Q(remote_follower__endswith=f"/{followee_id}")  # Check if the remote_follower URL ends with the followee_id
-
-        # Now query mutual followers considering both local and remote
-        if remote_follower_q:
-            mutual_followers = Follow.objects.filter(
-                (Q(local_followee_id=user_id) & Q(local_follower_id__in=all_followee_ids)) | 
-                (remote_follower_q & Q(local_followee_id=user_id))
-            )
-        else:
-            mutual_followers = Follow.objects.filter(
-                Q(local_followee_id=user_id) & Q(local_follower_id__in=all_followee_ids)
-            )
         combined_friends = []
 
-        # Get the list of friend ids
-        local_friend_ids = mutual_followers.values_list('local_follower_id', flat=True)
-
-        remote_friend_ids = mutual_followers.values_list('remote_follower', flat = True)
-        # remote
-        for remote_friend in remote_friend_ids:
-            remote_follower_data = fetch_remote_follower_data(remote_friend)
-            if remote_follower_data:  # Ensure the data is not None or empty
-                combined_friends.append(remote_follower_data)
-
-        # Local users
-        local_friends = User.objects.filter(uuid__in=local_friend_ids)
+        local_friends = User.objects.filter(uuid__in=mutual_local_friends)
         combined_friends.extend(local_friends)
+
+        # Add remote friends by fetching data from each remote follow URL
+        for remote_friend_url in mutual_remote_friends:
+            remote_follower_data = fetch_remote_follower_data(remote_friend_url)
+            if remote_follower_data:
+                combined_friends.append(remote_follower_data)
 
         serializer = UserSerializer(combined_friends, many=True)
         return Response(serializer.data)
@@ -446,17 +414,17 @@ class FollowView(APIView):
         parts = decoded_url.strip("/").split("/")
         follower_id = parts[-1]
    
-        follower = Follow.objects.filter(local_followee_id = user_id, remote_follower__contains=follower_id)
+        follower = Follow.objects.filter(local_followee_id=user_id, remote_follower__contains=follower_id)
 
         # local follower
         if not follower:
             decoded_url = unquote(follower_url)
             parts = decoded_url.strip("/").split("/")
             follower_id = parts[-1]
-            follower = Follow.objects.filter(local_followee_id = user_id, local_follower_id=follower_id)
+            follower = Follow.objects.filter(local_followee_id=user_id, local_follower__uuid=follower_id)
         else:
-            return Response({"is_follower": True}, status=200)
-        if not follower:  # neither local nor remote
-            return Response({"is_follower": False}, status=200)
+            return Response({"is_follower": True}, status=200) # is remote follower
+        if not follower:
+            return Response({"is_follower": False}, status=404) # neither local nor remote
         else:
-            return Response({"is_follower": True},status=200)
+            return Response({"is_follower": True},status=200) # is local follower

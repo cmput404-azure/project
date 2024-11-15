@@ -1,3 +1,4 @@
+from urllib.parse import unquote
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from ..models import User, Post, Follow
@@ -557,7 +558,9 @@ class PostView(APIView):
             - friends-only posts: must be authenticated
         """
         if post_fqid:
-            post_serial = post_fqid.split("/")[-1]
+            decoded_post_fqid = unquote(post_fqid)
+            post_serial = decoded_post_fqid.split("/")[-1]
+            print("POST_SERIAL", post_serial)
             UUID(post_serial)
             post = get_object_or_404(Post, uuid=post_serial)
 

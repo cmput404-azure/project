@@ -124,7 +124,7 @@ class FollowAdmin(admin.ModelAdmin):
         if obj.local_followee:
             return "LOCAL"
         else:
-            parsed_url = urlparse(obj.remote_follower)
+            parsed_url = urlparse(obj.remote_followee)
             return f"{parsed_url.scheme}://{parsed_url.netloc}"
     get_followee_origin.short_description = "Followee Origin"
 

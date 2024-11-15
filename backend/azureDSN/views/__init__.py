@@ -11,3 +11,4 @@ from .image import ImageView
 from .share import ShareView
 from .site_config import SiteConfigView
 from .node import NodeUserView, NodeView, NodeConnectionView
+from .remote import RemoteAuthorsView, RemoteFolloweeView

@@ -11,6 +11,8 @@ import FollowService from "../../service/follow";
 import InboxService from "../../service/inbox";
 import ProfileService from "../../service/profile";
 import { PostData, Author } from "../../models/models"
+import { normalizeURL } from "../../util/formatting/normalizeURL";
+
 interface ListItemProps {
   isRequest?: boolean;
   isPost?: boolean;
@@ -45,52 +47,50 @@ export default function ListItem({
   const [isDeletedPost, setIsDeletedPost] = useState(false);
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
+  const [isRemote, setIsRemote] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      // Format the user ID
-      let formatted_userId = user.id.replace(/\/+$/, '').split('/').pop();
-      setUserId(formatted_userId);
-
-      // Check inbox of the user ID
-      const userInbox = await InboxService.getInbox(formatted_userId);
-      await Promise.all(
-        userInbox.map(async (item: any) => {
-          if (item && item.type === "follow") {
-            let actorId = item.actor.id.replace(/\/+$/, '').split('/').pop();
-            if (actorId === authProvider.user.uuid) {
-              setIsRequested(true);
-            }
+      const userListId = extractUUID(user.id);
+      setUserId(userListId);
+      
+      let following = false;
+      if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+        // check if current user is already following the (local) user  
+        const currentUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
+        const encodedURL = encodeURIComponent(currentUser.id);
+        following = await FollowService.checkFollowing(userListId, encodedURL);
+      } else {
+        try {
+          following = await api.get(`/api/check/${authProvider.user.uuid}/follows/${user.id}`);
+          console.log(following)
+        } catch (err) {
+          if (err.response.status !== 404) {
+            console.error('Fetch following error:', error);
           }
-        })
-      );
-
-      // check if current user is already following the user
-      const currentUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
-      const encoded_url = encodeURIComponent(currentUser.id);
-      const following = await FollowService.checkFollowing(formatted_userId, encoded_url);
-
-      if (following === true) {
-        setIsFollowing(true);
+        }
       }
 
+      if (following) {
+        setIsFollowing(true);
+      }
     };
 
-    if (authProvider.isAuthenticated === true) {
+    if (authProvider.isAuthenticated) {
       if (isUserList) {
         fetchData(); // Call the async function
       }
       if (postObj != null) {
         if (postObj.post_status === "update") {
           setIsUpdatedPost(true);
-        }else if (postObj.post_status === "delete"){
+        } else if (postObj.post_status === "delete") {
           setIsDeletedPost(true);
         }
       }
     }
   }, []);
 
-  const unFollow = async () => {
+  const unfollow = async () => {
     await FollowService.unfollow(user.id, authProvider.user);
     onRefresh();
   };
@@ -117,17 +117,19 @@ export default function ListItem({
           },
         };
 
-        await InboxService.sendPostToInbox(user.id, followRequest);
-        setIsRequested(true);
+          await InboxService.sendPostToInbox(user.id, followRequest);
 
       } catch (error) {
         console.error("Fetch error:", error);
       }
+
+      setIsRequested(true);
+
     } else {
       closeModal?.();
       navigate("/login");
     }
-  };
+  }
 
   const addFollower = async () => {
     const encodedId = encodeURIComponent(user.id);
@@ -152,7 +154,6 @@ export default function ListItem({
 
   let additionalText = "";
   if (isRequest) additionalText = "wants to follow you";
-  // else if (isShare) additionalText = `shared a post with you titled: ${postObj.title}`;
   else if (isLike) additionalText = `liked your post titled: ${postObj.title}`;
   else if (isComment) additionalText = `commented on your post titled: ${postObj.title}`;
   else if (isUpdatedPost) additionalText = `updated their post titled: ${postObj.title}`;
@@ -178,7 +179,7 @@ export default function ListItem({
           </div>
         </div>
 
-        {isFollowerList && <button onClick={unFollow}>Unfollow</button>}
+        {isFollowerList && <button onClick={unfollow}>Unfollow</button>}
 
         {isUserList && (
           <button
