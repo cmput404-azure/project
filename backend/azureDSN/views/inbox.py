@@ -484,12 +484,20 @@ class InboxView(APIView):
                 # Send to remote inbox, passing the payload and remote host information
                 return self.send_follow_request_to_remote(payload)
             elif payload["type"].lower() == "post":
-                # New post created locally but the followers/friends are remote...
+                # New post created locally but the followers/friends are remote
                 # remote follower info is in the payload
                 return self.send_post_to_remote(payload)
+            
+            elif payload["type"].lower() == "like":
+                # To-do: Liking a remote post in my local stream
+                pass
+
+            elif payload["type"].lower() == "comment":
+                # To-do: Commenting on a remote post in my local stream
+                pass
 
             else:
-                return Response({"error": "User not found locally and only 'follow' requests are supported for remote authors"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "User not found locally and type not supported for remote authors."}, status=status.HTTP_400_BAD_REQUEST)
 
         if payload["type"].lower() == "post":
             return self.create_post(user_obj, payload, request)

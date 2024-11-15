@@ -9,6 +9,4 @@ class FollowRequest(models.Model):
     type = models.TextField(default="follow", editable=False)
     actor = models.JSONField(default=dict) # can be local or remote objects
     object = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='user') # always local
-    remote_object = models.JSONField(default=dict) # to track requests sent to remote users
-    remote_pending = models.BooleanField(default=False) # for polling
     created_at = models.DateTimeField(default=datetime.now)
