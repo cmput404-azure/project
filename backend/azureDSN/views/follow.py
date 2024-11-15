@@ -427,20 +427,3 @@ class FollowView(APIView):
             return Response({"is_follower": False}, status=404) # neither local nor remote
         else:
             return Response({"is_follower": True},status=200) # is local follower
-        
-class RemoteFollowView(APIView):
-    def post(self, request, author_serial, followee_url):
-        """
-            For outgoing requests to remote authors that were accepted. Creates a Follow object for it.
-        """
-
-        local_user = get_object_or_404(User, uuid=author_serial)
-
-        decoded_url = unquote(followee_url)
-
-        follow_obj = Follow.objects.create(
-            local_follower=local_user,
-            remote_followee=decoded_url
-        )
-
-        return Response({ "Message: Successfully added. "}, status=status.HTTP_200_OK)
