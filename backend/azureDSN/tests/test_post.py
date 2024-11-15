@@ -396,7 +396,7 @@ class PostTests(APITestCase):
             "contentType": "text/plain",
             "content": "This is the content of the post.",
             "published": timezone.now().isoformat(),
-            "visibility": 1
+            "visibility": 1 # We supply number, but it will be converted to string to adhere to response structure
         }
         response = self.client.post(url, post_data, format='json')
         
@@ -406,7 +406,7 @@ class PostTests(APITestCase):
         self.assertTrue(Post.objects.filter(title=post_data['title']).exists())
         self.assertEqual(response.data['title'], post_data['title'])
         self.assertEqual(response.data['content'], post_data['content'])
-        self.assertEqual(response.data['visibility'], post_data['visibility'])
+        self.assertEqual(response.data['visibility'], "PUBLIC")
         
     # ------------------------404 Not Found------------------------
     # test getting all posts from an author that does not exist
