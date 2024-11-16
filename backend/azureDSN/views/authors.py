@@ -7,7 +7,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from ..models import User, NodeUser
 from ..serializers import UserSerializer
-from ..utils.basic_auth import IsAuthenticatedNode
 from urllib.parse import urlparse
 from uuid import UUID
 import requests, os
@@ -18,7 +17,6 @@ class AuthorsPagination(PageNumberPagination):
     max_page_size = 100
 
 class AuthorsView(APIView):
-    permission_classes = [IsAuthenticatedNode]
     pagination_provider  = AuthorsPagination
    
     @extend_schema(

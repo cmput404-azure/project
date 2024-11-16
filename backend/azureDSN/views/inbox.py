@@ -10,14 +10,12 @@ import requests, os
 from urllib.parse import urlparse
 from ..serializers import *
 from ..models import *
-from ..utils.basic_auth import IsAuthenticatedNode
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
 a GET request occurs when a local user wants to check her/his inbox
 '''
 class InboxView(APIView):
-    permission_classes = [IsAuthenticatedNode]
     @extend_schema(
         summary="Retrieve Inbox",
         description="Fetch all inbox items for the specified author.",
