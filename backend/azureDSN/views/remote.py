@@ -1,5 +1,4 @@
-from django.core.exceptions import ObjectDoesNotExist
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -82,13 +81,15 @@ class RemoteFolloweeView(APIView):
 
             parsed_local = urlparse(os.getenv('BASE_URL'))
             base_local = f"{parsed_local.scheme}://{parsed_local.netloc}"
+            encoded_local = quote(f"{base_local}/api/authors/{local_serial}")
 
-            api_url = f"{base_host}/api/authors/{remote_serial}/followers/{base_local}/api/authors/{local_serial}"
+            api_url = f"{base_host}/api/authors/{remote_serial}/followers/{encoded_local}"
+            print(f"Sending to: {api_url}")
 
-            try:
-                node_user = NodeUser.objects.get(host__contains=base_host)
-            except ObjectDoesNotExist :
-                return Response({'error': 'Node not found for the provided host'}, status=404)
+            # try:
+            #     node_user = NodeUser.objects.get(host__contains=base_host)
+            # except ObjectDoesNotExist :
+            #     return Response({'error': 'Node not found for the provided host'}, status=404)
 
             response = requests.get(
                 api_url,

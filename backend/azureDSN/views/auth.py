@@ -67,8 +67,9 @@ class RegisterView(APIView):
         githubUsername = data.get('githubUsername')
         githubUrl = f"https://github.com/{githubUsername if githubUsername else 'login'}"
 
-        base_host = host.rstrip('/api/')
+        # base_host = host.rstrip('/api/')
         parsed_host = urlparse(host)
+        base_host = f"{parsed_host.scheme}://{parsed_host.netloc}"
         if parsed_host.netloc == "localhost:3000" or parsed_host.netloc == "127.0.0.1:3000":
             host = "http://localhost:8000/api/" # when creating user locally, automatically change it to port 8000 so the API works
 
@@ -81,9 +82,9 @@ class RegisterView(APIView):
         except ValidationError:
             return Response({"error": "Invalid URL format for host."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ensure host ends with /api/ -- for registration not on localhost
-        if not host.endswith('/api/'):
-            host = host.rstrip('/') + '/api/'
+        # # Ensure host ends with /api/ -- for registration not on localhost
+        # if not host.endswith('/api/'):
+        #     host = host.rstrip('/') + '/api/'
 
         # username should be unique but display name (name) can be non-unique
         if User.objects.filter(username=username).exists():
@@ -96,7 +97,7 @@ class RegisterView(APIView):
             email=email,
             display_name=name,
             github=githubUrl,
-            host=host,
+            host=base_host,
             is_active=is_active
         )
 
