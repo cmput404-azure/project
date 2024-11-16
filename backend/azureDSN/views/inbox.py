@@ -703,7 +703,8 @@ class InboxView(APIView):
     '''
     def create_like(self, user_object, payload, request):
         parsed_url = urlparse(payload["object"]) 
-        del payload["post_host"]
+        payload.pop("post_host", None)
+
         post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
         post_obj = Post.objects.get(uuid=post_id)
         like_obj = Like.objects.create(user=payload["author"], 
