@@ -52,7 +52,7 @@ class AuthorsView(APIView):
         """
         GET [local, remote] get all authors on the node
         """
-        authors = User.objects.filter(type="author")
+        authors = User.objects.filter(type="author").order_by('-created_at')
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(authors, request)
 
@@ -69,8 +69,6 @@ class AuthorsView(APIView):
         }, status=200)
 
 class AuthorsSpecificView(APIView):
-    pagination_provider  = AuthorsPagination
-
     @extend_schema(
         summary="Retrieve an author or all authors",
         description=(
