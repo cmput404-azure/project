@@ -106,7 +106,7 @@ class InboxService {
     Send a inbox item to the inbox of a user
     @param uuid: string - the fqid of the user
            inbox_item: object - the inbox item to be sent
-    @returns: message: string 
+    @returns: status
     */
     public async sendPostToInbox(fqid: string, inbox_item: object): Promise<any> {
         const uuid = fqid.split('/').pop()

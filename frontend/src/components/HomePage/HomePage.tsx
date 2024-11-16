@@ -11,7 +11,7 @@ import PostBar from "../PostBar/PostBar";
 import styles from "./HomePage.module.scss";
 import AuthorPost from "../AuthorPost/AuthorPost";
 import follow from "../../service/follow";
-import userService from "../../service/user";
+import profileService from "../../service/profile";
 import _ from 'lodash';
 
 type ViewType = "all" | "unlisted_friends-only";
@@ -62,7 +62,7 @@ const HomePage = () => {
         }
         // Get users haven't followed
         const following = await follow.getFollowing(authProvider.user.uuid);
-        const allUsers = await userService.fetchAllAuthors()
+        const allUsers = await profileService.fetchAllAuthors()
         
         // Filter out all users that current user already follows
         const followingIds = new Set(following.map((following) => following.id));
@@ -71,7 +71,7 @@ const HomePage = () => {
         );
 
         // Get all the remote authors
-        const remoteUsers = await userService.fetchRecommendedAuthors();
+        const remoteUsers = await profileService.fetchRecommendedAuthors();
         setRecommended( _.shuffle([...strangers, ...remoteUsers]));
         
       } catch (err) {
