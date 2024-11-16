@@ -140,7 +140,6 @@ class AuthorsSpecificView(APIView):
                     response = requests.get(
                         remote_author_url,
                         auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                        headers={"Origin": os.getenv('BASE_URL')},
                     )
                     if response.status_code == 200:
                         return Response(response.json(), status=status.HTTP_200_OK)
@@ -303,7 +302,6 @@ class AuthorsCompleteView(APIView):
                 response = requests.get(
                     api_url,
                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                    headers={"Origin": os.getenv('BASE_URL')},
                 )
 
                 data = response.json()

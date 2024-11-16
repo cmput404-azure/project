@@ -39,7 +39,6 @@ class RemoteAuthorsView(APIView):
                 f"{base_host}/api/authors/",
                 auth=HTTPBasicAuth(username, password),
                 params={"page": page, "size": size},
-                headers={"Origin": os.getenv('BASE_URL')},
                 timeout=5
             )
             
@@ -94,7 +93,6 @@ class RemoteFolloweeView(APIView):
             response = requests.get(
                 api_url,
                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                headers={"Origin": os.getenv('BASE_URL')},
             )
 
             if response.status_code == 404:

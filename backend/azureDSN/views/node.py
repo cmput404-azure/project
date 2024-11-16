@@ -150,7 +150,6 @@ class NodeConnectionView(APIView):
             response = requests.get(
                 node_url, # assume this ends with /api/
                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                headers={"Origin": os.getenv('BASE_URL')},
                 timeout=5
             )
             # Check if the connection is successful

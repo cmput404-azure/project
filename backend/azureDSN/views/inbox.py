@@ -558,7 +558,6 @@ class InboxView(APIView):
                     remote_inbox_url,
                     json=payload,
                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                    headers={"Origin": os.getenv('BASE_URL')},
                 )
 
             if response.status_code == 200:
@@ -587,7 +586,6 @@ class InboxView(APIView):
                 remote_inbox_url,
                 json=payload,
                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                headers={"Origin": os.getenv('BASE_URL')},
             )
 
             if response.status_code == 200:
