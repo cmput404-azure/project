@@ -101,12 +101,6 @@ export default function PublicProfile() {
       return;
     }
 
-    // this makes sure that the button for following/managing profile is displayed correctly
-    if (userID !== authProvider.user.uuid) {
-      setIsOwnProfile(false);
-      fetchPosts(userID);
-    }
-
     setIsAuthLoading(false);
 
     async function fetchCounts() {
@@ -151,12 +145,15 @@ export default function PublicProfile() {
 
     if (authProvider.isAuthenticated === false) {
       setIsAuthenticated(false);
+      // this makes sure that the button for following/managing profile is displayed correctly
+      setIsOwnProfile(false);
+      fetchPosts(userID);
     } else {
-      console.log("here");
-      console.log("authProvider.user.uuid", authProvider.user.uuid);
       if (userID === authProvider.user.uuid) {
         setIsOwnProfile(true);
       } else {
+        // this makes sure that the button for following/managing profile is displayed correctly
+        setIsOwnProfile(false);
         checkRequested();
         checkFollowing();
       }
