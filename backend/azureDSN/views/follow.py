@@ -1,57 +1,35 @@
-import json
-from django.http import Http404
-from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
-import http.client
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
-from drf_spectacular.utils import inline_serializer
-from rest_framework.response import Response
-from rest_framework import serializers
-from rest_framework import status
 from django.conf import settings
-from ..serializers.follow_serializer import FollowSerializer
-from ..serializers.user_serializer import UserSerializer
-from ..models import Follow
-from ..models import User
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, inline_serializer
+from requests.auth import HTTPBasicAuth
+from rest_framework import serializers, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from urllib.parse import unquote, urlparse
-from django.db.models import Q
-
+from ..serializers import FollowSerializer, UserSerializer
+from ..models import Follow, User
+import requests, os
 
 def fetch_remote_follower_data(remote_url):
     """
     Fetches remote follower data by sending a get request using the remote_url
     """
     try:
-        # Parse the remote URL to get the host and path
+        # Parse the remote URL to get the host and remote author uuid
         parsed_url = urlparse(remote_url)
+        base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+        author_uuid = os.path.split(parsed_url.path.rstrip('/'))[-1]
 
-        if not parsed_url.path.endswith('/'):
-            parsed_url = parsed_url._replace(path=parsed_url.path + '/')
-        connection = http.client.HTTPConnection(parsed_url.netloc)
+        remote_api_url = f"{base_host}/api/authors/{author_uuid}"
+        response = requests.get(
+            remote_api_url,
+            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+        )
 
-        # Perform the GET request
-        connection.request("GET", parsed_url.path)
-        response = connection.getresponse()
-        data = json.loads(response.read().decode())       
-        parts = data.get("id").strip("/").split("/")
-
-        userData={ 
-            "id": parts[-1],
-            "host": data.get("host"),
-            "displayName": data.get("displayName"),
-            "username": data.get("username"),
-            "bio":data.get("bio"),
-            "github": data.get("github"),
-            "profile_image": data.get("profileImage"),
-            "page": data.get("page")
-            }
-        serializer = UserSerializer(data = userData)
-        if serializer.is_valid():
-            user = User(**serializer.validated_data)  # Create an unsaved User instance
-            return user
+        if response.status_code == 200:
+            return response.json()
         else:
-            print("Errors:", serializer.errors)
-        
+            return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
     except Exception as e:
         print(f"Error fetching remote follower {remote_url}: {str(e)}")
         return None
@@ -208,25 +186,25 @@ class FollowerView(APIView):
         """
         # Get the followers list from Follow model
         followers = Follow.objects.filter(local_followee_id=user_id) 
-        combined_followers = []
+        local_followers = []
+        remote_followers = []
         for follower in followers:
             if follower.remote_follower:  # Remote follower handling
                 remote_data = fetch_remote_follower_data(follower.remote_follower)
                 if remote_data:
-                    combined_followers.append(remote_data)
+                    remote_followers.append(remote_data)
             else:  # Local follower handling
                 try:
                     user = User.objects.get(uuid=follower.local_follower_id)
-                    combined_followers.append(user)
+                    local_followers.append(user)
                 except User.DoesNotExist:
-                    raise Http404(f"Local follower with ID {follower.local_followee_id} not found.")
+                    return Response({"error": "Local follower not found."}, status=404)
 
-        # Using the remote_follower_id and local_follower_id, use the GET user endpoint
-
-        serializer = UserSerializer(combined_followers, many=True)
+        local_serializer = UserSerializer(local_followers, many=True)
+        
         response_data = {
-        "type": "followers",
-        "followers": serializer.data,
+            "type": "followers",
+            "followers": local_serializer.data + remote_followers,
         }
         return Response(response_data, status=200)
     
