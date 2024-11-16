@@ -639,12 +639,17 @@ class InboxView(APIView):
         # Replace the netloc (host) in full_url with author_host
         inbox_url = parsed_url._replace(netloc=urlparse(author_host).netloc)
 
-        connection = http.client.HTTPConnection(inbox_url.netloc)
-        connection.request("POST", inbox_url.path, body=payload_json, headers = headers)
-        response = connection.getresponse()
-        data = json.loads(response.read().decode()) 
+        response = requests.post(
+            inbox_url,
+            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+            json=payload
+        )
+        # connection = http.client.HTTPConnection(inbox_url.netloc)
+        # connection.request("POST", inbox_url.path, body=payload_json, headers = headers)
+        # response = connection.getresponse()
+        # data = json.loads(response.read().decode()) 
 
-        return Response(data,200)  
+        return Response(response.text,response.status_code)  
     
     
     '''
