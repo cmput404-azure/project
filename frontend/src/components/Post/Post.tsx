@@ -98,7 +98,6 @@ export default function Post({
                 }
               }
             }
-            console.log(postData.likes.src);
             setHasLiked(
               postData.likes.src.some((like) =>
                 like.id.includes(authProvider.user?.uuid)
@@ -114,7 +113,6 @@ export default function Post({
             checkIfShared();
           }
 
-          console.log(postData);
           setPost(postData);
   
           setCommentList(postData.comments.src.reverse());
