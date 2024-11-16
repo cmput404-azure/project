@@ -69,7 +69,7 @@ class NodeUserAdmin(admin.ModelAdmin):
         """
         queryset.update(is_authenticated=True)
         self.message_user(request, f"{queryset.count()} node(s) have been connected.")
-    authenticate_nodes.short_description = "Allow sharing to selected nodes"
+    authenticate_nodes.short_description = "Allow activities from selected nodes"
 
     def deauthenticate_nodes(self, request, queryset):
         """
@@ -78,7 +78,7 @@ class NodeUserAdmin(admin.ModelAdmin):
         """
         queryset.update(is_authenticated=False)
         self.message_user(request, f"{queryset.count()} node(s) have been disconnected.")
-    deauthenticate_nodes.short_description = "Disable sharing to selected nodes"
+    deauthenticate_nodes.short_description = "Reject activities from selected nodes"
 
 class PostAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'content_type', 'visibility')
