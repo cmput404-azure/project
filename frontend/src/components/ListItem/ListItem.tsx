@@ -149,7 +149,15 @@ export default function ListItem({
 
   const navigateToProfile = () => {
     closeModal?.();
-    navigate(`/authors/${extractUUID(user.id)}`);
+    let user_url = user["id"]
+    const parsedUrl = new URL(user_url);
+    const userHost = parsedUrl.hostname;
+    if (userHost === process.env.REACT_BASE_URL) {
+      navigate(`/authors/${extractUUID(user.id)}`);
+    } else {
+      const encodedUserId = encodeURIComponent(user_url);
+      navigate(`/authors/${encodedUserId}`);
+    }
   };
 
   let additionalText = "";
