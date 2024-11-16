@@ -14,9 +14,9 @@ class AuthorTests(APITestCase):
             type='author',
             username='testauthor',
             display_name='Test Author',
-            host=f"{settings.BASE_URL}/api/",
+            host=f"{settings.BASE_URL}",
             github='https://github.com/testauthor',
-            page=f'{settings.BASE_URL}/api//authors/testauthor',
+            page=f'{settings.BASE_URL}/api/authors/testauthor',
             created_at='2024-10-21T00:00:00Z',
             modified_at='2024-10-21T00:00:00Z'
         )
@@ -24,9 +24,9 @@ class AuthorTests(APITestCase):
             type='author',
             username='testauthor2',
             display_name='Test Author2',
-            host=f"{settings.BASE_URL}/api/",
+            host=f"{settings.BASE_URL}",
             github='https://github.com/testauthor2',
-            page=f'{settings.BASE_URL}/api//authors/testauthor2',
+            page=f'{settings.BASE_URL}/api/authors/testauthor2',
             created_at='2024-10-21T00:00:00Z',
             modified_at='2024-10-21T00:00:00Z'
         )
@@ -34,9 +34,9 @@ class AuthorTests(APITestCase):
             type='author',
             username='testauthor3',
             display_name='Test Author3',
-            host=f"{settings.BASE_URL}/api/",
+            host=f"{settings.BASE_URL}",
             github='https://github.com/testauthor3',
-            page=f'{settings.BASE_URL}/api//authors/testauthor3',
+            page=f'{settings.BASE_URL}/api/authors/testauthor3',
             created_at='2024-10-21T00:00:00Z',
             modified_at='2024-10-21T00:00:00Z'
         )
@@ -44,9 +44,9 @@ class AuthorTests(APITestCase):
             type='author',
             username='testauthor4',
             display_name='Test Author4',
-            host=f"{settings.BASE_URL}/api/",
+            host=f"{settings.BASE_URL}",
             github='https://github.com/testauthor4',
-            page=f'{settings.BASE_URL}/api//authors/testauthor4',
+            page=f'{settings.BASE_URL}/api/authors/testauthor4',
             created_at='2024-10-21T00:00:00Z',
             modified_at='2024-10-21T00:00:00Z'
         )
@@ -54,9 +54,9 @@ class AuthorTests(APITestCase):
             type='author',
             username='testauthor5',
             display_name='Test Author5',
-            host=f"{settings.BASE_URL}/api/",
+            host=f"{settings.BASE_URL}",
             github='https://github.com/testauthor5',
-            page=f'{settings.BASE_URL}/api//authors/testauthor5',
+            page=f'{settings.BASE_URL}/api/authors/testauthor5',
             created_at='2024-10-21T00:00:00Z',
             modified_at='2024-10-21T00:00:00Z'
         )
@@ -64,9 +64,9 @@ class AuthorTests(APITestCase):
             type='author',
             username='testauthor6',
             display_name='Test Author6',
-            host=f"{settings.BASE_URL}/api/",
+            host=f"{settings.BASE_URL}",
             github='https://github.com/testauthor6',
-            page=f'{settings.BASE_URL}/api//authors/testauthor6',
+            page=f'{settings.BASE_URL}/api/authors/testauthor6',
             created_at='2024-10-21T00:00:00Z',
             modified_at='2024-10-21T00:00:00Z'
         )
@@ -74,9 +74,9 @@ class AuthorTests(APITestCase):
             type='author',
             username='testauthor7',
             display_name='Test Author7',
-            host=f"{settings.BASE_URL}/api/",
+            host=f"{settings.BASE_URL}",
             github='https://github.com/testauthor7',
-            page=f'{settings.BASE_URL}/api//authors/testauthor7',
+            page=f'{settings.BASE_URL}/api/authors/testauthor7',
             created_at='2024-10-21T00:00:00Z',
             modified_at='2024-10-21T00:00:00Z'
         )
@@ -96,9 +96,9 @@ class AuthorTests(APITestCase):
         self.assertEqual(len(payload), 6)
         for author in payload:
             self.assertIn(author["displayName"], ['Test Author2', 'Test Author3', 'Test Author4', 'Test Author5', 'Test Author6', 'Test Author7'])
-            self.assertIn(author["host"], ['http://localhost:8000/api/'])
+            self.assertIn(author["host"], ['http://localhost:8000'])
             self.assertIn(author["github"], ['https://github.com/testauthor2', 'https://github.com/testauthor3', 'https://github.com/testauthor4', 'https://github.com/testauthor5', 'https://github.com/testauthor6', 'https://github.com/testauthor7'])
-            self.assertIn(author["page"], [f'{settings.BASE_URL}/api//authors/testauthor', f'{settings.BASE_URL}/api//authors/testauthor2', f'{settings.BASE_URL}/api//authors/testauthor3', f'{settings.BASE_URL}/api//authors/testauthor4', f'{settings.BASE_URL}/api//authors/testauthor5', f'{settings.BASE_URL}/api//authors/testauthor6', f'{settings.BASE_URL}/api//authors/testauthor7'])
+            self.assertIn(author["page"], [f'{settings.BASE_URL}/api/authors/testauthor', f'{settings.BASE_URL}/api/authors/testauthor2', f'{settings.BASE_URL}/api/authors/testauthor3', f'{settings.BASE_URL}/api/authors/testauthor4', f'{settings.BASE_URL}/api/authors/testauthor5', f'{settings.BASE_URL}/api/authors/testauthor6', f'{settings.BASE_URL}/api/authors/testauthor7'])
 
     def test_retrieve_authors_all_anonymous(self):
         """Test retrieving all authors without pagination."""
@@ -174,7 +174,7 @@ class AuthorTests(APITestCase):
             'displayName': 'Updated Test Author',
             'host': f"{settings.BASE_URL}/api/",
             'github': 'http://github.com/updated_testauthor',
-            'page': f'{settings.BASE_URL}/api//authors/updated_testauthor',
+            'page': f'{settings.BASE_URL}/api/authors/updated_testauthor',
         }
         response = self.client.put(url, updated_data, format='json')
 
@@ -191,17 +191,17 @@ class AuthorTests(APITestCase):
     # test getting author by fqid
     def test_get_author_by_fqid(self):
         """Test retrieving an author by FQID."""
-        host = "http://localhost:8000/api//api/authors/"
+        host = "http://localhost:8000/api/authors/"
         url = reverse('author_fqid', kwargs={'author_fqid': f"{host}{self.test_author.uuid}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
     
         self.assertEqual(response.data['type'], 'author')
-        self.assertEqual(response.data['id'], f"http://localhost:8000/api//api/authors/{self.test_author.uuid}")
+        self.assertEqual(response.data['id'], f"http://localhost:8000/api/authors/{self.test_author.uuid}")
         self.assertEqual(response.data['displayName'], self.test_author.display_name)
-        self.assertEqual(response.data['host'], 'http://localhost:8000/api/')
+        self.assertEqual(response.data['host'], 'http://localhost:8000')
         self.assertEqual(response.data['github'], 'https://github.com/testauthor')
-        self.assertEqual(response.data['page'], f'{settings.BASE_URL}/api//authors/testauthor')
+        self.assertEqual(response.data['page'], f'{settings.BASE_URL}/api/authors/testauthor')
         
     # # ----------------------------404 Tests----------------------------
     
@@ -213,7 +213,7 @@ class AuthorTests(APITestCase):
 
     def test_get_nonexistent_author_by_fqid(self):
         """Test that retrieving a non-existent author by FQID returns a 404."""
-        host = "http://localhost:8000/api//api/authors/"
+        host = "http://localhost:8000/api/authors/"
         url = reverse('author_fqid', kwargs={'author_fqid': f'{host}{uuid4()}'})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -229,7 +229,7 @@ class AuthorTests(APITestCase):
         
     def test_update_nonexistent_author_by_fqid(self):
         """Test that updating a non-existent author by FQID returns a 404."""
-        host = "http://localhost:8000/api//api/authors/"
+        host = "http://localhost:8000/api/authors/"
         url = reverse('author_fqid', kwargs={'author_fqid': f'{host}{uuid4()}'})
         data = {
             'display_name': 'Updated Author'
