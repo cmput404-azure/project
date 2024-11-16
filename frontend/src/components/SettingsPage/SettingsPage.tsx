@@ -1,7 +1,6 @@
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-
 import Paper from '@mui/material/Paper';
-import { Switch } from "@mui/material";
+import { Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableContainer from '@mui/material/TableContainer';
@@ -11,6 +10,34 @@ import { styled } from '@mui/material/styles';
 import styles from './SettingsPage.module.scss';
 import setting from '../../service/setting';
 import { useEffect, useState } from 'react';
+
+const StyledTextField = styled(TextField)(({ theme }) => ({
+   '& .MuiInputBase-root': {
+      color: 'white',
+   },
+   '& .MuiInputLabel-root': {
+      color: 'white',
+   },
+   '& .MuiOutlinedInput-root': {
+      '& fieldset': {
+         borderColor: 'transparent',
+         borderWidth: '1px',
+      },
+      '&:hover fieldset': {
+         borderColor: 'white',
+      },
+      '&.Mui-focused fieldset': {
+         borderColor: '#70ffaf',
+      },
+      '& .MuiInputLabel-root.Mui-focused': {
+      color: 'white',
+      },
+      backgroundColor: '#2b2b2b',
+      borderRadius: '5px',
+      transition: 'border-color 0.3s ease',
+   },
+   alignSelf: 'center',
+}));
 
 const StyledTableCell = styled(TableCell)(() => ({
    [`&.${tableCellClasses.head}`]: {
@@ -37,6 +64,12 @@ const StyledTableRow = styled(TableRow)(() => ({
 export default function CustomizedTables() {
    const [requireApproval, setRequireApproval] = useState(true);
    const [rows, setRows] = useState([]);
+   const [modalOpen, setModalOpen] = useState(false);
+   const [editingNode, setEditingNode] = useState(null);
+   const [protocol, setProtocol] = useState('http://');
+   const [nodeUrl, setNodeUrl] = useState('');
+   const [username, setUsername] = useState('');
+   const [password, setPassword] = useState('');
 
    function createData (host: string, username: string, password: string, status: boolean) {
       return { host, username, password, status };
@@ -47,6 +80,40 @@ export default function CustomizedTables() {
       await setting.updateToggle(newStatus);
       setRequireApproval(newStatus);
    }
+
+   const handleOpenModal = (node = null) => {
+      if (node) { // editing existing node
+         setEditingNode(node);
+         setNodeUrl(node.host);
+         setUsername(node.username);
+         setPassword(node.password);
+      } else {
+         setEditingNode(null);
+         setNodeUrl('');
+         setUsername('');
+         setPassword('');
+      }
+      setModalOpen(true);
+   }
+
+   const handleCloseModal = () => {
+      setModalOpen(false);
+   }
+
+   const handleSave = () => {
+      if (editingNode) {
+         // update existing node
+        
+      } else {
+         // add new entry
+         
+      }
+      handleCloseModal();
+   }
+
+   const handleDelete = (host) => {
+      
+   };
 
    useEffect(() => {
       const fetchConfig = async () => {
@@ -75,6 +142,7 @@ export default function CustomizedTables() {
             <p>Toggle registration approval</p>
             <Switch checked={requireApproval} onChange={handleToggle}/>
          </div>
+         <Button variant="contained" color="primary" onClick={() => handleOpenModal()}>Add New Connection</Button>
          <TableContainer component={Paper}>
             <Table sx={{ minWidth: 700 }} aria-label="customized table">
                <TableHead>
@@ -82,8 +150,7 @@ export default function CustomizedTables() {
                      <StyledTableCell>Node URL</StyledTableCell>
                      <StyledTableCell>Username</StyledTableCell>
                      <StyledTableCell>Password</StyledTableCell>
-                     <StyledTableCell>Status</StyledTableCell>
-                     {/* <StyledTableCell>Actions</StyledTableCell> */}
+                     <StyledTableCell>Incoming Requests</StyledTableCell>
                   </TableRow>
                </TableHead>
                <TableBody>
@@ -103,13 +170,142 @@ export default function CustomizedTables() {
                               fontSize: '14px'
                            }}
                         >
-                           {row.status ? 'CONNECTED' : 'NOT CONNECTED'}
+                           {row.status ? 'ALLOWED' : 'NOT ALLOWED'}
                         </StyledTableCell>
                      </StyledTableRow>
                   ))}
                </TableBody>
             </Table>
          </TableContainer>
+
+         {/* Modal for adding/editing nodes */}
+         <Modal
+            open={modalOpen}
+            onClose={handleCloseModal}
+            aria-labelledby="modal-title"
+            aria-describedby="modal-description"
+         >
+            <Box
+               sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  backgroundColor: '#1a1a1a',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  boxShadow: 24,
+                  width: '400px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+               }}
+            >
+               <h3 id="modal-title">Add/Edit Node</h3>
+               <form onSubmit={handleSave}>
+                  <Box display="flex" alignItems="center" gap={1} marginBottom={2} width="100%">
+                     <FormControl size="small" variant="outlined"
+                        sx={{
+                           minWidth: 'fit-content',
+                           '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                 borderColor: 'white',
+                              },
+                              '&.Mui-focused fieldset': {
+                                 borderColor: 'transparent',
+                                 borderWidth: 1,
+                              },
+                           },
+                           '& .MuiInputLabel-root': {
+                              color: 'white',
+                           },
+                        }}
+                     >
+                        <InputLabel id="protocol-select-label" sx={{ color: 'white' }}>Protocol</InputLabel>
+                        <Select
+                           labelId="protocol-select-label"
+                           id="protocol-select"
+                           value={protocol}
+                           onChange={(e) => setProtocol(e.target.value)}
+                           label="Protocol"
+                           sx={{
+                              backgroundColor: '#333',
+                              color: 'white',
+                              '& .MuiSelect-icon': {
+                                 color: 'white',
+                              },
+                           }}
+                        >
+                           <MenuItem value="http://">http://</MenuItem>
+                           <MenuItem value="https://">https://</MenuItem>
+                        </Select>
+                     </FormControl>
+
+                     <StyledTextField
+                        label="Host"
+                        variant="outlined"
+                        size="small"
+                        value={nodeUrl}
+                        onChange={(e) => setNodeUrl(e.target.value)}
+                        required
+                        fullWidth
+                        sx={{ flexGrow: 1 }}
+                     />
+                  </Box>
+                  <StyledTextField
+                     label="Node name"
+                     variant="outlined"
+                     size="small"
+                     value={username}
+                     onChange={(e) => setUsername(e.target.value)}
+                     required
+                     fullWidth
+                     sx={{
+                        marginBottom: '1rem',
+                     }}
+                  />
+                  <StyledTextField
+                     label="Password"
+                     variant="outlined"
+                     size="small"
+                     value={password}
+                     onChange={(e) => setPassword(e.target.value)}
+                     required
+                     fullWidth
+                     sx={{
+                        marginBottom: '1rem',
+                     }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                     <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        sx={{
+                           width: '20%',
+                           backgroundColor: '#70ffaf',
+                           color: '#1a1a1a',
+                           fontWeight: 'bold',
+                           fontSize: '12px',
+                           padding: '0.8rem',
+                           border: 'none',
+                           borderRadius: '8px',
+                           cursor: 'pointer',
+                           transition: 'background-color 0.3s',
+                           '&:hover': {
+                              backgroundColor: '#30fb88',
+                           },
+                        }}
+                        disabled={!nodeUrl || !username || !password}
+                        >
+                        Save
+                        </Button>
+                     </div>
+               </form>
+            </Box>
+         </Modal>
       </div>
    );
 }
