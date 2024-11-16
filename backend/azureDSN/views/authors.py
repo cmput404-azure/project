@@ -10,7 +10,7 @@ from ..serializers import UserSerializer
 from ..utils.basic_auth import IsAuthenticatedNode
 from urllib.parse import urlparse
 from uuid import UUID
-import requests
+import requests, os
 
 class AuthorsPagination(PageNumberPagination):
     page_size = 5
@@ -141,7 +141,8 @@ class AuthorsSpecificView(APIView):
                     remote_author_url = f"{base_host}/api/authors/{author_serial}"
                     response = requests.get(
                         remote_author_url,
-                        auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                        auth=HTTPBasicAuth(remote_node.username, remote_node.password),
+                        headers={"Origin": os.getenv('BASE_URL')},
                     )
                     if response.status_code == 200:
                         return Response(response.json(), status=status.HTTP_200_OK)
@@ -303,7 +304,8 @@ class AuthorsCompleteView(APIView):
 
                 response = requests.get(
                     api_url,
-                    auth=HTTPBasicAuth(node.username, node.password)
+                    auth=HTTPBasicAuth(node.username, node.password),
+                    headers={"Origin": os.getenv('BASE_URL')},
                 )
 
                 data = response.json()

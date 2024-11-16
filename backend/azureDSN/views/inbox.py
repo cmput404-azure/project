@@ -6,17 +6,18 @@ from rest_framework import status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from requests.auth import HTTPBasicAuth
-import requests
+import requests, os
 from urllib.parse import urlparse
 from ..serializers import *
 from ..models import *
-from ..utils import *
+from ..utils.basic_auth import IsAuthenticatedNode
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
 a GET request occurs when a local user wants to check her/his inbox
 '''
-class InboxView(APIView): 
+class InboxView(APIView):
+    permission_classes = [IsAuthenticatedNode]
     @extend_schema(
         summary="Retrieve Inbox",
         description="Fetch all inbox items for the specified author.",
@@ -558,7 +559,8 @@ class InboxView(APIView):
             response = requests.post(
                     remote_inbox_url,
                     json=payload,
-                    auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                    auth=HTTPBasicAuth(remote_node.username, remote_node.password),
+                    headers={"Origin": os.getenv('BASE_URL')},
                 )
 
             if response.status_code == 200:
@@ -586,7 +588,8 @@ class InboxView(APIView):
             response = requests.post(
                 remote_inbox_url,
                 json=payload,
-                auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                auth=HTTPBasicAuth(remote_node.username, remote_node.password),
+                headers={"Origin": os.getenv('BASE_URL')},
             )
 
             if response.status_code == 200:
