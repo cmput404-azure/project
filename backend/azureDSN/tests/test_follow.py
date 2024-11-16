@@ -1,37 +1,36 @@
+import uuid
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from ..models import Follow, User
 from urllib.parse import quote
 from django.conf import settings
-from unittest.mock import patch
-import uuid
+
 
 class FollowTests(APITestCase):
     def setUp(self):
-        patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
         self.user1_data = {
             "display_name": "TestUser1",
             "username":"TestUser1",
-            "github": "https://github.com/login",
-            "host": f"{settings.BASE_URL}/api/",
-            "page": f"{settings.BASE_URL}/authors/1",
+            "github": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
+            "host": f"{settings.BASE_URL}",
+            "page": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
             "profile_image":"profile_pictures/seabackground.jpg"
         }
         self.user2_data = {
             "display_name": "TestUser2",
             "username":"TestUser2",
-            "github": "https://github.com/login",
-            "host": f"{settings.BASE_URL}/api/",
-            "page": f"{settings.BASE_URL}/authors/2",
+            "github": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
+            "host": f"{settings.BASE_URL}",
+            "page": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
             "profile_image":"profile_pictures/seabackground.jpg"
         }
         self.user3_data = {
             "display_name": "TestUser3",
             "username":"TestUser3",
-            "github": "https://github.com/login",
-            "host": f"{settings.BASE_URL}/api/",
-            "page": f"{settings.BASE_URL}/authors/3",
+            "github": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
+            "host": f"{settings.BASE_URL}",
+            "page": f"{settings.BASE_URL}/admin/azureDSN/user/add/",
             "profile_image":"profile_pictures/seabackground.jpg"
         }
 
@@ -98,8 +97,8 @@ class FollowTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_add_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user3.uuid}'
-        encoded_url = quote(follower_url, safe="")
+        follower_url = f'{settings.BASE_URL}authors/{self.user3.uuid}'
+        encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user2.uuid, encoded_url])  
         response = self.client.put(f"{url}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -111,8 +110,8 @@ class FollowTests(APITestCase):
         self.assertEqual(len(follower_response.data["followers"]), 2)
 
     def test_add_existing_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user2.uuid}'
-        encoded_url = quote(follower_url, safe="")
+        follower_url = f'{settings.BASE_URL}authors/{self.user2.uuid}'
+        encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.put(f"{url}")
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
@@ -124,8 +123,8 @@ class FollowTests(APITestCase):
         self.assertEqual(len(follower_response.data["followers"]), 1)
 
     def test_delete_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user2.uuid}'
-        encoded_url = quote(follower_url, safe="")
+        follower_url = f'{settings.BASE_URL}authors/{self.user2.uuid}'
+        encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.delete(f"{url}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -137,22 +136,22 @@ class FollowTests(APITestCase):
         self.assertEqual(len(follower_response.data["followers"]), 0)
 
     def test_delete_non_existing_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user3.uuid}'
-        encoded_url = quote(follower_url, safe="")
+        follower_url = f'{settings.BASE_URL}authors/{self.user3.uuid}'
+        encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.delete(f"{url}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_check_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user2.uuid}'
-        encoded_url = quote(follower_url, safe="")
+        follower_url = f'{settings.BASE_URL}authors/{self.user2.uuid}'
+        encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.get(f"{url}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_check_no_follower(self):
-        follower_url = f'{settings.BASE_URL}/api/authors/{self.user3.uuid}'
-        encoded_url = quote(follower_url, safe="")
+        follower_url = f'{settings.BASE_URL}authors/{self.user3.uuid}'
+        encoded_url = quote(follower_url)
         url = reverse('followers_handler', args=[self.user1.uuid, encoded_url])  
         response = self.client.get(f"{url}")
         self.assertEqual(response.data["is_follower"], False)

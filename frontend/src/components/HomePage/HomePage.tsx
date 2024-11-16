@@ -217,7 +217,7 @@ const HomePage = () => {
       </div>
 
 
-      {authProvider.isAuthenticated && recommended.length > 0 && <div className={styles.authorSection}>
+      {authProvider.isAuthenticated && <div className={styles.authorSection}>
           <h2 className={styles.recommendedTitle}>Recommended for you</h2>
           {recommended.map((author) => (
             <AuthorPost key={author.id} author={author}/>

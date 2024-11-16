@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from requests.auth import HTTPBasicAuth
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from django.shortcuts import get_object_or_404
@@ -5,11 +6,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
-from ..models import User
+from ..models import User, NodeUser
 from ..serializers import UserSerializer
-from urllib.parse import urlparse
+
+import json
+import http.client
+from urllib.parse import unquote, urlparse
 from uuid import UUID
-import requests, os
+import requests
 
 class AuthorsPagination(PageNumberPagination):
     page_size = 5
@@ -52,7 +56,8 @@ class AuthorsView(APIView):
         """
         GET [local, remote] get all authors on the node
         """
-        authors = User.objects.filter(type="author").order_by('-created_at')
+       
+        authors = User.objects.all()
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(authors, request)
 
@@ -69,6 +74,8 @@ class AuthorsView(APIView):
         }, status=200)
 
 class AuthorsSpecificView(APIView):
+    pagination_provider  = AuthorsPagination
+
     @extend_schema(
         summary="Retrieve an author or all authors",
         description=(
@@ -110,36 +117,40 @@ class AuthorsSpecificView(APIView):
 
         if(author_serial):
             # if uuid provided
+            print(author_serial)
             author = get_object_or_404(User, uuid=author_serial)
             
             serializer = UserSerializer(author)
             return Response(serializer.data, status=200)
         elif(author_fqid):
-            author_serial = author_fqid.rstrip('/').split('/')[-1]
-            UUID(author_serial)
-
-            author_host = urlparse(author_fqid)
-            host = f"{author_host.scheme}://{author_host.netloc}"
-            if (host == os.getenv('BASE_URL', 'http://localhost:8000')):
-                local_user = get_object_or_404(User, uuid=author_serial)
-                serializer = UserSerializer(local_user)
-                return Response(serializer.data, status=200)
-
             try:
-                # Send request to remote server to get remote author's info
-                parsed_url = urlparse(author_fqid)
-                base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                author_serial = author_fqid.split('/')[-1]
+                UUID(author_serial)
 
-                remote_author_url = f"{base_host}/api/authors/{author_serial}"
-                response = requests.get(
-                    remote_author_url,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                )
-                if response.status_code == 200:
-                    return Response(response.json(), status=status.HTTP_200_OK)
-                else:
-                    return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
-            
+                try:
+                    # Check if local or remote user
+                    local_user = User.objects.get(uuid=author_serial)
+                    serializer = UserSerializer(local_user)
+                    return Response(serializer.data, status=200)
+                except User.DoesNotExist:
+                    # Send request to remote server to get remote author's info
+                    parsed_url = urlparse(author_fqid)
+                    base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+
+                    remote_node = NodeUser.objects.filter(host__contains=base_host).first()
+                    if not remote_node:
+                        return Response({"error": "Node credentials not found."}, status=status.HTTP_404_NOT_FOUND)
+
+                    remote_author_url = f"{base_host}/api/authors/{author_serial}"
+                    response = requests.get(
+                        remote_author_url,
+                        auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                    )
+                    if response.status_code == 200:
+                        return Response(response.json(), status=status.HTTP_200_OK)
+                    else:
+                        return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
+                
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -216,7 +227,7 @@ class AuthorsSpecificView(APIView):
 
 class AuthorsCompleteView(APIView):
     @extend_schema(
-        summary="Retrieve all local authors and remote authors of connected nodes.",
+        summary="Retrieve all local authors",
         description="This endpoint returns a list of all authors present in the local node.",
         responses={
             status.HTTP_200_OK: OpenApiResponse(
@@ -272,7 +283,7 @@ class AuthorsCompleteView(APIView):
     )
     def get(self, request):
         """
-        Gets all the author in our local node as well as remote authors from connected nodes.
+        Gets all the author in our local node.
         """
         user_uuid = request.query_params.get('user')
 
@@ -295,10 +306,10 @@ class AuthorsCompleteView(APIView):
 
                 response = requests.get(
                     api_url,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    auth=HTTPBasicAuth(node.username, node.password)
                 )
 
-                data = response.json().get("authors", [])
-                users.extend(data)
+                data = response.json()
+                users.extend(data["authors"])
                 
         return Response(users, status=200)

@@ -1,4 +1,3 @@
-from unittest.mock import patch
 from uuid import uuid4
 from django.urls import reverse
 from rest_framework import status
@@ -8,7 +7,7 @@ from rest_framework.authtoken.models import Token
 from django.utils import timezone
 
 class PostTests(APITestCase):
-    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
+    
     def setUp(self):
         """Create test users and posts for the tests."""
         self.test_author = User.objects.create_user(

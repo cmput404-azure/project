@@ -1,10 +1,8 @@
-from unittest.mock import patch
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from ..models import Post, User, Follow
 
 class StreamViewTest(APITestCase):
-    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
         self.client = APIClient()
 
