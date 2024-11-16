@@ -65,9 +65,21 @@
     font-size: 18px;
     font-weight: bold;
   }
+
+  .add-button.requested {
+    border-radius: 12px; /* Rounded rectangle */
+    padding: 4px 12px; /* Adjust padding for the label */
+    width: auto; /* Allow the button to resize dynamically */
+    min-width: 80px; /* Prevent the button from shrinking too small */
+    margin-left: auto; /* Align to the right of the header */
+    font-size: 14px; /* Slightly smaller font for the label */
+    text-align: center; /* Ensure text alignment inside */
+    transition: all 0.3s ease; /* Smooth transition for resizing */
+    color:#333
+  }
+  
   
 
-  
   /* Post content section */
   .post-content {
     font-size: 14px;
