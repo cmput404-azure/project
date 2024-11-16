@@ -17,7 +17,6 @@ def fetch_remote_follower_data(remote_url):
     try:
         # Parse the remote URL to get the host and remote author uuid
         remote_url = unquote(remote_url)
-        print(f"Decoded: {remote_url}")
         parsed_url = urlparse(remote_url)
         base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
         author_uuid = os.path.split(parsed_url.path.rstrip('/'))[-1]
@@ -387,22 +386,19 @@ class FollowView(APIView):
         Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/http%3A%2F%2F127.0.0.1%3A8000%2Fapi%2Fauthors%2F337f58f8-5811-4213-8311-1c7dc8e6038d/
         
         """
-        # remote follower
         decoded_url = unquote(follower_url)
         parts = decoded_url.strip("/").split("/")
         follower_id = parts[-1]
    
         follower = Follow.objects.filter(local_followee_id=user_id, remote_follower__contains=follower_id)
 
-        # local follower
-        if not follower:
-            decoded_url = unquote(follower_url)
-            parts = decoded_url.strip("/").split("/")
-            follower_id = parts[-1]
+        if follower:
+            return Response({"is_follower": True}, status=200) # Remote follower
+        else:
             follower = Follow.objects.filter(local_followee_id=user_id, local_follower__uuid=follower_id)
-        else:
-            return Response({"is_follower": True}, status=200) # is remote follower
-        if not follower:
-            return Response({"is_follower": False}, status=404) # neither local nor remote
-        else:
-            return Response({"is_follower": True},status=200) # is local follower
+            
+            if not follower:
+                return Response({"is_follower": False}, status=404) # Neither local nor remote
+            else:
+                return Response({"is_follower": True},status=200) # Local follower
+        
