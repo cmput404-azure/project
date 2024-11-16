@@ -53,7 +53,7 @@ class AuthorsView(APIView):
         GET [local, remote] get all authors on the node
         """
        
-        authors = User.objects.all()
+        authors = User.objects.filter(type="author")
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(authors, request)
 
@@ -304,7 +304,7 @@ class AuthorsCompleteView(APIView):
                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                 )
 
-                data = response.json()
-                users.extend(data["authors"])
+                data = response.json().get("authors", [])
+                users.extend(data)
                 
         return Response(users, status=200)
