@@ -112,7 +112,6 @@ class NodeConnectionView(APIView):
             Check if incoming connection requests have valid credentials allowing them to connect to our node.
         """
         authorization_header = request.headers.get('Authorization') # e.g. Basic <base64-encoded-credentials>
-        print(authorization_header)
 
         if not authorization_header:
             return Response({'error': 'No Authorization header'}, status=status.HTTP_400_BAD_REQUEST)

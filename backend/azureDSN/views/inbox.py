@@ -553,8 +553,8 @@ class InboxView(APIView):
                 # Need a check here if remote follower indeed has accepted follow request of post's author in their node
                 author = payload["author"]
                 encoded_url = quote(author.get('id'), safe='')
-                remote_follow_status_url = f"{base_host}/api/authors/{follower_serial}/following/{encoded_url}"
-                response = requests.post(
+                remote_follow_status_url = f"{base_host}/api/authors/{follower_serial}/followers/{encoded_url}"
+                response = requests.get(
                     remote_follow_status_url,
                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                 )

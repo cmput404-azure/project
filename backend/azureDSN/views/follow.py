@@ -384,7 +384,6 @@ class FollowView(APIView):
         """
         Checks if the second id is a follower of the first id
         Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/http%3A%2F%2F127.0.0.1%3A8000%2Fapi%2Fauthors%2F337f58f8-5811-4213-8311-1c7dc8e6038d/
-        
         """
         decoded_url = unquote(follower_url)
         parts = decoded_url.strip("/").split("/")

@@ -6,8 +6,6 @@ class TokenOrBasicAuthPermission(BasePermission):
     def has_permission(self, request, view):
         # Token has higher precedence over BasicAuth
         csrf_token = request.headers.get("X-CSRFToken") if request.headers.get("X-CSRFToken") else request.COOKIES.get('csrftoken')
-        print(csrf_token)
-
         if csrf_token:
             return True
 
