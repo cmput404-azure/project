@@ -556,20 +556,22 @@ class PostView(APIView):
         """
         if post_fqid:
             decoded_post_fqid = unquote(post_fqid)
-            print(decoded_post_fqid)
             post_serial = decoded_post_fqid.split("/")[-1]
             UUID(post_serial)
 
             post_visibility = ""
             post_data = ""
 
+            print("POST_URL", decoded_post_fqid)
+
             # Checks for remote first
             parsed_url = urlparse(decoded_post_fqid)
             host = f"{parsed_url.scheme}://{parsed_url.netloc}/api/"
-            post_url = f"{host}posts/{post_fqid}/"
+            # post_url = f"{host}posts/{post_fqid}/"
 
+            # print("POST_URL", post_url)
             if host!=settings.BASE_URL:
-                response = requests.get(post_url)
+                response = requests.get(post_fqid)
                 data = response.json()  # Parse the JSON response
                 print("DATA", data)
                 post_visibility = data.get("visibility")
