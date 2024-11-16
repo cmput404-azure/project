@@ -662,20 +662,23 @@ class InboxView(APIView):
         author_host = parsed_post_url.netloc
 
         payload_json = json.dumps(payload)
-        headers = {
-            "Content-Type": "application/json",
-            "Content-Length": str(len(payload_json))
-        }
+        
         # Replace the netloc (host) in full_url with author_host
         inbox_url = parsed_url._replace(netloc=author_host)
 
         print("inbox_url", inbox_url)
-        connection = http.client.HTTPConnection(inbox_url.netloc)
-        connection.request("POST", inbox_url.path, body=payload_json, headers = headers)
-        response = connection.getresponse()
-        data = json.loads(response.read().decode()) 
+
+        # Use requests to send the POST request
+        response = requests.post(
+            inbox_url.geturl(),
+            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')), 
+            data=payload_json)
+
+        # Parse the response
+        data = response.json()
 
         return Response(data, 200)
+    
     '''
     payload is a follow request object
     we return the status only cause the they dont need to know what is stored in other person's inbox
