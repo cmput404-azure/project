@@ -8,8 +8,6 @@ from ..serializers import PostSerializer
 from ..models import Post, User, Follow, Share, Inbox
 from .posts import PostsPagination
 import requests
-import http.client
-import json
 
 class PublicStreamView(APIView):
     pagination_provider = PostsPagination
@@ -46,32 +44,24 @@ class PublicStreamView(APIView):
                     
                     if visibility == "PUBLIC":
                         if post_id and post_id not in remote_posts: # Add if this post hasn't been added
-                            print(author_host)
                             author_host = remote_payload["author"]["host"]
-                            print(author_host)
                             post_fqid = f"{remote_payload['author']['id']}/post/{post_id}"
                             encoded_post_fqid = quote(post_fqid)
                             get_post_url = urljoin(author_host, f"posts/{encoded_post_fqid}/")
                             
-                            # Parse the URL for the GET request
-                            parsed_url = urlparse(get_post_url)
-                            connection = http.client.HTTPConnection(parsed_url.netloc)
-                            
                             try:
                                 # Perform the GET request
-                                connection.request("GET", parsed_url.path)
-                                response = connection.getresponse()
-                                
-                                if response.status == 200:
-                                    post_data = json.loads(response.read().decode())
-                                    if post_id not in remote_posts:  # Add only if not already added
+                                response = requests.get(get_post_url)
+
+                                if response.status_code == 200:
+                                    post_data = response.json()  
+                                    if post_id not in remote_posts:  
                                         remote_posts[post_id] = post_data
                                 else:
-                                    print(f"Failed to fetch post from {get_post_url}, status: {response.status}")
+                                    print(f"Failed to fetch post. Status code: {response.status_code}")
                             except Exception as e:
                                 print(f"Error fetching remote post {get_post_url}: {e}")
-                            finally:
-                                connection.close()
+                           
 
         unique_remote_posts = list(remote_posts.values())
 

@@ -1,6 +1,5 @@
 import json
 from urllib.parse import unquote, urlparse
-import http.client
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from ..models import User, Post, Follow
@@ -568,16 +567,13 @@ class PostView(APIView):
             parsed_url = urlparse(decoded_post_fqid)
             host = f"{parsed_url.scheme}://{parsed_url.netloc}/api/"
             post_url = f"{host}posts/{post_fqid}/"
-            parsed_post_url = urlparse(post_url)
 
             if host!=settings.BASE_URL:
-                connection = http.client.HTTPConnection(parsed_url.netloc)
-                # Perform the GET request
-                connection.request("GET", parsed_post_url.path)
-                response = connection.getresponse()
-                data = json.loads(response.read().decode()) 
-                post_visibility=data.get("visibility")       
-                post_data = data     
+                response = requests.get(post_url)
+                data = response.json()  # Parse the JSON response
+                print("DATA", data)
+                post_visibility = data.get("visibility")
+                post_data = data
             else:
                 post = get_object_or_404(Post, uuid=post_serial)
                 post_visibility = post.visibility
