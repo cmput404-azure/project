@@ -96,7 +96,7 @@ class AuthorTests(APITestCase):
         self.assertEqual(len(payload), 6)
         for author in payload:
             self.assertIn(author["displayName"], ['Test Author2', 'Test Author3', 'Test Author4', 'Test Author5', 'Test Author6', 'Test Author7'])
-            self.assertIn(author["host"], ['http://localhost:8000/api/'])
+            self.assertIn(author["host"], [f"{settings.BASE_URL}/api/"])
             self.assertIn(author["github"], ['https://github.com/testauthor2', 'https://github.com/testauthor3', 'https://github.com/testauthor4', 'https://github.com/testauthor5', 'https://github.com/testauthor6', 'https://github.com/testauthor7'])
             self.assertIn(author["page"], [f'{settings.BASE_URL}/authors/testauthor', f'{settings.BASE_URL}/authors/testauthor2', f'{settings.BASE_URL}/authors/testauthor3', f'{settings.BASE_URL}/authors/testauthor4', f'{settings.BASE_URL}/authors/testauthor5', f'{settings.BASE_URL}/authors/testauthor6', f'{settings.BASE_URL}/authors/testauthor7'])
 

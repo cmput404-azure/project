@@ -46,13 +46,13 @@ class LikeSerializer(serializers.ModelSerializer):
         user_uuid = user_data.get('id', '')
 
         # return f"{host}api/authors/{user_uuid}/liked/{obj.uuid}"
-        return f"authors/{user_uuid}/liked/{obj.uuid}"
+        return f"api/authors/{user_uuid}/liked/{obj.uuid}"
     
     def get_object(self, obj): # currently only works for Post object
         """Construct the FQID for the liked object."""
         post = obj.post
         # return f"{post.user.host}api/authors/{post.user.uuid}/posts/{post.uuid}"
-        return f"authors/{post.user.uuid}/posts/{post.uuid}"
+        return f"api/authors/{post.user.uuid}/posts/{post.uuid}"
     
     def get_published(self, obj):
         dt = obj.created_at
