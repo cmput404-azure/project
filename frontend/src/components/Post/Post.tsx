@@ -1,5 +1,18 @@
-import { Alert, CircularProgress, Snackbar, Tooltip, Modal } from "@mui/material";
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from "@mui/material";
+import {
+  Alert,
+  CircularProgress,
+  Snackbar,
+  Tooltip,
+  Modal,
+} from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
+} from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -25,15 +38,16 @@ import share from "../../service/share";
 import styles from "./Post.module.scss";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-
 export default function Post({
   postGiven,
   canToggleComments = true,
   isModal = false,
+  disableLikeComment = false,
 }: {
   postGiven?: PostModel;
   canToggleComments?: boolean;
   isModal?: boolean;
+  disableLikeComment?: boolean;
 }) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
   const postID = postGiven ? null : postIDFromParams;
@@ -66,13 +80,13 @@ export default function Post({
           // decode base64 content
           const decodedPost = decodeBase64ToUrl(postDataList);
           postData.content = decodedPost[0].content;
-  
+
           if (authProvider.user) {
             const authUser = await ProfileService.fetchAuthorData(
               authProvider.user.uuid
             );
             const url = `${authUser.host}authors/${authProvider.user.uuid}`;
-  
+
             if (url !== postData.author.id) {
               let authorId = postData.author.id
                 .replace(/\/+$/, "")
@@ -103,17 +117,20 @@ export default function Post({
             );
 
             const checkIfShared = async () => {
-              const isShared = await ShareService.checkShare(postData.id, authProvider.user.uuid);
-              setHasShared(isShared)
+              const isShared = await ShareService.checkShare(
+                postData.id,
+                authProvider.user.uuid
+              );
+              setHasShared(isShared);
             };
-            
+
             // Call the function to check the share status
             checkIfShared();
           }
 
           console.log(postData);
           setPost(postData);
-  
+
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes.count
@@ -131,10 +148,13 @@ export default function Post({
               )
             );
 
-            const isShared = await ShareService.checkShare(postGiven.id, authProvider.user.uuid);
-            setHasShared(isShared)
+            const isShared = await ShareService.checkShare(
+              postGiven.id,
+              authProvider.user.uuid
+            );
+            setHasShared(isShared);
           }
-          
+
           setCommentList(postGiven.comments.src.reverse());
           setLikeCount(
             Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
@@ -146,13 +166,9 @@ export default function Post({
       } catch (error) {
         if (error.response && error.response.status === 403) {
           navigate("/login");
-        }
-
-        else if (error.response && error.response.status === 404) {
+        } else if (error.response && error.response.status === 404) {
           navigate("/"); // back to stream since they are not an admin
-        }
-
-        else {
+        } else {
           console.error("Error fetching post data:", error);
         }
       }
@@ -209,15 +225,17 @@ export default function Post({
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
         const postData = await postService.getPost(`api/posts/${encodedId}`);
-        const comments = postData.comments?.src ? postData.comments.src.reverse() : [];
+        const comments = postData.comments?.src
+          ? postData.comments.src.reverse()
+          : [];
         setCommentList(comments);
         setCommentCount(
           Array.isArray(postData.comments) ? 0 : postData.comments.count
         );
       }
-    }
-    fetchPost()
-  }, [isModalOpen])
+    };
+    fetchPost();
+  }, [isModalOpen]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
@@ -340,9 +358,9 @@ export default function Post({
         <img
           className={styles.profilePic}
           src={
-            post.author.profileImage && post.author.profileImage.trim() !== "" ? // the nullish coalescing operator (??) treats empty as valid
-            post.author.profileImage :
-            `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
+            post.author.profileImage && post.author.profileImage.trim() !== "" // the nullish coalescing operator (??) treats empty as valid
+              ? post.author.profileImage
+              : `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
           }
           alt={`${post.author.displayName}'s profile`}
           onClick={redirectToAuthorProfile}
@@ -357,11 +375,9 @@ export default function Post({
             </span>
           </div>
           <div>
-          {post.visibility === 4 && (
-            <span className={styles.deletedLabel}>
-              Deleted
-            </span>
-          )}
+            {post.visibility === 4 && (
+              <span className={styles.deletedLabel}>Deleted</span>
+            )}
             {post.type === "shared" && (
               <span className={styles.sharedLabel}>
                 Shared by {post.shared_by}
@@ -369,7 +385,7 @@ export default function Post({
             )}
           </div>
         </div>
-        
+
         <Tooltip title="Copy link">
           <i className="fas fa-link" onClick={handleCopyLink}></i>
         </Tooltip>
@@ -393,23 +409,37 @@ export default function Post({
           <div className={styles.essentials}>
             <div
               className={`${styles.icon} ${hasLiked ? styles.liked : ""}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLikePost();
-              }}
+              onClick={
+                !disableLikeComment
+                  ? (e) => {
+                      e.stopPropagation();
+                      handleLikePost();
+                    }
+                  : () => {}
+              }
             >
-              <i className="fas fa-heart icon"></i>
+              <i
+                className={`${"fas fa-heart icon"} ${
+                  !disableLikeComment ? "" : styles.disabled
+                }`}
+              ></i>
               <span>{formatCount(likeCount)}</span>
             </div>
             <div
-              className={styles.icon}
+              className={`${styles.icon}`}
               onClick={
-                canToggleComments
-                  ? handleToggleComment
-                  : handleCommentButtonClick
+                !disableLikeComment
+                  ? canToggleComments
+                    ? handleToggleComment
+                    : handleCommentButtonClick
+                  : () => {}
               }
             >
-              <i className="fas fa-comment"></i>
+              <i
+                className={`${"fas fa-comment"} ${
+                  !disableLikeComment ? "" : styles.disabled
+                }`}
+              ></i>
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
@@ -421,7 +451,12 @@ export default function Post({
               <i className="fas fa-share"></i>
             </div>
           ) : null}
-          <ShareDialogue post={post} isDialogOpen={isShareDialogOpen} setHasShared={setHasShared} onClose={handleCloseShareDialog} />
+          <ShareDialogue
+            post={post}
+            isDialogOpen={isShareDialogOpen}
+            setHasShared={setHasShared}
+            onClose={handleCloseShareDialog}
+          />
         </div>
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
@@ -431,7 +466,8 @@ export default function Post({
               <img
                 className={styles.postImage}
                 src={
-                  post.content.includes("data:image/") || post.content.includes("base64,")
+                  post.content.includes("data:image/") ||
+                  post.content.includes("base64,")
                     ? post.content
                     : "data:image/png;base64," + post.content
                 }
@@ -504,7 +540,9 @@ export default function Post({
                   <div className={styles.commentAuthor}>
                     {comment.author.displayName}
                   </div>
-                  <div className={styles.timePosted}>{new Date(comment.published).toLocaleString()}</div>
+                  <div className={styles.timePosted}>
+                    {new Date(comment.published).toLocaleString()}
+                  </div>
                 </div>
                 <div className={styles.commentText}>{comment.comment}</div>
               </div>
@@ -529,7 +567,12 @@ interface ShareDialogueProps {
   onClose: () => void;
 }
 
-function ShareDialogue({ post, isDialogOpen, setHasShared, onClose }: ShareDialogueProps) {
+function ShareDialogue({
+  post,
+  isDialogOpen,
+  setHasShared,
+  onClose,
+}: ShareDialogueProps) {
   // const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(isDialogOpen);
   const authProvider = useAuth();
 
@@ -551,7 +594,7 @@ function ShareDialogue({ post, isDialogOpen, setHasShared, onClose }: ShareDialo
       authProvider.user.uuid
     );
     const followers = await follow.getFollowers(authProvider.user.uuid);
-    
+
     for (const follower of followers) {
       const share_obj = {
         type: "share",
@@ -563,9 +606,9 @@ function ShareDialogue({ post, isDialogOpen, setHasShared, onClose }: ShareDialo
     }
 
     // Add directly to the share model with receiver as null
-    const share_obj : Share = {
-      post: post.id
-    }
+    const share_obj: Share = {
+      post: post.id,
+    };
 
     await share.addShare(share_obj, authProvider.user.uuid);
     setHasShared(true);

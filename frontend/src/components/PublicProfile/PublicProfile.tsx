@@ -332,7 +332,12 @@ export default function PublicProfile() {
 
         <section className={styles.posts}>
           {posts.map((post) => (
-            <Post key={post.id} postGiven={post} canToggleComments={false} />
+            <Post
+              key={post.id}
+              postGiven={post}
+              canToggleComments={false}
+              disableLikeComment={true}
+            />
           ))}
           {page < totalPages && (
             <Button
