@@ -1,4 +1,4 @@
-from urllib.parse import urljoin, urlparse
+from urllib.parse import quote, urljoin, urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -46,11 +46,15 @@ class PublicStreamView(APIView):
                     
                     if visibility == "PUBLIC":
                         if post_id and post_id not in remote_posts: # Add if this post hasn't been added
+                            print(author_host)
                             author_host = remote_payload["author"]["host"]
-                            post_url = urljoin(author_host, f"posts/{post_id}")
+                            print(author_host)
+                            post_fqid = f"{remote_payload['author']['id']}/post/{post_id}"
+                            encoded_post_fqid = quote(post_fqid)
+                            get_post_url = urljoin(author_host, f"posts/{encoded_post_fqid}/")
                             
                             # Parse the URL for the GET request
-                            parsed_url = urlparse(post_url)
+                            parsed_url = urlparse(get_post_url)
                             connection = http.client.HTTPConnection(parsed_url.netloc)
                             
                             try:
@@ -63,9 +67,9 @@ class PublicStreamView(APIView):
                                     if post_id not in remote_posts:  # Add only if not already added
                                         remote_posts[post_id] = post_data
                                 else:
-                                    print(f"Failed to fetch post from {post_url}, status: {response.status}")
+                                    print(f"Failed to fetch post from {get_post_url}, status: {response.status}")
                             except Exception as e:
-                                print(f"Error fetching remote post {post_url}: {e}")
+                                print(f"Error fetching remote post {get_post_url}: {e}")
                             finally:
                                 connection.close()
 
