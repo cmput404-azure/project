@@ -38,17 +38,19 @@ import share from "../../service/share";
 import styles from "./Post.module.scss";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
+interface PostProps {
+  postGiven?: PostModel;
+  canToggleComments?: boolean;
+  isModal?: boolean;
+  disableLikeComment?: boolean;
+}
+
 export default function Post({
   postGiven,
   canToggleComments = true,
   isModal = false,
   disableLikeComment = false,
-}: {
-  postGiven?: PostModel;
-  canToggleComments?: boolean;
-  isModal?: boolean;
-  disableLikeComment?: boolean;
-}) {
+}: PostProps) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
   const postID = postGiven ? null : postIDFromParams;
 
