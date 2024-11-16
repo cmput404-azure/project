@@ -6,10 +6,10 @@ from rest_framework import status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from requests.auth import HTTPBasicAuth
-import requests, os
 from urllib.parse import urlparse, quote
 from ..serializers import *
 from ..models import *
+import requests, os
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
