@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState }  from 'react';
 import styles from './AuthorPost.module.scss';
 import { Author } from '../../models/models';
 import { useAuth } from '../../state';
@@ -11,6 +11,7 @@ interface AuthorPostProps {
 
 const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
   const authProvider = useAuth();
+  const [isRequested, setIsRequested] = useState(false); 
 
   const handleAddButton = async () => {
     const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
@@ -43,7 +44,10 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
       }
     };
   
-    await InboxService.sendPostToInbox(author.id, followRequest);
+    const status = await InboxService.sendPostToInbox(author.id, followRequest);
+    if (status === 200) {
+      setIsRequested(true); // Change button state on success
+    }
   }
 
   return (
@@ -60,8 +64,12 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
             <p>@{author.username}</p>
           </div>
         </div>
-        <button className={styles['add-button']} onClick={handleAddButton}>
-          <span>+</span>
+        <button
+          className={`${styles['add-button']} ${isRequested ? styles['requested'] : ''}`}
+          onClick={handleAddButton}
+          disabled={isRequested}
+        >
+          {isRequested ? 'Requested' : '+'}
         </button>
       </div>
       <div className={styles['post-content']}>

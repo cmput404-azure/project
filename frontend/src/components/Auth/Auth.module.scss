@@ -80,3 +80,10 @@
   color: #70ffaf;
   cursor: pointer !important;
 }
+
+/* styling for auto complete */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #2b2b2b inset !important;
+  -webkit-text-fill-color: white !important;
+  -webkit-border-radius: 12px;
+}
