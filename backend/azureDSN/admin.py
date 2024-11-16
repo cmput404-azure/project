@@ -65,7 +65,7 @@ class NodeUserAdmin(admin.ModelAdmin):
     def authenticate_nodes(self, request, queryset):
         """
         To authenticate connections (set `is_authenticated=True`).
-        Allow sharing to selected nodes.
+        Allow activities to be shared from selected nodes.
         """
         queryset.update(is_authenticated=True)
         self.message_user(request, f"{queryset.count()} node(s) have been connected.")
@@ -74,7 +74,7 @@ class NodeUserAdmin(admin.ModelAdmin):
     def deauthenticate_nodes(self, request, queryset):
         """
         To break/stop connections (set `is_authenticated=False`).
-        Stop sharing to the selected nodes.
+        Disallow activities to be shared from selected nodes.
         """
         queryset.update(is_authenticated=False)
         self.message_user(request, f"{queryset.count()} node(s) have been disconnected.")
