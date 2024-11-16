@@ -571,9 +571,8 @@ class PostView(APIView):
 
             # print("POST_URL", post_url)
             if host!=settings.BASE_URL:
-                response = requests.get(post_fqid)
+                response = requests.get(decoded_post_fqid)
                 data = response.json()  # Parse the JSON response
-                print("DATA", data)
                 post_visibility = data.get("visibility")
                 post_data = data
             else:

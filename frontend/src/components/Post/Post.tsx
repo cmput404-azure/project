@@ -30,6 +30,7 @@ import ShareDialogue from "../Post/ShareDialogue";
 import EllipseMenu from "../EllipseMenu/EllipseMenu";
 
 import { PostData } from "../../models/models";
+import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -224,9 +225,9 @@ export default function Post({
       if (postGiven) {
         let encodedId = null;
         encodedId = encodeURIComponent(postGiven.id);
-        if (postGiven.author.host != process.env.REACT_APP_API_BASE_URL){
-          encodedId = encodeURIComponent(`${postGiven.author.id}/posts/${postGiven.id}`);
-        }
+        // if (postGiven.author.host != process.env.REACT_APP_API_BASE_URL){
+        //   encodedId = encodeURIComponent(`${postGiven.id}`);
+        // }
         const postData = await postService.getPost(`api/posts/${encodedId}`);
         const comments = postData.comments?.src
           ? postData.comments.src.reverse()

@@ -1,4 +1,4 @@
-from urllib.parse import quote, urljoin, urlparse
+from urllib.parse import quote, unquote, urljoin, urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404
 from ..serializers import PostSerializer
 from ..models import Post, User, Follow, Share, Inbox
 from .posts import PostsPagination
+from requests.auth import HTTPBasicAuth
+
 import requests
 
 class PublicStreamView(APIView):
@@ -46,12 +48,14 @@ class PublicStreamView(APIView):
                         if post_id and post_id not in remote_posts: # Add if this post hasn't been added
                             author_host = remote_payload["author"]["host"]
                             post_fqid = f"{remote_payload['author']['id']}/post/{post_id}"
-                            encoded_post_fqid = quote(post_fqid)
-                            get_post_url = urljoin(author_host, f"posts/{encoded_post_fqid}/")
+
+                            encoded_post_fqid = quote(post_fqid, safe="")
+                            get_post_url = f"{author_host}posts/{encoded_post_fqid}/"
                             
                             try:
                                 # Perform the GET request
-                                response = requests.get(get_post_url)
+                                response = requests.get(get_post_url,
+                                auth=HTTPBasicAuth("NodeA", "!Summer2024!"))
 
                                 if response.status_code == 200:
                                     post_data = response.json()  

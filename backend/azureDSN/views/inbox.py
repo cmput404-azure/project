@@ -7,7 +7,7 @@ from rest_framework import status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from requests.auth import HTTPBasicAuth
-from urllib.parse import urlparse, quote
+from urllib.parse import urlparse, quote, urlunparse
 from ..serializers import *
 from ..models import *
 import requests, os
@@ -637,9 +637,10 @@ class InboxView(APIView):
         }
         # Replace the netloc (host) in full_url with author_host
         inbox_url = parsed_url._replace(netloc=urlparse(author_host).netloc)
+        formatted_url = urlunparse(inbox_url)
 
         response = requests.post(
-            inbox_url,
+            formatted_url,
             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
             json=payload
         )
