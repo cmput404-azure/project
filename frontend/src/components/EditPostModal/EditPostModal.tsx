@@ -75,7 +75,7 @@ export default function EditPostModal({
     if (
       title === post.title &&
       content === post.content &&
-      visibility === visibility
+      visibility === post.visibility
     ) {
       setDisabled(true);
     } else {
