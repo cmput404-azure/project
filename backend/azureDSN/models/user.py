@@ -63,7 +63,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         Returns the unique URL for this author, which will look like:
         http://node1/api/authors/<uuid>
         """
-        return f"{self.host}authors/{self.user_id}"
+        return f"{self.host}/api/authors/{self.user_id}"
 
 
 class NodeUser(User):
