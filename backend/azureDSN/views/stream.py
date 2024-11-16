@@ -46,11 +46,9 @@ class PublicStreamView(APIView):
                     
                     if visibility == "PUBLIC":
                         if post_id and post_id not in remote_posts: # Add if this post hasn't been added
-                            print(author_host)
                             author_host = remote_payload["author"]["host"]
-                            print(author_host)
                             post_fqid = f"{remote_payload['author']['id']}/post/{post_id}"
-                            encoded_post_fqid = quote(post_fqid)
+                            encoded_post_fqid = quote(post_fqid, safe="")
                             get_post_url = urljoin(author_host, f"posts/{encoded_post_fqid}/")
                             
                             # Parse the URL for the GET request

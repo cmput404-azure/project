@@ -649,6 +649,29 @@ class InboxView(APIView):
         return Response(data,200)  
     
     
+    def send_comment_to_remote(self, payload, request):
+        full_url = request.build_absolute_uri()
+        parsed_url = urlparse(full_url)
+        
+        post_url = payload["post"]
+        parsed_post_url = urlparse(post_url)
+        author_host = parsed_post_url.netloc
+
+        payload_json = json.dumps(payload)
+        headers = {
+            "Content-Type": "application/json",
+            "Content-Length": str(len(payload_json))
+        }
+        # Replace the netloc (host) in full_url with author_host
+        inbox_url = parsed_url._replace(netloc=author_host)
+
+        print("inbox_url", inbox_url)
+        connection = http.client.HTTPConnection(inbox_url.netloc)
+        connection.request("POST", inbox_url.path, body=payload_json, headers = headers)
+        response = connection.getresponse()
+        data = json.loads(response.read().decode()) 
+
+        return Response(data, 200)
     '''
     payload is a follow request object
     we return the status only cause the they dont need to know what is stored in other person's inbox
@@ -675,8 +698,6 @@ class InboxView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-    def send_comment_to_remote(self, payload, request):
-        pass
     '''
     payload is a comment object
     id is http://{server}/api/authors/{user_id}/commented/{comment_id}
