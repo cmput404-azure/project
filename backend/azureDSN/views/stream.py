@@ -1,4 +1,5 @@
-from urllib.parse import quote, urljoin, urlparse
+import os
+from urllib.parse import quote, unquote, urljoin, urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,9 +8,9 @@ from django.shortcuts import get_object_or_404
 from ..serializers import PostSerializer
 from ..models import Post, User, Follow, Share, Inbox
 from .posts import PostsPagination
+from requests.auth import HTTPBasicAuth
+
 import requests
-import http.client
-import json
 
 class PublicStreamView(APIView):
     pagination_provider = PostsPagination
@@ -48,28 +49,26 @@ class PublicStreamView(APIView):
                         if post_id and post_id not in remote_posts: # Add if this post hasn't been added
                             author_host = remote_payload["author"]["host"]
                             post_fqid = f"{remote_payload['author']['id']}/post/{post_id}"
+
                             encoded_post_fqid = quote(post_fqid, safe="")
-                            get_post_url = urljoin(author_host, f"posts/{encoded_post_fqid}/")
-                            
-                            # Parse the URL for the GET request
-                            parsed_url = urlparse(get_post_url)
-                            connection = http.client.HTTPConnection(parsed_url.netloc)
+                            get_post_url = f"{author_host}posts/{encoded_post_fqid}/"
                             
                             try:
                                 # Perform the GET request
-                                connection.request("GET", parsed_url.path)
-                                response = connection.getresponse()
-                                
-                                if response.status == 200:
-                                    post_data = json.loads(response.read().decode())
-                                    if post_id not in remote_posts:  # Add only if not already added
+                                response = requests.get(
+                                    get_post_url,
+                                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                                )
+
+                                if response.status_code == 200:
+                                    post_data = response.json()  
+                                    if post_id not in remote_posts:  
                                         remote_posts[post_id] = post_data
                                 else:
-                                    print(f"Failed to fetch post from {get_post_url}, status: {response.status}")
+                                    print(f"Failed to fetch post. Status code: {response.status_code}")
                             except Exception as e:
                                 print(f"Error fetching remote post {get_post_url}: {e}")
-                            finally:
-                                connection.close()
+                           
 
         unique_remote_posts = list(remote_posts.values())
 
@@ -127,9 +126,6 @@ class AuthStreamView(APIView):
         }
     )
     def get(self, request):
-        print("Req: ", request)
-        print("user: ", request.user)
-
         if request.user.is_authenticated:
             author_uuid = request.user.uuid
             user = get_object_or_404(User, uuid=author_uuid)
@@ -151,8 +147,6 @@ class AuthStreamView(APIView):
                 local_followee=user,
                 local_follower__in=local_followees
             ).values_list('local_follower_id', flat=True)
-
-            print(f"People I'm friends with: {friends}")
 
             # Query for local followees' unlisted posts
             followees_unlisted_posts = Post.objects.filter(

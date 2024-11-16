@@ -1,6 +1,5 @@
 import json
 from urllib.parse import unquote, urlparse
-import http.client
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from ..models import User, Post, Follow
@@ -370,11 +369,8 @@ class AuthorPostsAllView(APIView):
         
         author = User.objects.get(uuid=author_serial)
         author_data = UserSerializer(author).data
-        print(f"Passed UserSerializer: {author_data}")
         author_data["id"] = author.uuid
         request.data["author"] = author_data
-
-        # print(request.data)
         serializer = CreatePostSerializer(data=request.data, partial=True)
 
         if serializer.is_valid():
@@ -382,10 +378,9 @@ class AuthorPostsAllView(APIView):
 
             # Serialize the response
             response = CreatePostSerializer(instance).data
-
             return Response(response, status=status.HTTP_201_CREATED)
+        
         if not serializer.is_valid():
-            print("Validation Errors:", serializer.errors)  # Print errors
             return Response(serializer.errors, status=400)
         
     def fetch_github_activity(self, author):
@@ -413,7 +408,6 @@ class AuthorPostsAllView(APIView):
 
                 serializer = CreatePostSerializer(data=event_post)
                 if serializer.is_valid():
-                    print("Saving post...")
                     serializer.save()
                 else:
                     print("Error saving post:", serializer.errors)
@@ -562,28 +556,26 @@ class PostView(APIView):
         """
         if post_fqid:
             decoded_post_fqid = unquote(post_fqid)
-            print(decoded_post_fqid)
             post_serial = decoded_post_fqid.split("/")[-1]
-            print("POST_SERIAL", post_serial)
             UUID(post_serial)
 
             post_visibility = ""
             post_data = ""
 
+            print("POST_URL", decoded_post_fqid)
+
             # Checks for remote first
             parsed_url = urlparse(decoded_post_fqid)
             host = f"{parsed_url.scheme}://{parsed_url.netloc}/api/"
-            post_url = f"{host}posts/{post_fqid}/"
-            parsed_post_url = urlparse(post_url)
+            # post_url = f"{host}posts/{post_fqid}/"
 
-            if host!=settings.BASE_URL:
-                connection = http.client.HTTPConnection(parsed_url.netloc)
-                # Perform the GET request
-                connection.request("GET", parsed_post_url.path)
-                response = connection.getresponse()
-                data = json.loads(response.read().decode()) 
-                post_visibility=data.get("visibility")       
-                post_data = data     
+            base_url = f"{settings.BASE_URL}/api/"
+
+            if host!=base_url:
+                response = requests.get(decoded_post_fqid)
+                data = response.json()  # Parse the JSON response
+                post_visibility = data.get("visibility")
+                post_data = data
             else:
                 post = get_object_or_404(Post, uuid=post_serial)
                 post_visibility = post.visibility

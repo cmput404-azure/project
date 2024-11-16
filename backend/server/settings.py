@@ -18,7 +18,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-BASE_URL = env('BASE_URL', default='http://localhost:8001/api/') # keep it consistent that our url ends with /api/
+BASE_URL = env('BASE_URL', default='http://localhost:8000')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -41,7 +41,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://ui19:3000',
     'http://ui19:3001',
     'https://azuredsn-889a4fb9b2bb.herokuapp.com',
-    'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com'
+    'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com',
+    "https://azuredsn-dev-ffe9709386a4.herokuapp.com"
 ]
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
@@ -49,7 +50,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3001',
     'http://127.0.0.1:3001',
     'https://azuredsn-889a4fb9b2bb.herokuapp.com',
-    'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com'
+    'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com',
+    "https://azuredsn-dev-ffe9709386a4.herokuapp.com"
 ]
 
 # Application definition

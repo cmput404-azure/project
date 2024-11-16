@@ -36,7 +36,7 @@ export default function UserSearch({ closeModal }: userSearchProps) {
       setLoading(true);
       setError(null);
       try {
-        if (authProvider.isAuthenticated === false) {
+        if (!authProvider.isAuthenticated) {
           const response = await api.get(`/api/authors/all/`, {
             params: { user: "anonymous" }
           });

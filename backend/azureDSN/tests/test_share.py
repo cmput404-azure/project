@@ -1,9 +1,11 @@
+from unittest.mock import patch
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from ..models import Share, User, Post
+from ..models import Share, User
 
 class ShareViewTests(APITestCase):
+    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
         self.client = APIClient()
         # Set up a test user and test data for posts
