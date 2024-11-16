@@ -141,7 +141,7 @@ class AuthorsSpecificView(APIView):
                     remote_author_url = f"{base_host}/api/authors/{author_serial}"
                     response = requests.get(
                         remote_author_url,
-                        auth=HTTPBasicAuth(remote_node.username, remote_node.password),
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                         headers={"Origin": os.getenv('BASE_URL')},
                     )
                     if response.status_code == 200:
@@ -225,7 +225,7 @@ class AuthorsSpecificView(APIView):
 
 class AuthorsCompleteView(APIView):
     @extend_schema(
-        summary="Retrieve all local authors",
+        summary="Retrieve all local authors and remote authors of connected nodes.",
         description="This endpoint returns a list of all authors present in the local node.",
         responses={
             status.HTTP_200_OK: OpenApiResponse(
@@ -281,7 +281,7 @@ class AuthorsCompleteView(APIView):
     )
     def get(self, request):
         """
-        Gets all the author in our local node.
+        Gets all the author in our local node as well as remote authors from connected nodes.
         """
         user_uuid = request.query_params.get('user')
 
@@ -304,7 +304,7 @@ class AuthorsCompleteView(APIView):
 
                 response = requests.get(
                     api_url,
-                    auth=HTTPBasicAuth(node.username, node.password),
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                     headers={"Origin": os.getenv('BASE_URL')},
                 )
 

@@ -92,7 +92,7 @@ class RemoteFolloweeView(APIView):
 
             response = requests.get(
                 api_url,
-                auth=HTTPBasicAuth(node_user.username, node_user.password),
+                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                 headers={"Origin": os.getenv('BASE_URL')},
             )
 

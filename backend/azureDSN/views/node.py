@@ -149,7 +149,7 @@ class NodeConnectionView(APIView):
             # Send a test GET request to the remote node's API with basic auth
             response = requests.get(
                 node_url, # assume this ends with /api/
-                auth=HTTPBasicAuth(username, password),
+                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                 headers={"Origin": os.getenv('BASE_URL')},
                 timeout=5
             )

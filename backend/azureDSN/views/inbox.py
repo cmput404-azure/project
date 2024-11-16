@@ -559,7 +559,7 @@ class InboxView(APIView):
             response = requests.post(
                     remote_inbox_url,
                     json=payload,
-                    auth=HTTPBasicAuth(remote_node.username, remote_node.password),
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                     headers={"Origin": os.getenv('BASE_URL')},
                 )
 
@@ -588,7 +588,7 @@ class InboxView(APIView):
             response = requests.post(
                 remote_inbox_url,
                 json=payload,
-                auth=HTTPBasicAuth(remote_node.username, remote_node.password),
+                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                 headers={"Origin": os.getenv('BASE_URL')},
             )
 
