@@ -13,6 +13,7 @@ import AuthorPost from "../AuthorPost/AuthorPost";
 import follow from "../../service/follow";
 import profileService from "../../service/profile";
 import _ from 'lodash';
+import { extractUUID } from "../../util/formatting/extractUUID";
 
 type ViewType = "all" | "unlisted_friends-only";
 
@@ -67,7 +68,10 @@ const HomePage = () => {
         // Filter out all users that current user already follows
         const followingIds = new Set(following.map((following) => following.id));
         const strangers = allUsers.filter(
-          (user) => !followingIds.has(user.id || authProvider.user.uuid) && user.type != "node"
+          (user) =>
+            !followingIds.has(user.id) &&
+            extractUUID(user.id) !== authProvider.user.uuid &&
+            user.type !== "node"
         );
 
         // Get all the remote authors
