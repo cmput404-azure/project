@@ -29,8 +29,12 @@ def fetch_remote_follower_data(remote_url):
 
         if response.status_code == 200:
             return response.json()
+        elif response.status_code == 403:
+            print(f"Access forbidden to the remote node.")
+            return None
         else:
-            return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
+            print(f"Failed to fetch author: {response.text}")
+            return None
     except Exception as e:
         print(f"Error fetching remote follower {remote_url}: {str(e)}")
         return None
@@ -184,6 +188,7 @@ class FollowerView(APIView):
         Get all the followers of a local user
 
         """
+        print("test")
         # Get the followers list from Follow model
         followers = Follow.objects.filter(local_followee_id=user_id) 
         local_followers = []
@@ -201,6 +206,8 @@ class FollowerView(APIView):
                     return Response({"error": "Local follower not found."}, status=404)
 
         local_serializer = UserSerializer(local_followers, many=True)
+        print(f"Local:{local_serializer.data}")
+        print(f"remote: {remote_followers}")
         
         response_data = {
             "type": "followers",
