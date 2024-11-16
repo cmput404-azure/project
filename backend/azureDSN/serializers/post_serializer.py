@@ -15,7 +15,7 @@ class PostSerializer(serializers.ModelSerializer):
     
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
-    published = serializers.DateTimeField(source='created_at')
+    published = serializers.DateTimeField(source='modified_at')
     
     class Meta:
         model = Post
@@ -95,8 +95,8 @@ class PostSerializer(serializers.ModelSerializer):
         post.description = validated_data.get('description', post.description)
         post.contentType = validated_data.get('contentType', post.contentType)
         post.content = validated_data.get('content', post.content)
-        post.published = validated_data.get('published', post.published)
-        post.modified_at = validated_data.get('modified_at', post.modified_at)
+        post.published = validated_data.get('published', post.modified_at)
+        # post.modified_at = validated_data.get('modified_at', post.modified_at)
         post.visibility = validated_data.get('visibility', post.visibility)
         post.save()
         return post
