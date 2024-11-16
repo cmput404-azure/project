@@ -60,9 +60,10 @@ export default function NotificationList() {
             user = await fetchUser(encodedId);
             try {
               let post_resp = await api.get(item.post);
+              console.log(post_resp);
               post_obj = post_resp.data;
 
-              if(post_obj.author.id.includes(authProvider.user.uuid)=== true){
+              if(item.author.id.includes(authProvider.user.uuid)=== true){
                 // user commented on their own post, don't need to notify
                 return null
               }
