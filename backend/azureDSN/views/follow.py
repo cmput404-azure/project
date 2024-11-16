@@ -98,27 +98,28 @@ class FollowCustomView(APIView):
         Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/following/?action=following
         """
         user = get_object_or_404(User, uuid=user_id)
-        # Get all the users where user is the follower
-        my_followees = Follow.objects.filter(local_follower=user) # This fetches both local and remote authors that I'm following
+        # Fetch both local and remote authors that I'm following
+        my_followees = Follow.objects.filter(local_follower=user)
 
-        followee_data = []
+        local_followee = []
+        remote_followee = []
         for follow in my_followees:
             if follow.local_followee:
-                followee_data.append(follow.local_followee)
+                local_followee.append(follow.local_followee)
             elif follow.remote_followee:
                 try:
                     remote_user = fetch_remote_follower_data(follow.remote_followee)
                     if remote_user:
-                        followee_data.append(remote_user)
+                        remote_followee.append(remote_user)
                 except Exception as e:
                     print(f"Error fetching remote followee data: {e}")
         
-        serializer = UserSerializer(followee_data, many=True)
+        local_serializer = UserSerializer(local_followee, many=True)
         response_data = {
             "type": "followers",
-            "followers": serializer.data,
+            "followers": local_serializer.data + remote_followee,
         }
-        return Response(response_data)
+        return Response(response_data, status=status.HTTP_200_OK)
     
     def get_friends(self, user_id):
         """
@@ -136,19 +137,17 @@ class FollowCustomView(APIView):
         mutual_local_friends = local_followee_ids.intersection(local_follower_ids)
         mutual_remote_friends = remote_followee_urls.intersection(remote_follower_urls)
 
-        combined_friends = []
-
         local_friends = User.objects.filter(uuid__in=mutual_local_friends)
-        combined_friends.extend(local_friends)
 
+        remote_friends = []
         # Add remote friends by fetching data from each remote follow URL
         for remote_friend_url in mutual_remote_friends:
             remote_follower_data = fetch_remote_follower_data(remote_friend_url)
             if remote_follower_data:
-                combined_friends.append(remote_follower_data)
+                remote_friends.append(remote_follower_data)
 
-        serializer = UserSerializer(combined_friends, many=True)
-        return Response(serializer.data)
+        local_serializer = UserSerializer(local_friends, many=True)
+        return Response(local_serializer.data + remote_friends, status=status.HTTP_200_OK)
     
 class FollowerView(APIView):
     @extend_schema(

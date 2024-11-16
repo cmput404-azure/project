@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from requests.auth import HTTPBasicAuth
 import requests, os
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 from ..serializers import *
 from ..models import *
 
@@ -541,15 +541,28 @@ class InboxView(APIView):
         try:
             remote_follower = payload["follower"]
             
-            # remove follower from payload to return to original post structure
+            # Remove follower from payload to return to original post structure
             del payload["follower"]
-            
+
             follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
             remote_host = remote_follower.get("host")
             parsed_url = urlparse(remote_host)
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
+
+            if payload["visibility"] == "FRIENDS":
+                # Need a check here if remote follower indeed has accepted follow request of post's author in their node
+                author = payload["author"]
+                remote_follow_status_url = f"{base_host}/api/authors/{follower_serial}/following/{quote(author.get('id'))}"
+                response = requests.post(
+                    remote_follow_status_url,
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                )
+
+                if response.status_code == 404: # User not a follower of remote follower
+                    return Response({"message": "Friends-only post is not sent to remote node."}, status=status.HTTP_200_OK)
             
+            
+            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
             response = requests.post(
                 remote_inbox_url,
                 json=payload,
