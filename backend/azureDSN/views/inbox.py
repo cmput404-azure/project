@@ -549,16 +549,12 @@ class InboxView(APIView):
             parsed_url = urlparse(remote_host)
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
             remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
-
-            remote_node = NodeUser.objects.filter(host__contains=remote_host).first()
-            if not remote_node:
-                return Response({"error": f"Node for {remote_host} not found."}, status=status.HTTP_404_NOT_FOUND)
             
             response = requests.post(
-                    remote_inbox_url,
-                    json=payload,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                )
+                remote_inbox_url,
+                json=payload,
+                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+            )
 
             if response.status_code == 200:
                 return Response({"message": "Post successfully sent to remote inbox."}, status=status.HTTP_200_OK)
@@ -578,10 +574,6 @@ class InboxView(APIView):
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
             remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox/"
 
-            remote_node = NodeUser.objects.filter(host__contains=remote_host).first()
-            if not remote_node:
-                return Response({"error": f"Node for {remote_host} not found."}, status=status.HTTP_404_NOT_FOUND)
-            
             response = requests.post(
                 remote_inbox_url,
                 json=payload,

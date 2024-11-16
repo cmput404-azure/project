@@ -52,7 +52,6 @@ class AuthorsView(APIView):
         """
         GET [local, remote] get all authors on the node
         """
-       
         authors = User.objects.filter(type="author")
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(authors, request)
@@ -131,10 +130,6 @@ class AuthorsSpecificView(APIView):
                     # Send request to remote server to get remote author's info
                     parsed_url = urlparse(author_fqid)
                     base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-
-                    remote_node = NodeUser.objects.filter(host__contains=base_host).first()
-                    if not remote_node:
-                        return Response({"error": "Node credentials not found."}, status=status.HTTP_404_NOT_FOUND)
 
                     remote_author_url = f"{base_host}/api/authors/{author_serial}"
                     response = requests.get(
