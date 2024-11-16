@@ -1,3 +1,4 @@
+import os
 from urllib.parse import quote, unquote, urljoin, urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -54,8 +55,10 @@ class PublicStreamView(APIView):
                             
                             try:
                                 # Perform the GET request
-                                response = requests.get(get_post_url,
-                                auth=HTTPBasicAuth("NodeA", "!Summer2024!"))
+                                response = requests.get(
+                                    get_post_url,
+                                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                                )
 
                                 if response.status_code == 200:
                                     post_data = response.json()  
