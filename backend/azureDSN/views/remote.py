@@ -2,7 +2,7 @@ from urllib.parse import quote, urlparse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from ..models.user import NodeUser
+from ..models import NodeUser, Follow
 from requests.auth import HTTPBasicAuth
 import requests, random, os
 
@@ -73,37 +73,10 @@ class RemoteFolloweeView(APIView):
         """
             Checks if our local user with `local_serial` is following remote followee with `remote_fqid`
         """
-        try:
-            parsed = urlparse(remote_fqid)
-            base_host = f"{parsed.scheme}://{parsed.netloc}"
-            remote_serial = remote_fqid.rstrip('/').split('/')[-1]
+        # Instead of calling remote server, we can check our Follow table
+        follower = Follow.objects.filter(local_follower_id=local_serial, remote_followee__contains=remote_fqid)
 
-            parsed_local = urlparse(os.getenv('BASE_URL'))
-            base_local = f"{parsed_local.scheme}://{parsed_local.netloc}"
-            encoded_local = quote(f"{base_local}/api/authors/{local_serial}")
-
-            api_url = f"{base_host}/api/authors/{remote_serial}/followers/{encoded_local}"
-            print(f"Sending to: {api_url}")
-
-            # try:
-            #     node_user = NodeUser.objects.get(host__contains=base_host)
-            # except ObjectDoesNotExist :
-            #     return Response({'error': 'Node not found for the provided host'}, status=404)
-
-            response = requests.get(
-                api_url,
-                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-            )
-
-            if response.status_code == 404:
-                # User is not a follower
-                return Response({'is_follower': False}, status=404)
-            elif response.status_code == 200:
-                # User is a follower
-                return Response({'is_follower': True}, status=200)
-            else:
-                # No permission from remote node
-                return Response({'error': 'Unable to check following status'}, status=response.status_code)
-
-        except Exception as e:
-            return Response({'error': str(e)}, status=500)
+        if follower:
+            return Response({'is_follower': True}, status=200)
+        else:
+            return Response({'is_follower': False}, status=404)
