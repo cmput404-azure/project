@@ -46,20 +46,16 @@ export default function ListItem({
   const [isUpdatedPost, setIsUpdatedPost] = useState(false);
   const [isDeletedPost, setIsDeletedPost] = useState(false);
   const navigate = useNavigate();
-  const [userId, setUserId] = useState("");
   const [isRemote, setIsRemote] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const userListId = extractUUID(user.id);
-      setUserId(userListId);
-      
       let following = false;
       if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
-        // check if current user is already following the (local) user  
-        const currentUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
-        const encodedURL = encodeURIComponent(currentUser.id);
-        following = await FollowService.checkFollowing(userListId, encodedURL);
+        // check if current user is already following the (local) user
+        const loggedInFQID = `${process.env.REACT_APP_API_BASE_URL}/api/authors/${authProvider.user.uuid}`
+        const encodedURL = encodeURIComponent(loggedInFQID);
+        following = await FollowService.checkFollowing(extractUUID(user.id), encodedURL);
       } else {
         try {
           following = await api.get(`/api/check/${authProvider.user.uuid}/follows/${user.id}`);
