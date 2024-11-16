@@ -211,8 +211,6 @@ export default function PublicProfile() {
     navigate("/login");
   }
 
-  // just refresh the page for now
-
   if (!authorData)
     return (
       <div className="loading">
