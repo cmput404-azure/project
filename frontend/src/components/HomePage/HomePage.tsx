@@ -10,6 +10,9 @@ import Post from "../Post/Post";
 import PostBar from "../PostBar/PostBar";
 import styles from "./HomePage.module.scss";
 import AuthorPost from "../AuthorPost/AuthorPost";
+import follow from "../../service/follow";
+import profileService from "../../service/profile";
+import _ from 'lodash';
 
 type ViewType = "all" | "unlisted_friends-only";
 
@@ -25,6 +28,7 @@ const HomePage = () => {
   const [privatePage, setPrivatePage] = useState(1);
   const [totalPublicPages, setTotalPublicPages] = useState(0);
   const [totalPrivatePages, setTotalPrivatePages] = useState(0);
+  const [localUsers, setLocalUsers] = useState<any[]>([]);
   const pageSize = 15;
   const authProvider = useAuth();
 
@@ -56,12 +60,19 @@ const HomePage = () => {
           setIsUserLoading(false); // user not authenticated
           return;
         }
+        // Get users haven't followed
+        const following = await follow.getFollowing(authProvider.user.uuid);
+        const allUsers = await profileService.fetchAllAuthors()
+        
+        // Filter out all users that current user already follows
+        const followingIds = new Set(following.map((following) => following.id));
+        const strangers = allUsers.filter(
+          (user) => !followingIds.has(user.id || authProvider.user.uuid) && user.type != "node"
+        );
 
-        const response = await api.get<{ recommended_authors: Author[] }>('/api/authors/recommended/');
-        if (response.status === 200) {
-          const randomAuthors = response.data.recommended_authors;
-          setRecommended(randomAuthors);
-        }
+        // Get all the remote authors
+        const remoteUsers = await profileService.fetchRecommendedAuthors();
+        setRecommended( _.shuffle([...strangers, ...remoteUsers]));
         
       } catch (err) {
         console.error("Something went wrong: ", err);

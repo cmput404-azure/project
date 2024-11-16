@@ -65,9 +65,22 @@
     font-size: 18px;
     font-weight: bold;
   }
+
+  // From Gemini 16/11/2024
+  .add-button.requested {
+    border-radius: 12px; 
+    padding: 4px 12px; 
+    width: auto; 
+    min-width: 80px; 
+    margin-left: auto; 
+    font-size: 14px;
+    text-align: center; 
+    transition: all 0.3s ease; 
+    color:#333
+  }
+  
   
 
-  
   /* Post content section */
   .post-content {
     font-size: 14px;
