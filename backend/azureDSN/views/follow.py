@@ -17,6 +17,7 @@ def fetch_remote_follower_data(remote_url):
     try:
         # Parse the remote URL to get the host and remote author uuid
         remote_url = unquote(remote_url)
+        print(f"Decoded: {remote_url}")
         parsed_url = urlparse(remote_url)
         base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
         author_uuid = os.path.split(parsed_url.path.rstrip('/'))[-1]
