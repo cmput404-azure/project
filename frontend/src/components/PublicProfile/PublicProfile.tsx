@@ -64,8 +64,10 @@ export default function PublicProfile() {
 
   const fetchProfileData = async () => {
     if (userID) {
+      setPosts([]); // clear previous posts, this ensures that when going from one public profile to another, hte previous posts are not shown
       const author = await ProfileService.fetchAuthorData(userID);
       setAuthorData(author);
+      setPage(1);
       await fetchPosts(userID);
     }
   };
@@ -97,6 +99,12 @@ export default function PublicProfile() {
     if (authProvider.isAuthenticated === undefined) {
       setIsAuthLoading(true);
       return;
+    }
+
+    // this makes sure that the button for following/managing profile is displayed correctly
+    if (userID !== authProvider.user.uuid) {
+      setIsOwnProfile(false);
+      fetchPosts(userID);
     }
 
     setIsAuthLoading(false);
