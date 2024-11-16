@@ -13,6 +13,7 @@ export interface Author {
 }
 
 export interface User{
+    host: string;
     username: string;
     uuid: string;
     profileImage: string | null;
