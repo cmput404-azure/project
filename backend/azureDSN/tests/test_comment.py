@@ -3,8 +3,9 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from ..models import Comment, Post, User
-
+from unittest.mock import patch
 class CommentsAPITest(APITestCase):
+    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
         self.client = APIClient()
         
