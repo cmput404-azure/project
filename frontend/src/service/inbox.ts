@@ -108,12 +108,12 @@ class InboxService {
            inbox_item: object - the inbox item to be sent
     @returns: message: string 
     */
-    public async sendPostToInbox(fqid: string, inbox_item: object): Promise<string> {
+    public async sendPostToInbox(fqid: string, inbox_item: object): Promise<any> {
         const uuid = fqid.split('/').pop()
         // handle local/remote in backend
         try {
-            const inboxResponse = await api.post<{ message: string }>(`/api/authors/${uuid}/inbox/`, inbox_item);
-            return inboxResponse.data.message;
+            const inboxResponse = await api.post<any>(`/api/authors/${uuid}/inbox/`, inbox_item);
+            return inboxResponse.status;
         } catch (error) {
             console.error(`Error sending object to inbox of ${fqid}:`, error);
             return "Error";
