@@ -496,7 +496,8 @@ class InboxView(APIView):
 
             elif payload["type"].lower() == "comment":
                 # To-do: Commenting on a remote post in my local stream
-                pass
+                return self.send_comment_to_remote(payload, request)
+
 
             else:
                 return Response({"error": "User not found locally and type not supported for remote authors."}, status=status.HTTP_400_BAD_REQUEST)
@@ -674,6 +675,8 @@ class InboxView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+    def send_comment_to_remote(self, payload, request):
+        pass
     '''
     payload is a comment object
     id is http://{server}/api/authors/{user_id}/commented/{comment_id}
