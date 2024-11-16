@@ -112,7 +112,6 @@ class NodeConnectionView(APIView):
             Check if incoming connection requests have valid credentials allowing them to connect to our node.
         """
         authorization_header = request.headers.get('Authorization') # e.g. Basic <base64-encoded-credentials>
-        print(authorization_header)
 
         if not authorization_header:
             return Response({'error': 'No Authorization header'}, status=status.HTTP_400_BAD_REQUEST)
@@ -126,12 +125,8 @@ class NodeConnectionView(APIView):
         decoded_credentials = base64.b64decode(auth_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':')
 
-        # expected_username = os.getenv('NODE_USERNAME', 'default')
-        # expected_password = os.getenv('NODE_PASSWORD', 'defaultpass')
-
-        expected_username = "NodeA"
-        expected_password = "!Summer2024!"
-        print(expected_username, expected_password)
+        expected_username = os.getenv('NODE_USERNAME', 'default')
+        expected_password = os.getenv('NODE_PASSWORD', 'defaultpass')
 
         if username == expected_username and password == expected_password:
             return Response({'message': 'Connected successfully'}, status=status.HTTP_200_OK)
@@ -153,7 +148,7 @@ class NodeConnectionView(APIView):
             # Send a test GET request to the remote node's API with basic auth
             response = requests.get(
                 node_url, # assume this ends with /api/
-                auth=HTTPBasicAuth(username, password),
+                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                 timeout=5
             )
             # Check if the connection is successful

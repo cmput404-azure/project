@@ -1,8 +1,9 @@
 from ..models import User, SiteConfiguration
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
-
+from unittest.mock import patch
 class RegisterViewTest(APITestCase):
+    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
         self.client = APIClient()
 

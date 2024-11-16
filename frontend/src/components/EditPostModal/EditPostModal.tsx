@@ -14,14 +14,14 @@ interface EditPostModalProps {
   post: {
     title: string;
     content: string;
-    visibility: number;
+    visibility: any;
     contentType: string;
     description: string;
   } | null; // Allow post to be null or undefined
   onSubmit: (updatedPost: {
     title: string;
     content: string;
-    visibility: number;
+    visibility: any;
   }) => void;
 }
 
@@ -48,7 +48,9 @@ export default function EditPostModal({
 }: EditPostModalProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [visibility, setVisibility] = useState<number>(0);
+  const [visibility, setVisibility] = useState<number>(
+    post.visibility == "PUBLIC" ? 1 : post.visibility == "FRIENDS-ONLY" ? 2 : 3
+  );
   const [contentType, setContentType] = useState(`${post.contentType}`);
   const [disabled, setDisabled] = useState(true);
 
@@ -58,13 +60,23 @@ export default function EditPostModal({
       // Check if post is defined
       setTitle(post.title);
       setContent(post.content);
-      setVisibility(post.visibility);
+      setVisibility(
+        post.visibility == "PUBLIC"
+          ? 1
+          : post.visibility == "FRIENDS-ONLY"
+          ? 2
+          : 3
+      );
     }
   }, [isOpen, post]);
 
   // Disable save button if there are no edits made
   useEffect(() => {
-    if (title === post.title && content === post.content && visibility === post.visibility) {
+    if (
+      title === post.title &&
+      content === post.content &&
+      visibility === post.visibility
+    ) {
       setDisabled(true);
     } else {
       setDisabled(false);
@@ -122,16 +134,16 @@ export default function EditPostModal({
               fullWidth
               onChange={(e) => setContent(e.target.value)}
               sx={{
-                '& .MuiOutlinedInput-root': {
-                   padding: 0,
+                "& .MuiOutlinedInput-root": {
+                  padding: 0,
                 },
-                '& .MuiOutlinedInput-notchedOutline': {
-                   border: 'none',
+                "& .MuiOutlinedInput-notchedOutline": {
+                  border: "none",
                 },
-                '& textarea': {
-                  resize: 'none', // Remove resize handle
+                "& textarea": {
+                  resize: "none", // Remove resize handle
                 },
-             }}
+              }}
             />
           )}
         </div>
@@ -166,7 +178,11 @@ export default function EditPostModal({
             variant="contained"
             disabled={disabled}
             onClick={handleSave}
-            sx={{ backgroundColor: "#70ffaf", color: "black", transition: "0.3s ease-in-out" }}
+            sx={{
+              backgroundColor: "#70ffaf",
+              color: "black",
+              transition: "0.3s ease-in-out",
+            }}
           >
             Save
           </Button>

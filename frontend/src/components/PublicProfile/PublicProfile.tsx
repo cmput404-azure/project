@@ -54,13 +54,20 @@ export default function PublicProfile() {
   const navigate = useNavigate();
 
   const authProvider = useAuth();
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const { userID } = useParams<{ userID: string }>();
 
+  useEffect(() => {
+    fetchProfileData();
+  }, [userID]);
+
   const fetchProfileData = async () => {
     if (userID) {
+      setPosts([]); // clear previous posts, this ensures that when going from one public profile to another, hte previous posts are not shown
       const author = await ProfileService.fetchAuthorData(userID);
       setAuthorData(author);
+      setPage(1);
       await fetchPosts(userID);
     }
   };
@@ -88,10 +95,14 @@ export default function PublicProfile() {
   };
 
   useEffect(() => {
-    fetchProfileData();
-  }, [userID]);
+    // Wait for authProvider to initialize
+    if (authProvider.isAuthenticated === undefined) {
+      setIsAuthLoading(true);
+      return;
+    }
 
-  useEffect(() => {
+    setIsAuthLoading(false);
+
     async function fetchCounts() {
       try {
         const followers = await FollowService.getFollowers(userID);
@@ -121,7 +132,7 @@ export default function PublicProfile() {
       await Promise.all(
         userInbox.map(async (item: any) => {
           if (item && item.type === "follow") {
-            let actorId = item.actor.id.replace(/\/+$/, '').split('/').pop();
+            let actorId = item.actor.id.replace(/\/+$/, "").split("/").pop();
             if (actorId === authProvider.user.uuid) {
               setIsRequested(true);
             }
@@ -131,17 +142,32 @@ export default function PublicProfile() {
     }
 
     fetchCounts();
+
     if (authProvider.isAuthenticated === false) {
       setIsAuthenticated(false);
+      // this makes sure that the button for following/managing profile is displayed correctly
+      setIsOwnProfile(false);
+      fetchPosts(userID);
     } else {
       if (userID === authProvider.user.uuid) {
         setIsOwnProfile(true);
       } else {
+        // this makes sure that the button for following/managing profile is displayed correctly
+        setIsOwnProfile(false);
         checkRequested();
         checkFollowing();
       }
     }
-  }, [userID]);
+  }, [userID, authProvider]);
+
+  // Render loading indicator until authProvider is ready
+  if (isAuthLoading) {
+    return (
+      <div className="loading">
+        <CircularProgress sx={{ color: "#70ffaf" }} />
+      </div>
+    );
+  }
 
   function getLink() {
     const currentURL = window.location.href;
@@ -220,8 +246,8 @@ export default function PublicProfile() {
                     isOwnProfile
                       ? handleManageProfileClick
                       : isAuthenticated
-                        ? handleButtonClick
-                        : handleLoginClick
+                      ? handleButtonClick
+                      : handleLoginClick
                   }
                   disabled={isRequested}
                   sx={{ backgroundColor: "#70ffaf", color: "black" }}
@@ -229,10 +255,10 @@ export default function PublicProfile() {
                   {isOwnProfile
                     ? "Manage Profile"
                     : isRequested
-                      ? "Requested"
-                      : isFollowing
-                        ? "Unfollow"
-                        : "Follow"}
+                    ? "Requested"
+                    : isFollowing
+                    ? "Unfollow"
+                    : "Follow"}
                 </Button>
 
                 {authorData.github && (
@@ -261,7 +287,8 @@ export default function PublicProfile() {
                       })
                     }
                   >
-                    <b>{followersCount}</b> {followersCount === 1 ? "follower" : "followers"}
+                    <b>{followersCount}</b>{" "}
+                    {followersCount === 1 ? "follower" : "followers"}
                   </p>
                   <p
                     className={styles.following__count}
@@ -303,7 +330,12 @@ export default function PublicProfile() {
 
         <section className={styles.posts}>
           {posts.map((post) => (
-            <Post key={post.id} postGiven={post} canToggleComments={false} />
+            <Post
+              key={post.id}
+              postGiven={post}
+              canToggleComments={false}
+              disableLikeComment={true}
+            />
           ))}
           {page < totalPages && (
             <Button
