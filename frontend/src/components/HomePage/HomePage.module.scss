@@ -21,6 +21,7 @@
   display: flex;
   flex: 1;
   flex-direction: column;
+  align-items: center; /* Centers items horizontally */
   gap: 20px; 
   max-width: 380px;
   overflow-y: auto; /* Enables vertical scrolling */

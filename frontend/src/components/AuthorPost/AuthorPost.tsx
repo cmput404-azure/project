@@ -12,7 +12,9 @@ interface AuthorPostProps {
 const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
   const authProvider = useAuth();
   const [isRequested, setIsRequested] = useState(false); 
-
+  const truncateText = (text: string, maxLength: number) => {
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
   const handleAddButton = async () => {
     const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
     const myInfo = userResponse.data;
@@ -72,9 +74,11 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
           {isRequested ? 'Requested' : '+'}
         </button>
       </div>
-      <div className={styles['post-content']}>
-        <p>{author.bio}</p>
-      </div>
+      {author.bio && author.bio.trim() !== "" && (
+        <div className={styles['post-content']}>
+          <p>{truncateText(author.bio, 100)}</p>
+        </div>
+      )}
     </div>
   );
 };

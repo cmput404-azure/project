@@ -1,6 +1,6 @@
 .author-post {
     border-radius: 8px;
-    padding: 25px 30px;
+    padding: 20px 25px;
     width: 100%;
     max-width: 300px;
     background-color: #777777; /* Gray background for the entire box */
@@ -11,7 +11,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px; 
   }
   
   .author-info {
@@ -83,7 +82,7 @@
 
   /* Post content section */
   .post-content {
-    font-size: 14px;
+    font-size: 140px;
     color: #ffffff;
     margin-top: 8px; /* Reduced margin */
     text-align: left;
