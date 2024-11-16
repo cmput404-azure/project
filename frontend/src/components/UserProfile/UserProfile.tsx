@@ -241,6 +241,7 @@ export default function UserProfile() {
               postGiven={post}
               canToggleComments={false}
               disableLikeComment={true}
+              onDeletePost={onDeletePost}
             />
           ))}
           {page < totalPages && (
