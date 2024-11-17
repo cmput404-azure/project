@@ -24,10 +24,6 @@ class TokenOrBasicAuthPermission(BasePermission):
         # If no CSRF or BasicAuth, check if the request is for the login endpoint
         if (request.path).rstrip('/') == '/api/login':
             return True
-        
-        # If no CSRF or BasicAuth, check if the request is for the login endpoint
-        if (request.path).rstrip('/') == '/api/login':
-            return True
 
         return False
     

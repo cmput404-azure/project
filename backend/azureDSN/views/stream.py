@@ -38,13 +38,12 @@ class PublicStreamView(APIView):
         remote_posts = {}
         for inbox in Inbox.objects.all(): # Iterate through all local inboxes
             for item in inbox.items.filter(remote_payload__isnull=False):
-                print(f"ITEM: {item.post_status}")
                 remote_payload = item.remote_payload
                 if remote_payload.get("type") == "post": # And get the public remote posts
                     post_id = remote_payload.get("id")
                     visibility = remote_payload.get("visibility")
                     
-                    if visibility == "PUBLIC" and item.post_status.upper() != "DELETE":
+                    if visibility == "PUBLIC" and (item.post_status == None or item.post_status.upper() != "DELETE"):
                         if post_id and post_id not in remote_posts: # Add if this post hasn't been added
                               # Commented out since not sure how to resolve
 #                             author_host = remote_payload["author"]["host"]
@@ -72,8 +71,7 @@ class PublicStreamView(APIView):
                             print(f"Added post with id: {post_id}")
                             remote_posts[post_id] = remote_payload
                         else:
-                            print(f"Might be updated: {post_id}")
-                            if item.post_status.upper() == "UPDATE":
+                            if item.post_status and item.post_status.upper() == "UPDATE":
                                 # There's a newer version of this post
                                 remote_posts[post_id] = remote_payload
 
@@ -133,9 +131,6 @@ class AuthStreamView(APIView):
         }
     )
     def get(self, request):
-        print("Req: ", request)
-        print("user: ", request.user)
-
         if request.user.is_authenticated:
             author_uuid = request.user.uuid
             user = get_object_or_404(User, uuid=author_uuid)
@@ -157,8 +152,6 @@ class AuthStreamView(APIView):
                 local_followee=user,
                 local_follower__in=local_followees
             ).values_list('local_follower_id', flat=True)
-
-            print(f"People I'm friends with: {friends}")
 
             # Query for local followees' unlisted posts
             followees_unlisted_posts = Post.objects.filter(

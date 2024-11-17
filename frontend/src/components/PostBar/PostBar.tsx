@@ -13,6 +13,7 @@ import inbox from "../../service/inbox";
 import { useAuth } from "../../state";
 import { normalizeURL } from "../../util/formatting/normalizeURL";
 import styles from "./PostBar.module.scss";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 interface PostBarProps {
   author?: any;
@@ -192,7 +193,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       const friends = await follow.getFriends(authProvider.user.uuid);
 
       // Send to followers if post is public or unlisted
-      if (visibilityNumber === 1 || visibilityNumber === 3) {
+      if (normalizeVisibility(visibilityNumber) === 1 || normalizeVisibility(visibilityNumber) === 3) {
         for (const follower of followers) {
           if (normalizeURL(follower.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
             await inbox.sendPostToInbox(follower.id, postResponse.data);
