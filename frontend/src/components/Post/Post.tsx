@@ -21,7 +21,6 @@ import ShareService from "../../service/share";
 import styles from "./Post.module.scss";
 import ShareDialogue from "../Post/ShareDialogue";
 import EllipseMenu from "../EllipseMenu/EllipseMenu";
-import { PostData } from "../../models/models";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -63,6 +62,7 @@ export default function Post({
       try {
 
         if (postID) {
+          console.log(`with postID: ${postID}`)
           const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
           let postDataList = [];
@@ -129,7 +129,7 @@ export default function Post({
         } else {
           setPost(postGiven);
 
-          if (authProvider.user) {
+          if (authProvider.user && postGiven.likes.count > 0) {
             setHasLiked(
               postGiven.likes.src.some((like) =>
                 like.id.includes(authProvider.user.uuid)
@@ -143,7 +143,11 @@ export default function Post({
             setHasShared(isShared);
           }
 
-          setCommentList(postGiven.comments.src.reverse());
+          setCommentList(
+            postGiven.comments.count > 0
+              ? postGiven.comments.src.reverse()
+              : []
+          );
           setLikeCount(
             Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
           );
@@ -278,7 +282,8 @@ export default function Post({
         object: post.id,
         post_host: postGiven.author.host
       };
-
+      console.log(post.author.id)
+      console.log(postGiven.author.host)
       await inbox.sendPostToInbox(post.author.id, like_obj);
       setLikeCount(likeCount + 1);
       setHasLiked(true);
