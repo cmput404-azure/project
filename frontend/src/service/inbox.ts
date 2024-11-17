@@ -1,4 +1,5 @@
 import { Inbox, InboxItem } from "../models/models";
+import { extractUUID } from "../util/formatting/extractUUID";
 import { api } from "./config";
 
 class InboxService {
@@ -35,8 +36,8 @@ class InboxService {
         visibility: number
     ): Promise<string> {
         try {
-            post_id = post_id.split('/').pop()
-            uuid = uuid.split('/').pop()
+            post_id = extractUUID(post_id);
+            uuid = extractUUID(uuid);
             const response = await api.put<{ message: string }>(`/api/authors/${uuid}/inbox/`, {
                 id: post_id,
                 title,
@@ -59,8 +60,8 @@ class InboxService {
     */
     public async deleteInboxPost(uuid: string, post_id: string): Promise<string> {
         try {
-            post_id = post_id.split('/').pop()
-            uuid = uuid.split('/').pop()
+            post_id = extractUUID(post_id);
+            uuid = extractUUID(uuid);
             const config = {
                 headers: {},
                 data: {
@@ -109,8 +110,7 @@ class InboxService {
     @returns: status
     */
     public async sendPostToInbox(fqid: string, inbox_item: object): Promise<any> {
-        const uuid = fqid.split('/').pop()
-        // handle local/remote in backend
+        const uuid = extractUUID(fqid);
         try {
             const inboxResponse = await api.post<any>(`/api/authors/${uuid}/inbox/`, inbox_item);
             return inboxResponse.status;
@@ -127,7 +127,7 @@ class InboxService {
     @returns: message: string 
     */
     public async sendCommentToInbox(uuid: string, inbox_item: object): Promise<Comment | null> {
-        uuid = uuid.split('/').pop()
+        uuid = extractUUID(uuid);
         try {
             const inboxResponse = await api.post<Comment>(`/api/authors/${uuid}/inbox/`, inbox_item);
             return inboxResponse.data;

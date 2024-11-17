@@ -19,6 +19,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 BASE_URL = env('BASE_URL', default='http://localhost:8000')
+INTERNAL_API_SECRET = os.getenv('INTERNAL_API_SECRET')
+if not INTERNAL_API_SECRET:
+    raise ValueError("INTERNAL_API_SECRET is not set in the environment variables.")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
