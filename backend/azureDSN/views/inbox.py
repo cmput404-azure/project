@@ -11,6 +11,7 @@ from ..serializers import *
 from ..models import *
 import requests, os
 from datetime import datetime
+from django.db.models import Q
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
@@ -349,16 +350,13 @@ class InboxView(APIView):
                 post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
                 post_obj = Post.objects.get(uuid=post_id)
                 
-                # Local post: Update inbox and modify existing post status
-                create_inbox_item(inbox_obj, post_obj, post_status="update")
-                
                 # Find the old version of that posts in inbox   
                 post_content_type = ContentType.objects.get(model="post")
                 inbox_item_obj = InboxItem.objects.filter(
                     inbox=inbox_obj,
                     content_type=post_content_type,
-                    object_id=payload['id']  # Filtering by the specific post ID
-                )
+                    object_id=post_id,  # Filtering by the specific post ID
+                ).exclude(post_status__in=["delete", "edited"])
                 
                 # Modify the post_status to edited 
                 if inbox_item_obj.exists():
@@ -366,30 +364,34 @@ class InboxView(APIView):
                         item.post_status = "edited"
                         item.save()
                         
+                # Local post: Update inbox and modify existing post status
+                create_inbox_item(inbox_obj, post_obj, post_status="update")
+                        
                 return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
             
             except Post.DoesNotExist: 
-                # Remote post: Update inbox and modify existing remote payload status
-                payload["modified"] = datetime.now
-                create_inbox_item(inbox_obj, remote_payload=payload, post_status="update")
-                
                 # Find the old version of that posts in inbox
                 existing_item_obj = InboxItem.objects.filter(
                     inbox=inbox_obj,
-                    remote_payload__id=payload['id']  # Check if remote_payload's id matches the incoming id
-                )
+                    remote_payload__id=post_id,  # Check if remote_payload's id matches the incoming id
+                ).exclude(post_status__in=["delete", "edited"])
                 
                 # Modify the post_status to edited
                 if existing_item_obj.exists():
                     for item in existing_item_obj:
                         item.post_status = "edited"
                         item.save()
+                
+                # Remote post: Update inbox and modify existing remote payload status
+                payload["modified"] = datetime.now
+                create_inbox_item(inbox_obj, remote_payload=payload, post_status="update")
 
                 return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
         
         except User.DoesNotExist:
             # author_serial is remote user
-            return self.send_updated_post_to_remote(payload)
+            # return self.send_updated_post_to_remote(payload)
+            return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
     
     def send_updated_post_to_remote(self, payload):
         """
