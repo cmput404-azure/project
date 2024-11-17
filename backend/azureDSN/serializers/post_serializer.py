@@ -46,7 +46,8 @@ class PostSerializer(serializers.ModelSerializer):
 
         # settings.BASE_URL will always work as long as you have .env file now
         base_url = settings.BASE_URL
-        post_url = f'authors/{author_uuid}/posts/{post_uuid}'
+        print(f"Base URL: {base_url}")
+        post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
         
         # Fetch all likes of the post
@@ -62,7 +63,7 @@ class PostSerializer(serializers.ModelSerializer):
             representation['likes'] = []
             
         # Fetch all comments of the post
-        comment_url = f"{base_url}authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
+        comment_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
         
         try:
             response = requests.get(comment_url)
