@@ -11,7 +11,6 @@ from ..serializers import *
 from ..models import *
 import requests, os
 from datetime import datetime
-from django.db.models import Q
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
@@ -325,9 +324,11 @@ class InboxView(APIView):
                     > local post:
                         + Create another inbox item with type post, post_status is update
                         + Find the previous post with matching post_id, set post_status to edited
+                        + If this is the 2+ times update same post, previous update is called update-old
                     > remote post:
                         + Create another inbox item with with remote payload, post_status is update
                         + Find the previous remote_payload with type post and set post_status to edited
+                        + If this is the 2+ times update same post, previous update is called update-old
             - if objet does not exist => remote user:
                 + we just simply send a put request with a whole edited post obj to their endpoint
         return message indicating successful or not
@@ -373,25 +374,30 @@ class InboxView(APIView):
                 # Find the old version of that posts in inbox
                 existing_item_obj = InboxItem.objects.filter(
                     inbox=inbox_obj,
-                    remote_payload__id=post_id,  # Check if remote_payload's id matches the incoming id
+                    remote_payload__id=payload["id"],  # Check if remote_payload's id matches the incoming id
                 ).exclude(post_status__in=["delete", "edited"])
                 
                 # Modify the post_status to edited
                 if existing_item_obj.exists():
                     for item in existing_item_obj:
-                        item.post_status = "edited"
+                        if (item.post_status == "update"):
+                            # this means these are the last update
+                            item.post_status = "update-old"
+                        else:
+                            item.post_status = "edited"
                         item.save()
                 
                 # Remote post: Update inbox and modify existing remote payload status
-                payload["modified"] = datetime.now
+                if "modified_at" not in payload:
+                    payload["modified_at"] =  datetime.now().isoformat()
                 create_inbox_item(inbox_obj, remote_payload=payload, post_status="update")
 
                 return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
         
         except User.DoesNotExist:
             # author_serial is remote user
-            # return self.send_updated_post_to_remote(payload)
-            return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
+            return self.send_updated_post_to_remote(payload)
+            # return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
     
     def send_updated_post_to_remote(self, payload):
         """
