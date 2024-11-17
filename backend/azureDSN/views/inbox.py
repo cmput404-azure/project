@@ -10,6 +10,7 @@ from urllib.parse import urlparse, quote
 from ..serializers import *
 from ..models import *
 import requests, os
+from datetime import datetime
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
@@ -299,7 +300,7 @@ class InboxView(APIView):
             'application/json': {
                 'type': 'object',
                 'properties': {
-                    'id': {'type': 'string', 'format': 'uuid', 'description': 'UUID of the post to update'},
+                    'id': {'type': 'string', 'format': 'uuid', 'description': 'fqid of the post to update'},
                     'title': {'type': 'string', 'description': 'New title of the post', 'maxLength': 255},
                     'content': {'type': 'string', 'description': 'New content of the post'},
                     'visibility': {'type': 'string', 'description': 'New visibility of the post'}
@@ -314,25 +315,127 @@ class InboxView(APIView):
         tags=['Inbox API']
     )
     def put(self, request, author_serial):
-        user_object = get_object_or_404(User, uuid=author_serial)
-        inbox_obj = get_object_or_404(Inbox, user=user_object)
+        '''
+        We can't send directly to remote inbox => we have to send it from our backend
+        Idea is to send the whole post obj that is edited with the receiver object
+        The backend itself has to check if the author_serial exists in the User model
+            - if exists => local user:
+                + for local user, we have to further check if the post send to us is remote post or local post
+                    > local post:
+                        + Create another inbox item with type post, post_status is update
+                        + Find the previous post with matching post_id, set post_status to edited
+                    > remote post:
+                        + Create another inbox item with with remote payload, post_status is update
+                        + Find the previous remote_payload with type post and set post_status to edited
+            - if objet does not exist => remote user:
+                + we just simply send a put request with a whole edited post obj to their endpoint
+        return message indicating successful or not
+        '''
         payload = request.data
+       
+        if "type" not in payload:
+            return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
+        
         try: 
-            parsed_url = urlparse(payload["id"]) 
-            post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
-            post_obj = Post.objects.get(uuid=post_id)
-            # local post
+            user_object = User.objects.get(uuid=author_serial)
             inbox_obj = get_object_or_404(Inbox, user=user_object)
-            create_inbox_item(inbox_obj, post_obj, post_status="update")
-            return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
+            
+            # author_serial is local user
+            if "follower" in payload:
+                del payload["follower"] # we not sure if follower is sent with or not but local user won't need it anyway
+            
+            try: 
+                parsed_url = urlparse(payload["id"]) 
+                post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+                post_obj = Post.objects.get(uuid=post_id)
+                
+                # Local post: Update inbox and modify existing post status
+                create_inbox_item(inbox_obj, post_obj, post_status="update")
+                
+                # Find the old version of that posts in inbox   
+                post_content_type = ContentType.objects.get(model="post")
+                inbox_item_obj = InboxItem.objects.filter(
+                    inbox=inbox_obj,
+                    content_type=post_content_type,
+                    object_id=payload['id']  # Filtering by the specific post ID
+                )
+                
+                # Modify the post_status to edited 
+                if inbox_item_obj.exists():
+                    for item in inbox_item_obj:
+                        item.post_status = "edited"
+                        item.save()
+                        
+                return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
+            
+            except Post.DoesNotExist: 
+                # Remote post: Update inbox and modify existing remote payload status
+                payload["modified"] = datetime.now
+                create_inbox_item(inbox_obj, remote_payload=payload, post_status="update")
+                
+                # Find the old version of that posts in inbox
+                existing_item_obj = InboxItem.objects.filter(
+                    inbox=inbox_obj,
+                    remote_payload__id=payload['id']  # Check if remote_payload's id matches the incoming id
+                )
+                
+                # Modify the post_status to edited
+                if existing_item_obj.exists():
+                    for item in existing_item_obj:
+                        item.post_status = "edited"
+                        item.save()
+
+                return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
         
-        except Post.DoesNotExist: # remote post
-            # If post is from remote user, treat it as a json object
-            inbox_obj = get_object_or_404(Inbox, user=user_object)
-            create_inbox_item(inbox_obj, remote_payload=payload, post_status="update")
-            return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            # author_serial is remote user
+            return self.send_updated_post_to_remote(payload)
+    
+    def send_updated_post_to_remote(self, payload):
+        """
+        Send updated post to a remote user's inbox.
         
-        
+        Handles cases where the `visibility` is set to "FRIENDS" and verifies 
+        if the remote follower has accepted the follow request.
+        """
+        try:
+            remote_follower = payload["follower"]
+            del payload["follower"] # reconstruct payload to post object format
+
+            follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
+            remote_host = remote_follower.get("host")
+            parsed_url = urlparse(remote_host)
+            base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+
+            if payload["visibility"] == "FRIENDS":
+                # Need a check here if remote follower indeed has accepted follow request of post's author in their node
+                author = payload["author"]
+                encoded_url = quote(author.get('id'), safe='')
+                remote_follow_status_url = f"{base_host}/api/authors/{follower_serial}/followers/{encoded_url}"
+                
+                response = requests.get(
+                    remote_follow_status_url,
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                )
+
+                if response.status_code == 404: # User not a follower of remote follower
+                    return Response({"message": "Friends-only post is not sent to remote node."}, status=status.HTTP_200_OK)
+            
+            # Send the updated post to the remote inbox
+            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
+            response = requests.put(
+                remote_inbox_url,
+                json=payload,
+                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+            )
+
+            if response.status_code == 200:
+                return Response({"message": "Post successfully sent to remote inbox."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": f"Failed to send post: {response.text}"}, status=response.status_code)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @extend_schema(
         summary="Add Item to Inbox",
