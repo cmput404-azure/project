@@ -1,20 +1,27 @@
-import { Button, CircularProgress } from "@mui/material";
-import PublicIcon from "@mui/icons-material/Public";
-import PeopleIcon from "@mui/icons-material/People";
+import { Button, CircularProgress, Drawer } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useAuth } from "../../state";
-import { api } from "../../service/config";
-import stream from "../../service/stream";
+
 import { Author } from "../../models/models";
+import AuthorPost from "../AuthorPost/AuthorPost";
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import PeopleIcon from "@mui/icons-material/People";
 import Post from "../Post/Post";
 import PostBar from "../PostBar/PostBar";
+import PublicIcon from "@mui/icons-material/Public";
+import _ from 'lodash';
+import { api } from "../../service/config";
+import { extractUUID } from "../../util/formatting/extractUUID";
+import follow from "../../service/follow";
+import profileService from "../../service/profile";
+import stream from "../../service/stream";
 import styles from "./HomePage.module.scss";
-import AuthorPost from "../AuthorPost/AuthorPost";
+import { useAuth } from "../../state";
 
 type ViewType = "all" | "unlisted_friends-only";
 
 const HomePage = () => {
   const [recommended, setRecommended] = useState<Author[]>([]); // list of remote authors for now, but should make it local if no remote connection, and make sure it's only people
+  const [recommendedDrawer, setRecommendedDrawer] = useState<boolean>(false);
   const [publicPosts, setPublicPosts] = useState<any[]>([]);
   const [privatePosts, setPrivatePosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -25,6 +32,7 @@ const HomePage = () => {
   const [privatePage, setPrivatePage] = useState(1);
   const [totalPublicPages, setTotalPublicPages] = useState(0);
   const [totalPrivatePages, setTotalPrivatePages] = useState(0);
+  const [localUsers, setLocalUsers] = useState<any[]>([]);
   const pageSize = 15;
   const authProvider = useAuth();
 
@@ -56,18 +64,28 @@ const HomePage = () => {
           setIsUserLoading(false); // user not authenticated
           return;
         }
+        // Get users haven't followed
+        const following = await follow.getFollowing(authProvider.user.uuid);
+        const allUsers = await profileService.fetchAllAuthors()
 
-        const response = await api.get<{ recommended_authors: Author[] }>('/api/authors/recommended/');
-        if (response.status === 200) {
-          const randomAuthors = response.data.recommended_authors;
-          setRecommended(randomAuthors);
-        }
-        
+        // Filter out all users that current user already follows
+        const followingIds = new Set(following.map((following) => following.id));
+        const strangers = allUsers.filter(
+          (user) =>
+            !followingIds.has(user.id) &&
+            extractUUID(user.id) !== authProvider.user.uuid &&
+            user.type !== "node"
+        );
+
+        // Get all the remote authors
+        const remoteUsers = await profileService.fetchRecommendedAuthors();
+        setRecommended(_.shuffle([...strangers, ...remoteUsers]));
+
       } catch (err) {
         console.error("Something went wrong: ", err);
       }
     }
-    
+
     fetchUser();
     fetchRecommended();
   }, [authProvider.user]); // This effect runs when authProvider.user changes
@@ -77,7 +95,7 @@ const HomePage = () => {
     privatePage = 1,
   ) => {
     if (isUserLoading) return;
-  
+
     try {
       const publicResponse = await stream.getStream(false, publicPage);
       const privateResponse = await stream.getStream(true, privatePage);
@@ -102,7 +120,7 @@ const HomePage = () => {
 
       setTotalPublicPages(Math.ceil(publicResponse.count / pageSize));
       setTotalPrivatePages(Math.ceil(privateResponse.count / pageSize));
-  
+
       setIsLoading(false);
 
     } catch (err) {
@@ -151,19 +169,17 @@ const HomePage = () => {
         {authProvider.isAuthenticated && (
           <div className={styles.icon_bar}>
             <div
-              className={`${styles.icon_section} ${
-                activeFilterPost === "all" ? styles.active : ""
-              }`}
+              className={`${styles.icon_section} ${activeFilterPost === "all" ? styles.active : ""
+                }`}
               onClick={() => handleFilterPost("all")}
             >
               <PublicIcon className={styles.icon} />
             </div>
             <div
-              className={`${styles.icon_section} ${
-                activeFilterPost === "unlisted_friends-only"
-                  ? styles.active
-                  : ""
-              }`}
+              className={`${styles.icon_section} ${activeFilterPost === "unlisted_friends-only"
+                ? styles.active
+                : ""
+                }`}
               onClick={() => handleFilterPost("unlisted_friends-only")}
             >
               <PeopleIcon className={styles.icon} />
@@ -206,14 +222,36 @@ const HomePage = () => {
       </div>
 
 
-      {authProvider.isAuthenticated && <div className={styles.authorSection}>
-          <h2 className={styles.recommendedTitle}>Recommended for you</h2>
-          {recommended.map((author) => (
-            <AuthorPost key={author.id} author={author}/>
-          ))}
-      </div>}
+      {authProvider.isAuthenticated &&
+        <div className={styles.drawer}>
+          <Button className={styles.recommended__button} size="small" onClick={() => setRecommendedDrawer(true)}>
+            <KeyboardDoubleArrowLeftIcon />
+          </Button>
+          <Drawer
+            open={recommendedDrawer}
+            anchor="right"
+            onClose={() => setRecommendedDrawer(false)}
+            PaperProps={{
+              sx: { bgcolor: "#555", color: "#fff" },
+            }}
+          >
+            <RecommendedAuthors authors={recommended} />
+          </Drawer>
+        </div>
+      }
     </div>
   );
 };
 
 export default HomePage;
+
+export function RecommendedAuthors({ authors }: { authors: Author[] }) {
+  return (
+    <div className={styles.recommended}>
+      <h2 className={styles.recommendedTitle}>Recommended for you</h2>
+      {authors.map((author) => (
+        <AuthorPost key={author.id} author={author} />
+      ))}
+    </div>
+  );
+}

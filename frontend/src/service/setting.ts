@@ -33,7 +33,7 @@ class SettingService {
      */
     public async updateToggle(newStatus: boolean) {
         try {
-            const request = await api.post<ConfigResponse>('/api/config/', {
+            const request = await api.put<ConfigResponse>('/api/config/', {
                 require_approval: newStatus
             });
             return request.data;
@@ -50,6 +50,56 @@ class SettingService {
             console.error("Error fetching list of nodes: ", err);
             return [];
         }
+    }
+
+    public async addNode(username: string, password: string, fullUrl: string) {
+        try {
+            const response = await api.post('/api/nodes/add/', {
+                username: username,
+                password: password,
+                host: fullUrl,
+            });
+            return response.data; // success message
+
+        } catch (error) {
+            if (error.response) {
+                return error.response.data; // informational error message from the backend
+            }
+            throw new Error('An unexpected error occurred');
+        }
+    }
+
+    public async updateNode(username: string, password: string, fullUrl: string, status: boolean) {
+        try {
+            const response = await api.put('/api/nodes/update/', {
+                username: username,
+                password: password,
+                host: fullUrl,
+                is_authenticated: status
+            });
+            return response.data;
+
+        } catch (error) {
+            if (error.response) {
+                return error.response.data;
+            }
+            throw new Error('An unexpected error occurred');
+        }
+    }
+
+    public async deleteNode(username: string) {
+        try {
+            const response = await api.delete(`/api/nodes/delete/?username=${username}`);
+            if (response.status === 200) {
+              console.log('Node deleted successfully');
+              return response.data;
+            } else {
+              throw new Error('Failed to delete node');
+            }
+          } catch (error) {
+            console.error('Error deleting node:', error);
+            throw error;
+          }
     }
 }
 

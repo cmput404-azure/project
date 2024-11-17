@@ -1,4 +1,4 @@
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from ..models import User, Post, Follow
@@ -10,7 +10,9 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
-import requests
+from django.conf import settings
+import requests, os
+from requests.auth import HTTPBasicAuth
 
 class AuthorPostView(APIView):
     """
@@ -55,16 +57,11 @@ class AuthorPostView(APIView):
             - Authenticated locally as friend of author: public + friends-only posts.
             - Authenticated as remote node: This probably should not happen. Remember, the way remote node becomes aware of local posts is by local node pushing those posts to inbox, not by remote node pulling.
         """
-        # TODO: remote node handling
         if not User.objects.filter(uuid=author_serial).exists(): 
             return Response("Author does not exist.", status=404)
 
-        # If both author and post serials are provided
         if (author_serial and post_serial):
-            # Retrieve the author
             author = get_object_or_404(User, uuid=author_serial)
-            
-            # Retrieve the post
             post = get_object_or_404(Post, uuid=post_serial, user=author)
 
             # Check visibility for permission logic:
@@ -158,11 +155,18 @@ class AuthorPostView(APIView):
             post.title = request.data.get('title', post.title)
             post.content = request.data.get('content', post.content)
             post.description = request.data.get('description', post.description)
-            post.visibility = request.data.get('visibility', post.visibility)
+
+            # Convert to integer
+            visibility_map = {v: k for k, v in Post.VISIBILITY_CHOICES}
+            received_visibility = request.data.get('visibility', post.visibility)
+
+            if isinstance(received_visibility, str):
+                received_visibility = visibility_map.get(received_visibility.upper(), post.visibility)
+
+            post.visibility = received_visibility
             post.modified_at = request.data.get('modified_at', post.modified_at)
             post.modified_at = timezone.now()  # update the modified time
 
-            # save the changes
             post.save()
 
             # return the updated post data using the serializer
@@ -210,11 +214,9 @@ class AuthorPostView(APIView):
         DELETE [local] remove a post
             - local posts: must be authenticated locally as the author
         """
-        # check if user exists
         if not User.objects.filter(uuid=author_serial).exists():
             return Response("Author does not exist.", status=404)
 
-        # check if user is authenticated
         if not request.user.is_authenticated:     
             return Response("You must be authenticated to delete a post.", status=403)
            
@@ -245,7 +247,6 @@ class PostsPagination(PageNumberPagination):
             "count": self.page.paginator.count,
             "src": data,
         })
-
 
 class AuthorPostsAllView(APIView):
     """
@@ -303,7 +304,7 @@ class AuthorPostsAllView(APIView):
 
         self.fetch_github_activity(author)
 
-        posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3]).order_by('-created_at')
+        posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3]).order_by('-modified_at')
         # Likes and Comments will be handled in PostSerializer below
 
         if request.user.is_authenticated:
@@ -336,7 +337,7 @@ class AuthorPostsAllView(APIView):
     
     @extend_schema(
         summary="Create a new post",
-        description="Create a new post. Currently, likes and comments are not created since there's no reason to have likes, comments, etc. because it doesn't exist yet",
+        description="Create a new post with the expected structure.",
         request=PostSerializer,
         responses={
             status.HTTP_201_CREATED: OpenApiResponse(response=PostSerializer, description='Post created successfully'),
@@ -367,11 +368,9 @@ class AuthorPostsAllView(APIView):
         
         author = User.objects.get(uuid=author_serial)
         author_data = UserSerializer(author).data
-        print(f"Passed UserSerializer: {author_data}")
         author_data["id"] = author.uuid
         request.data["author"] = author_data
 
-        # print(request.data)
         serializer = CreatePostSerializer(data=request.data, partial=True)
 
         if serializer.is_valid():
@@ -382,7 +381,6 @@ class AuthorPostsAllView(APIView):
 
             return Response(response, status=status.HTTP_201_CREATED)
         if not serializer.is_valid():
-            print("Validation Errors:", serializer.errors)  # Print errors
             return Response(serializer.errors, status=400)
         
     def fetch_github_activity(self, author):
@@ -410,7 +408,6 @@ class AuthorPostsAllView(APIView):
 
                 serializer = CreatePostSerializer(data=event_post)
                 if serializer.is_valid():
-                    print("Saving post...")
                     serializer.save()
                 else:
                     print("Error saving post:", serializer.errors)
@@ -560,21 +557,58 @@ class PostView(APIView):
         if post_fqid:
             decoded_post_fqid = unquote(post_fqid)
             post_serial = decoded_post_fqid.split("/")[-1]
-            print("POST_SERIAL", post_serial)
             UUID(post_serial)
-            post = get_object_or_404(Post, uuid=post_serial)
+
+            post_visibility = ""
+            post_data = ""
+
+            print("POST_URL", decoded_post_fqid)
+
+            parsed_url = urlparse(decoded_post_fqid)
+            host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            
+            if host.strip().lower() == os.getenv('BASE_URL', 'http://localhost:8000').strip().lower():
+            # if (host == os.getenv('BASE_URL', 'http://localhost:8000')):
+                post = get_object_or_404(Post, uuid=post_serial)
+                post_visibility = post.visibility
+                serializer = PostSerializer(post)
+                post_data = serializer.data
+            else:
+                response = requests.get(decoded_post_fqid)
+                response = requests.get(
+                    decoded_post_fqid,
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME').strip(), os.getenv('NODE_PASSWORD').strip()),
+                )
+                data = response.json()  # Parse the JSON response
+                post_visibility = data.get("visibility")
+                post_data = data
+
+            # if host!=base_url:
+            #     response = requests.get(decoded_post_fqid)
+            #     response = requests.get(
+            #         decoded_post_fqid,
+            #         auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+            #     )
+            #     data = response.json()  # Parse the JSON response
+            #     post_visibility = data.get("visibility")
+            #     post_data = data
+            # else:
+            #     post = get_object_or_404(Post, uuid=post_serial)
+            #     post_visibility = post.visibility
+            #     serializer = PostSerializer(post)
+            #     post_data = serializer.data
+
 
             # Check the visibility of the post
-            if post.visibility == 1: # Anyone can see PUBLIC posts
+            if post_visibility in (1, "PUBLIC"): # Anyone can see PUBLIC posts
                 pass
-            elif post.visibility in (2, 3):  # FRIENDS or UNLISTED
+            elif post_visibility in (2, 3):  # FRIENDS or UNLISTED
                 if not request.user.is_authenticated:
                     return Response("Authentication required to view this post.", status=403)
-            elif post.visibility == 4:  # DELETED
+            elif post_visibility == 4:  # DELETED
                 if not (request.user.is_authenticated and request.user.is_staff):
                     return Response("Post does not exist.", status=404) # Don't disclose information for security purposes
             
-            serializer = PostSerializer(post)
-            return Response(serializer.data, status=200)
+            return Response(post_data, status=200)
         else:
             return Response("No post ID specified", status=400)

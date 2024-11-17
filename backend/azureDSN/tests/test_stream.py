@@ -1,8 +1,10 @@
+from unittest.mock import patch
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from ..models import Post, User, Follow
 
 class StreamViewTest(APITestCase):
+    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
         self.client = APIClient()
 
@@ -174,4 +176,3 @@ class StreamViewTest(APITestCase):
         # In the frontend, you can't view the auth stream because the button is hidden, so instead of returning error code, it returns empty array
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(returned_posts), 0) # empty, because user is unauthenticated, can't fetch non-public posts as that is specific to user
-

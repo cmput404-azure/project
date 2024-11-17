@@ -73,7 +73,7 @@ export interface PostData {
     likes: PostLike;
     published: string;
     modified_at:string;
-    visibility: number;
+    visibility: string;
     shared_by?: string; // only for share functionality
 }
 

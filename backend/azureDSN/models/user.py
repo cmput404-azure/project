@@ -81,7 +81,7 @@ class NodeUser(User):
     # Only require username, password, host (url of the remote node)
     # keep created_at and modified_at for consistency with other models
     # Add one more Boolean field that says if the node is authenticated or not (is_authenticated)
-    is_authenticated = models.BooleanField(default=False)
+    is_authenticated = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         # Explicitly set profile_image to None to avoid file processing attempts

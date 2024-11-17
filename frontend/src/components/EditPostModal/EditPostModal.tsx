@@ -7,6 +7,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Modal from "react-modal";
 import styled from "@mui/material/styles/styled";
 import styles from "./EditPostModal.module.scss";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -14,14 +15,14 @@ interface EditPostModalProps {
   post: {
     title: string;
     content: string;
-    visibility: number;
+    visibility: any;
     contentType: string;
     description: string;
   } | null; // Allow post to be null or undefined
   onSubmit: (updatedPost: {
     title: string;
     content: string;
-    visibility: number;
+    visibility: any;
   }) => void;
 }
 
@@ -48,7 +49,7 @@ export default function EditPostModal({
 }: EditPostModalProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [visibility, setVisibility] = useState<number>(0);
+  const [visibility, setVisibility] = useState<number>(normalizeVisibility(post.visibility) as number);
   const [contentType, setContentType] = useState(`${post.contentType}`);
   const [disabled, setDisabled] = useState(true);
 
@@ -58,13 +59,17 @@ export default function EditPostModal({
       // Check if post is defined
       setTitle(post.title);
       setContent(post.content);
-      setVisibility(post.visibility);
+      setVisibility(normalizeVisibility(post.visibility) as number);
     }
   }, [isOpen, post]);
 
   // Disable save button if there are no edits made
   useEffect(() => {
-    if (title === post.title && content === post.content && visibility === post.visibility) {
+    if (
+      title === post.title &&
+      content === post.content &&
+      normalizeVisibility(visibility) === normalizeVisibility(post.visibility)
+    ) {
       setDisabled(true);
     } else {
       setDisabled(false);
@@ -74,7 +79,8 @@ export default function EditPostModal({
   const handleSave = () => {
     if (post) {
       // Ensure post is defined before saving
-      onSubmit({ title, content, visibility });
+      const normalizedVisibility = normalizeVisibility(visibility, true);
+      onSubmit({ title, content, visibility: normalizedVisibility });
       onRequestClose(); // close modal after saving
     }
   };
@@ -122,16 +128,16 @@ export default function EditPostModal({
               fullWidth
               onChange={(e) => setContent(e.target.value)}
               sx={{
-                '& .MuiOutlinedInput-root': {
-                   padding: 0,
+                "& .MuiOutlinedInput-root": {
+                  padding: 0,
                 },
-                '& .MuiOutlinedInput-notchedOutline': {
-                   border: 'none',
+                "& .MuiOutlinedInput-notchedOutline": {
+                  border: "none",
                 },
-                '& textarea': {
-                  resize: 'none', // Remove resize handle
+                "& textarea": {
+                  resize: "none", // Remove resize handle
                 },
-             }}
+              }}
             />
           )}
         </div>
@@ -166,7 +172,11 @@ export default function EditPostModal({
             variant="contained"
             disabled={disabled}
             onClick={handleSave}
-            sx={{ backgroundColor: "#70ffaf", color: "black", transition: "0.3s ease-in-out" }}
+            sx={{
+              backgroundColor: "#70ffaf",
+              color: "black",
+              transition: "0.3s ease-in-out",
+            }}
           >
             Save
           </Button>

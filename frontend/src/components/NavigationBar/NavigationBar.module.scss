@@ -92,24 +92,27 @@
 }
 
 .modalHeader {
+    position: relative;
     display: flex;
+    justify-content: center;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0px;
-    margin-top:0px;
+    padding: 10px;
 }
-
+  
 .modalTitle {
-    flex-grow: 1;
+    margin: 0;
+    font-size: 1.5rem;
     text-align: center;
-    color:black;
-    margin:0
 }
-
+  
 .closeModalButton {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 8px; 
     margin:0;
+    position: absolute; // relative to the .modalHeader
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
 }
