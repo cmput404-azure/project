@@ -42,7 +42,7 @@ class PublicStreamView(APIView):
                     post_id = remote_payload.get("id")
                     visibility = remote_payload.get("visibility")
                     
-                    if visibility == "PUBLIC":
+                    if visibility == "PUBLIC" and item.post_status.upper() != "DELETE":
                         if post_id and post_id not in remote_posts: # Add if this post hasn't been added
                             print(f"Added post with id: {post_id}")
                             remote_posts[post_id] = remote_payload
