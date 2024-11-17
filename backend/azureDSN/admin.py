@@ -4,6 +4,23 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import *
 
+class ConnectionStatusFilter(admin.SimpleListFilter):
+    title = 'Connection Status'
+    parameter_name = 'connection_status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('connected', 'Connected'),
+            ('not_connected', 'Not Connected'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'connected':
+            return queryset.filter(is_authenticated=True)
+        if self.value() == 'not_connected':
+            return queryset.filter(is_authenticated=False)
+        return queryset
+
 # Need this for inline editing in Django Admin panel
 class SiteConfigurationAdmin(admin.ModelAdmin):
     list_display = ('id', 'require_approval')
