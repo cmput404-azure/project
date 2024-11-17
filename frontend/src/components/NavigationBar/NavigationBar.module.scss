@@ -92,28 +92,27 @@
 }
 
 .modalHeader {
-    position: relative; /* Enables positioning of child elements */
+    position: relative;
     display: flex;
-    justify-content: center; /* Center the header text horizontally */
-    align-items: center; /* Vertically center items */
+    justify-content: center;
+    align-items: center;
     padding: 10px;
-  }
-  
-.modalTitle {
-    margin: 0; /* Remove default margin */
-    font-size: 1.5rem; /* Adjust size as needed */
-    text-align: center; /* Center text inside the flex container */
 }
   
-
+.modalTitle {
+    margin: 0;
+    font-size: 1.5rem;
+    text-align: center;
+}
+  
 .closeModalButton {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 8px; 
     margin:0;
-    position: absolute; /* Fixes the button in one spot relative to the .modalHeader */
-    right: 20px; /* Adjust the distance from the right edge */
-    top: 50%; /* Center vertically relative to .modalHeader */
-    transform: translateY(-50%); /* Corrects vertical alignment */
+    position: absolute; // relative to the .modalHeader
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
 }
