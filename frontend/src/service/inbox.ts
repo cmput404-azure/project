@@ -26,7 +26,7 @@ class InboxService {
     */
     public async updateInboxPost(
         uuid: string,
-        post_obj: PostData
+        post_obj: any
     ): Promise<string> {
         try {
             uuid = uuid.split('/').pop()
@@ -45,7 +45,7 @@ class InboxService {
                post_obj: Post - the deleted post object
         @returns: message: string
     */
-    public async deleteInboxPost(uuid: string, post_obj: PostData): Promise<string> {
+    public async deleteInboxPost(uuid: string, post_obj: any): Promise<string> {
         try {
             uuid = uuid.split('/').pop()
             const config = {
