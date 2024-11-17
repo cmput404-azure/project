@@ -29,6 +29,7 @@ import ShareDialogue from "../Post/ShareDialogue";
 import EllipseMenu from "../EllipseMenu/EllipseMenu";
 
 import { PostData } from "../../models/models";
+import { normalizeURL } from "../../util/formatting/normalizeURL";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -125,8 +126,6 @@ export default function Post({
             // Call the function to check the share status
             checkIfShared();
           }
-
-          console.log(postData);
           setPost(postData);
 
           setCommentList(postData.comments.src.reverse());
@@ -139,7 +138,7 @@ export default function Post({
         } else {
           setPost(postGiven);
 
-          if (authProvider.user) {
+          if (authProvider.user && postGiven.likes?.count > 0) {
             setHasLiked(
               postGiven.likes.src.some((like) =>
                 like.id.includes(authProvider.user.uuid)
@@ -153,12 +152,16 @@ export default function Post({
             setHasShared(isShared);
           }
 
-          setCommentList(postGiven.comments.src.reverse());
+          setCommentList(
+            postGiven.comments?.count > 0
+              ? postGiven.comments.src.reverse()
+              : []
+          );
           setLikeCount(
-            Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
+            postGiven.likes ? postGiven.likes.count : 0
           );
           setCommentCount(
-            Array.isArray(postGiven.comments) ? 0 : postGiven.comments.count
+            postGiven.comments ? postGiven.comments.count : 0
           );
         }
       } catch (error) {
@@ -218,12 +221,17 @@ export default function Post({
     }
   }, [post]);
 
+  // To refresh comment count when comment modal is closed
   useEffect(() => {
     const fetchPost = async () => {
       if (postGiven) {
+        // only call if post is local otherwise this is going to raise error
+        if (normalizeURL(postGiven.author.host) !== process.env.REACT_APP_API_BASE_URL) {
+          return;
+        }
         let encodedId = encodeURIComponent(postGiven.id);
-        const postData = await postService.getPost(`api/posts/${encodedId}`);
-        const comments = postData.comments?.src
+        const postData = await postService.getPost(`api/posts/${encodedId}`); // this endpoint only works on local post
+        const comments = postData.comments
           ? postData.comments.src.reverse()
           : [];
         setCommentList(comments);

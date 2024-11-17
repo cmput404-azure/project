@@ -1,12 +1,10 @@
-import os
 from rest_framework import serializers
 from ..models import Post, User
 from .user_serializer import UserSerializer
 from rest_framework.response import Response
-import base64
 from django.conf import settings
 from urllib.parse import urljoin
-import requests
+import requests, base64
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
@@ -15,7 +13,7 @@ class PostSerializer(serializers.ModelSerializer):
     
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
-    published = serializers.DateTimeField(source='created_at')
+    published = serializers.DateTimeField(source='modified_at')
     
     class Meta:
         model = Post
@@ -50,9 +48,10 @@ class PostSerializer(serializers.ModelSerializer):
         
         # Fetch all likes of the post
         like_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
+        headers = {"Internal-Auth": settings.INTERNAL_API_SECRET} # To get through the auth layer
         
         try:
-            response = requests.get(like_url)
+            response = requests.get(like_url, headers=headers)
             if response.status_code == 200:
                 representation['likes'] = response.json()
             else:
@@ -64,7 +63,7 @@ class PostSerializer(serializers.ModelSerializer):
         comment_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
         
         try:
-            response = requests.get(comment_url)
+            response = requests.get(comment_url, headers=headers)
             if response.status_code == 200:
                 representation['comments'] = response.json()
             else:
@@ -94,7 +93,7 @@ class PostSerializer(serializers.ModelSerializer):
         post.description = validated_data.get('description', post.description)
         post.contentType = validated_data.get('contentType', post.contentType)
         post.content = validated_data.get('content', post.content)
-        post.published = validated_data.get('published', post.published)
+        post.published = validated_data.get('published', post.modified_at)
         post.modified_at = validated_data.get('modified_at', post.modified_at)
         post.visibility = validated_data.get('visibility', post.visibility)
         post.save()
