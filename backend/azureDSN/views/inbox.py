@@ -216,7 +216,7 @@ class InboxView(APIView):
     )
     def delete(self, request, author_serial):
         '''
-        When delete a post, I expect no type but the body is a deleted post object
+        When delete a post, the body is a deleted post object
         When reject/accept a follow request, body is a follow request object
         if payload is empty = no body, we clear the inbox
         '''
@@ -230,6 +230,9 @@ class InboxView(APIView):
             return Response({"message": "delete all inbox items successfully"}, status=status.HTTP_200_OK)
         
         if "type" not in payload:
+            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if payload["type"].lower() == "post":   
             return self.delete_post(author_serial, request)
         elif payload["type"].lower() == "follow":
             return self.delete_follow_request(author_serial, payload, request)
@@ -239,7 +242,7 @@ class InboxView(APIView):
     '''
     The deleted post might be local or remote
     '''
-    def delete_post(self, author_serial, payload, request):
+    def delete_post(self, author_serial, request):
         '''
         We can't send directly to remote inbox => we have to send it from our backend
         Idea is to send the whole post obj that is deleted with the receiver object
