@@ -99,7 +99,7 @@ const HomePage = () => {
     try {
       const publicResponse = await stream.getStream(false, publicPage);
       const privateResponse = await stream.getStream(true, privatePage);
-
+      
       setPublicPosts(prevPosts => {
         const existingIds = new Set(prevPosts.map(post => post.id));
         const newPublicPosts = publicResponse.src.filter(post => !existingIds.has(post.id));

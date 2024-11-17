@@ -52,8 +52,8 @@ class LikesAPITest(APITestCase):
         # Check response data
         self.assertEqual(response.data['type'], f"like")
         self.assertEqual(response.data['author']["displayName"], f"{self.user.display_name}")
-        self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/liked/{self.like.uuid}")
-        self.assertEqual(response.data['object'], f"http://testserver/api/authors/{self.user.uuid}/posts/{self.post.uuid}")
+        self.assertEqual(response.data['id'], f"{settings.BASE_URL}/api/authors/{self.user.uuid}/liked/{self.like.uuid}")
+        self.assertEqual(response.data['object'], f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}")
 
     def test_get_like_invalid_serial(self):
         # Test calling the endpoint with either invalid author serial or like serial, should return 404
@@ -87,8 +87,8 @@ class LikesAPITest(APITestCase):
 
         self.assertEqual(response.data['type'], f"like")
         self.assertEqual(response.data['author']["displayName"], f"{self.user.display_name}")
-        self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/liked/{self.like.uuid}")
-        self.assertEqual(response.data['object'], f"http://testserver/api/authors/{self.user.uuid}/posts/{self.post.uuid}")
+        self.assertEqual(response.data['id'], f"{settings.BASE_URL}/api/authors/{self.user.uuid}/liked/{self.like.uuid}")
+        self.assertEqual(response.data['object'], f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}")
 
     def test_get_like_invalid_fqid(self):
         # Test calling the endpoint using an invalid Like uuid that invalidates the FQID, should return 400

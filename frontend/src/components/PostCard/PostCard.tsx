@@ -21,6 +21,7 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, B
 import { api } from "../../service/config";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import auth from "../../service/auth";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 interface PostCardProps {
   post: Post
@@ -217,7 +218,7 @@ function PostCard({
         </div>
 
         <div className={styles.icon}>
-          {post.visibility === 3 || isAuthor || isAdmin || post.visibility === 1 ? ( // friend post doesnt have a link 
+          {normalizeVisibility(post.visibility) === 3 || isAuthor || isAdmin || normalizeVisibility(post.visibility) === 1 ? ( // friend post doesnt have a link 
             <Tooltip title="copy link">
               <i className="fas fa-link" onClick={handleGetLink}></i>
             </Tooltip>
@@ -249,7 +250,7 @@ function PostCard({
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
-          {post.visibility === 1 ? (
+          {normalizeVisibility(post.visibility) === 1 ? (
             <div className={styles.icon} onClick={handleClickShare}>
               <i className="fas fa-share"></i>
             </div>

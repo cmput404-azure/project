@@ -11,6 +11,7 @@ import follow from "../../service/follow";
 import inbox from "../../service/inbox";
 import EditPostModal from "../EditPostModal/EditPostModal";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 const StyledMenu = styled((props: MenuProps) => (
   <Menu
@@ -127,22 +128,29 @@ export default function EllipseMenu({
       await api.put(
         `/api/authors/${extractUUID(authorUUID)}/posts/${postId}/`,
         updatedPost
-      );
+      ); // Model will auto convert integer to string
 
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target =
-        updatedPost.visibility === 1 || updatedPost.visibility === 3
+        normalizeVisibility(postData.visibility) === 1 || normalizeVisibility(postData.visibility) === 3
           ? followers
           : friends;
       for (const recipient of target) {
-        await inbox.updateInboxPost(
-          recipient.id,
-          postId,
-          updatedPost.title,
-          updatedPost.content,
-          updatedPost.visibility
-        );
+        const post_obj = {
+          ...postData,
+          ...(postData.type ? {} : { type: "post" }),
+          title: updatedPost.title,
+          content: updatedPost.content,
+          visibility: normalizeVisibility(updatedPost.visibility, true) as string,
+          follower: {
+            type: "author",
+            id: recipient.id,
+            host: recipient.host,
+          }
+        };
+
+        await inbox.updateInboxPost(recipient.id, post_obj);
       }
 
       // Update local postData state
@@ -150,7 +158,7 @@ export default function EllipseMenu({
         ...postData,
         title: updatedPost.title,
         content: updatedPost.content,
-        visibility: updatedPost.visibility,
+        visibility: normalizeVisibility(updatedPost.visibility, true) as string,
       });
 
       closeEditModal();
@@ -169,15 +177,24 @@ export default function EllipseMenu({
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target =
-        postData.visibility === 1 || postData.visibility === 3
+        normalizeVisibility(postData.visibility) === 1 || normalizeVisibility(postData.visibility) === 3
           ? followers
           : friends;
       for (const recipient of target) {
-        await inbox.deleteInboxPost(recipient.id, postId);
+        const deletedPost = {
+          ...postData,
+          ...(postData.type ? {} : { type: "post" }),
+          follower: {
+            type: "author",
+            id: recipient.id,
+            host: recipient.host,
+          }
+        };
+        await inbox.deleteInboxPost(recipient.id, deletedPost);
       }
 
       // Update postData state to indicate deletion
-      setPostData({ ...postData, visibility: 4 });
+      setPostData({ ...postData, visibility: "DELETED" });
       closeDeleteModal();
       onDelete(postData.id);
     } catch (error) {
