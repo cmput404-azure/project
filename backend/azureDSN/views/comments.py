@@ -105,7 +105,7 @@ class MultipleCommentsView(APIView):
 
             post_obj = get_object_or_404(Post, uuid=post_id)
 
-        comments = Comment.objects.filter(post=post_obj)
+        comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
 
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(comments, request)
