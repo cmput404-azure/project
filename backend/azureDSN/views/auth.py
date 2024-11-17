@@ -121,6 +121,7 @@ class CheckAuthView(APIView):
             response = {
                 'is_authenticated': True,
                 'user': {
+                    'host': request.user.host,
                     'username': request.user.username,
                     'uuid': request.user.uuid,
                     'profileImage': request.user.profile_image if request.user.profile_image else None,
