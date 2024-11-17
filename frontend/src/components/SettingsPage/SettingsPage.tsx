@@ -1,16 +1,17 @@
+import { Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
+import { useEffect, useState } from 'react';
+
 import DeleteIcon from '@mui/icons-material/Delete';
 import Paper from '@mui/material/Paper';
-import { Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import setting from '../../service/setting';
 import { styled } from '@mui/material/styles';
 import styles from './SettingsPage.module.scss';
-import setting from '../../service/setting';
-import { useEffect, useState } from 'react';
 
 const StyledTextField = styled(TextField)(() => ({
    '& .MuiInputBase-root': {
@@ -73,8 +74,8 @@ export default function CustomizedTables() {
    const [password, setPassword] = useState('');
    const [status, setStatus] = useState(true);
    const [errorMessage, setErrorMessage] = useState('');
-   
-   function createData (host: string, username: string, password: string, status: boolean) {
+
+   function createData(host: string, username: string, password: string, status: boolean) {
       return { host, username, password, status };
    }
 
@@ -139,9 +140,9 @@ export default function CustomizedTables() {
          const response = await setting.deleteNode(username);
          fetchNodeList();
 
-       } catch (error) {
+      } catch (error) {
          console.error('Error deleting node:', error);
-       }
+      }
    };
 
    const fetchNodeList = async () => {
@@ -154,7 +155,7 @@ export default function CustomizedTables() {
       setRows(nodeRows);
    }
 
-   useEffect(() => { 
+   useEffect(() => {
       const fetchConfig = async () => {
          const val = await setting.getToggleValue();
          setRequireApproval(val);
@@ -169,7 +170,7 @@ export default function CustomizedTables() {
          <h1 className={styles.title}>Admin Settings</h1>
          <div className={styles.registration__toggle}>
             <p>Toggle registration approval</p>
-            <Switch checked={requireApproval} onChange={handleToggle}/>
+            <Switch checked={requireApproval} onChange={handleToggle} />
          </div>
          <Button
             variant="contained"
@@ -216,7 +217,7 @@ export default function CustomizedTables() {
                               size="small"
                               color="error"
                               onClick={() => handleDelete(row.username)}
-                              >
+                           >
                               <DeleteIcon />
                            </IconButton>
                         </StyledTableCell>
@@ -394,10 +395,10 @@ export default function CustomizedTables() {
                            },
                         }}
                         disabled={!nodeUrl || !username || !password}
-                        >
+                     >
                         Save
-                        </Button>
-                     </div>
+                     </Button>
+                  </div>
                </form>
             </Box>
          </Modal>

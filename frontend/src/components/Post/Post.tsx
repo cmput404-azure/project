@@ -22,6 +22,10 @@ import styles from "./Post.module.scss";
 import ShareDialogue from "../Post/ShareDialogue";
 import EllipseMenu from "../EllipseMenu/EllipseMenu";
 
+import { PostData } from "../../models/models";
+import { normalizeURL } from "../../util/formatting/normalizeURL";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
+
 interface PostProps {
   postGiven?: PostModel;
   canToggleComments?: boolean;
@@ -88,8 +92,8 @@ export default function Post({
                 encodedUrl
               );
               if (!authProvider.user.is_staff) {
-                if (postData.visibility !== 1) {
-                  if (!is_following && postData.visibility === 2) {
+                if (normalizeVisibility(postData.visibility) !== 1) {
+                  if (!is_following && normalizeVisibility(postData.visibility) === 2) {
                     setOpenSnackbar(true);
                     setShowAlert(true);
                     setTimeout(() => {
@@ -116,20 +120,20 @@ export default function Post({
             // Call the function to check the share status
             checkIfShared();
           }
-
+          
           setPost(postData);
 
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
-            Array.isArray(postData.likes) ? 0 : postData.likes.count
+            Array.isArray(postData.likes) ? 0 : (postData.likes?.count || 0)
           );
           setCommentCount(
-            Array.isArray(postData.comments) ? 0 : postData.comments.count
+            Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
           );
         } else {
           setPost(postGiven);
 
-          if (authProvider.user && postGiven.likes.count > 0) {
+          if (authProvider.user && postGiven.likes?.count > 0) {
             setHasLiked(
               postGiven.likes.src.some((like) =>
                 like.id.includes(authProvider.user.uuid)
@@ -144,15 +148,16 @@ export default function Post({
           }
 
           setCommentList(
-            postGiven.comments.count > 0
+            postGiven.comments?.count > 0
               ? postGiven.comments.src.reverse()
               : []
           );
+          
           setLikeCount(
-            Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
+            Array.isArray(postData.likes) ? 0 : (postData.likes?.count || 0)
           );
           setCommentCount(
-            Array.isArray(postGiven.comments) ? 0 : postGiven.comments.count
+            Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
           );
         }
       } catch (error) {
@@ -212,13 +217,17 @@ export default function Post({
     }
   }, [post]);
 
+  // To refresh comment count when comment modal is closed
   useEffect(() => {
     const fetchPost = async () => {
       if (postGiven) {
-        let encodedId = null;
-        encodedId = encodeURIComponent(postGiven.id);
-        const postData = await postService.getPost(`api/posts/${encodedId}`);
-        const comments = postData.comments?.src
+        // only call if post is local otherwise this is going to raise error
+        if (normalizeURL(postGiven.author.host) !== process.env.REACT_APP_API_BASE_URL) {
+          return;
+        }
+        let encodedId = encodeURIComponent(postGiven.id);
+        const postData = await postService.getPost(`api/posts/${encodedId}`); // this endpoint only works on local post
+        const comments = postData.comments
           ? postData.comments.src.reverse()
           : [];
         setCommentList(comments);
@@ -370,7 +379,7 @@ export default function Post({
             </span>
           </div>
           <div>
-            {post.visibility === 4 && (
+            {normalizeVisibility(post.visibility) === 4 && (
               <span className={styles.deletedLabel}>Deleted</span>
             )}
             {post.type === "shared" && (
@@ -446,7 +455,7 @@ export default function Post({
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
-          {post.visibility === 1 ? (
+          {normalizeVisibility(post.visibility) === 1 ? (
             <div
               className={`${styles.icon} ${hasShared ? styles.shared : ""}`}
               onClick={handleSharePost}

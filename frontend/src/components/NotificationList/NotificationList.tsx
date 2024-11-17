@@ -117,6 +117,10 @@ export default function NotificationList() {
         <p>{error}</p>
       ) : (
         <div>
+          {notifications.length === 0 ? (
+          // Display this message when there are no notifications
+          <p className={styles.noNotifications}>No notifications to display</p>
+        ) : (
           <ul className={styles.customList}>
             {notifications.map((item, index) => {
               if (item.type === "follow") {
@@ -171,6 +175,7 @@ export default function NotificationList() {
               return null;
             })}
           </ul>
+              )}
         </div>
       )}
     </div>

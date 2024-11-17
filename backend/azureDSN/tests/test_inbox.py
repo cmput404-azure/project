@@ -77,69 +77,315 @@ class InboxViewTestCase(TestCase):
         self.assertEqual(len(inbox_obj.items.all()), 1) # Ensure inbox is empty
 
     # Send a DELETE request to delete a post
-    def test_delete_local_post(self):
+    def test_delete_local_post_from_local_user(self):
         # Add a post into inbox
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         create_inbox_item(self.post, inbox_obj)
         payload = {
+            "author": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                "bio": "",
+                "displayName": "tino",
+                "github": "https://github.com/QuinNguyen02",
+                "host": "http://localhost:8001/api/",
+                "profileImage": "",
+                "username": "tino"
+            },
+            "comments": [],
+            "content": "dfsfdsf",
+            "contentType": "text/plain",
+            "description": "dsfdfsdf",
+            "follower": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
+                "host": "http://localhost:8001/api/"
+            },
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "second post",
             "type": "post",
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}"
+            "visibility": 3
         }
         
         response = self.client.delete(self.inbox_url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(inbox_obj.items.all()), 2) # Ensure inbox have one more item
+        self.assertEqual(len(inbox_obj.items.all()), 1) # we delete existing one and add one with delete status
         self.assertEqual(inbox_obj.items.last().post_status, "delete")
         
-    def test_delete_non_existent_local_post(self):
+    def test_delete_invalid_post_from_local_user(self):
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
-        
+        create_inbox_item(self.post, inbox_obj)
         # Define a payload with a non-existent post ID
         payload = {
+            "author": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                "bio": "",
+                "displayName": "tino",
+                "github": "https://github.com/QuinNguyen02",
+                "host": "http://localhost:8001/api/",
+                "profileImage": "",
+                "username": "tino"
+            },
+            "comments": [],
+            "content": "dfsfdsf",
+            "contentType": "text/plain",
+            "description": "dsfdfsdf",
+            "follower": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
+                "host": "http://localhost:8001/api/"
+            },
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe4c",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "second post",
             "type": "post",
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe4c"
+            "visibility": 3
         }
         
         response = self.client.delete(self.inbox_url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(inbox_obj.items.count(), 1)
+        self.assertEqual(inbox_obj.items.count(), 2) 
+        self.assertEqual(inbox_obj.items.last().post_status, "delete")
         
-    def test_delete_remote_post(self):
+    def test_delete_remote_post_from_local_user(self):
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         
-        # Define a payload with a post ID from a remote server
+        # Define a payload with a post ID doesn't exist in Post model
         payload = {
+            "author": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                "bio": "",
+                "displayName": "tino",
+                "github": "https://github.com/QuinNguyen02",
+                "host": "http://localhost:8001/api/",
+                "profileImage": "",
+                "username": "tino"
+            },
+            "comments": [],
+            "content": "dfsfdsf",
+            "contentType": "text/plain",
+            "description": "dsfdfsdf",
+            "follower": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
+                "host": "http://localhost:8001/api/"
+            },
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe4c",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "second post",
             "type": "post",
-            "id": "http://remote-server.com/api/authors/2677192c-bce3-4583-afe3-b6592155fe4c/posts/2677192c-bce3-4583-afe3-b6592155fe4c"
+            "visibility": 1    
         }
         
+        create_inbox_remote_post(payload, inbox_obj) # add remote post into the inbox
         response = self.client.delete(self.inbox_url, data=payload, format='json')
+        
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(inbox_obj.items.count(), 1) 
         self.assertIsNotNone(inbox_obj.items.last().remote_payload)
         self.assertEqual(inbox_obj.items.last().post_status, "delete")
 
-    # Test update existing post 
-    def test_update_existing_post(self):
-        # add post into inbox
-        payload = {
-            "type": "post",
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
-            "description": "This post is a test",
+    def test_delete_invalid_remote_post_from_local_user(self):
+        inbox_obj = Inbox.objects.get(user=self.user.uuid)
+        
+        # Define a payload with a post ID doesn't exist in Post model and Inbox model
+        remote_payload = {
+            "author": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                "bio": "",
+                "displayName": "tino",
+                "github": "https://github.com/QuinNguyen02",
+                "host": "http://localhost:8001/api/",
+                "profileImage": "",
+                "username": "tino"
+            },
+            "comments": [],
+            "content": "dfsfdsf",
             "contentType": "text/plain",
-            "content": "This is a test post",
-            "title": "Test Post",
-            "visibility": 1,
+            "description": "dsfdfsdf",
+            "follower": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
+                "host": "http://localhost:8001/api/"
+            },
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe5d",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "second post",
+            "type": "post",
+            "visibility": 1    
         }
 
+        create_inbox_remote_post(remote_payload, inbox_obj) # add remote post into the inbox
+        payload = {
+            "author": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                "bio": "",
+                "displayName": "tino",
+                "github": "https://github.com/QuinNguyen02",
+                "host": "http://localhost:8001/api/",
+                "profileImage": "",
+                "username": "tino"
+            },
+            "comments": [],
+            "content": "dfsfdsf",
+            "contentType": "text/plain",
+            "description": "dsfdfsdf",
+            "follower": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
+                "host": "http://localhost:8001/api/"
+            },
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe6c",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "second post",
+            "type": "post",
+            "visibility": 1    
+        }
+        response = self.client.delete(self.inbox_url, data=payload, format='json')
+        
+        self.assertEqual(inbox_obj.items.count(), 2) 
+        self.assertIsNotNone(inbox_obj.items.last().remote_payload)
+        self.assertIsNone(inbox_obj.items.first().post_status)
+        self.assertEqual(inbox_obj.items.last().post_status,"delete")
+    
+    # Test update existing post 
+    def test_update_local_post_from_local_user(self):
+        inbox_obj = Inbox.objects.get(user=self.user.uuid)
+        # add post into inbox
+        payload = {
+            "author": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                "bio": "",
+                "displayName": "tino",
+                "github": "https://github.com/QuinNguyen02",
+                "host": "http://localhost:8001/api/",
+                "profileImage": "",
+                "username": "tino"
+            },
+            "comments": [],
+            "content": "dfsfdsf",
+            "contentType": "text/plain",
+            "description": "dsfdfsdf",
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "second post",
+            "type": "post",
+            "visibility": 3
+        }
         response = self.client.post(self.inbox_url, data=payload, format='json')
         # try update post
         """Test updating an existing post in the inbox."""
         payload = {
-            "id": self.post.uuid,
-            "title": "Updated Title",
-            "content": "Updated Content",
-            "visibility": 2
+            "author": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                "bio": "",
+                "displayName": "tino",
+                "github": "https://github.com/QuinNguyen02",
+                "host": "http://localhost:8001/api/",
+                "profileImage": "",
+                "username": "tino"
+            },
+            "comments": [],
+            "content": "dfsfdsf",
+            "contentType": "text/plain",
+            "description": "dsfdfsdf",
+            "follower": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
+                "host": "http://localhost:8001/api/"
+            },
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "This is the new title",
+            "type": "post",
+            "visibility": 1
+        }
+        response = self.client.put(self.inbox_url, data=payload, format='json')
+        inbox_obj = Inbox.objects.get(user=self.user.uuid)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["message"], "We have noticed other users about your updated post")
+        self.assertEqual(len(inbox_obj.items.all()), 2)
+        self.assertEqual(inbox_obj.items.last().post_status, "update")
+        self.assertEqual(inbox_obj.items.first().post_status, "edited")
+        
+    
+    def test_update_remote_post_from_local_user(self):
+        inbox_obj = Inbox.objects.get(user=self.user.uuid)
+        # add post into inbox
+        payload = {
+            "author": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                "bio": "",
+                "displayName": "tino",
+                "github": "https://github.com/QuinNguyen02",
+                "host": "http://localhost:8001/api/",
+                "profileImage": "",
+                "username": "tino"
+            },
+            "comments": [],
+            "content": "dfsfdsf",
+            "contentType": "text/plain",
+            "description": "dsfdfsdf",
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "second post",
+            "type": "post",
+            "visibility": 3
+        }
+        create_inbox_remote_post(payload, inbox_obj)
+        # try update post
+        """Test updating an existing post in the inbox."""
+        payload = {
+            "author": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                "bio": "",
+                "displayName": "tino",
+                "github": "https://github.com/QuinNguyen02",
+                "host": "http://localhost:8001/api/",
+                "profileImage": "",
+                "username": "tino"
+            },
+            "comments": [],
+            "content": "dfsfdsf",
+            "contentType": "text/plain",
+            "description": "dsfdfsdf",
+            "follower": {
+                "type": "author",
+                "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
+                "host": "http://localhost:8001/api/"
+            },
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "This is the new title",
+            "type": "post",
+            "visibility": 1
         }
         
         response = self.client.put(self.inbox_url, data=payload, format='json')
@@ -148,37 +394,26 @@ class InboxViewTestCase(TestCase):
         self.assertEqual(response.data["message"], "We have noticed other users about your updated post")
         self.assertEqual(len(inbox_obj.items.all()), 2)
         self.assertEqual(inbox_obj.items.last().post_status, "update")
+        self.assertEqual(inbox_obj.items.first().post_status, "edited") 
+        self.assertIsNotNone(inbox_obj.items.last().remote_payload)    
+        self.assertIsNotNone(inbox_obj.items.first().remote_payload) 
         
-    
-    def test_update_remote_post(self):
-        # add post into inbox
-        payload = {
-            "type": "post",
-            "id": f"http://localhost:8000/api/authors/2677192c-bce3-4583-afe3-b6592155fe4c/posts/2677192c-bce3-4583-afe3-b6592155fe4c",
-            "description": "This post is a test",
-            "contentType": "text/plain",
-            "content": "This is a test post",
-            "title": "Test Post",
-            "visibility": 1,
-        }
-
-        response = self.client.post(self.inbox_url, data=payload, format='json')
-        # try update post
-        """Test updating an existing post in the inbox."""
-        payload = {
-            "id": "2677192c-bce3-4583-afe3-b6592155fe4c",
-            "title": "Updated Title",
-            "content": "Updated Content",
-            "visibility": 2
-        }
-        
+    def test_invalid_type_for_update_post(self):
+        # Add follow request into inbox
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
-        response = self.client.put(self.inbox_url, data=payload, format='json')
-        self.assertEqual(len(inbox_obj.items.all()), 2)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(inbox_obj.items.last().post_status, "update")
-        self.assertIsNotNone(inbox_obj.items.last().remote_payload)
-        
+        # Call to update request
+        payload = {
+            "type": "abc",
+            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+            "likes": [],
+            "modified_at": "2024-11-17T02:17:33.067586Z",
+            "published": "2024-11-17T02:17:33.022000Z",
+            "title": "This is the new title",
+        }
+        response = self.client.delete(self.inbox_url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(inbox_obj.items.all()), 0) # Ensure inbox is empty
+            
     
     # Test sending a post into one's inbox
     def test_post_invalid_inbox_obj(self):
@@ -363,6 +598,12 @@ def create_inbox_item(object, inbox_obj):
     inbox_item_obj = InboxItem.objects.create(content_type=content_type,
                                                  object_id=id,
                                                  content_object=object)
+    inbox_obj.items.add(inbox_item_obj)
+
+    return inbox_item_obj
+
+def create_inbox_remote_post(remote_payload, inbox_obj, post_status=None):
+    inbox_item_obj = InboxItem.objects.create(remote_payload=remote_payload, post_status=post_status)
     inbox_obj.items.add(inbox_item_obj)
 
     return inbox_item_obj

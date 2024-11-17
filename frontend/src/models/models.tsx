@@ -13,7 +13,6 @@ export interface Author {
 }
 
 export interface User{
-    host: string;
     username: string;
     uuid: string;
     profileImage: string | null;
@@ -74,7 +73,7 @@ export interface PostData {
     likes: PostLike;
     published: string;
     modified_at:string;
-    visibility: number;
+    visibility: string;
     shared_by?: string; // only for share functionality
 }
 

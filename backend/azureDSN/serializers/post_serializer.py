@@ -1,12 +1,10 @@
-import os
 from rest_framework import serializers
 from ..models import Post, User
 from .user_serializer import UserSerializer
 from rest_framework.response import Response
-import base64
 from django.conf import settings
 from urllib.parse import urljoin
-import requests
+import requests, base64
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
@@ -44,13 +42,14 @@ class PostSerializer(serializers.ModelSerializer):
         author_uuid = instance.user.uuid
         post_uuid = str(instance.uuid)
 
+        # settings.BASE_URL will always work as long as you have .env file now
         base_url = settings.BASE_URL
         post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
         
         # Fetch all likes of the post
         like_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
-        headers = {"Internal-Auth": os.getenv("INTERNAL_API_SECRET")} # To get through the auth layer
+        headers = {"Internal-Auth": settings.INTERNAL_API_SECRET} # To get through the auth layer
         
         try:
             response = requests.get(like_url, headers=headers)
@@ -163,6 +162,13 @@ class CreatePostSerializer(serializers.ModelSerializer):
     # Convert the integer visibility back to string when serializing the response
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        # build fqid for post
+        author_uuid = instance.user.uuid
+        post_uuid = str(instance.uuid)
+        
+        base_url = settings.BASE_URL
+        post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
+        representation['id'] = urljoin(base_url, post_url)
         
         visibility_str = dict(Post.VISIBILITY_CHOICES).get(instance.visibility)
         representation['visibility'] = visibility_str

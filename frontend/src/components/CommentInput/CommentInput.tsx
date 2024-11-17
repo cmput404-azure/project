@@ -1,9 +1,9 @@
-import { useState } from "react";
+import Avatar from "@mui/material/Avatar";
 import TextField from "@mui/material/TextField";
+import inbox from "../../service/inbox";
 import styled from "@mui/material/styles/styled";
 import styles from "./CommentInput.module.scss";
-import inbox from "../../service/inbox";
-import Avatar from "@mui/material/Avatar";
+import { useState } from "react";
 
 // Styling inspired from https://medium.com/@irwantoalvin/how-to-style-your-material-ui-textfield-integrate-it-with-react-hook-form-and-make-it-reusable-0f3050a90e9a, Downloaded 2024-10-24
 // need to style field like this otherwise stylings may reset and not appear properly
@@ -90,7 +90,7 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
       setTextErrorMsg(
         `You've reached the max character limit of ${MAX_CHARACTERS}`
       );
-    } else if (e.target.value.length == 0) {
+    } else if (e.target.value.length === 0) {
       setIsTextError(true);
       setDisableCommentButton(true);
       setTextErrorMsg("Comment cannot be empty");
