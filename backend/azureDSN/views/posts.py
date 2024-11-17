@@ -154,7 +154,15 @@ class AuthorPostView(APIView):
             post.title = request.data.get('title', post.title)
             post.content = request.data.get('content', post.content)
             post.description = request.data.get('description', post.description)
-            post.visibility = request.data.get('visibility', post.visibility)
+
+            # Convert to integer
+            visibility_map = {v: k for k, v in Post.VISIBILITY_CHOICES}
+            received_visibility = request.data.get('visibility', post.visibility)
+
+            if isinstance(received_visibility, str):
+                received_visibility = visibility_map.get(received_visibility.upper(), post.visibility)
+
+            post.visibility = received_visibility
             post.modified_at = request.data.get('modified_at', post.modified_at)
             post.modified_at = timezone.now()  # update the modified time
 
@@ -359,8 +367,11 @@ class AuthorPostsAllView(APIView):
         
         author = User.objects.get(uuid=author_serial)
         author_data = UserSerializer(author).data
+        print(f"Passed UserSerializer: {author_data}")
         author_data["id"] = author.uuid
         request.data["author"] = author_data
+
+        # print(request.data)
         serializer = CreatePostSerializer(data=request.data, partial=True)
 
         if serializer.is_valid():
@@ -368,9 +379,10 @@ class AuthorPostsAllView(APIView):
 
             # Serialize the response
             response = CreatePostSerializer(instance).data
+
             return Response(response, status=status.HTTP_201_CREATED)
-        
         if not serializer.is_valid():
+            print("Validation Errors:", serializer.errors)  # Print errors
             return Response(serializer.errors, status=400)
         
     def fetch_github_activity(self, author):
@@ -398,6 +410,7 @@ class AuthorPostsAllView(APIView):
 
                 serializer = CreatePostSerializer(data=event_post)
                 if serializer.is_valid():
+                    print("Saving post...")
                     serializer.save()
                 else:
                     print("Error saving post:", serializer.errors)
@@ -547,6 +560,7 @@ class PostView(APIView):
         if post_fqid:
             decoded_post_fqid = unquote(post_fqid)
             post_serial = decoded_post_fqid.split("/")[-1]
+            print("POST_SERIAL", post_serial)
             UUID(post_serial)
 
             post_visibility = ""

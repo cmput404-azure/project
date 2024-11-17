@@ -1,5 +1,5 @@
-import { Inbox, InboxItem } from "../models/models";
 import { extractUUID } from "../util/formatting/extractUUID";
+import { Inbox, InboxItem, PostData } from "../models/models";
 import { api } from "./config";
 
 class InboxService {
@@ -22,18 +22,12 @@ class InboxService {
     /* 
         Update the post in inbox
         @param uuid: string - the fqid of the user
-               post_id: string - the fqid of the post
-               title: string - the new title of the post
-               content: string - the new content of the post
-               visibility: number - the new status of the post  
+               post_obj: Post - the updated post object
         @returns: message: string 
     */
     public async updateInboxPost(
         uuid: string,
-        post_id: string,
-        title: string,
-        content: string,
-        visibility: number
+        post_obj: any
     ): Promise<string> {
         try {
             post_id = extractUUID(post_id);
@@ -55,23 +49,19 @@ class InboxService {
     /* 
         Delete the inbox of the users
         @param uuid: string - the uuid of the user 
-               post_id: string - the fqid of the post
+               post_obj: Post - the deleted post object
         @returns: message: string
     */
-    public async deleteInboxPost(uuid: string, post_id: string): Promise<string> {
+    public async deleteInboxPost(uuid: string, post_obj: any): Promise<string> {
         try {
             post_id = extractUUID(post_id);
             uuid = extractUUID(uuid);
             const config = {
                 headers: {},
-                data: {
-                    id: `/api/authors/${uuid}/posts/${post_id}`,
-                    type: "post",
-                },
+                data: post_obj,
             };
 
             const response = await api.delete<{ message: string }>(`/api/authors/${uuid}/inbox/`, config);
-
             return response.data.message;
         } catch (error) {
             console.error("Delete post in inbox error:", error);

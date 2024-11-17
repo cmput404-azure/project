@@ -38,35 +38,44 @@ class PublicStreamView(APIView):
         remote_posts = {}
         for inbox in Inbox.objects.all(): # Iterate through all local inboxes
             for item in inbox.items.filter(remote_payload__isnull=False):
+                print(f"ITEM: {item.post_status}")
                 remote_payload = item.remote_payload
                 if remote_payload.get("type") == "post": # And get the public remote posts
                     post_id = remote_payload.get("id")
                     visibility = remote_payload.get("visibility")
                     
-                    if visibility == "PUBLIC":
+                    if visibility == "PUBLIC" and item.post_status.upper() != "DELETE":
                         if post_id and post_id not in remote_posts: # Add if this post hasn't been added
-                            author_host = remote_payload["author"]["host"]
-                            post_fqid = f"{remote_payload['author']['id']}/post/{post_id}"
+                              # Commented out since not sure how to resolve
+#                             author_host = remote_payload["author"]["host"]
+#                             post_fqid = f"{remote_payload['author']['id']}/post/{post_id}"
 
-                            encoded_post_fqid = quote(post_fqid, safe="")
-                            get_post_url = f"{author_host}posts/{encoded_post_fqid}/"
+#                             encoded_post_fqid = quote(post_fqid, safe="")
+#                             get_post_url = f"{author_host}posts/{encoded_post_fqid}/"
                             
-                            try:
-                                # Perform the GET request
-                                response = requests.get(
-                                    get_post_url,
-                                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
-                                )
+#                             try:
+#                                 # Perform the GET request
+#                                 response = requests.get(
+#                                     get_post_url,
+#                                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+#                                 )
 
-                                if response.status_code == 200:
-                                    post_data = response.json()  
-                                    if post_id not in remote_posts:  
-                                        remote_posts[post_id] = post_data
-                                else:
-                                    print(f"Failed to fetch post. Status code: {response.status_code}")
-                            except Exception as e:
-                                print(f"Error fetching remote post {get_post_url}: {e}")
+#                                 if response.status_code == 200:
+#                                     post_data = response.json()  
+#                                     if post_id not in remote_posts:  
+#                                         remote_posts[post_id] = post_data
+#                                 else:
+#                                     print(f"Failed to fetch post. Status code: {response.status_code}")
+#                             except Exception as e:
+#                                 print(f"Error fetching remote post {get_post_url}: {e}")
                            
+                            print(f"Added post with id: {post_id}")
+                            remote_posts[post_id] = remote_payload
+                        else:
+                            print(f"Might be updated: {post_id}")
+                            if item.post_status.upper() == "UPDATE":
+                                # There's a newer version of this post
+                                remote_posts[post_id] = remote_payload
 
         unique_remote_posts = list(remote_posts.values())
 
@@ -124,6 +133,9 @@ class AuthStreamView(APIView):
         }
     )
     def get(self, request):
+        print("Req: ", request)
+        print("user: ", request.user)
+
         if request.user.is_authenticated:
             author_uuid = request.user.uuid
             user = get_object_or_404(User, uuid=author_uuid)
@@ -145,6 +157,8 @@ class AuthStreamView(APIView):
                 local_followee=user,
                 local_follower__in=local_followees
             ).values_list('local_follower_id', flat=True)
+
+            print(f"People I'm friends with: {friends}")
 
             # Query for local followees' unlisted posts
             followees_unlisted_posts = Post.objects.filter(

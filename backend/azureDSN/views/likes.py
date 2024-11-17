@@ -76,7 +76,7 @@ class LikeView(APIView):
             Returns: like object
             """
             try:
-                like_serial = like_fqid.split('/')[-1]
+                like_serial = like_fqid.rstrip('/').split('/')[-1]
                 UUID(like_serial)
             except (IndexError, ValueError):
                 return Response(
@@ -92,11 +92,6 @@ class LikeView(APIView):
             )
 
         serialized_like = LikeSerializer(like).data
-
-        # Modify serialized data with absolute URIs
-        uri = request.build_absolute_uri("/")
-        serialized_like['id'] = uri + serialized_like['id']
-        serialized_like['object'] = uri + serialized_like['object']
 
         return Response(serialized_like, status=status.HTTP_200_OK) # for consistency with drf-spectacular
 

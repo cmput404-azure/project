@@ -25,6 +25,10 @@ class TokenOrBasicAuthPermission(BasePermission):
         if (request.path).rstrip('/') == '/api/login':
             return True
         
+        # If no CSRF or BasicAuth, check if the request is for the login endpoint
+        if (request.path).rstrip('/') == '/api/login':
+            return True
+
         return False
     
     def _is_internal_request(self, secret):

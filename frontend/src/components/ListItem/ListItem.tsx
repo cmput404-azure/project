@@ -46,19 +46,24 @@ export default function ListItem({
   const [isUpdatedPost, setIsUpdatedPost] = useState(false);
   const [isDeletedPost, setIsDeletedPost] = useState(false);
   const navigate = useNavigate();
+  const [userId, setUserId] = useState("");
   const [isRemote, setIsRemote] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
+      const userListId = extractUUID(user.id);
+      setUserId(userListId);
+      
       let following = false;
       if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
-        // check if current user is already following the (local) user
-        const loggedInFQID = `${authProvider.user.host}/api/authors/${authProvider.user.uuid}`
-        const encodedURL = encodeURIComponent(loggedInFQID);
-        following = await FollowService.checkFollowing(extractUUID(user.id), encodedURL);
+        // check if current user is already following the (local) user  
+        const currentUser = await ProfileService.fetchAuthorData(authProvider.user.uuid);
+        const encodedURL = encodeURIComponent(currentUser.id);
+        following = await FollowService.checkFollowing(userListId, encodedURL);
       } else {
         try {
           following = await api.get(`/api/check/${authProvider.user.uuid}/follows/${user.id}`);
+          console.log(following)
         } catch (err) {
           if (err.response.status !== 404) {
             console.error('Fetch following error:', error);
@@ -76,7 +81,7 @@ export default function ListItem({
         fetchData(); // Call the async function
       }
       if (postObj != null) {
-        if (postObj.post_status === "update") {
+        if (postObj.post_status && postObj.post_status.includes("update")) {
           setIsUpdatedPost(true);
         } else if (postObj.post_status === "delete") {
           setIsDeletedPost(true);
@@ -91,44 +96,39 @@ export default function ListItem({
   };
 
   const sendFollowerRequest = async () => {
-    if (!authProvider.isAuthenticated) {
+    if (authProvider.isAuthenticated === true) {
+      try {
+        const userResponse = await api.get(`/api/authors/${authProvider.user.uuid}/`);
+        const userInfo = userResponse.data;
+
+        const followRequest = {
+          type: "follow",
+          summary: `${userInfo.username} wants to follow ${user.username}`,
+          actor: {
+            type: "author",
+            id: `${userInfo.id}`,
+            host: `${userInfo.host}`,
+            displayName: `${userInfo.displayName}`,
+            username: `${userInfo.username}`,
+            bio: `${userInfo.bio}`,
+            profileImage: `${userInfo.profileImage}`,
+            github: `${userInfo.github}`,
+            page: `${userInfo.page}`,
+          },
+        };
+
+          await InboxService.sendPostToInbox(user.id, followRequest);
+
+      } catch (error) {
+        console.error("Fetch error:", error);
+      }
+
+      setIsRequested(true);
+
+    } else {
       closeModal?.();
       navigate("/login");
     }
-
-    const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
-    const myInfo = userResponse.data;
-
-    const followRequest = {
-      type: "follow",
-      summary: `${myInfo.username} wants to follow ${user.username}`,
-      actor: { // person who sends the request
-        type: "author",
-        id: `${myInfo.id}`,
-        host: `${myInfo.host}`,
-        displayName: `${myInfo.displayName}`,
-        username: `${myInfo.username}`,
-        bio: `${myInfo.bio}`,
-        profileImage: `${myInfo.profileImage}`,
-        github: `${myInfo.github}`,
-        page: `${myInfo.page}`,
-      },
-      object: { // person who the request is being sent to
-        type: "author",
-        id: `${user.id}`,
-        host: `${user.host}`,
-        displayName: `${user.displayName}`,
-        username: `${user.username}`,
-        bio: `${user.bio}`,
-        profileImage: `${user.profileImage}`,
-        github: `${user.github}`,
-        page: `${user.page}`,
-      }
-    };
-  
-    await InboxService.sendPostToInbox(user.id, followRequest);
-
-    setIsRequested(true);
   }
 
   const addFollower = async () => {
