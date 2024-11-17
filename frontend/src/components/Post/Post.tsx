@@ -293,8 +293,6 @@ export default function Post({
         object: post.id,
         post_host: postGiven.author.host
       };
-      console.log(post.author.id)
-      console.log(postGiven.author.host)
       await inbox.sendPostToInbox(post.author.id, like_obj);
       setLikeCount(likeCount + 1);
       setHasLiked(true);
