@@ -303,7 +303,7 @@ class AuthorPostsAllView(APIView):
 
         self.fetch_github_activity(author)
 
-        posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3]).order_by('-created_at')
+        posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3]).order_by('-modified_at')
         # Likes and Comments will be handled in PostSerializer below
 
         if request.user.is_authenticated:

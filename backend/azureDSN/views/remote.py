@@ -1,4 +1,3 @@
-from django.core.exceptions import ObjectDoesNotExist
 from urllib.parse import urlparse
 from rest_framework.response import Response
 from rest_framework.views import APIView

@@ -1,4 +1,4 @@
-.settings{
+.settings {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -7,7 +7,7 @@
     height: 100%;
     padding: 1rem;
 
-    .registration__toggle{
+    .registration__toggle {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -19,4 +19,9 @@
         border-radius: 5px;
         margin-bottom: 1rem;
     }
+
+}
+
+.error__message {
+    color: #ff4d4d;
 }

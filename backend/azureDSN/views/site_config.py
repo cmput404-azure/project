@@ -10,7 +10,7 @@ class SiteConfigView(APIView):
         serializer = SiteConfigSerializer(config)
         return Response(serializer.data)
 
-    def post(self, request):
+    def put(self, request):
         config = SiteConfiguration.objects.first()
         serializer = SiteConfigSerializer(config, data=request.data)
         if serializer.is_valid():

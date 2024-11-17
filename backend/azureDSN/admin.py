@@ -37,7 +37,31 @@ class UserAdmin(BaseUserAdmin):
     approve_users.short_description = "Approve selected users"
 
 class NodeUserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'host', 'password', 'is_authenticated')
+    list_display = ('username', 'password', 'host', 'get_connection_status')
+    actions = ['authenticate_nodes', 'deauthenticate_nodes']
+    list_filter = (ConnectionStatusFilter,)
+
+    def get_connection_status(self, obj):
+        return "ALLOWED" if obj.is_authenticated else "NOT ALLOWED"
+    get_connection_status.short_description = "Connection Status"
+
+    def authenticate_nodes(self, request, queryset):
+        """
+        To authenticate connections (set `is_authenticated=True`).
+        Allow activities to be shared from selected nodes.
+        """
+        queryset.update(is_authenticated=True)
+        self.message_user(request, f"{queryset.count()} node(s) have been connected.")
+    authenticate_nodes.short_description = "Allow activities from selected nodes"
+
+    def deauthenticate_nodes(self, request, queryset):
+        """
+        To break/stop connections (set `is_authenticated=False`).
+        Disallow activities to be shared from selected nodes.
+        """
+        queryset.update(is_authenticated=False)
+        self.message_user(request, f"{queryset.count()} node(s) have been disconnected.")
+    deauthenticate_nodes.short_description = "Reject activities from selected nodes"
 
 class PostAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'content_type', 'visibility')
