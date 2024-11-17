@@ -25,15 +25,6 @@ Crystal Zhang <br />
 Cinguinique Erquette <br />
 Nathan Wu
 
-## API Requirements
-
-- Service address: https://azuredsn-889a4fb9b2bb.herokuapp.com
-
-## HTTP Basic Auth Config
-
-- Username: azuredsn
-- Password: azure404
-
 ## Structure
 
 ### Frontend

@@ -11,22 +11,40 @@
   flex: 2;
   flex-direction: column;
   gap: 20px;
-  overflow-y: auto;
-  padding: 20px;
   overflow-x: hidden;
+  overflow-y: auto; 
+  padding: 20px;
 }
 
-.authorSection {
-  background-color: #343434;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
+.drawer{
   align-items: center;
-  gap: 20px; 
-  max-width: 380px;
-  overflow-y: auto;
-  padding: 20px;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  .recommended__button{
+    background-color: #343434 !important;
+    border-bottom-left-radius: 50%;
+    border-top-left-radius: 50%;
+    color: #70ffaf;
+    padding: 2rem 0 !important;
+  }
+}
 
+.recommended { 
+  align-items: center;
+  background-color: #343434;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 1rem;
+  width: 400px;
 }
 
 .recommendedTitle {
@@ -49,17 +67,17 @@
   .icon_section {
     align-items: center;
     border-radius: 10px;
+    color: white;
     cursor: pointer;
     display: flex;
     justify-content: center;
     padding: 5px 1px;
     transition: background-color 0.3s ease, transform 0.2s ease;
     width: 100%;
-    color: white;
     &.active {
       background-color: #70ffaf;
-      color: black;
       border-radius: 10px;
+      color: black;
     }
 
     .icon {

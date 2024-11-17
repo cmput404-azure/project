@@ -15,7 +15,7 @@ class PostSerializer(serializers.ModelSerializer):
     
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
-    published = serializers.DateTimeField(source='created_at')
+    published = serializers.DateTimeField(source='modified_at')
     
     class Meta:
         model = Post
@@ -44,13 +44,14 @@ class PostSerializer(serializers.ModelSerializer):
         author_uuid = instance.user.uuid
         post_uuid = str(instance.uuid)
 
+        # settings.BASE_URL will always work as long as you have .env file now
         base_url = settings.BASE_URL
         print(f"Base URL: {base_url}")
         post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
         
         # Fetch all likes of the post
-        like_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
+        like_url = f"{base_url}authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
         
         try:
             response = requests.get(like_url)
@@ -95,7 +96,7 @@ class PostSerializer(serializers.ModelSerializer):
         post.description = validated_data.get('description', post.description)
         post.contentType = validated_data.get('contentType', post.contentType)
         post.content = validated_data.get('content', post.content)
-        post.published = validated_data.get('published', post.published)
+        post.published = validated_data.get('published', post.modified_at)
         post.modified_at = validated_data.get('modified_at', post.modified_at)
         post.visibility = validated_data.get('visibility', post.visibility)
         post.save()

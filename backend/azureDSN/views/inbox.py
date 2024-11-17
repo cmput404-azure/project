@@ -1,21 +1,26 @@
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes, OpenApiExample, inline_serializer
-from rest_framework import status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.contenttypes.models import ContentType
+from urllib.parse import urlparse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes, OpenApiExample
+from drf_spectacular.utils import inline_serializer
+from rest_framework import serializers
+from django.utils import timezone
+from datetime import datetime
+from django.core.exceptions import ObjectDoesNotExist
+import requests
 from requests.auth import HTTPBasicAuth
-from urllib.parse import urlparse, quote
 from ..serializers import *
 from ..models import *
-import requests, os
+from ..utils import *
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
 a GET request occurs when a local user wants to check her/his inbox
 '''
-class InboxView(APIView):
+class InboxView(APIView): 
     @extend_schema(
         summary="Retrieve Inbox",
         description="Fetch all inbox items for the specified author.",
@@ -541,34 +546,26 @@ class InboxView(APIView):
         try:
             remote_follower = payload["follower"]
             
-            # Remove follower from payload to return to original post structure
+            # remove follower from payload to return to original post structure
             del payload["follower"]
 
+            print(f"Payload is now: {remote_follower}")
+            
             follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
             remote_host = remote_follower.get("host")
             parsed_url = urlparse(remote_host)
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-
-            if payload["visibility"] == "FRIENDS":
-                # Need a check here if remote follower indeed has accepted follow request of post's author in their node
-                author = payload["author"]
-                encoded_url = quote(author.get('id'), safe='')
-                remote_follow_status_url = f"{base_host}/api/authors/{follower_serial}/followers/{encoded_url}"
-                response = requests.get(
-                    remote_follow_status_url,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                )
-
-                if response.status_code == 404: # User not a follower of remote follower
-                    return Response({"message": "Friends-only post is not sent to remote node."}, status=status.HTTP_200_OK)
-            
-            
             remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
+
+            remote_node = NodeUser.objects.filter(host__contains=remote_host).first()
+            if not remote_node:
+                return Response({"error": f"Node for {remote_host} not found."}, status=status.HTTP_404_NOT_FOUND)
+            
             response = requests.post(
-                remote_inbox_url,
-                json=payload,
-                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-            )
+                    remote_inbox_url,
+                    json=payload,
+                    auth=HTTPBasicAuth(remote_node.username, remote_node.password)
+                )
 
             if response.status_code == 200:
                 return Response({"message": "Post successfully sent to remote inbox."}, status=status.HTTP_200_OK)
@@ -588,10 +585,14 @@ class InboxView(APIView):
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
             remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox/"
 
+            remote_node = NodeUser.objects.filter(host__contains=remote_host).first()
+            if not remote_node:
+                return Response({"error": f"Node for {remote_host} not found."}, status=status.HTTP_404_NOT_FOUND)
+            
             response = requests.post(
                 remote_inbox_url,
                 json=payload,
-                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                auth=HTTPBasicAuth(remote_node.username, remote_node.password)
             )
 
             if response.status_code == 200:

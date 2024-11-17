@@ -74,16 +74,6 @@ class CommentsAPITest(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-
-
-
-
-
-
-
-
-
-
     def test_get_single_comment_by_serials(self):
         # Retrieve a single comment by author, post, and comment serials
         url = reverse('comment_by_serial', kwargs={
@@ -149,4 +139,3 @@ class CommentsAPITest(APITestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
