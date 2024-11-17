@@ -217,7 +217,7 @@ function PostCard({
         </div>
 
         <div className={styles.icon}>
-          {post.visibility === 3 || isAuthor || isAdmin || post.visibility === 1 ? ( // friend post doesnt have a link 
+          {post.visibility === "FRIENDS-ONLY" || isAuthor || isAdmin || post.visibility === "PUBLIC" ? ( // friend post doesnt have a link 
             <Tooltip title="copy link">
               <i className="fas fa-link" onClick={handleGetLink}></i>
             </Tooltip>
@@ -249,7 +249,7 @@ function PostCard({
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
-          {post.visibility === 1 ? (
+          {post.visibility === "PUBLIC" ? (
             <div className={styles.icon} onClick={handleClickShare}>
               <i className="fas fa-share"></i>
             </div>

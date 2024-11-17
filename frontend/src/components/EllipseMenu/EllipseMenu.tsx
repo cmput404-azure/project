@@ -120,7 +120,7 @@ export default function EllipseMenu({
   async function handleUpdatePost(updatedPost: {
     title: string;
     content: string;
-    visibility: number;
+    visibility: string;
   }) {
     try {
       const postId = extractUUID(postData.id);
@@ -132,7 +132,7 @@ export default function EllipseMenu({
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target =
-        updatedPost.visibility === 1 || updatedPost.visibility === 3
+        updatedPost.visibility === "PUBLIC" || updatedPost.visibility === "UNLISTED"
           ? followers
           : friends;
       for (const recipient of target) {
@@ -176,7 +176,7 @@ export default function EllipseMenu({
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target =
-        postData.visibility === 1 || postData.visibility === 3
+        postData.visibility === "PUBLIC" || postData.visibility === "UNLISTED"
           ? followers
           : friends;
       for (const recipient of target) {
@@ -193,7 +193,7 @@ export default function EllipseMenu({
       }
 
       // Update postData state to indicate deletion
-      setPostData({ ...postData, visibility: 4 });
+      setPostData({ ...postData, visibility: "DELETED" });
       closeDeleteModal();
       onDelete(postData.id);
     } catch (error) {

@@ -1,7 +1,6 @@
-import { Author, PostData as Post } from "../../models/models";
+import { PostData as Post } from "../../models/models";
 import { CircularProgress, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
-
 import { AuthorPostsResponse } from "../../models/models";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import EditPostModal from "../EditPostModal/EditPostModal";
@@ -13,7 +12,6 @@ import { api } from "../../service/config";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import follow from "../../service/follow";
 import followService from "../../service/follow";
-import inbox from "../../service/inbox";
 import styles from "./UserProfileOld.module.scss";
 import { useAuth } from "../../state";
 import { useParams } from "react-router-dom";
@@ -226,7 +224,7 @@ export default function UserProfileOld() {
           `/api/authors/${userToGet}/posts/`
         );
         // filter out the posts that are not publicaly visible
-        const posts = response.data.src.filter((post) => post.visibility == 1);
+        const posts = response.data.src.filter((post) => post.visibility === "PUBLIC");
         setAuthorPosts(posts.reverse());
       }
     } catch (error) {
@@ -254,34 +252,6 @@ export default function UserProfileOld() {
           }
         );
 
-        // Get friends and followers list
-        const followers = await follow.getFollowers(authProvider.user.uuid);
-        const friends = await follow.getFriends(authProvider.user.uuid);
-
-        // followers already include all followers and friends
-        // public/unlisted=> send to followers and friends
-        // if (postToEdit[0].visibility === 1 || postToEdit[0].visibility === 3) {
-        //   for (const follower of followers) {
-        //     const inboxResponse = await inbox.updateInboxPost(
-        //       follower.id,
-        //       postId,
-        //       updatedPost.title,
-        //       updatedPost.content,
-        //       updatedPost.visibility
-        //     );
-        //   }
-        // } else {
-        //   for (const friend of friends) {
-        //     const inboxResponse = await inbox.updateInboxPost(
-        //       friend.id,
-        //       postId,
-        //       updatedPost.title,
-        //       updatedPost.content,
-        //       updatedPost.visibility
-        //     );
-        //   }
-        // }
-
         console.log("Post updated successfully:", response.data);
 
         // call again to refresh teh posts
@@ -302,28 +272,6 @@ export default function UserProfileOld() {
           `/api/authors/${authProvider.user.uuid}/posts/${postToDelete}/`
         );
 
-        // Get friends and followers list
-        const followers = await follow.getFollowers(authProvider.user.uuid);
-        const friends = await follow.getFriends(authProvider.user.uuid);
-
-        // followers already include friends and followers
-        // if (visibilityNumber === 1 || visibilityNumber === 3) {
-        //   for (const follower of followers) {
-        //     const inboxResponse = await inbox.deleteInboxPost(
-        //       follower.id,
-        //       postToDelete
-        //     );
-        //   }
-        // } else {
-        //   // Friends receive inbox on all type of post
-        //   for (const friend of friends) {
-        //     const inboxResponse = await inbox.deleteInboxPost(
-        //       friend.id,
-        //       postToDelete
-        //     );
-        //   }
-        // }
-
         // Refresh the posts after successful deletion
         await fetchAuthorPosts();
 
@@ -336,20 +284,6 @@ export default function UserProfileOld() {
       }
     }
   }
-
-  // not used yet
-  // const addFollower = async () => {
-  //   const encodedHost = encodeURIComponent(authorData.host);
-  //   const encodedId = encodeURIComponent(authorData.id);
-
-  //   const encodedUrl = `${encodedHost}/api/authors/${encodedId}`;
-  //   // Add actor as follower
-  //   const response = await api.put(
-  //     `/api/authors/${authProvider.user.uuid}/followers/${encodedUrl}/`
-  //   );
-
-  //   const data = response.data;
-  // };
 
   if (!authorData) {
     return (
@@ -396,10 +330,6 @@ export default function UserProfileOld() {
               </IconButton>
             </section>
           </section>
-
-          {/* {          <span className={styles.userHandle}>
-            @{authorData.displayName.toLowerCase().replace(" ", "_")}
-          </span>} */}
 
           <section className={styles.userStats}>
             <span>

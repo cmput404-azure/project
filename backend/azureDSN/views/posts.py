@@ -158,7 +158,12 @@ class AuthorPostView(APIView):
             post.title = request.data.get('title', post.title)
             post.content = request.data.get('content', post.content)
             post.description = request.data.get('description', post.description)
-            post.visibility = request.data.get('visibility', post.visibility)
+
+            # Convert to string
+            visibility_map = {v: k for k, v in Post.VISIBILITY_CHOICES}
+            received_visibility = request.data.get('visibility', post.visibility)
+
+            post.visibility = visibility_map.get(received_visibility, post.visibility)
             post.modified_at = request.data.get('modified_at', post.modified_at)
             post.modified_at = timezone.now()  # update the modified time
 

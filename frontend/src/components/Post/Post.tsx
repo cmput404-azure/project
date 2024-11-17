@@ -97,8 +97,8 @@ export default function Post({
                 encodedUrl
               );
               if (!authProvider.user.is_staff) {
-                if (postData.visibility !== 1) {
-                  if (!is_following && postData.visibility === 2) {
+                if (postData.visibility !== "PUBLIC") {
+                  if (!is_following && postData.visibility === "FRIENDS-ONLY") {
                     setOpenSnackbar(true);
                     setShowAlert(true);
                     setTimeout(() => {
@@ -381,7 +381,7 @@ export default function Post({
             </span>
           </div>
           <div>
-            {post.visibility === 4 && (
+            {post.visibility === "DELETED" && (
               <span className={styles.deletedLabel}>Deleted</span>
             )}
             {post.type === "shared" && (
@@ -457,7 +457,7 @@ export default function Post({
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
-          {post.visibility === 1 ? (
+          {post.visibility === "PUBLIC" ? (
             <div
               className={`${styles.icon} ${hasShared ? styles.shared : ""}`}
               onClick={handleSharePost}
