@@ -154,7 +154,14 @@ export default function ListItem({
 
   const navigateToProfile = () => {
     closeModal?.();
-    navigate(`/authors/${extractUUID(user.id)}`);
+    let user_url = user["id"]
+    if (normalizeURL(user_url) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+      navigate(`/authors/${extractUUID(user.id)}`);
+    } else {
+      // To-do: Fetch correct information (posts, followers, followings, friends)
+      const encodedUserId = encodeURIComponent(user_url);
+      navigate(`/authors/${encodedUserId}`);
+    }
   };
 
   let additionalText = "";

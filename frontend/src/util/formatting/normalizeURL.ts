@@ -1,5 +1,5 @@
-// A function to normalize a given url to it's base form
+// A function to normalize a given url to it's base form (includes port if it exists)
 export function normalizeURL(url: string) {
     const parsedUrl = new URL(url);
-    return `${parsedUrl.protocol}//${parsedUrl.host}`;
+    return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.port ? `:${parsedUrl.port}` : ''}`;
 }
