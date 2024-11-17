@@ -157,7 +157,3 @@ class FollowTests(APITestCase):
         response = self.client.get(f"{url}")
         self.assertEqual(response.data["is_follower"], False)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        
-
-
-    

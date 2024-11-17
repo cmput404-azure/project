@@ -42,6 +42,7 @@ class PostSerializer(serializers.ModelSerializer):
         author_uuid = instance.user.uuid
         post_uuid = str(instance.uuid)
 
+        # settings.BASE_URL will always work as long as you have .env file now
         base_url = settings.BASE_URL
         post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)

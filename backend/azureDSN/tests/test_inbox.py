@@ -605,3 +605,5 @@ def create_inbox_item(object, inbox_obj):
 def create_inbox_remote_post(remote_payload, inbox_obj, post_status=None):
     inbox_item_object = InboxItem.objects.create(remote_payload=remote_payload, post_status=post_status)
     inbox_obj.items.add(inbox_item_object)
+
+    return inbox_item_obj

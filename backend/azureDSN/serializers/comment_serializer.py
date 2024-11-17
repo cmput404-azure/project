@@ -25,6 +25,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     # Convert post object into a FQID of post object
     def get_post(self, obj):
+        print("!!!!!!!!")
         post = str(obj)
         return post.split('/')[-1]
     
@@ -35,6 +36,8 @@ class CommentSerializer(serializers.ModelSerializer):
     Create new comment object
     '''
     def create(self, validated_data):
+        print("000000000000")
+        print(validated_data)
         if validated_data.get("published"):
             validated_data["created_at"] = validated_data.pop("published")
 

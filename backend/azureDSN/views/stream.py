@@ -62,7 +62,7 @@ class PublicStreamView(APIView):
         all_posts = serialized_local_posts + unique_remote_posts
 
         # Separate logic for Post objects and JSON objects
-        all_posts.sort(key=lambda post: post['published'] if isinstance(post, dict) else post['created_at'], reverse=True)
+        all_posts.sort(key=lambda post: post['published'] if isinstance(post, dict) else post['modified_at'], reverse=True)
 
         pagination = PostsPagination()
         paginated_posts = pagination.paginate_queryset(all_posts, request, view=self)
@@ -109,6 +109,9 @@ class AuthStreamView(APIView):
         }
     )
     def get(self, request):
+        print("Req: ", request)
+        print("user: ", request.user)
+
         if request.user.is_authenticated:
             author_uuid = request.user.uuid
             user = get_object_or_404(User, uuid=author_uuid)
@@ -130,6 +133,8 @@ class AuthStreamView(APIView):
                 local_followee=user,
                 local_follower__in=local_followees
             ).values_list('local_follower_id', flat=True)
+
+            print(f"People I'm friends with: {friends}")
 
             # Query for local followees' unlisted posts
             followees_unlisted_posts = Post.objects.filter(
