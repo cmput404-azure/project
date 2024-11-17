@@ -141,14 +141,55 @@ class InboxView(APIView):
         ],
 
         # Define the request body with `type` and `id` as fields in the payload
-        request = inline_serializer(
-            name="DeleteInboxItemPayload",
+        request=inline_serializer(
+            name="Delete Inbox body",
             fields={
-                "type": serializers.CharField(help_text="Type of the item to delete (e.g., 'post', 'follow')", required=True),
-                "id": serializers.CharField(help_text="fqid/id of the item to delete (e.g., post or follow request)", required=True),
-            }
-        ),
-        
+                    'id': serializers.CharField(),
+                    'type': serializers.CharField()
+                }
+            ),
+            examples=[
+                OpenApiExample(
+                    name="Post Body Example",
+                    value={
+                        "author": {
+                            "type": "author",
+                            "id": "http://localhost:8001/api/authors/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+                            "bio": "",
+                            "displayName": "tino",
+                            "github": "https://github.com/QuinNguyen02",
+                            "host": "http://localhost:8001/api/",
+                            "profileImage": "",
+                            "username": "tino"
+                        },
+                        "comments": [],
+                        "content": "dfsfdsf",
+                        "contentType": "text/plain",
+                        "description": "dsfdfsdf",
+                        "follower": {
+                            "type": "author",
+                            "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
+                            "host": "http://localhost:8001/api/"
+                        },
+                        "id": f"http://localhost:8000/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262/posts/a2d00814-ec38-4ea0-a297-7aa64b24a262",
+                        "likes": [],
+                        "modified_at": "2024-11-17T02:17:33.067586Z",
+                        "published": "2024-11-17T02:17:33.022000Z",
+                        "title": "second post",
+                        "type": "post",
+                        "visibility": 3
+                    },
+                    description="Example of deleting a a post in the inbox."
+                ),
+                OpenApiExample(
+                    name="Follow Request Body Example",
+                    value={
+                        "type": "follow",
+                        "id": 12
+                    },
+                    description="Example of deleting a follow request in the inbox."
+                )
+            ],
         responses={
             status.HTTP_200_OK: OpenApiResponse(
                 response=inline_serializer(
@@ -337,18 +378,13 @@ class InboxView(APIView):
                 required=True
             )
         ],
-        request={
-            'application/json': {
-                'type': 'object',
-                'properties': {
-                    'id': {'type': 'string', 'format': 'uuid', 'description': 'fqid of the post to update'},
-                    'title': {'type': 'string', 'description': 'New title of the post', 'maxLength': 255},
-                    'content': {'type': 'string', 'description': 'New content of the post'},
-                    'visibility': {'type': 'string', 'description': 'New visibility of the post'}
-                },
-                'required': ['id']
+        request = inline_serializer(
+            name="updated post object payload",
+            fields={
+                "post": PostSerializer(),
+                "follower": UserSerializer(),
             }
-        },
+        ),
         responses={
             status.HTTP_200_OK: OpenApiResponse(description="Post updated successfully."),
             status.HTTP_404_NOT_FOUND: OpenApiResponse(description="Post or inbox item not found."),
