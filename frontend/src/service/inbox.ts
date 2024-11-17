@@ -30,20 +30,11 @@ class InboxService {
     */
     public async updateInboxPost(
         uuid: string,
-        post_id: string,
-        title: string,
-        content: string,
-        visibility: number
+        post_obj: any
     ): Promise<string> {
         try {
-            post_id = extractUUID(post_id);
             uuid = extractUUID(uuid);
-            const response = await api.put<{ message: string }>(`/api/authors/${uuid}/inbox/`, {
-                id: post_id,
-                title,
-                content,
-                visibility,
-            });
+            const response = await api.put<{ message: string }>(`/api/authors/${uuid}/inbox/`, post_obj);
 
             return response.data.message;
         } catch (error) {
@@ -58,22 +49,21 @@ class InboxService {
                post_obj: Post - the deleted post object
         @returns: message: string
     */
-    public async deleteInboxPost(uuid: string, post_obj: any): Promise<string> {
-        try {
-            post_id = extractUUID(post_id);
-            uuid = extractUUID(uuid);
-            const config = {
-                headers: {},
-                data: post_obj,
-            };
-
-            const response = await api.delete<{ message: string }>(`/api/authors/${uuid}/inbox/`, config);
-            return response.data.message;
-        } catch (error) {
-            console.error("Delete post in inbox error:", error);
-            return "";
+        public async deleteInboxPost(uuid: string, post_obj: any): Promise<string> {
+            try {
+                uuid = extractUUID(uuid);
+                const config = {
+                    headers: {},
+                    data: post_obj,
+                };
+    
+                const response = await api.delete<{ message: string }>(`/api/authors/${uuid}/inbox/`, config);
+                return response.data.message;
+            } catch (error) {
+                console.error("Delete post in inbox error:", error);
+                return "";
+            }
         }
-    }
 
 
     /* 

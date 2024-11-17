@@ -47,6 +47,7 @@ export default function Post({
   const navigate = useNavigate();
 
   const [post, setPost] = useState<PostModel | null>(null);
+  const [postData, setPostData] = useState<PostData>(postGiven);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
