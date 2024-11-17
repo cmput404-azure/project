@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework import status, serializers
 from django.contrib.contenttypes.models import ContentType
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes, OpenApiExample, inline_serializer
-from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from requests.auth import HTTPBasicAuth
 from urllib.parse import urlparse, quote, urlunparse
