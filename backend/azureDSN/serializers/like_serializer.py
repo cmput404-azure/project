@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 from ..models import Like, Post
 from django.utils.timezone import make_aware
@@ -41,18 +42,16 @@ class LikeSerializer(serializers.ModelSerializer):
     
     def get_id(self, obj):
         user_data = obj.user
-
-        # host = user_data.get('host', '')
         user_uuid = user_data.get('id', '')
+        if (user_uuid):
+            user_uuid = user_uuid.rstrip('/').split('/')[-1]
 
-        # return f"{host}api/authors/{user_uuid}/liked/{obj.uuid}"
-        return f"api/authors/{user_uuid}/liked/{obj.uuid}"
+        return f"{settings.BASE_URL}/api/authors/{user_uuid}/liked/{obj.uuid}"
     
     def get_object(self, obj): # currently only works for Post object
         """Construct the FQID for the liked object."""
         post = obj.post
-        # return f"{post.user.host}api/authors/{post.user.uuid}/posts/{post.uuid}"
-        return f"api/authors/{post.user.uuid}/posts/{post.uuid}"
+        return f"{settings.BASE_URL}/api/authors/{post.user.uuid}/posts/{post.uuid}"
     
     def get_published(self, obj):
         dt = obj.created_at
