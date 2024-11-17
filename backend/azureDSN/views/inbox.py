@@ -400,9 +400,7 @@ class InboxView(APIView):
                 + we just simply send a put request with a whole edited post obj to their endpoint
         return message indicating successful or not
         '''
-        print(f"HERE")
         payload = request.data
-        print(f"PAYLOAD: {payload}")
        
         if "type" not in payload:
             return Response({"message": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
@@ -419,29 +417,26 @@ class InboxView(APIView):
                 parsed_url = urlparse(payload["id"]) 
                 post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
                 post_obj = Post.objects.get(uuid=post_id)
-                print(f"POST: {post_obj}")
-                # serialized_post = PostSerializer(post_obj).data
-                # print(serialized_post)
-                # # Local post: Update inbox and modify existing post status
-                # # Find the old version of that posts in inbox   
-                # post_content_type = ContentType.objects.get(model="post")
-                # inbox_item_obj = InboxItem.objects.filter(
-                #     inbox=inbox_obj,
-                #     content_type=post_content_type,
-                #     object_id=post_id,  # Filtering by the specific post ID
-                # ).exclude(post_status__in=["delete", "edited"])
+                # Local post: Update inbox and modify existing post status
+                # Find the old version of that posts in inbox   
+                post_content_type = ContentType.objects.get(model="post")
+                inbox_item_obj = InboxItem.objects.filter(
+                    inbox=inbox_obj,
+                    content_type=post_content_type,
+                    object_id=post_id,  # Filtering by the specific post ID
+                ).exclude(post_status__in=["delete", "edited"])
                 
-                # # Modify the post_status to edited 
-                # if inbox_item_obj.exists():
-                #     for item in inbox_item_obj:
-                #         item.post_status = "edited"
-                #         item.save()
+                # Modify the post_status to edited 
+                if inbox_item_obj.exists():
+                    for item in inbox_item_obj:
+                        item.post_status = "edited"
+                        item.save()
                         
-                # create_inbox_item(inbox_obj, post_obj, post_status="update")
+                create_inbox_item(inbox_obj, post_obj, post_status="update")
                         
                 return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
             
-            except Post.DoesNotExist: 
+            except Post.DoesNotExist:
                 # Remote post: Update inbox and modify existing remote payload status
                 # Find the old version of that posts in inbox
                 existing_item_obj = InboxItem.objects.filter(

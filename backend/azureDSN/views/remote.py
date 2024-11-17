@@ -1,9 +1,8 @@
-from django.core.exceptions import ObjectDoesNotExist
 from urllib.parse import urlparse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from ..models.user import NodeUser, Follow
+from ..models import NodeUser, Follow
 from requests.auth import HTTPBasicAuth
 import requests, random, os
 
