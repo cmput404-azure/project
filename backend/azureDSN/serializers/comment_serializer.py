@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import *
 from ..models import Comment
+from django.conf import settings
 
 class CommentSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField(source='uuid')
@@ -15,7 +16,7 @@ class CommentSerializer(serializers.ModelSerializer):
     # This method gets the custom uuid value and maps it to'id'
     def get_id(self, obj):
         post = obj.post
-        return f"{post.user.host}/authors/{post.user.uuid}/commented/{obj.uuid}"  
+        return f"{settings.BASE_URL.strip()}/api/authors/{post.user.uuid}/commented/{obj.uuid}"  
 
     # The returned id field is the value stored in the uuid
     def to_representation(self, instance):
@@ -30,7 +31,7 @@ class CommentSerializer(serializers.ModelSerializer):
     
     def get_post_FQID(self, obj):
         post = obj.post
-        return f"{post.user.host}authors/{post.user.uuid}/posts/{post.uuid}"
+        return f"{settings.BASE_URL.strip()}/api/authors/{post.user.uuid}/posts/{post.uuid}"
     '''
     Create new comment object
     '''
