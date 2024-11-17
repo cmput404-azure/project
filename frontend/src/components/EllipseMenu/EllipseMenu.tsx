@@ -146,10 +146,6 @@ export default function EllipseMenu({
             type: "author",
             id: recipient.id,
             host: recipient.host,
-            // displayName: recipient.displayName,
-            // page: recipient.page,
-            // github: recipient.github,
-            // profileImage: recipient.profileImage
           }
         };
 
@@ -191,10 +187,6 @@ export default function EllipseMenu({
             type: "author",
             id: recipient.id,
             host: recipient.host,
-            // displayName: recipient.displayName,
-            // page: recipient.page,
-            // github: recipient.github,
-            // profileImage: recipient.profileImage
           }
         };
         await inbox.deleteInboxPost(recipient.id, deletedPost);
