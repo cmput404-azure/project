@@ -107,7 +107,6 @@ class NodeView(APIView):
         """
             Remove a node from NodeUser (hard-delete).
         """
-        # Example call: http://localhost:8000/api/nodes/remove/?node=http://azuretest/api/
         # Updated call: http://localhost:8000/api/nodes/remove/?username=nodename
         node_name = request.query_params.get('username')
 
