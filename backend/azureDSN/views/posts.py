@@ -337,7 +337,7 @@ class AuthorPostsAllView(APIView):
     
     @extend_schema(
         summary="Create a new post",
-        description="Create a new post. Currently, likes and comments are not created since there's no reason to have likes, comments, etc. because it doesn't exist yet",
+        description="Create a new post with the expected structure.",
         request=PostSerializer,
         responses={
             status.HTTP_201_CREATED: OpenApiResponse(response=PostSerializer, description='Post created successfully'),
