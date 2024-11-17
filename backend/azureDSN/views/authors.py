@@ -293,12 +293,14 @@ class AuthorsCompleteView(APIView):
                 base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
                 api_url = f"{base_url}/api/authors/"
 
-                response = requests.get(
-                    api_url,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                )
-
-                data = response.json().get("authors", [])
-                users.extend(data)
+                try:
+                    response = requests.get(
+                        api_url,
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    )
+                    data = response.json().get("authors", [])
+                    users.extend(data)
+                except:
+                    continue
                 
         return Response(users, status=200)

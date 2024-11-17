@@ -51,6 +51,7 @@ export default function ListItem({
   useEffect(() => {
     const fetchData = async () => {
       let following = false;
+
       if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
         // check if current user is already following the (local) user
         const loggedInFQID = `${authProvider.user.host}/api/authors/${authProvider.user.uuid}`
@@ -59,6 +60,7 @@ export default function ListItem({
       } else {
         try {
           following = await api.get(`/api/check/${authProvider.user.uuid}/follows/${user.id}`);
+          console.log(following);
         } catch (err) {
           if (err.response.status !== 404) {
             console.error('Fetch following error:', error);
@@ -71,9 +73,27 @@ export default function ListItem({
       }
     };
 
+    async function checkRequested() {
+      // Check inbox of the user ID
+      if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+        const userInbox = await InboxService.getInbox(extractUUID(user.id));
+        await Promise.all(
+          userInbox.map(async (item: any) => {
+            if (item && item.type === "follow") {
+              let actorId = item.actor.id.replace(/\/+$/, "").split("/").pop();
+              if (actorId === authProvider.user.uuid) {
+                setIsRequested(true);
+              }
+            }
+          })
+        );
+      }
+    }
+
     if (authProvider.isAuthenticated) {
       if (isUserList) {
         fetchData(); // Call the async function
+        checkRequested();
       }
       if (postObj != null) {
         if (postObj.post_status === "update") {
@@ -125,7 +145,7 @@ export default function ListItem({
         page: `${user.page}`,
       }
     };
-  
+
     await InboxService.sendPostToInbox(user.id, followRequest);
 
     setIsRequested(true);
