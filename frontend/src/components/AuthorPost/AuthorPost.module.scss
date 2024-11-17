@@ -1,90 +1,88 @@
 .author-post {
-    border-radius: 8px;
-    padding: 20px 25px;
-    width: 100%;
-    max-width: 300px;
-    background-color: #777777; /* Gray background for the entire box */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slight shadow */
-  }
+  border-radius: 8px;
+  padding: 20px 25px;
+  width: 100%;
+  max-width: 300px;
+  background-color: #777777;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
   
-  .post-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+.post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
   
-  .author-info {
-    display: flex;
-    align-items: center;
-  }
+.author-info {
+  display: flex;
+  align-items: center;
+}
   
-  .author-avatar {
-    width: 64px; 
-    height: 64px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 12px;
-  }
-  
-  .author-info div {
+.author-avatar {
+  width: 64px; 
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+}
+
+.author-info {
+  div {
     display: flex;
     flex-direction: column;
     justify-content: flex-start; 
   }
-  
-  .author-info h3 {
+
+  h3 {
     margin: 0;
     font-size: 16px;
     font-weight: bold;
     text-align: left;
     color: white; 
   }
-  
-  .author-info p {
+
+  p {
     margin: 0;
     color: #bbbbbb; 
     font-size: 14px;
     text-align: left;
   }
+}
   
-  /* Smaller add button */
-  .add-button {
-    background-color: transparent;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 24px; 
-    height: 24px;
-    border-radius: 50%;
-    background-color: #a0a0a0;
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-  }
+/* Smaller add button */
+.add-button {
+  background-color: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px; 
+  height: 24px;
+  border-radius: 50%;
+  background-color: #a0a0a0;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+}
 
-  // From Gemini 16/11/2024
-  .add-button.requested {
-    border-radius: 12px; 
-    padding: 4px 12px; 
-    width: auto; 
-    min-width: 80px; 
-    margin-left: auto; 
-    font-size: 14px;
-    text-align: center; 
-    transition: all 0.3s ease; 
-    color:#333
-  }
+/* From Gemini 16/11/2024 */
+.add-button.requested {
+  border-radius: 12px; 
+  padding: 4px 12px; 
+  width: auto; 
+  min-width: 80px; 
+  margin-left: auto; 
+  font-size: 14px;
+  text-align: center; 
+  transition: all 0.3s ease; 
+  color:#333
+}
   
-  
-
-  /* Post content section */
-  .post-content {
-    font-size: 140px;
-    color: #ffffff;
-    margin-top: 8px; /* Reduced margin */
-    text-align: left;
-  }
-  
+.post-content {
+  font-size: 14px;
+  color: #ffffff;
+  margin-top: 8px;
+  text-align: left;
+}

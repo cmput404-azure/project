@@ -5,13 +5,13 @@
 }
   
 .postSection {
-  align-items: center; /* Horizontal alignment */
+  align-items: center;
   background-color: #ffffff00;
   display: flex;
-  flex: 2; /* Middle section wider than the nav */
+  flex: 2;
   flex-direction: column;
   gap: 20px;
-  overflow-y: auto; /* Enables vertical scrolling */
+  overflow-y: auto;
   padding: 20px;
   overflow-x: hidden;
 }
@@ -21,18 +21,19 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  align-items: center; /* Centers items horizontally */
+  align-items: center;
   gap: 20px; 
   max-width: 380px;
-  overflow-y: auto; /* Enables vertical scrolling */
+  overflow-y: auto;
   padding: 20px;
 
 }
+
 .recommendedTitle {
   color: rgb(207, 207, 207);
   font-weight: bold;
-  margin: 0 auto; /* Ensure the title stays centered */
-  text-align: center; /* Center text horizontally */
+  margin: 0 auto;
+  text-align: center;
 }
 
 /* Icon bar styles */
@@ -42,8 +43,8 @@
   display: flex;
   justify-content: space-evenly;
   margin-bottom: 20px;
-  max-width: 200px; /* Prevent it from being too wide */
-  width: 100%; /* Ensure it spans the full post section */
+  max-width: 200px;
+  width: 100%;
 
   .icon_section {
     align-items: center;
@@ -64,7 +65,7 @@
     .icon {
       background-position: center;
       background-size: cover;
-      border-radius: 50%; /* Optional: rounded icons */
+      border-radius: 50%;
       height: 28px;
       width: 28px;
     }
