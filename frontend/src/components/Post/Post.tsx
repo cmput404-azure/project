@@ -1,10 +1,5 @@
-import {
-  Alert,
-  CircularProgress,
-  Snackbar,
-  Tooltip,
-  Modal,
-} from "@mui/material";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+import { Alert, CircularProgress, Snackbar, Tooltip, Modal } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -24,11 +19,12 @@ import FollowService from "../../service/follow";
 import ProfileService from "../../service/profile";
 import ShareService from "../../service/share";
 import styles from "./Post.module.scss";
-import "@fortawesome/fontawesome-free/css/all.min.css";
 import ShareDialogue from "../Post/ShareDialogue";
 import EllipseMenu from "../EllipseMenu/EllipseMenu";
 
 import { PostData } from "../../models/models";
+import { normalizeURL } from "../../util/formatting/normalizeURL";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -47,12 +43,11 @@ export default function Post({
 }: PostProps) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
   const postID = postGiven ? null : postIDFromParams;
-
-  const [postData, setPostData] = useState<PostData>(postGiven);
-
   const authProvider = useAuth();
+  const navigate = useNavigate();
 
   const [post, setPost] = useState<PostModel | null>(null);
+  const [postData, setPostData] = useState<PostData>(postGiven);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
@@ -62,15 +57,17 @@ export default function Post({
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [commentList, setCommentList] = useState<any[]>([]);
   const [showAlert, setShowAlert] = useState(false);
-  const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAuthor, setCurrentAuthor] = useState<any>();
 
   useEffect(() => {
     const fetchPost = async () => {
+
       try {
+
         if (postID) {
+          console.log(`with postID: ${postID}`)
           const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
           let postDataList = [];
@@ -96,8 +93,8 @@ export default function Post({
                 encodedUrl
               );
               if (!authProvider.user.is_staff) {
-                if (postData.visibility !== 1) {
-                  if (!is_following && postData.visibility === 2) {
+                if (normalizeVisibility(postData.visibility) !== 1) {
+                  if (!is_following && normalizeVisibility(postData.visibility) === 2) {
                     setOpenSnackbar(true);
                     setShowAlert(true);
                     setTimeout(() => {
@@ -107,7 +104,6 @@ export default function Post({
                 }
               }
             }
-            console.log(postData.likes.src);
             setHasLiked(
               postData.likes.src.some((like) =>
                 like.id.includes(authProvider.user?.uuid)
@@ -125,21 +121,20 @@ export default function Post({
             // Call the function to check the share status
             checkIfShared();
           }
-
-          console.log(postData);
+          
           setPost(postData);
 
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
-            Array.isArray(postData.likes) ? 0 : postData.likes.count
+            Array.isArray(postData.likes) ? 0 : (postData.likes?.count || 0)
           );
           setCommentCount(
-            Array.isArray(postData.comments) ? 0 : postData.comments.count
+            Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
           );
         } else {
           setPost(postGiven);
 
-          if (authProvider.user) {
+          if (authProvider.user && postGiven.likes?.count > 0) {
             setHasLiked(
               postGiven.likes.src.some((like) =>
                 like.id.includes(authProvider.user.uuid)
@@ -153,12 +148,17 @@ export default function Post({
             setHasShared(isShared);
           }
 
-          setCommentList(postGiven.comments.src.reverse());
+          const comments = Array.isArray(postGiven?.comments?.src) 
+              ? postGiven.comments.src.reverse() 
+              : [];
+          setCommentList(comments);
+          
           setLikeCount(
-            Array.isArray(postGiven.likes) ? 0 : postGiven.likes.count
+            Array.isArray(postData.likes) ? 0 : (postData.likes?.count || 0)
           );
           setCommentCount(
-            Array.isArray(postGiven.comments) ? 0 : postGiven.comments.count
+            // Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
+            comments.length
           );
         }
       } catch (error) {
@@ -218,22 +218,28 @@ export default function Post({
     }
   }, [post]);
 
+  // To refresh comment count when comment modal is closed
   useEffect(() => {
     const fetchPost = async () => {
       if (postGiven) {
+        // only call if post is local otherwise this is going to raise error
+        if (normalizeURL(postGiven.author.host) !== process.env.REACT_APP_API_BASE_URL) {
+          return;
+        }
         let encodedId = encodeURIComponent(postGiven.id);
-        const postData = await postService.getPost(`api/posts/${encodedId}`);
-        const comments = postData.comments?.src
-          ? postData.comments.src.reverse()
-          : [];
+        const postData = await postService.getPost(`api/posts/${encodedId}`); // this endpoint only works on local post
+        const comments = Array.isArray(postData?.comments?.src) 
+            ? postData.comments.src.reverse() 
+            : [];
         setCommentList(comments);
         setCommentCount(
-          Array.isArray(postData.comments) ? 0 : postData.comments.count
+          (postData.comments) ? postData.comments.count : 0
+          // comments.length
         );
       }
     };
     fetchPost();
-  }, [isModalOpen]);
+  }, [isModalOpen, postGiven]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
@@ -285,8 +291,10 @@ export default function Post({
         author: currentUser.data,
         published: new Date(post.published).toISOString(),
         object: post.id,
+        post_host: postGiven.author.host
       };
-
+      console.log(post.author.id)
+      console.log(postGiven.author.host)
       await inbox.sendPostToInbox(post.author.id, like_obj);
       setLikeCount(likeCount + 1);
       setHasLiked(true);
@@ -373,7 +381,7 @@ export default function Post({
             </span>
           </div>
           <div>
-            {post.visibility === 4 && (
+            {normalizeVisibility(post.visibility) === 4 && (
               <span className={styles.deletedLabel}>Deleted</span>
             )}
             {post.type === "shared" && (
@@ -449,7 +457,7 @@ export default function Post({
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
-          {post.visibility === 1 ? (
+          {normalizeVisibility(post.visibility) === 1 ? (
             <div
               className={`${styles.icon} ${hasShared ? styles.shared : ""}`}
               onClick={handleSharePost}

@@ -73,6 +73,7 @@ export default function UserProfile() {
     setPosts((prevPosts) => {
       const existingIds = new Set(prevPosts.map((post) => post.id));
       const newPosts = src.filter((post) => !existingIds.has(post.id));
+      console.log(...prevPosts, ...newPosts);
       return [...prevPosts, ...newPosts];
     });
 

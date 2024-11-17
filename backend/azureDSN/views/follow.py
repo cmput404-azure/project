@@ -1,13 +1,14 @@
-from django.conf import settings
-from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, inline_serializer
-from requests.auth import HTTPBasicAuth
+from django.http import Http404
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from urllib.parse import unquote, urlparse
+from django.conf import settings
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, inline_serializer
 from ..serializers import FollowSerializer, UserSerializer
 from ..models import Follow, User
+from urllib.parse import unquote, urlparse
+from requests.auth import HTTPBasicAuth
 import requests, os
 
 def fetch_remote_follower_data(remote_url):
@@ -118,7 +119,7 @@ class FollowCustomView(APIView):
                         remote_followee.append(remote_user)
                 except Exception as e:
                     print(f"Error fetching remote followee data: {e}")
-        
+
         local_serializer = UserSerializer(local_followee, many=True)
         response_data = {
             "type": "followers",
@@ -188,7 +189,6 @@ class FollowerView(APIView):
         Get all the followers of a local user
 
         """
-        print("test")
         # Get the followers list from Follow model
         followers = Follow.objects.filter(local_followee_id=user_id) 
         local_followers = []
@@ -206,9 +206,7 @@ class FollowerView(APIView):
                     return Response({"error": "Local follower not found."}, status=404)
 
         local_serializer = UserSerializer(local_followers, many=True)
-        print(f"Local:{local_serializer.data}")
-        print(f"remote: {remote_followers}")
-        
+
         response_data = {
             "type": "followers",
             "followers": local_serializer.data + remote_followers,
@@ -345,6 +343,7 @@ class FollowView(APIView):
 
         # Get the necessary information from follower_url
         decoded_url = unquote(follower_url)
+        print(decoded_url)
         parts = decoded_url.strip("/").split("/")
         follower_host = f"{parts[0]}//{parts[2]}"  
         follower_id = parts[-1]
@@ -391,7 +390,9 @@ class FollowView(APIView):
         """
         Checks if the second id is a follower of the first id
         Example call: http://127.0.0.1:8000/api/authors/eba591e5-91a3-4b80-9fe4-cd3eb8b4b544/followers/http%3A%2F%2F127.0.0.1%3A8000%2Fapi%2Fauthors%2F337f58f8-5811-4213-8311-1c7dc8e6038d/
+        
         """
+        # remote follower
         decoded_url = unquote(follower_url)
         parts = decoded_url.strip("/").split("/")
         follower_id = parts[-1]
@@ -407,4 +408,3 @@ class FollowView(APIView):
                 return Response({"is_follower": False}, status=404) # Neither local nor remote
             else:
                 return Response({"is_follower": True},status=200) # Local follower
-        

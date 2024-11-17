@@ -105,7 +105,7 @@ class MultipleCommentsView(APIView):
 
             post_obj = get_object_or_404(Post, uuid=post_id)
 
-        comments = Comment.objects.filter(post=post_obj)
+        comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
 
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(comments, request)
@@ -171,6 +171,7 @@ class SingleCommentView(APIView):
         """
         if comment_serial:
             # Case: Retrieve comment using author, post, and comment serials.
+            print(type(author_serial))  # returns <class 'uuid.UUID'>
             author = get_object_or_404(User, uuid=author_serial)
             post = get_object_or_404(Post, uuid=post_serial, user=author)
 

@@ -46,10 +46,14 @@ export default function ListItem({
   const [isUpdatedPost, setIsUpdatedPost] = useState(false);
   const [isDeletedPost, setIsDeletedPost] = useState(false);
   const navigate = useNavigate();
+  const [userId, setUserId] = useState("");
   const [isRemote, setIsRemote] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
+      const userListId = extractUUID(user.id);
+      setUserId(userListId);
+      
       let following = false;
       if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
         // check if current user is already following the (local) user
@@ -59,6 +63,7 @@ export default function ListItem({
       } else {
         try {
           following = await api.get(`/api/check/${authProvider.user.uuid}/follows/${user.id}`);
+          console.log(following)
         } catch (err) {
           if (err.response.status !== 404) {
             console.error('Fetch following error:', error);
@@ -76,7 +81,7 @@ export default function ListItem({
         fetchData(); // Call the async function
       }
       if (postObj != null) {
-        if (postObj.post_status === "update") {
+        if (postObj.post_status && postObj.post_status.includes("update")) {
           setIsUpdatedPost(true);
         } else if (postObj.post_status === "delete") {
           setIsDeletedPost(true);
@@ -95,7 +100,7 @@ export default function ListItem({
       closeModal?.();
       navigate("/login");
     }
-
+    
     const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
     const myInfo = userResponse.data;
 
@@ -125,7 +130,7 @@ export default function ListItem({
         page: `${user.page}`,
       }
     };
-  
+
     await InboxService.sendPostToInbox(user.id, followRequest);
 
     setIsRequested(true);

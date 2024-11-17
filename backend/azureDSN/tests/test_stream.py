@@ -176,4 +176,3 @@ class StreamViewTest(APITestCase):
         # In the frontend, you can't view the auth stream because the button is hidden, so instead of returning error code, it returns empty array
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(returned_posts), 0) # empty, because user is unauthenticated, can't fetch non-public posts as that is specific to user
-
