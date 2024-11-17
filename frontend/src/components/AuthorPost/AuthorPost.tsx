@@ -12,9 +12,7 @@ interface AuthorPostProps {
 const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
   const authProvider = useAuth();
   const [isRequested, setIsRequested] = useState(false); 
-  const truncateText = (text: string, maxLength: number) => {
-    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
-  };
+  
   const handleAddButton = async () => {
     const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
     const myInfo = userResponse.data;
