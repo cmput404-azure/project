@@ -566,8 +566,9 @@ class PostView(APIView):
 
             parsed_url = urlparse(decoded_post_fqid)
             host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-
-            if (host == os.getenv('BASE_URL', 'http://localhost:8000')):
+            
+            if host.strip().lower() == os.getenv('BASE_URL', 'http://localhost:8000').strip().lower():
+            # if (host == os.getenv('BASE_URL', 'http://localhost:8000')):
                 post = get_object_or_404(Post, uuid=post_serial)
                 post_visibility = post.visibility
                 serializer = PostSerializer(post)
@@ -576,7 +577,7 @@ class PostView(APIView):
                 response = requests.get(decoded_post_fqid)
                 response = requests.get(
                     decoded_post_fqid,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME').strip(), os.getenv('NODE_PASSWORD').strip()),
                 )
                 data = response.json()  # Parse the JSON response
                 post_visibility = data.get("visibility")

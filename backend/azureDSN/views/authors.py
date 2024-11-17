@@ -119,7 +119,7 @@ class AuthorsSpecificView(APIView):
 
             author_host = urlparse(author_fqid)
             host = f"{author_host.scheme}://{author_host.netloc}"
-            if (host == os.getenv('BASE_URL', 'http://localhost:8000')):
+            if host.strip().lower() == os.getenv('BASE_URL', 'http://localhost:8000').strip().lower():
                 local_user = get_object_or_404(User, uuid=author_serial)
                 serializer = UserSerializer(local_user)
                 return Response(serializer.data, status=200)
@@ -132,7 +132,7 @@ class AuthorsSpecificView(APIView):
                 remote_author_url = f"{base_host}/api/authors/{author_serial}"
                 response = requests.get(
                     remote_author_url,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME').strip().lower(), os.getenv('NODE_PASSWORD').strip().lower()),
                 )
                 if response.status_code == 200:
                     return Response(response.json(), status=status.HTTP_200_OK)
