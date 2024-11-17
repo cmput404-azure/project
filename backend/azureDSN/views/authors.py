@@ -1,3 +1,4 @@
+import os
 from urllib.parse import urlparse
 from requests.auth import HTTPBasicAuth
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
@@ -304,12 +305,23 @@ class AuthorsCompleteView(APIView):
                 base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
                 api_url = f"{base_url}/api/authors/"
 
-                response = requests.get(
-                    api_url,
-                    auth=HTTPBasicAuth(node.username, node.password)
-                )
+                try:
+                    response = requests.get(
+                        api_url,
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                    )
 
-                data = response.json()
-                users.extend(data["authors"])
+                    if response.status_code == 403:
+                        continue
+
+                    data = response.json()
+
+                    if "authors" in data and data["authors"]:
+                        users.extend(data["authors"])
+                    else:
+                        continue
+                except requests.exceptions.RequestException as e:
+                    print(f"Error fetching authors from node {node.host}: {e}")
+                    continue
                 
         return Response(users, status=200)
