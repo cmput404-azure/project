@@ -45,15 +45,15 @@ class PostSerializer(serializers.ModelSerializer):
         post_uuid = str(instance.uuid)
 
         base_url = settings.BASE_URL
-        print(f"Base URL: {base_url}")
         post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
         
         # Fetch all likes of the post
         like_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
+        headers = {"Internal-Auth": os.getenv("INTERNAL_API_SECRET")} # To get through the auth layer
         
         try:
-            response = requests.get(like_url)
+            response = requests.get(like_url, headers=headers)
             if response.status_code == 200:
                 representation['likes'] = response.json()
             else:
@@ -65,7 +65,7 @@ class PostSerializer(serializers.ModelSerializer):
         comment_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
         
         try:
-            response = requests.get(comment_url)
+            response = requests.get(comment_url, headers=headers)
             if response.status_code == 200:
                 representation['comments'] = response.json()
             else:
