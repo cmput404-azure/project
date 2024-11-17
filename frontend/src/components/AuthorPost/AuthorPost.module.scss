@@ -18,6 +18,27 @@
 .author_info {
   display: flex;
   align-items: center;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: left;
+    color: white;
+  }
+
+  p {
+    margin: 0;
+    color: #bbbbbb;
+    font-size: 14px;
+    text-align: left;
+  }
 }
 
 .author_avatar {
@@ -26,27 +47,6 @@
   border-radius: 50%;
   object-fit: cover;
   margin-right: 12px;
-}
-
-.author_info div {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-.author_info h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: bold;
-  text-align: left;
-  color: white;
-}
-
-.author_info p {
-  margin: 0;
-  color: #bbbbbb;
-  font-size: 14px;
-  text-align: left;
 }
 
 /* Smaller add button */
@@ -67,6 +67,7 @@
   font-weight: bold;
 }
 
+// From Gemini 16/11/2024
 .add_button__requested {
   border-radius: 12px;
   padding: 4px 12px;
