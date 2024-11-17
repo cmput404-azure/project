@@ -87,7 +87,6 @@ class ImageView(APIView):
     )
     def get(self, request, author_serial=None, post_serial=None, post_fqid=None):
         if (author_serial and post_serial):
-            print("i am NOT using fqid")
             """
                 URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/image
                 GET [local, remote] get the public post converted to binary as an image
@@ -105,7 +104,6 @@ class ImageView(APIView):
                 GET [local, remote] get the public post converted to binary as an image
                 return 404 if not an image
             """
-            print("i am using fqid")
             try:
                 # Extract the POST FQID's path
                 parsed_url = urlparse(post_fqid)
@@ -125,14 +123,9 @@ class ImageView(APIView):
             post = get_object_or_404(Post, uuid=post_serial)
 
         if post.has_image:
-            print("there is an image in this post")
-            print(f"Type of content: {type(post.content)}")
-            print(f"Length of content (after): {len(post.content)}")
-            
-            print(f"What's the type: {post.content_type}")
             img_type = post.content_type.split(';')[0]
-
             data = f"data:{post.content_type},{post.content}"
+
             return Response({"image": data, "content_type": img_type}, status=200)
         
         else:

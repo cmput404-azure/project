@@ -14,6 +14,7 @@ import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
 import remarkGfm from 'remark-gfm';
 import styles from "./MiniPostCard.module.scss";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 interface MiniPostCardProps {
   post: PostData;
@@ -75,11 +76,22 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
 
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
-      const target = updatedPost.visibility === 1 || updatedPost.visibility === 3 ? followers : friends;
+      const target = normalizeVisibility(updatedPost.visibility) === 1 || normalizeVisibility(updatedPost.visibility) === 3 ? followers : friends;
       for (const recipient of target) {
-        await inbox.updateInboxPost(
-          recipient.id, postId, updatedPost.title, updatedPost.content, updatedPost.visibility
-        );
+        const post_obj = {
+          ...postData,
+          ...(postData.type ? {} : { type: "post" }),
+          title: updatedPost.title,
+          content: updatedPost.content,
+          visibility: normalizeVisibility(updatedPost.visibility, true) as string,
+          follower: {
+            type: "author",
+            id: recipient.id,
+            host: recipient.host,
+          }
+        };
+
+        await inbox.updateInboxPost(recipient.id, post_obj);
       }
 
       // Update local postData state
@@ -87,7 +99,7 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
         ...postData,
         title: updatedPost.title,
         content: updatedPost.content,
-        visibility: updatedPost.visibility
+        visibility: normalizeVisibility(updatedPost.visibility) as string
       });
 
       closeEditModal();
@@ -103,13 +115,22 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
 
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
-      const target = postData.visibility === 1 || postData.visibility === 3 ? followers : friends;
+      const target = normalizeVisibility(postData.visibility) === 1 || normalizeVisibility(postData.visibility) === 3 ? followers : friends;
       for (const recipient of target) {
-        await inbox.deleteInboxPost(recipient.id, postId);
+        const deletedPost = {
+          ...postData,
+          ...(postData.type ? {} : { type: "post" }),
+          follower: {
+            type: "author",
+            id: recipient.id,
+            host: recipient.host,
+          }
+        };
+        await inbox.deleteInboxPost(recipient.id, deletedPost);
       }
 
       // Update postData state to indicate deletion
-      setPostData({ ...postData, visibility: 4 });
+      setPostData({ ...postData, visibility: "DELETED" });
       closeDeleteModal();
       onDelete(postData.id);
     } catch (error) {

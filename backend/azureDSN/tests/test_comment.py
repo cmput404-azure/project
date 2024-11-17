@@ -3,8 +3,9 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from ..models import Comment, Post, User
-
+from unittest.mock import patch
 class CommentsAPITest(APITestCase):
+    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
         self.client = APIClient()
         
@@ -73,16 +74,6 @@ class CommentsAPITest(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-
-
-
-
-
-
-
-
-
-
     def test_get_single_comment_by_serials(self):
         # Retrieve a single comment by author, post, and comment serials
         url = reverse('comment_by_serial', kwargs={
@@ -148,4 +139,3 @@ class CommentsAPITest(APITestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-

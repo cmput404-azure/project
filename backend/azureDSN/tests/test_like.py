@@ -1,18 +1,21 @@
 import uuid
 from django.urls import reverse
+from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from ..models import Like, Post, User
+from unittest.mock import patch
 
 class LikesAPITest(APITestCase):
+    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create(
             display_name="Test User",
             username="Test User",
-            host="http://localhost:8000/api/",
+            host=f"{settings.BASE_URL}/api/",
             github="https://github.com/testuser",
-            page="http://localhost:8000/authors/testuser",
+            page=f"{settings.BASE_URL}/authors/testuser",
             profile_image=None
         )
 
@@ -49,8 +52,8 @@ class LikesAPITest(APITestCase):
         # Check response data
         self.assertEqual(response.data['type'], f"like")
         self.assertEqual(response.data['author']["displayName"], f"{self.user.display_name}")
-        self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/liked/{self.like.uuid}")
-        self.assertEqual(response.data['object'], f"http://testserver/api/authors/{self.user.uuid}/posts/{self.post.uuid}")
+        self.assertEqual(response.data['id'], f"{settings.BASE_URL}/api/authors/{self.user.uuid}/liked/{self.like.uuid}")
+        self.assertEqual(response.data['object'], f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}")
 
     def test_get_like_invalid_serial(self):
         # Test calling the endpoint with either invalid author serial or like serial, should return 404
@@ -75,7 +78,7 @@ class LikesAPITest(APITestCase):
     def test_get_like_by_like_fqid(self):
         # Test fetching a like object using its FQID
         url = reverse('get_like_by_fqid', kwargs={
-            'like_fqid': f"http://{self.user.host}api/like/{self.like.uuid}"
+            'like_fqid': f"http://{self.user.host}like/{self.like.uuid}"
         })
 
         response = self.client.get(url)
@@ -84,13 +87,13 @@ class LikesAPITest(APITestCase):
 
         self.assertEqual(response.data['type'], f"like")
         self.assertEqual(response.data['author']["displayName"], f"{self.user.display_name}")
-        self.assertEqual(response.data['id'], f"http://testserver/api/authors/{self.user.uuid}/liked/{self.like.uuid}")
-        self.assertEqual(response.data['object'], f"http://testserver/api/authors/{self.user.uuid}/posts/{self.post.uuid}")
+        self.assertEqual(response.data['id'], f"{settings.BASE_URL}/api/authors/{self.user.uuid}/liked/{self.like.uuid}")
+        self.assertEqual(response.data['object'], f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}")
 
     def test_get_like_invalid_fqid(self):
         # Test calling the endpoint using an invalid Like uuid that invalidates the FQID, should return 400
         url = reverse('get_like_by_fqid', kwargs={
-            'like_fqid': f"http://{self.user.host}api/like/not-a-uuid"
+            'like_fqid': f"http://{self.user.host}like/not-a-uuid"
         })
 
         response = self.client.get(url)
@@ -124,7 +127,7 @@ class LikesAPITest(APITestCase):
     def test_get_author_likes_fqid(self):
         # Test getting Likes of an author by its author FQID
         url = reverse('author_likes_by_fqid', kwargs={
-            'author_fqid': f"{self.user.host}api/author/{self.user.uuid}"
+            'author_fqid': f"{self.user.host}author/{self.user.uuid}"
         })
 
         response = self.client.get(url)
@@ -138,7 +141,7 @@ class LikesAPITest(APITestCase):
     def test_get_author_likes_invalid_fqid(self):
         # Test calling the endpoint with an invalid author serial that invalidates the FQID
         url = reverse('author_likes_by_fqid', kwargs={
-            'author_fqid': f"{self.user.host}api/author/not-a-valid-uuid"
+            'author_fqid': f"{self.user.host}author/not-a-valid-uuid"
         })
 
         response = self.client.get(url)
@@ -154,9 +157,9 @@ class LikesAPITest(APITestCase):
         # Make another user like the post as well
         self.user2 = User.objects.create(
             display_name="Test User 2",
-            host="http://localhost:8000/",
+            host=f"{settings.BASE_URL}/api/",
             github="http://github.com/testuser2",
-            page="http://localhost:8000/authors/testuser2",
+            page=f"{settings.BASE_URL}/authors/testuser2",
             profile_image=None
         )
 
@@ -202,7 +205,7 @@ class LikesAPITest(APITestCase):
     def test_get_post_likes_by_fqid(self):
         # Test get Likes object of a post using post fqid
         url = reverse('get_likes_by_fqid', kwargs={
-            'post_fqid': f"{self.user.host}api/posts/{self.post.uuid}"
+            'post_fqid': f"{self.user.host}posts/{self.post.uuid}"
         })
 
         response = self.client.get(url)
@@ -216,11 +219,8 @@ class LikesAPITest(APITestCase):
     def test_get_post_likes_invalid_fqid(self):
         # Test calling the endpoint using an invvalid post fqid that invalidates the fqid, should return 400
         url = reverse('get_likes_by_fqid', kwargs={
-            'post_fqid': f"{self.user.host}api/author/"
+            'post_fqid': f"{self.user.host}author/"
         })
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-

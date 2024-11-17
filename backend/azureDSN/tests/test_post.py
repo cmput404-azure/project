@@ -1,4 +1,6 @@
+from unittest.mock import patch
 from uuid import uuid4
+from django.conf import settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -7,23 +9,23 @@ from rest_framework.authtoken.models import Token
 from django.utils import timezone
 
 class PostTests(APITestCase):
-    
+    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
         """Create test users and posts for the tests."""
         self.test_author = User.objects.create_user(
             username='testauthor',
             display_name='Test Author',
-            host='http://localhost:8000/api/',
+            host=f"{settings.BASE_URL}/api/",
             github='http://github.com',
-            page='http://localhost:8000/api/authors/testauthor',
+            page=f'{settings.BASE_URL}/api/authors/testauthor',
         )
         
         self.test_author2 = User.objects.create_user(
             username='testauthor2',
             display_name='Test Author 2',
-            host='http://localhost:8000/api/',
+            host=f'{settings.BASE_URL}/api/',
             github='http://github.com',
-            page='http://localhost:8000/api/authors/testauthor2',
+            page=f'{settings.BASE_URL}/api/authors/testauthor2',
         )
         
         # Create a token for the test user
@@ -261,7 +263,7 @@ class PostTests(APITestCase):
     # ------------------------200 OK------------------------
     # get post by fqid
     def test_get_post_by_fqid(self):
-        host = "http://localhost:8000/api/posts/"
+        host = f"{settings.BASE_URL}/api/posts/"
         url = reverse('post', kwargs={'post_fqid': f"{host}{self.test_post1.uuid}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -272,7 +274,7 @@ class PostTests(APITestCase):
     def test_get_friends_only_post_by_fqid(self):
         """Test getting a friends-only post by fqid."""
         self.authenticate()
-        host = "http://localhost:8000/api/posts/"
+        host = f"{settings.BASE_URL}/api/posts/"
         url = reverse('post', kwargs={'post_fqid': f"{host}{self.test_post2.uuid}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -281,7 +283,7 @@ class PostTests(APITestCase):
     def test_get_unlisted_post_by_fqid(self):
         """Test getting an unlisted post by fqid."""
         self.authenticate()
-        host = "http://localhost:8000/api/posts/"
+        host = f"{settings.BASE_URL}/api/posts/"
         url = reverse('post', kwargs={'post_fqid': f"{host}{self.test_post3.uuid}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -290,7 +292,7 @@ class PostTests(APITestCase):
     # get post by fqid that does not exist
     def test_get_post_by_fqid_not_found(self):
         """Test getting a post by fqid that does not exist."""
-        host = "http://localhost:8000/api/posts/"
+        host = f"{settings.BASE_URL}/api/posts/"
         url = reverse('post', kwargs={'post_fqid': f"{host}{uuid4()}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -298,7 +300,7 @@ class PostTests(APITestCase):
     # get a deleted post by fqid
     def test_get_deleted_post_by_fqid(self):
         """Test getting a deleted post by fqid."""
-        host = "http://localhost:8000/api/posts/"
+        host = f"{settings.BASE_URL}/api/posts/"
         url = reverse('post', kwargs={'post_fqid': f"{host}{self.test_post4.uuid}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -307,7 +309,7 @@ class PostTests(APITestCase):
     # get a friends-only post by fqid without authentication
     def test_get_friends_only_post_by_fqid_not_authenticated(self):
         """Test getting a friends-only post by fqid without authentication."""
-        host = "http://localhost:8000/api/posts/"
+        host = f"{settings.BASE_URL}/api/posts/"
         url = reverse('post', kwargs={'post_fqid': f"{host}{self.test_post2.uuid}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -315,7 +317,7 @@ class PostTests(APITestCase):
     # get an unlisted post by fqid without authentication
     def test_get_unlisted_post_by_fqid_not_authenticated(self):
         """Test getting an unlisted post by fqid without authentication."""
-        host = "http://localhost:8000/api/posts/"
+        host = f"{settings.BASE_URL}/api/posts/"
         url = reverse('post', kwargs={'post_fqid': f"{host}{self.test_post3.uuid}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

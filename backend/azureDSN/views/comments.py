@@ -105,7 +105,7 @@ class MultipleCommentsView(APIView):
 
             post_obj = get_object_or_404(Post, uuid=post_id)
 
-        comments = Comment.objects.filter(post=post_obj)
+        comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
 
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(comments, request)
@@ -211,11 +211,7 @@ class CreateCommentView(APIView):
     def post(self, request, author_serial):
         # Deserialize the incoming request data
         serializer = CommentSerializer(data=request.data)
-        print("@@@@@@@")
-        print(request.data)
         if serializer.is_valid():
-            print("#######")
-            print(serializer.validated_data)
             post_fqid = serializer.validated_data.get('post')
             post_id = post_fqid.split('/')[-1]  # Extract the post UUID from the FQID
             

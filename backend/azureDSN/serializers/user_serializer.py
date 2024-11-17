@@ -63,7 +63,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     # This method gets the custom uuid value and maps it to'id'
     def get_id(self, obj):
-        return f"{obj.host}authors/{obj.uuid}"  
+        return f"{obj.host}authors/{obj.uuid}"
 
     # The returned id field is the value stored in the uuid
     def to_representation(self, instance):
@@ -93,7 +93,6 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Check if the payload have the expected fields.
         """
-        print(data)
         required_fields = ['uuid', 'host', 'display_name', 'github', 'page'] # based on DB schema (image not included right now)
         missing_fields = [field for field in required_fields if field not in data]
 

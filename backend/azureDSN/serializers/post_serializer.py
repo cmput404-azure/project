@@ -1,12 +1,10 @@
-import os
 from rest_framework import serializers
 from ..models import Post, User
 from .user_serializer import UserSerializer
 from rest_framework.response import Response
-import base64
 from django.conf import settings
 from urllib.parse import urljoin
-import requests
+import requests, base64
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(source='user') 
@@ -15,7 +13,7 @@ class PostSerializer(serializers.ModelSerializer):
     
     id = serializers.UUIDField(source='uuid', read_only=True)
     contentType = serializers.CharField(source='content_type')
-    published = serializers.DateTimeField(source='created_at')
+    published = serializers.DateTimeField(source='modified_at')
     
     class Meta:
         model = Post
@@ -45,15 +43,16 @@ class PostSerializer(serializers.ModelSerializer):
         post_uuid = str(instance.uuid)
 
         # settings.BASE_URL will always work as long as you have .env file now
-        base_url = settings.BASE_URL
-        post_url = f'authors/{author_uuid}/posts/{post_uuid}'
+        base_url = settings.BASE_URL.strip()
+        post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
         
         # Fetch all likes of the post
-        like_url = f"{base_url}authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
+        like_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
+        headers = {"Internal-Auth": settings.INTERNAL_API_SECRET} # To get through the auth layer
         
         try:
-            response = requests.get(like_url)
+            response = requests.get(like_url, headers=headers)
             if response.status_code == 200:
                 representation['likes'] = response.json()
             else:
@@ -62,10 +61,10 @@ class PostSerializer(serializers.ModelSerializer):
             representation['likes'] = []
             
         # Fetch all comments of the post
-        comment_url = f"{base_url}authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
+        comment_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
         
         try:
-            response = requests.get(comment_url)
+            response = requests.get(comment_url, headers=headers)
             if response.status_code == 200:
                 representation['comments'] = response.json()
             else:
@@ -95,7 +94,7 @@ class PostSerializer(serializers.ModelSerializer):
         post.description = validated_data.get('description', post.description)
         post.contentType = validated_data.get('contentType', post.contentType)
         post.content = validated_data.get('content', post.content)
-        post.published = validated_data.get('published', post.published)
+        post.published = validated_data.get('published', post.modified_at)
         post.modified_at = validated_data.get('modified_at', post.modified_at)
         post.visibility = validated_data.get('visibility', post.visibility)
         post.save()
@@ -114,6 +113,8 @@ class CreatePostSerializer(serializers.ModelSerializer):
     content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
     github_id = serializers.CharField(required=False, allow_null=True)
     visibility = serializers.ChoiceField(choices=Post.VISIBILITY_CHOICES, default=1)
+    comments = serializers.ListField(default=[])
+    likes = serializers.ListField(default=[])
 
     class Meta:
         model = Post
@@ -127,7 +128,9 @@ class CreatePostSerializer(serializers.ModelSerializer):
             'author',
             'published',
             'visibility',
-            'github_id'
+            'github_id',
+            'likes',
+            'comments'
         )
 
     def create(self, validated_data):
@@ -163,8 +166,45 @@ class CreatePostSerializer(serializers.ModelSerializer):
     # Convert the integer visibility back to string when serializing the response
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        # build fqid for post
+        author_uuid = instance.user.uuid
+        post_uuid = str(instance.uuid)
+        
+        base_url = settings.BASE_URL.strip()
+        post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
+        representation['id'] = urljoin(base_url, post_url)
         
         visibility_str = dict(Post.VISIBILITY_CHOICES).get(instance.visibility)
         representation['visibility'] = visibility_str
+
+        # settings.BASE_URL will always work as long as you have .env file now
+        base_url = settings.BASE_URL.strip()
+        post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
+        representation['id'] = urljoin(base_url, post_url)
+        
+        # Fetch all likes of the post
+        like_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
+        headers = {"Internal-Auth": settings.INTERNAL_API_SECRET} # To get through the auth layer
+        
+        try:
+            response = requests.get(like_url, headers=headers)
+            if response.status_code == 200:
+                representation['likes'] = response.json()
+            else:
+                representation['likes'] = []
+        except requests.RequestException as e:
+            representation['likes'] = []
+            
+        # Fetch all comments of the post
+        comment_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
+        
+        try:
+            response = requests.get(comment_url, headers=headers)
+            if response.status_code == 200:
+                representation['comments'] = response.json()
+            else:
+                representation['comments'] = []
+        except requests.RequestException as e:
+            representation['comments'] = []
         
         return representation
