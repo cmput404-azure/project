@@ -31,7 +31,6 @@ class StreamService{
    public async getStream(auth: boolean = false, page: number = 1, size: number = 15): Promise<PaginatedResponse> {
       try {
          const endpoint = auth ? "/api/stream/auth" : "/api/stream/";
-         // const endpoint = '/api/stream/';
          const req = await api.get<PaginatedResponse>(endpoint, {
            params: { page, size },
          });

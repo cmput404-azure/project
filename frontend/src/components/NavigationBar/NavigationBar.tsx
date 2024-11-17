@@ -5,7 +5,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import Modal from "react-modal";
 import NotificationList from "../NotificationList/NotificationList";
 import UserSearch from "../UserSearch/UserSearch";
-import { logout } from "../../util/auth/checkauth";
 import styles from "./NavigationBar.module.scss";
 
 interface NavigationBarProps {
@@ -41,8 +40,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   ];
 
   const loggedOutNavigationItems = [
-    { icon: <i className="fa-solid fa-user" />, label: "login" },
-    { icon: <i className="fa-solid fa-user-plus" />, label: "signup" },
+    { icon: <i className="fa-solid fa-arrow-right-to-bracket" />, label: "login" },
   ];
 
   const bottomNavigationItems = [
@@ -71,9 +69,9 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
           {[
             ...commonNavigationItems,
             ...(isLoggedIn
-              ? loggedInNavigationItems
+              ? [...bottomNavigationItems, ...loggedInNavigationItems, ]
               : loggedOutNavigationItems),
-            ...bottomNavigationItems,
+            ...(isAdmin && isLoggedIn ? adminNavigationItems : []),
           ].map((item) => (
             <div
               key={item.label}
@@ -104,8 +102,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   e.preventDefault();
                   if (item.label === "search") {
                     handleSearchClick();
-                  } else if (item.label === "logout") {
-                    logout();
                   } else {
                     onClick(item.label); // Default handler for other items
                   }
@@ -132,9 +128,10 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 </div>
               ))}
           </div>
-          {/* For Profile Icon */}
+          {/* For Bottom Navigation */}
           <div className={styles.bottomIconGroup}>
-            {bottomNavigationItems.map((item) => (
+          {isLoggedIn ? (
+            bottomNavigationItems.map((item) => (
               <div
                 key={item.label}
                 className={styles.navigationItem}
@@ -142,7 +139,20 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               >
                 {item.icon}
               </div>
-            ))}
+            ))
+          ) : (
+            loggedOutNavigationItems
+              .filter((item) => item.label === "login")
+              .map((item) => (
+                <div
+                  key={item.label}
+                  className={styles.navigationItem}
+                  onClick={() => onClick(item.label)}
+                >
+                  {item.icon}
+                </div>
+              ))
+          )}
           {/* For Settings Icon */}
             {isAdmin && adminNavigationItems.map((item) => (
               <div

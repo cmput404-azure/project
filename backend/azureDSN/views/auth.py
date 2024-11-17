@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 
 class LoginView(APIView):
     def post(self, request):
+        print("trying to login here")
         username = request.data.get('username')
         password = request.data.get('password')
 
@@ -19,6 +20,7 @@ class LoginView(APIView):
 
             # If approval is no longer required, activate the user automatically
             if not site_config.require_approval and not user.is_active:
+                print("Auto-activating user as approval is no longer required")
                 user.is_active = True
                 user.save()
 
@@ -67,8 +69,8 @@ class RegisterView(APIView):
         githubUsername = data.get('githubUsername')
         githubUrl = f"https://github.com/{githubUsername if githubUsername else 'login'}"
 
+        base_host = host.rstrip('/api/')
         parsed_host = urlparse(host)
-        base_host = f"{parsed_host.scheme}://{parsed_host.netloc}"
         if parsed_host.netloc == "localhost:3000" or parsed_host.netloc == "127.0.0.1:3000":
             host = "http://localhost:8000/api/" # when creating user locally, automatically change it to port 8000 so the API works
 
@@ -96,7 +98,7 @@ class RegisterView(APIView):
             email=email,
             display_name=name,
             github=githubUrl,
-            host=base_host,
+            host=host,
             is_active=is_active
         )
 

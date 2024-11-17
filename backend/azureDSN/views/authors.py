@@ -108,19 +108,18 @@ class AuthorsSpecificView(APIView):
         GET [local, remote] get the public authors
         """
 
-        if(author_serial):
-            # if uuid provided
+        if (author_serial):
             author = get_object_or_404(User, uuid=author_serial)
-            
             serializer = UserSerializer(author)
             return Response(serializer.data, status=200)
-        elif(author_fqid):
+        
+        elif (author_fqid):
             author_serial = author_fqid.rstrip('/').split('/')[-1]
             UUID(author_serial)
 
             author_host = urlparse(author_fqid)
             host = f"{author_host.scheme}://{author_host.netloc}"
-            if (host == os.getenv('BASE_URL', 'http://localhost:8000')):
+            if host.strip().lower() == os.getenv('BASE_URL', 'http://localhost:8000').strip().lower():
                 local_user = get_object_or_404(User, uuid=author_serial)
                 serializer = UserSerializer(local_user)
                 return Response(serializer.data, status=200)
@@ -133,13 +132,13 @@ class AuthorsSpecificView(APIView):
                 remote_author_url = f"{base_host}/api/authors/{author_serial}"
                 response = requests.get(
                     remote_author_url,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME').strip().lower(), os.getenv('NODE_PASSWORD').strip().lower()),
                 )
                 if response.status_code == 200:
                     return Response(response.json(), status=status.HTTP_200_OK)
                 else:
                     return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
-            
+
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -216,7 +215,7 @@ class AuthorsSpecificView(APIView):
 
 class AuthorsCompleteView(APIView):
     @extend_schema(
-        summary="Retrieve all local authors and remote authors of connected nodes.",
+        summary="Retrieve all local authors",
         description="This endpoint returns a list of all authors present in the local node.",
         responses={
             status.HTTP_200_OK: OpenApiResponse(
@@ -272,7 +271,7 @@ class AuthorsCompleteView(APIView):
     )
     def get(self, request):
         """
-        Gets all the author in our local node as well as remote authors from connected nodes.
+        Gets all the author in our local node.
         """
         user_uuid = request.query_params.get('user')
 
@@ -296,11 +295,20 @@ class AuthorsCompleteView(APIView):
                 try:
                     response = requests.get(
                         api_url,
-                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                     )
-                    data = response.json().get("authors", [])
-                    users.extend(data)
-                except:
+
+                    if response.status_code == 403:
+                        continue
+
+                    data = response.json()
+
+                    if "authors" in data and data["authors"]:
+                        users.extend(data["authors"])
+                    else:
+                        continue
+                except requests.exceptions.RequestException as e:
+                    print(f"Error fetching authors from node {node.host}: {e}")
                     continue
                 
         return Response(users, status=200)
