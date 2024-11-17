@@ -1,6 +1,7 @@
-import { extractUUID } from "../util/formatting/extractUUID";
 import { Inbox, InboxItem, PostData } from "../models/models";
+
 import { api } from "./config";
+import { extractUUID } from "../util/formatting/extractUUID";
 
 class InboxService {
     /* 
@@ -22,12 +23,17 @@ class InboxService {
     /* 
         Update the post in inbox
         @param uuid: string - the fqid of the user
-               post_obj: Post - the updated post object
-        @returns: message: string 
+                post_id: string - the fqid of the post
+                title: string - the new title of the post
+                content: string - the new content of the post
+                visibility: number - the new status of the post  
     */
     public async updateInboxPost(
         uuid: string,
-        post_obj: any
+        post_id: string,
+        title: string,
+        content: string,
+        visibility: number
     ): Promise<string> {
         try {
             post_id = extractUUID(post_id);
