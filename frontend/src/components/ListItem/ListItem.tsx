@@ -76,7 +76,7 @@ export default function ListItem({
         fetchData(); // Call the async function
       }
       if (postObj != null) {
-        if (postObj.post_status === "update") {
+        if (postObj.post_status && postObj.post_status.includes("update")) {
           setIsUpdatedPost(true);
         } else if (postObj.post_status === "delete") {
           setIsDeletedPost(true);
