@@ -77,9 +77,24 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target = updatedPost.visibility === 1 || updatedPost.visibility === 3 ? followers : friends;
       for (const recipient of target) {
-        await inbox.updateInboxPost(
-          recipient.id, postId, updatedPost.title, updatedPost.content, updatedPost.visibility
-        );
+        const post_obj = {
+          ...postData,
+          ...(postData.type ? {} : { type: "post" }),
+          title: updatedPost.title,
+          content: updatedPost.content,
+          visibility: updatedPost.visibility,
+          follower: {
+            type: "author",
+            id: recipient.id,
+            host: recipient.host,
+            // displayName: recipient.displayName,
+            // page: recipient.page,
+            // github: recipient.github,
+            // profileImage: recipient.profileImage
+          }
+        };
+
+        await inbox.updateInboxPost(recipient.id, post_obj);
       }
 
       // Update local postData state
@@ -105,7 +120,20 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target = postData.visibility === 1 || postData.visibility === 3 ? followers : friends;
       for (const recipient of target) {
-        await inbox.deleteInboxPost(recipient.id, postId);
+        const deletedPost = {
+          ...postData,
+          ...(postData.type ? {} : { type: "post" }),
+          follower: {
+            type: "author",
+            id: recipient.id,
+            host: recipient.host,
+            // displayName: recipient.displayName,
+            // page: recipient.page,
+            // github: recipient.github,
+            // profileImage: recipient.profileImage
+          }
+        };
+        await inbox.deleteInboxPost(recipient.id, deletedPost);
       }
 
       // Update postData state to indicate deletion
