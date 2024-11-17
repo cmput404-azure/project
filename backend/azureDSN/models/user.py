@@ -76,7 +76,11 @@ class NodeUser(User):
     bio = None
     github = None
     page = None
+    display_name = "external"
 
+    # Only require username, password, host (url of the remote node)
+    # keep created_at and modified_at for consistency with other models
+    # Add one more Boolean field that says if the node is authenticated or not (is_authenticated)
     is_authenticated = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):

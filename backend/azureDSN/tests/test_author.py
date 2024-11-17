@@ -191,15 +191,15 @@ class AuthorTests(APITestCase):
     # test getting author by fqid
     def test_get_author_by_fqid(self):
         """Test retrieving an author by FQID."""
-        host = "http://localhost:8000/api/authors/"
+        host = f"{settings.BASE_URL}/api/authors/"
         url = reverse('author_fqid', kwargs={'author_fqid': f"{host}{self.test_author.uuid}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
     
         self.assertEqual(response.data['type'], 'author')
-        self.assertEqual(response.data['id'], f"http://localhost:8000/api/authors/{self.test_author.uuid}")
+        self.assertEqual(response.data['id'], f"{settings.BASE_URL}/api/authors/{self.test_author.uuid}")
         self.assertEqual(response.data['displayName'], self.test_author.display_name)
-        self.assertEqual(response.data['host'], 'http://localhost:8000/api/')
+        self.assertEqual(response.data['host'], f'{settings.BASE_URL}/api/')
         self.assertEqual(response.data['github'], 'https://github.com/testauthor')
         self.assertEqual(response.data['page'], f'{settings.BASE_URL}/authors/testauthor')
         
@@ -213,7 +213,7 @@ class AuthorTests(APITestCase):
 
     def test_get_nonexistent_author_by_fqid(self):
         """Test that retrieving a non-existent author by FQID returns a 404."""
-        host = "http://localhost:8000/api/authors/"
+        host = f"{settings.BASE_URL}/api/authors/"
         url = reverse('author_fqid', kwargs={'author_fqid': f'{host}{uuid4()}'})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -229,7 +229,7 @@ class AuthorTests(APITestCase):
         
     def test_update_nonexistent_author_by_fqid(self):
         """Test that updating a non-existent author by FQID returns a 404."""
-        host = "http://localhost:8000/api/authors/"
+        host = f"{settings.BASE_URL}/api/authors/"
         url = reverse('author_fqid', kwargs={'author_fqid': f'{host}{uuid4()}'})
         data = {
             'display_name': 'Updated Author'

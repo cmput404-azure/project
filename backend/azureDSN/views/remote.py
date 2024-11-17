@@ -1,10 +1,11 @@
-from urllib.parse import quote, urlparse
+from urllib.parse import urlparse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from ..models import NodeUser, Follow
 from requests.auth import HTTPBasicAuth
 import requests, random, os
+
 
 class RemoteAuthorsView(APIView):
     def get(self, request):
@@ -42,7 +43,9 @@ class RemoteAuthorsView(APIView):
                 timeout=5
             )
             
+            # Check if request was successful
             if response.status_code == 200:
+                # Extract authors list from JSON response
                 return response.json().get("authors", [])
             else:
                 # This could mean the remote node does not grant us access to their data

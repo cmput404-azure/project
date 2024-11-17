@@ -125,7 +125,7 @@ class ImageView(APIView):
         if post.has_image:
             img_type = post.content_type.split(';')[0]
             data = f"data:{post.content_type},{post.content}"
-            
+
             return Response({"image": data, "content_type": img_type}, status=200)
         
         else:

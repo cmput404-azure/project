@@ -38,12 +38,11 @@ export default function NotificationList() {
             user = await fetchUser(item.actor.id);
           } else if (item.type === "like") {
             user = await fetchUser(item.author.id);
-            // Expected format for host: http://host/api/
-            // Expected format for object: api/authors/author_id/posts/post_id
-            const objectPath = item.object.startsWith("api/") ? item.object.slice(4) : item.object;
+            // Expected format for author's host: http://host/api/
+            // Expected format for object: http://host/api/authors/<author_uuid>/posts/<post_uuid>
             try {
               // post should be local 
-              let post_resp = await api.get(`${process.env.REACT_APP_API_BASE_URL}/api/${objectPath}`);
+              let post_resp = await api.get(item.object);
               post_obj = post_resp.data;
 
               //item.author.id is the author of the like
@@ -117,6 +116,10 @@ export default function NotificationList() {
         <p>{error}</p>
       ) : (
         <div>
+          {notifications.length === 0 ? (
+          // Display this message when there are no notifications
+          <p className={styles.noNotifications}>No notifications to display</p>
+        ) : (
           <ul className={styles.customList}>
             {notifications.map((item, index) => {
               if (item.type === "follow") {
@@ -171,6 +174,7 @@ export default function NotificationList() {
               return null;
             })}
           </ul>
+              )}
         </div>
       )}
     </div>

@@ -1,5 +1,4 @@
-import os
-from urllib.parse import quote, unquote, urljoin, urlparse
+from urllib.parse import quote, urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,8 +8,7 @@ from ..serializers import PostSerializer
 from ..models import Post, User, Follow, Share, Inbox
 from .posts import PostsPagination
 from requests.auth import HTTPBasicAuth
-
-import requests
+import requests, os
 
 class PublicStreamView(APIView):
     pagination_provider = PostsPagination
@@ -45,30 +43,33 @@ class PublicStreamView(APIView):
                     post_id = remote_payload.get("id")
                     visibility = remote_payload.get("visibility")
                     
-                    if visibility == "PUBLIC":
-                        if post_id and post_id not in remote_posts: # Add if this post hasn't been added
-                            author_host = remote_payload["author"]["host"]
-                            post_fqid = f"{remote_payload['author']['id']}/post/{post_id}"
+                    if visibility == "PUBLIC" and (item.post_status == None or item.post_status.upper() != "DELETE"):
+                        author_host = urlparse(remote_payload["author"]["host"])
+                        base_author_host = f"{author_host.scheme}://{author_host.netloc}"
+                        post_uuid = post_id.rstrip('/').split('/')[-1]
+                        author_fqid = remote_payload["author"]["id"]
+                        author_uuid = author_fqid.rstrip('/').split('/')[-1]
 
-                            encoded_post_fqid = quote(post_fqid, safe="")
-                            get_post_url = f"{author_host}posts/{encoded_post_fqid}/"
-                            
-                            try:
-                                # Perform the GET request
-                                response = requests.get(
-                                    get_post_url,
-                                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
-                                )
+                        get_post_url = f"{base_author_host}/api/authors/{author_uuid}/posts/{post_uuid}/"
+                        try:
+                            # Perform the GET request
+                            response = requests.get(
+                                get_post_url,
+                                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                            )
 
-                                if response.status_code == 200:
-                                    post_data = response.json()  
-                                    if post_id not in remote_posts:  
-                                        remote_posts[post_id] = post_data
-                                else:
-                                    print(f"Failed to fetch post. Status code: {response.status_code}")
-                            except Exception as e:
-                                print(f"Error fetching remote post {get_post_url}: {e}")
-                           
+                            if response.status_code == 200:
+                                post_data = response.json()
+
+                                if post_id not in remote_posts: # Add if this post hasn't been added
+                                    remote_posts[post_id] = post_data
+                                elif item.post_status and item.post_status.upper() == "UPDATE":
+                                    # There's a newer version of this post
+                                    remote_posts[post_id] = post_data
+                            else:
+                                print(f"Failed to fetch post. Status code: {response.status_code}")
+                        except Exception as e:
+                            print(f"Error fetching remote post {get_post_url}: {e}")
 
         unique_remote_posts = list(remote_posts.values())
 
@@ -79,7 +80,7 @@ class PublicStreamView(APIView):
         all_posts = serialized_local_posts + unique_remote_posts
 
         # Separate logic for Post objects and JSON objects
-        all_posts.sort(key=lambda post: post['published'] if isinstance(post, dict) else post['created_at'], reverse=True)
+        all_posts.sort(key=lambda post: post['published'] if isinstance(post, dict) else post['modified_at'], reverse=True)
 
         pagination = PostsPagination()
         paginated_posts = pagination.paginate_queryset(all_posts, request, view=self)

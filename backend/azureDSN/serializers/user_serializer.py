@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from ..models import User
+from django.conf import settings
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
 
