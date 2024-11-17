@@ -650,7 +650,7 @@ class InboxView(APIView):
         # response = connection.getresponse()
         # data = json.loads(response.read().decode()) 
 
-        return Response(response.text,response.status_code)  
+        return Response(response.text, response.status_code)  
     
     
     def send_comment_to_remote(self, payload, request):
@@ -662,22 +662,26 @@ class InboxView(APIView):
         author_host = parsed_post_url.netloc
 
         payload_json = json.dumps(payload)
-        
+        headers = {
+            "Content-Type": "application/json",
+            "Content-Length": str(len(payload_json))
+        }
         # Replace the netloc (host) in full_url with author_host
         inbox_url = parsed_url._replace(netloc=author_host)
+        formatted_url = urlunparse(inbox_url)
 
-        print("inbox_url", inbox_url)
-
+        print(formatted_url)
         # Use requests to send the POST request
         response = requests.post(
-            inbox_url.geturl(),
+            formatted_url,
             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')), 
-            data=payload_json)
+            data=payload_json,
+            headers=headers)
 
         # Parse the response
         data = response.json()
 
-        return Response(data, 200)
+        return Response(data, response.status_code)
     
     '''
     payload is a follow request object
