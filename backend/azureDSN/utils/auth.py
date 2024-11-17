@@ -1,5 +1,3 @@
-import os
-from urllib.parse import urlparse
 from rest_framework.authentication import get_authorization_header
 from rest_framework.permissions import BasePermission
 from base64 import b64decode
@@ -17,6 +15,10 @@ class TokenOrBasicAuthPermission(BasePermission):
         if len(auth_header) == 2 and auth_header[0].lower() == b"basic":
             return self._is_valid_basic_auth(auth_header[1].decode())
         
+        # If no CSRF or BasicAuth, check if the request is for the login endpoint
+        if (request.path).rstrip('/') == '/api/login':
+            return True
+
         return False
 
     def _is_valid_basic_auth(self, auth_value):
