@@ -30,6 +30,7 @@ import EllipseMenu from "../EllipseMenu/EllipseMenu";
 
 import { PostData } from "../../models/models";
 import { normalizeURL } from "../../util/formatting/normalizeURL";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -97,8 +98,8 @@ export default function Post({
                 encodedUrl
               );
               if (!authProvider.user.is_staff) {
-                if (postData.visibility !== "PUBLIC") {
-                  if (!is_following && postData.visibility === "FRIENDS-ONLY") {
+                if (normalizeVisibility(postData.visibility) !== 1) {
+                  if (!is_following && normalizeVisibility(postData.visibility) === 2) {
                     setOpenSnackbar(true);
                     setShowAlert(true);
                     setTimeout(() => {
@@ -382,7 +383,7 @@ export default function Post({
             </span>
           </div>
           <div>
-            {post.visibility === "DELETED" && (
+            {normalizeVisibility(post.visibility) === 4 && (
               <span className={styles.deletedLabel}>Deleted</span>
             )}
             {post.type === "shared" && (
@@ -458,7 +459,7 @@ export default function Post({
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
-          {post.visibility === "PUBLIC" ? (
+          {normalizeVisibility(post.visibility) === 1 ? (
             <div
               className={`${styles.icon} ${hasShared ? styles.shared : ""}`}
               onClick={handleSharePost}

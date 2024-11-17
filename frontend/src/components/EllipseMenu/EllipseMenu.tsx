@@ -11,6 +11,7 @@ import follow from "../../service/follow";
 import inbox from "../../service/inbox";
 import EditPostModal from "../EditPostModal/EditPostModal";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 const StyledMenu = styled((props: MenuProps) => (
   <Menu
@@ -120,19 +121,19 @@ export default function EllipseMenu({
   async function handleUpdatePost(updatedPost: {
     title: string;
     content: string;
-    visibility: string;
+    visibility: number;
   }) {
     try {
       const postId = extractUUID(postData.id);
       await api.put(
         `/api/authors/${extractUUID(authorUUID)}/posts/${postId}/`,
         updatedPost
-      );
+      ); // Model will auto convert integer to string
 
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target =
-        updatedPost.visibility === "PUBLIC" || updatedPost.visibility === "UNLISTED"
+        normalizeVisibility(postData.visibility) === 1 || normalizeVisibility(postData.visibility) === 3
           ? followers
           : friends;
       for (const recipient of target) {
@@ -141,7 +142,7 @@ export default function EllipseMenu({
           ...(postData.type ? {} : { type: "post" }),
           title: updatedPost.title,
           content: updatedPost.content,
-          visibility: updatedPost.visibility,
+          visibility: normalizeVisibility(updatedPost.visibility, true) as string,
           follower: {
             type: "author",
             id: recipient.id,
@@ -157,7 +158,7 @@ export default function EllipseMenu({
         ...postData,
         title: updatedPost.title,
         content: updatedPost.content,
-        visibility: updatedPost.visibility,
+        visibility: normalizeVisibility(updatedPost.visibility, true) as string,
       });
 
       closeEditModal();
@@ -176,7 +177,7 @@ export default function EllipseMenu({
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target =
-        postData.visibility === "PUBLIC" || postData.visibility === "UNLISTED"
+        normalizeVisibility(postData.visibility) === 1 || normalizeVisibility(postData.visibility) === 3
           ? followers
           : friends;
       for (const recipient of target) {

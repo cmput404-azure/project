@@ -15,6 +15,7 @@ import followService from "../../service/follow";
 import styles from "./UserProfileOld.module.scss";
 import { useAuth } from "../../state";
 import { useParams } from "react-router-dom";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 // by default isViewing is false which means the user is viewing their own profile
 export default function UserProfileOld() {
@@ -224,7 +225,7 @@ export default function UserProfileOld() {
           `/api/authors/${userToGet}/posts/`
         );
         // filter out the posts that are not publicaly visible
-        const posts = response.data.src.filter((post) => post.visibility === "PUBLIC");
+        const posts = response.data.src.filter((post) => normalizeVisibility(post.visibility) === 1);
         setAuthorPosts(posts.reverse());
       }
     } catch (error) {
