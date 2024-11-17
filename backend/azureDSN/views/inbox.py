@@ -216,63 +216,101 @@ class InboxView(APIView):
     )
     def delete(self, request, author_serial):
         '''
-        The idea is that on receiving the inbox item, we map it to either post, like, comment or follow_request
-        We find that object stored in our inbox that delete it
-        When delete a post, I expect the type and id of the follow request is sent in the body 
+        When delete a post, I expect no type but the body is a deleted post object
         When reject/accept a follow request, body is a follow request object
         if payload is empty = no body, we clear the inbox
         '''
-        user_obj = get_object_or_404(User, uuid=author_serial)
         payload = request.data
         
         if not payload:
             # Delete the whole inbox
+            user_obj = get_object_or_404(User, uuid=author_serial)
             inbox_obj = get_object_or_404(Inbox, user=user_obj)
             inbox_obj.items.clear()
-            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_200_OK)
+            return Response({"message": "delete all inbox items successfully"}, status=status.HTTP_200_OK)
         
         if "type" not in payload:
-            return Response({"error": "A 'type' field is required in the inbox delete object request"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if payload["type"].lower() == "post":
-            return self.delete_post(user_obj, payload, request)
+            return self.delete_post(author_serial, request)
         elif payload["type"].lower() == "follow":
-            return self.delete_follow_request(user_obj, payload, request)
+            return self.delete_follow_request(author_serial, payload, request)
         else:
-            return Response({"error": "A 'type' field must be either follow or post"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "A 'type' field must be either follow or doesn't included"}, status=status.HTTP_400_BAD_REQUEST)
     
     '''
     The deleted post might be local or remote
-    payload is a post object
-    id is in format: http://{server}/api/authors/{user_id}/posts/{post_id}
     '''
-    def delete_post(self, user_object, payload, request):
-        try: 
-            parsed_url = urlparse(payload["id"]) 
-            post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
-            post_obj = Post.objects.get(uuid=post_id)
-            serializer = PostSerializer(post_obj, data=payload, context={"request": request})
-            # local post
-            inbox_obj = get_object_or_404(Inbox, user=user_object)
-            create_inbox_item(inbox_obj, post_obj, post_status="delete")
-            return Response({"message": "We have noticed other users about your deleted post"}, status=status.HTTP_200_OK)
+    def delete_post(self, author_serial, payload, request):
+        '''
+        We can't send directly to remote inbox => we have to send it from our backend
+        Idea is to send the whole post obj that is deleted with the receiver object
+        The backend itself has to check if the author_serial exists in the User model
+            - if exists => local user:
+                + for local user, we have to further check if the post send to us is remote post or local post
+                    > local post:
+                        + Create another inbox item with type post, post_status is delete
+                        + Find all the previous post with matching post_id and remove it (handle edited post)
+                    > remote post:
+                        + Create another inbox item with with remote payload, post_status is delete
+                        + Find all the previous post with matching post_id and remove it (handle edited post)
+            - if objet does not exist => remote user:
+                + we just simply send a delete request with a whole deleted post obj to their endpoint
+        return message indicating successful or not
+        '''
+        payload = request.data
+       
+        if "type" not in payload:
+            return Response({"message": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
         
-        except Post.DoesNotExist: # remote post
-            # If post is from remote user, treat it as a json object
+        try: 
+            user_object = User.objects.get(uuid=author_serial)
             inbox_obj = get_object_or_404(Inbox, user=user_object)
-            create_inbox_item(inbox_obj, remote_payload=payload, post_status="delete")
-            return Response({"message": "We have noticed other users about your deleted post"}, status=status.HTTP_200_OK)
+            
+            # author_serial is local user
+            if "follower" in payload:
+                del payload["follower"] # we not sure if follower is sent with or not but local user won't need it anyway
+            
+            try: 
+                parsed_url = urlparse(payload["id"]) 
+                post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+                post_obj = Post.objects.get(uuid=post_id)
+                
+                # Find the old version of that posts in inbox including null, update, update-old or even delete and remove them
+                post_content_type = ContentType.objects.get(model="post")
+                InboxItem.objects.filter(
+                    inbox=inbox_obj,
+                    content_type=post_content_type,
+                    object_id=post_id,  # Filtering by the specific post ID
+                ).delete()
+          
+                create_inbox_item(inbox_obj, post_obj, post_status="delete")
+                return Response({"message": "We have noticed other users about your deleted post"}, status=status.HTTP_200_OK)
+            
+            except Post.DoesNotExist: 
+                # Find the old version of that posts in inbox including null, update, update-old or even delete and remove them
+                InboxItem.objects.filter(
+                    inbox=inbox_obj,
+                    remote_payload__id=payload["id"],  # Check if remote_payload's id matches the incoming id
+                ).delete()
+                
+                create_inbox_item(inbox_obj, remote_payload=payload, post_status="delete")
+                return Response({"message": "We have noticed other users about your deleted post"}, status=status.HTTP_200_OK)
+        
+        except User.DoesNotExist:
+            # author_serial is remote user
+            return self.send_modified_post_to_remote(payload, http_method="DELETE")
         
     
     '''
     The deleted follow request can be from remote/local users
     '''
-    def delete_follow_request(self, user_object, payload, request):
+    def delete_follow_request(self, author_serial, payload, request):
+        user_object = get_object_or_404(User, uuid=author_serial)
+        
         # Validate the follow request object sent with the payload
         try:
             follow_obj = FollowRequest.objects.get(id=payload["id"])
         except FollowRequest.DoesNotExist:
-            return Response({"error": "Follow request not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "Follow request not found."}, status=status.HTTP_404_NOT_FOUND)
         
         '''
         Here when delete the follow request we need to both delete the inbox_item as well as follow_request item
@@ -336,7 +374,7 @@ class InboxView(APIView):
         payload = request.data
        
         if "type" not in payload:
-            return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
         
         try: 
             user_object = User.objects.get(uuid=author_serial)
@@ -350,7 +388,7 @@ class InboxView(APIView):
                 parsed_url = urlparse(payload["id"]) 
                 post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
                 post_obj = Post.objects.get(uuid=post_id)
-                
+                # Local post: Update inbox and modify existing post status
                 # Find the old version of that posts in inbox   
                 post_content_type = ContentType.objects.get(model="post")
                 inbox_item_obj = InboxItem.objects.filter(
@@ -365,12 +403,12 @@ class InboxView(APIView):
                         item.post_status = "edited"
                         item.save()
                         
-                # Local post: Update inbox and modify existing post status
                 create_inbox_item(inbox_obj, post_obj, post_status="update")
                         
                 return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
             
             except Post.DoesNotExist: 
+                # Remote post: Update inbox and modify existing remote payload status
                 # Find the old version of that posts in inbox
                 existing_item_obj = InboxItem.objects.filter(
                     inbox=inbox_obj,
@@ -387,7 +425,6 @@ class InboxView(APIView):
                             item.post_status = "edited"
                         item.save()
                 
-                # Remote post: Update inbox and modify existing remote payload status
                 if "modified_at" not in payload:
                     payload["modified_at"] =  datetime.now().isoformat()
                 create_inbox_item(inbox_obj, remote_payload=payload, post_status="update")
@@ -396,16 +433,9 @@ class InboxView(APIView):
         
         except User.DoesNotExist:
             # author_serial is remote user
-            return self.send_updated_post_to_remote(payload)
-            # return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
+            return self.send_modified_post_to_remote(payload, http_method="PUT")
     
-    def send_updated_post_to_remote(self, payload):
-        """
-        Send updated post to a remote user's inbox.
-        
-        Handles cases where the `visibility` is set to "FRIENDS" and verifies 
-        if the remote follower has accepted the follow request.
-        """
+    def send_modified_post_to_remote(self, payload, http_method):
         try:
             remote_follower = payload["follower"]
             del payload["follower"] # reconstruct payload to post object format
@@ -429,10 +459,11 @@ class InboxView(APIView):
                 if response.status_code == 404: # User not a follower of remote follower
                     return Response({"message": "Friends-only post is not sent to remote node."}, status=status.HTTP_200_OK)
             
-            # Send the updated post to the remote inbox
+            # Send the updated/deleted post to the remote inbox
             remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
-            response = requests.put(
-                remote_inbox_url,
+            response = requests.request(
+                method=http_method,
+                url=remote_inbox_url,
                 json=payload,
                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
             )
@@ -440,10 +471,10 @@ class InboxView(APIView):
             if response.status_code == 200:
                 return Response({"message": "Post successfully sent to remote inbox."}, status=status.HTTP_200_OK)
             else:
-                return Response({"error": f"Failed to send post: {response.text}"}, status=response.status_code)
+                return Response({"message": f"Failed to send post: {response.text}"}, status=response.status_code)
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @extend_schema(
         summary="Add Item to Inbox",
