@@ -1,5 +1,3 @@
-import os
-from urllib.parse import urlparse
 from rest_framework.authentication import get_authorization_header
 from rest_framework.permissions import BasePermission
 from base64 import b64decode

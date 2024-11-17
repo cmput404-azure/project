@@ -1,6 +1,6 @@
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import Paper from '@mui/material/Paper';
-import { Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
+import { Box, Button, Checkbox, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableContainer from '@mui/material/TableContainer';
@@ -11,7 +11,7 @@ import styles from './SettingsPage.module.scss';
 import setting from '../../service/setting';
 import { useEffect, useState } from 'react';
 
-const StyledTextField = styled(TextField)(({ theme }) => ({
+const StyledTextField = styled(TextField)(() => ({
    '& .MuiInputBase-root': {
       color: 'white',
    },
@@ -29,12 +29,12 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
       '&.Mui-focused fieldset': {
          borderColor: '#70ffaf',
       },
-      '& .MuiInputLabel-root.Mui-focused': {
-      color: 'white',
-      },
       backgroundColor: '#2b2b2b',
       borderRadius: '5px',
       transition: 'border-color 0.3s ease',
+   },
+   '& .MuiInputLabel-root.Mui-focused': {
+      color: 'white',
    },
    alignSelf: 'center',
 }));
@@ -70,7 +70,9 @@ export default function CustomizedTables() {
    const [nodeUrl, setNodeUrl] = useState('');
    const [username, setUsername] = useState('');
    const [password, setPassword] = useState('');
-
+   const [status, setStatus] = useState(true);
+   const [errorMessage, setErrorMessage] = useState('');
+   
    function createData (host: string, username: string, password: string, status: boolean) {
       return { host, username, password, status };
    }
@@ -82,13 +84,19 @@ export default function CustomizedTables() {
    }
 
    const handleOpenModal = (node = null) => {
+      setErrorMessage('');
       if (node) { // editing existing node
          setEditingNode(node);
-         setNodeUrl(node.host);
+
+         const { protocol, hostname, port } = new URL(node.host);
+         setNodeUrl(`${hostname}${port ? `:${port}` : ''}`);
+         setProtocol(protocol.replace(':', '://'));
          setUsername(node.username);
          setPassword(node.password);
+         setStatus(node.status);
       } else {
          setEditingNode(null);
+         setProtocol('http://');
          setNodeUrl('');
          setUsername('');
          setPassword('');
@@ -100,36 +108,50 @@ export default function CustomizedTables() {
       setModalOpen(false);
    }
 
-   const handleSave = () => {
-      if (editingNode) {
-         // update existing node
-        
-      } else {
-         // add new entry
-         
+   const handleSave = async () => {
+      setErrorMessage('');
+      const fullUrl = `${protocol}${nodeUrl}`;
+
+      try {
+         let response;
+         if (editingNode) {
+            response = await setting.updateNode(username, password, fullUrl, status);
+         } else {
+            response = await setting.addNode(username, password, fullUrl);
+         }
+
+         if (response.error) {
+            setErrorMessage(response.error);
+         } else {
+            setErrorMessage('');
+            handleCloseModal();
+            fetchNodeList();
+         }
+      } catch (error) {
+         console.error('Error processing node:', error);
+         setErrorMessage('Something went wrong. Please try again later.');
       }
-      handleCloseModal();
    }
 
    const handleDelete = (host) => {
       
    };
 
-   useEffect(() => {
+   const fetchNodeList = async () => {
+      const fetchedData = await setting.getNodeList();
+
+      const nodeRows = fetchedData.map((node: any) => {
+         return createData(node.host, node.username, node.password, node.is_authenticated);
+      });
+
+      setRows(nodeRows);
+   }
+
+   useEffect(() => { 
       const fetchConfig = async () => {
          const val = await setting.getToggleValue();
          setRequireApproval(val);
       };
-
-      const fetchNodeList = async () => {
-         const fetchedData = await setting.getNodeList();
-   
-         const nodeRows = fetchedData.map((node: any) => {
-            return createData(node.host, node.username, node.password, node.is_authenticated);
-         });
-
-         setRows(nodeRows);
-      }
 
       fetchConfig();
       fetchNodeList();
@@ -155,7 +177,7 @@ export default function CustomizedTables() {
                </TableHead>
                <TableBody>
                   {rows.map((row) => (
-                     <StyledTableRow key={row.host}>
+                     <StyledTableRow key={row.host} onDoubleClick={() => handleOpenModal(row)}>
                         <StyledTableCell component="th" scope="row">
                            {row.host}
                         </StyledTableCell>
@@ -200,6 +222,11 @@ export default function CustomizedTables() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  border: 'none',
+                  outline: 'none',
+                  '&:focus': {
+                     outline: 'none',
+                  },
                }}
             >
                <h3 id="modal-title">Add/Edit Node</h3>
@@ -219,6 +246,12 @@ export default function CustomizedTables() {
                            },
                            '& .MuiInputLabel-root': {
                               color: 'white',
+                              '&.Mui-focused': {
+                                 color: 'white',
+                              },
+                           },
+                           '& .MuiSelect-icon': {
+                              color: 'white',
                            },
                         }}
                      >
@@ -232,9 +265,6 @@ export default function CustomizedTables() {
                            sx={{
                               backgroundColor: '#333',
                               color: 'white',
-                              '& .MuiSelect-icon': {
-                                 color: 'white',
-                              },
                            }}
                         >
                            <MenuItem value="http://">http://</MenuItem>
@@ -273,10 +303,34 @@ export default function CustomizedTables() {
                      onChange={(e) => setPassword(e.target.value)}
                      required
                      fullWidth
+                     type="password"
                      sx={{
                         marginBottom: '1rem',
                      }}
                   />
+                  {editingNode && (
+                     <FormControlLabel
+                        control={
+                           <Checkbox
+                              checked={status}
+                              onChange={(e) => setStatus(e.target.checked)}
+                              sx={{
+                                 color: 'white',
+                                 '&.Mui-checked': {
+                                    color: '#70ffaf',
+                                 },
+                              }}
+                           />
+                        }
+                        label="Allow Connection"
+                        sx={{
+                           color: 'white',
+                           marginBottom: '1rem',
+                        }}
+                     />
+                  )}
+
+                  {errorMessage && <p className={styles.error__message}>{errorMessage}</p>}
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                      <Button
                         type="submit"
