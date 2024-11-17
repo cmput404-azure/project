@@ -1,3 +1,4 @@
+from unittest.mock import patch
 from rest_framework.test import APITestCase, APIClient
 from ..models import User, Post
 from django.urls import reverse
@@ -5,6 +6,7 @@ from rest_framework import status
 import uuid
 
 class ImageAPITest(APITestCase):
+    patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create(
@@ -77,8 +79,3 @@ class ImageAPITest(APITestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-
-
-

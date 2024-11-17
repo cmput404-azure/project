@@ -11,20 +11,21 @@
   flex: 2; /* Middle section wider than the nav */
   flex-direction: column;
   gap: 20px;
+  overflow-x: hidden;
   overflow-y: auto; /* Enables vertical scrolling */
   padding: 20px;
-  overflow-x: hidden;
 }
 
 .authorSection {
   background-color: #343434;
   display: flex;
-  flex: 1;
+  // flex: 0.5;
+  width: 350px;
   flex-direction: column;
-  gap: 20px; 
-  max-width: 380px;
+  gap: 20px;
+  overflow-x: hidden; 
   overflow-y: auto; /* Enables vertical scrolling */
-  padding: 20px;
+  padding: 1rem;
 
 }
 .recommendedTitle {
@@ -47,17 +48,17 @@
   .icon_section {
     align-items: center;
     border-radius: 10px;
+    color: white;
     cursor: pointer;
     display: flex;
     justify-content: center;
     padding: 5px 1px;
     transition: background-color 0.3s ease, transform 0.2s ease;
     width: 100%;
-    color: white;
     &.active {
       background-color: #70ffaf;
-      color: black;
       border-radius: 10px;
+      color: black;
     }
 
     .icon {
