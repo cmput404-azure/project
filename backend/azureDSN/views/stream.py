@@ -109,9 +109,6 @@ class AuthStreamView(APIView):
         }
     )
     def get(self, request):
-        print("Req: ", request)
-        print("user: ", request.user)
-
         if request.user.is_authenticated:
             author_uuid = request.user.uuid
             user = get_object_or_404(User, uuid=author_uuid)
@@ -133,8 +130,6 @@ class AuthStreamView(APIView):
                 local_followee=user,
                 local_follower__in=local_followees
             ).values_list('local_follower_id', flat=True)
-
-            print(f"People I'm friends with: {friends}")
 
             # Query for local followees' unlisted posts
             followees_unlisted_posts = Post.objects.filter(

@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from ..models.user import NodeUser
+from ..models.user import NodeUser, Follow
 from requests.auth import HTTPBasicAuth
 import requests, random, os
 
@@ -18,12 +18,11 @@ class RemoteAuthorsView(APIView):
             node_users = NodeUser.objects.all()
 
             for node in node_users:
-                if node.is_authenticated:
-                    authors = self.fetch_remote_authors(node.host, node.username, node.password)
-                    all_remote_authors.extend(authors)
+                # We send our local credentials to the remote host
+                authors = self.fetch_remote_authors(node.host, os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                all_remote_authors.extend(authors)
 
-            random_authors = self.select_random_authors(all_remote_authors)
-            print(f"Selected authors: {random_authors}")
+            random_authors = self.select_random_authors(all_remote_authors) if all_remote_authors else []
             
             return Response({"recommended_authors": random_authors}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -50,6 +49,7 @@ class RemoteAuthorsView(APIView):
                 # Extract authors list from JSON response
                 return response.json().get("authors", [])
             else:
+                # This could mean the remote node does not grant us access to their data
                 print(f"Failed to fetch authors from {host}: {response.status_code}")
                 return []
 
@@ -77,37 +77,10 @@ class RemoteFolloweeView(APIView):
         """
             Checks if our local user with `local_serial` is following remote followee with `remote_fqid`
         """
-        try:
-            parsed = urlparse(remote_fqid)
-            base_host = f"{parsed.scheme}://{parsed.netloc}"
-            remote_serial = remote_fqid.rstrip('/').split('/')[-1]
+        # Instead of calling remote server, we can check our Follow table
+        follower = Follow.objects.filter(local_follower_id=local_serial, remote_followee__contains=remote_fqid)
 
-            parsed_local = urlparse(os.getenv('BASE_URL'))
-            base_local = f"{parsed_local.scheme}://{parsed_local.netloc}"
-
-            api_url = f"{base_host}/api/authors/{remote_serial}/followers/{base_local}/api/authors/{local_serial}"
-
-            print(f"Calling to: {api_url}")
-
-            try:
-                node_user = NodeUser.objects.get(host__contains=base_host)
-                print(f"Do I have node? {node_user}")
-            except ObjectDoesNotExist :
-                return Response({'error': 'Node not found for the provided host'}, status=404)
-
-            response = requests.get(
-                api_url,
-                auth=HTTPBasicAuth(node_user.username, node_user.password)
-            )
-
-            if response.status_code == 404:
-                # User is not a follower
-                return Response({'is_follower': False}, status=404)
-            elif response.status_code == 200:
-                # User is a follower
-                return Response({'is_follower': True}, status=200)
-            else:
-                return Response({'error': 'Unable to check following status'}, status=response.status_code)
-
-        except Exception as e:
-            return Response({'error': str(e)}, status=500)
+        if follower:
+            return Response({'is_follower': True}, status=200)
+        else:
+            return Response({'is_follower': False}, status=404)

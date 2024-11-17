@@ -52,8 +52,7 @@ class AuthorsView(APIView):
         """
         GET [local, remote] get all authors on the node
         """
-       
-        authors = User.objects.all()
+        authors = User.objects.filter(type="author").order_by('-created_at')
         pagination = self.pagination_provider()
         page = pagination.paginate_queryset(authors, request)
 
@@ -109,42 +108,37 @@ class AuthorsSpecificView(APIView):
         GET [local, remote] get the public authors
         """
 
-        if(author_serial):
-            # if uuid provided
-            print(author_serial)
+        if (author_serial):
             author = get_object_or_404(User, uuid=author_serial)
-            
             serializer = UserSerializer(author)
             return Response(serializer.data, status=200)
-        elif(author_fqid):
+        
+        elif (author_fqid):
+            author_serial = author_fqid.rstrip('/').split('/')[-1]
+            UUID(author_serial)
+
+            author_host = urlparse(author_fqid)
+            host = f"{author_host.scheme}://{author_host.netloc}"
+            if (host == os.getenv('BASE_URL', 'http://localhost:8000')):
+                local_user = get_object_or_404(User, uuid=author_serial)
+                serializer = UserSerializer(local_user)
+                return Response(serializer.data, status=200)
+
             try:
-                author_serial = author_fqid.split('/')[-1]
-                UUID(author_serial)
+                # Send request to remote server to get remote author's info
+                parsed_url = urlparse(author_fqid)
+                base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-                try:
-                    # Check if local or remote user
-                    local_user = User.objects.get(uuid=author_serial)
-                    serializer = UserSerializer(local_user)
-                    return Response(serializer.data, status=200)
-                except User.DoesNotExist:
-                    # Send request to remote server to get remote author's info
-                    parsed_url = urlparse(author_fqid)
-                    base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                remote_author_url = f"{base_host}/api/authors/{author_serial}"
+                response = requests.get(
+                    remote_author_url,
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                )
+                if response.status_code == 200:
+                    return Response(response.json(), status=status.HTTP_200_OK)
+                else:
+                    return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
 
-                    remote_node = NodeUser.objects.filter(host__contains=base_host).first()
-                    if not remote_node:
-                        return Response({"error": "Node credentials not found."}, status=status.HTTP_404_NOT_FOUND)
-
-                    remote_author_url = f"{base_host}/api/authors/{author_serial}"
-                    response = requests.get(
-                        remote_author_url,
-                        auth=HTTPBasicAuth(remote_node.username, remote_node.password)
-                    )
-                    if response.status_code == 200:
-                        return Response(response.json(), status=status.HTTP_200_OK)
-                    else:
-                        return Response({"error": f"Failed to fetch author: {response.text}"}, status=response.status_code)
-                
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
