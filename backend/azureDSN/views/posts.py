@@ -11,7 +11,8 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
 from django.conf import settings
-import requests
+import requests, os
+from requests.auth import HTTPBasicAuth
 
 class AuthorPostView(APIView):
     """
@@ -563,22 +564,38 @@ class PostView(APIView):
 
             print("POST_URL", decoded_post_fqid)
 
-            # Checks for remote first
             parsed_url = urlparse(decoded_post_fqid)
-            host = f"{parsed_url.scheme}://{parsed_url.netloc}/api/"
+            host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-            base_url = f"{settings.BASE_URL}/api/"
-
-            if host!=base_url:
-                response = requests.get(decoded_post_fqid)
-                data = response.json()  # Parse the JSON response
-                post_visibility = data.get("visibility")
-                post_data = data
-            else:
+            if (host == os.getenv('BASE_URL', 'http://localhost:8000')):
                 post = get_object_or_404(Post, uuid=post_serial)
                 post_visibility = post.visibility
                 serializer = PostSerializer(post)
                 post_data = serializer.data
+            else:
+                response = requests.get(decoded_post_fqid)
+                response = requests.get(
+                    decoded_post_fqid,
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                )
+                data = response.json()  # Parse the JSON response
+                post_visibility = data.get("visibility")
+                post_data = data
+
+            # if host!=base_url:
+            #     response = requests.get(decoded_post_fqid)
+            #     response = requests.get(
+            #         decoded_post_fqid,
+            #         auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+            #     )
+            #     data = response.json()  # Parse the JSON response
+            #     post_visibility = data.get("visibility")
+            #     post_data = data
+            # else:
+            #     post = get_object_or_404(Post, uuid=post_serial)
+            #     post_visibility = post.visibility
+            #     serializer = PostSerializer(post)
+            #     post_data = serializer.data
 
 
             # Check the visibility of the post

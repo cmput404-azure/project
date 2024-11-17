@@ -294,10 +294,6 @@ class InboxView(APIView):
             return Response({"message": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
         
         try: 
-            parsed_url = urlparse(payload["id"]) 
-            post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
-            post_obj = Post.objects.get(uuid=post_id)
-            
             # Local post
             user_object = User.objects.get(uuid=author_serial)
             inbox_obj = get_object_or_404(Inbox, user=user_object)
