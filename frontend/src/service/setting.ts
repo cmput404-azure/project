@@ -86,6 +86,21 @@ class SettingService {
             throw new Error('An unexpected error occurred');
         }
     }
+
+    public async deleteNode(username: string) {
+        try {
+            const response = await api.delete(`/api/nodes/delete/?username=${username}`);
+            if (response.status === 200) {
+              console.log('Node deleted successfully');
+              return response.data;
+            } else {
+              throw new Error('Failed to delete node');
+            }
+          } catch (error) {
+            console.error('Error deleting node:', error);
+            throw error;
+          }
+    }
 }
 
 const setting = new SettingService();

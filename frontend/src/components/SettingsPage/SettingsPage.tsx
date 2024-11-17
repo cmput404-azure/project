@@ -1,6 +1,7 @@
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Paper from '@mui/material/Paper';
-import { Box, Button, Checkbox, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
+import { Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableContainer from '@mui/material/TableContainer';
@@ -133,8 +134,14 @@ export default function CustomizedTables() {
       }
    }
 
-   const handleDelete = (host) => {
-      
+   const handleDelete = async (username) => {
+      try {
+         const response = await setting.deleteNode(username);
+         fetchNodeList();
+
+       } catch (error) {
+         console.error('Error deleting node:', error);
+       }
    };
 
    const fetchNodeList = async () => {
@@ -164,7 +171,30 @@ export default function CustomizedTables() {
             <p>Toggle registration approval</p>
             <Switch checked={requireApproval} onChange={handleToggle}/>
          </div>
-         <Button variant="contained" color="primary" onClick={() => handleOpenModal()}>Add New Connection</Button>
+         <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleOpenModal()}
+            sx={{
+               width: '15%',
+               backgroundColor: '#70ffaf',
+               color: '#1a1a1a',
+               fontWeight: 'bold',
+               fontSize: '12px',
+               padding: '0.5rem',
+               border: 'none',
+               borderRadius: '8px',
+               cursor: 'pointer',
+               transition: 'background-color 0.3s',
+               '&:hover': {
+                  backgroundColor: '#30fb88',
+               },
+               marginBottom: '1rem',
+               alignSelf: 'flex-end',
+            }}
+         >
+            New Connection
+         </Button>
          <TableContainer component={Paper}>
             <Table sx={{ minWidth: 700 }} aria-label="customized table">
                <TableHead>
@@ -177,9 +207,18 @@ export default function CustomizedTables() {
                </TableHead>
                <TableBody>
                   {rows.map((row) => (
-                     <StyledTableRow key={row.host} onDoubleClick={() => handleOpenModal(row)}>
+                     <StyledTableRow key={row.host}
+                        onDoubleClick={() => handleOpenModal(row)}
+                     >
                         <StyledTableCell component="th" scope="row">
                            {row.host}
+                           <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDelete(row.username)}
+                              >
+                              <DeleteIcon />
+                           </IconButton>
                         </StyledTableCell>
                         <StyledTableCell>{row.username}</StyledTableCell>
                         <StyledTableCell>{row.password}</StyledTableCell>
@@ -229,7 +268,9 @@ export default function CustomizedTables() {
                   },
                }}
             >
-               <h3 id="modal-title">Add/Edit Node</h3>
+               <h3 id="modal-title">
+                  {editingNode ? 'Update Node' : 'Add Node'}
+               </h3>
                <form onSubmit={handleSave}>
                   <Box display="flex" alignItems="center" gap={1} marginBottom={2} width="100%">
                      <FormControl size="small" variant="outlined"
