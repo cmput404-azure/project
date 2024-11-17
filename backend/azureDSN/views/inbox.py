@@ -491,8 +491,6 @@ class InboxView(APIView):
             elif payload["type"].lower() == "comment":
                 # To-do: Commenting on a remote post in my local stream
                 return self.send_comment_to_remote(payload, request)
-
-
             else:
                 return Response({"error": "User not found locally and type not supported for remote authors."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -620,10 +618,13 @@ class InboxView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def send_like_to_remote(self, payload, request):
+    def send_like_to_remote(self, payload, request, test=False):
 
-        # use the request url to get the correct uuid of the post author
-        full_url = request.build_absolute_uri()
+        if test:
+            full_url = request
+        else:
+            # use the request url to get the correct uuid of the post author
+            full_url = request.build_absolute_uri()
         parsed_url = urlparse(full_url)
 
         payload_json = json.dumps(payload)
@@ -640,6 +641,9 @@ class InboxView(APIView):
         inbox_url = parsed_url._replace(netloc=urlparse(author_host).netloc)
         formatted_url = urlunparse(inbox_url)
 
+        if test:
+            return formatted_url
+        
         response = requests.post(
             formatted_url,
             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
@@ -653,8 +657,11 @@ class InboxView(APIView):
         return Response(response.text, response.status_code)  
     
     
-    def send_comment_to_remote(self, payload, request):
-        full_url = request.build_absolute_uri()
+    def send_comment_to_remote(self, payload, request, test=False):
+        if test:
+            full_url = request
+        else:
+            full_url = request.build_absolute_uri()
         parsed_url = urlparse(full_url)
         
         post_url = payload["post"]
@@ -671,6 +678,8 @@ class InboxView(APIView):
         formatted_url = urlunparse(inbox_url)
 
         print(formatted_url)
+        if test:
+            return formatted_url
         # Use requests to send the POST request
         response = requests.post(
             formatted_url,

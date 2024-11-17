@@ -7,6 +7,11 @@ from ..models import User, Inbox, InboxItem, Post, FollowRequest, Share
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 import uuid
+from unittest.mock import patch, MagicMock
+from rest_framework.response import Response
+from ..views import InboxView
+
+
 class InboxViewTestCase(TestCase):
     patch('azureDSN.utils.auth.TokenOrBasicAuthPermission.has_permission', return_value=True).start()
     def setUp(self):
@@ -314,7 +319,9 @@ class InboxViewTestCase(TestCase):
         except Share.DoesNotExist:
             self.assertRaises(ObjectDoesNotExist)
 
-    def test_send_comment_to_remote(self):
+    # Tests that it is able to direct comments made on a remote post to the correct method
+    @patch('azureDSN.views.inbox.InboxView.send_comment_to_remote')  
+    def test_send_comment_to_remote(self, mock_send_comment):
         payload = {
             "type": "comment",
             "post": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
@@ -329,9 +336,76 @@ class InboxViewTestCase(TestCase):
             },
             "comment": "Nice post!",
         }
+        mock_send_comment.return_value = Response(200)
 
         response = self.client.post(self.remote_inbox_url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    # Tests that it is able to build the correct url to send to the remote server
+    def test_send_comment_to_remote_url(self):
+        payload = {
+            "type": "comment",
+            "post": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "author":{
+                "type":"author",
+                "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                "host":"http://localhost:8001/azureDSN/",
+                "displayName":"Quin Nguyen",
+                "github": "https://github.com/QuinNguyen02",
+                "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+            },
+            "comment": "Nice post!",
+        }
+        inbox_view = InboxView()
+
+        response = inbox_view.send_comment_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
+        self.assertEqual(response,f'http://localhost:8000/api/authors/{self.user.uuid}/inbox/' )
+
+    # Tests that it is able to direct comments made on a remote post to the correct method
+    @patch('azureDSN.views.inbox.InboxView.send_like_to_remote')  
+    def test_send_like_to_remote(self, mock_send_like):
+        payload = {
+            "type": "like",
+            "post": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "author":{
+                "type":"author",
+                "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                "host":"http://localhost:8001/azureDSN/",
+                "displayName":"Quin Nguyen",
+                "github": "https://github.com/QuinNguyen02",
+                "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+            },
+            "published": '2024-10-21T00:00:00Z'
+
+        }
+        mock_send_like.return_value = Response(200)
+
+        response = self.client.post(self.remote_inbox_url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    # Tests that it is able to build the correct url to send to the remote server
+    def test_send_like_to_remote_url(self):
+            payload = {
+                "type": "like",
+                "post": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+                "author":{
+                    "type":"author",
+                    "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                    "host":"http://localhost:8001/azureDSN/",
+                    "displayName":"Quin Nguyen",
+                    "github": "https://github.com/QuinNguyen02",
+                    "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                    "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                },
+                "comment": "Nice post!",
+                "post_host": "http://localhost:8000/api/"
+            }
+            inbox_view = InboxView()
+
+            response = inbox_view.send_like_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
+            self.assertEqual(response,f'http://localhost:8000/api/authors/{self.user.uuid}/inbox/' )
 
         
         
