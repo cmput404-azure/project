@@ -96,7 +96,7 @@ class AuthorTests(APITestCase):
         self.assertEqual(len(payload), 6)
         for author in payload:
             self.assertIn(author["displayName"], ['Test Author2', 'Test Author3', 'Test Author4', 'Test Author5', 'Test Author6', 'Test Author7'])
-            self.assertIn(author["host"], ['http://localhost:8000/api/'])
+            self.assertIn(author["host"], [f'{settings.BASE_URL}/api/'])
             self.assertIn(author["github"], ['https://github.com/testauthor2', 'https://github.com/testauthor3', 'https://github.com/testauthor4', 'https://github.com/testauthor5', 'https://github.com/testauthor6', 'https://github.com/testauthor7'])
             self.assertIn(author["page"], [f'{settings.BASE_URL}/authors/testauthor', f'{settings.BASE_URL}/authors/testauthor2', f'{settings.BASE_URL}/authors/testauthor3', f'{settings.BASE_URL}/authors/testauthor4', f'{settings.BASE_URL}/authors/testauthor5', f'{settings.BASE_URL}/authors/testauthor6', f'{settings.BASE_URL}/authors/testauthor7'])
 
@@ -191,15 +191,15 @@ class AuthorTests(APITestCase):
     # test getting author by fqid
     def test_get_author_by_fqid(self):
         """Test retrieving an author by FQID."""
-        host = "http://localhost:8000/api/authors/"
+        host = f"{settings.BASE_URL}/api/authors/"
         url = reverse('author_fqid', kwargs={'author_fqid': f"{host}{self.test_author.uuid}"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
     
         self.assertEqual(response.data['type'], 'author')
-        self.assertEqual(response.data['id'], f"http://localhost:8000/api/authors/{self.test_author.uuid}")
+        self.assertEqual(response.data['id'], f"{settings.BASE_URL}/api/authors/{self.test_author.uuid}")
         self.assertEqual(response.data['displayName'], self.test_author.display_name)
-        self.assertEqual(response.data['host'], 'http://localhost:8000/api/')
+        self.assertEqual(response.data['host'], f'{settings.BASE_URL}/api/')
         self.assertEqual(response.data['github'], 'https://github.com/testauthor')
         self.assertEqual(response.data['page'], f'{settings.BASE_URL}/authors/testauthor')
         
