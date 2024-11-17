@@ -17,34 +17,34 @@
 }
 
 .drawer{
+  align-items: center;
   display: flex;
   flex-flow: column;
-  align-items: center;
   justify-content: center;
   position: absolute;
   right: 0;
   top: 50%;
   .recommended__button{
     background-color: #343434 !important;
-    padding: 2rem 0 !important;
-    color: #70ffaf;
-    border-top-left-radius: 50%;
     border-bottom-left-radius: 50%;
+    border-top-left-radius: 50%;
+    color: #70ffaf;
+    padding: 2rem 0 !important;
   }
 }
 
-.recommended {
+.recommended { 
+  align-items: center;
   background-color: #343434;
-  display: flex;
-  width: 400px;
   box-sizing: border-box;
+  display: flex;
   flex-direction: column;
   gap: 20px;
-  overflow-x: hidden; 
-  align-items: center;
+  height: 100%;
+  overflow-x: hidden;
   overflow-y: auto;
   padding: 1rem;
-  height: 100%;
+  width: 400px;
 }
 .recommendedTitle {
   color: rgb(207, 207, 207);

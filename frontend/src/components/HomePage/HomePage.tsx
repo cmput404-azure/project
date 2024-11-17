@@ -177,8 +177,8 @@ const HomePage = () => {
             </div>
             <div
               className={`${styles.icon_section} ${activeFilterPost === "unlisted_friends-only"
-                  ? styles.active
-                  : ""
+                ? styles.active
+                : ""
                 }`}
               onClick={() => handleFilterPost("unlisted_friends-only")}
             >
