@@ -155,11 +155,10 @@ export default function ListItem({
   const navigateToProfile = () => {
     closeModal?.();
     let user_url = user["id"]
-    const parsedUrl = new URL(user_url);
-    const userHost = parsedUrl.hostname;
-    if (userHost === process.env.REACT_BASE_URL) {
+    if (normalizeURL(user_url) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
       navigate(`/authors/${extractUUID(user.id)}`);
     } else {
+      // To-do: Fetch correct information (posts, followers, followings, friends)
       const encodedUserId = encodeURIComponent(user_url);
       navigate(`/authors/${encodedUserId}`);
     }
