@@ -42,7 +42,7 @@ class InboxService {
     /* 
         Delete the inbox of the users
         @param uuid: string - the uuid of the user 
-               post_obj: Post - the updated post object
+               post_obj: Post - the deleted post object
         @returns: message: string
     */
     public async deleteInboxPost(uuid: string, post_obj: PostData): Promise<string> {
@@ -50,14 +50,10 @@ class InboxService {
             uuid = uuid.split('/').pop()
             const config = {
                 headers: {},
-                data: {
-                    post: post_obj,
-                    type: "post"
-                },
+                data: post_obj,
             };
 
             const response = await api.delete<{ message: string }>(`/api/authors/${uuid}/inbox/`, config);
-
             return response.data.message;
         } catch (error) {
             console.error("Delete post in inbox error:", error);
