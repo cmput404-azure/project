@@ -53,21 +53,25 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
   }
 
   return (
-    <div className={styles['author-post']}>
-      <div className={styles['post-header']}>
-        <div className={styles['author-info']}>
-          <img src={
-            author.profileImage && author.profileImage.trim() !== "" ?
-            author.profileImage :
-            `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
-          } alt="Author" className={styles['author-avatar']} />
+    <div className={styles.author_post}>
+      <div className={styles.post_header}>
+        <div className={styles.author_info}>
+          <img
+            src={
+              author.profileImage && author.profileImage.trim() !== ""
+                ? author.profileImage
+                : `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+            }
+            alt="Author"
+            className={styles.author_avatar}
+          />
           <div>
             <h3>{author.displayName}</h3>
             <p>@{author.username}</p>
           </div>
         </div>
         <button
-          className={`${styles['add-button']} ${isRequested ? styles['requested'] : ''}`}
+          className={`${styles.add_button} ${isRequested ? styles.add_button__requested : ''}`}
           onClick={handleAddButton}
           disabled={isRequested}
         >
@@ -75,12 +79,12 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
         </button>
       </div>
       {author.bio && author.bio.trim() !== "" && (
-        <div className={styles['post-content']}>
-          <p>{truncateText(author.bio, 100)}</p>
+        <div className={styles.post_content}>
+          <p>{author.bio}</p>
         </div>
       )}
     </div>
-  );
+  );  
 };
 
 export default AuthorPost;
