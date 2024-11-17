@@ -1,14 +1,69 @@
 
-from urllib.parse import urlparse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
+from django.core.validators import URLValidator
+from rest_framework import status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
+from urllib.parse import urlparse
 from ..models.user import NodeUser, User
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError as DjangoValidationError
 
-class NodeView(APIView):
+class NodeSerializer(serializers.Serializer):
+    host = serializers.CharField(max_length=255)
+    username = serializers.CharField(max_length=255)
+    password = serializers.CharField(max_length=255)
+
+    class Meta:
+        examples = [
+            OpenApiExample(
+                name="Node Example",
+                value={
+                    "host": "http://newnode.com",
+                    "username": "newuser",
+                    "password": "newpassword123"
+                }
+            )
+        ]
+class NodeWithAuthenticationSerializer(NodeSerializer):
+    is_authenticated = serializers.BooleanField(default=True)
+
+    class Meta:
+        examples = [
+            OpenApiExample(
+                name="Node Example",
+                value={
+                    "host": "http://newnode.com",
+                    "username": "newuser",
+                    "password": "newpassword123",
+                    "is_authenticated": True
+                }
+            )
+        ]
+
+class GetNodesView(APIView):
+    @extend_schema(
+        summary="Fetch the list of Nodes.",
+        description="Fetch a list of all nodes (NodeUser entries), including their host, username, password, and authentication status.",
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                description="A list of Node users retrieved successfully.",
+                response={
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "host": {"type": "string", "example": "http://example.com"},
+                            "username": {"type": "string", "example": "node1"},
+                            "password": {"type": "string", "example": "securepassword123"},
+                            "is_authenticated": {"type": "boolean", "example": True},
+                        }
+                    }
+                }
+            ),
+        },
+        tags=["Node API"]
+    )
     def get(self, request):
         """
             Fetch the list of `NodeUser` table.
@@ -18,7 +73,44 @@ class NodeView(APIView):
 
         # List of dictionaries automatically converted into JSON by DRF
         return Response(node_users, status=status.HTTP_200_OK)
-    
+
+
+class UpdateNodeView(APIView):
+    @extend_schema(
+        summary="Update details of a Node.",
+        description="Update an existing NodeUser object by providing the `host`, `username`, `password`, and `is_authenticated` fields.",
+        request=NodeWithAuthenticationSerializer,
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                description="Node updated successfully.",
+                response={
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string", "example": "Node updated successfully!"}
+                    }
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                description="Invalid input or missing required fields.",
+                response={
+                    "type": "object",
+                    "properties": {
+                        "error": {"type": "string", "example": "Host is required."}
+                    }
+                }
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                description="Node not found.",
+                response={
+                    "type": "object",
+                    "properties": {
+                        "error": {"type": "string", "example": "Node not found."}
+                    }
+                }
+            ),
+        },
+        tags=["Node API"]
+    )
     def put(self, request):
         """
             Edit a single `NodeUser` entry in the database.
@@ -60,7 +152,34 @@ class NodeView(APIView):
         node_obj.save()
 
         return Response({"message": "Node updated successfully!"}, status=status.HTTP_200_OK)
-    
+
+class AddNodeView(APIView):
+    @extend_schema(
+        summary="Adds a new Node.",
+        description="Create a new NodeUser object by providing the `host`, `username`, and `password`. The `is_authenticated` status defaults to True.",
+        request=NodeSerializer,
+        responses={
+            status.HTTP_201_CREATED: OpenApiResponse(
+                description="Node created successfully.",
+                response={
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string", "example": "Node added successfully"}
+                    }
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                description="Invalid input or missing required fields.",
+                response={
+                    "type": "object",
+                    "properties": {
+                        "error": {"type": "string", "example": "Missing required fields."}
+                    }
+                }
+            ),
+        },
+        tags=["Node API"]
+    )
     def post(self, request):
         """
             Add a node to NodeUser by providing the node's URL, username, and password.
@@ -102,7 +221,51 @@ class NodeView(APIView):
             return Response({'message': 'Node added successfully'}, status=status.HTTP_201_CREATED)
         else:
             return Response({'error': 'Node already exists'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+class DeleteNodeView(APIView):    
+    @extend_schema(
+        summary="Delete a Node.",
+        description="Remove a NodeUser object from the system by providing the `username` of the node to be deleted.",
+        parameters=[
+            OpenApiParameter(
+                name="username",
+                description="The `username` of the node to be deleted.",
+                type=str,
+                required=True,
+                location=OpenApiParameter.QUERY
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                description="Node deleted successfully.",
+                response={
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string", "example": "Node removed successfully"}
+                    }
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                description="Missing required field (username).",
+                response={
+                    "type": "object",
+                    "properties": {
+                        "error": {"type": "string", "example": "Missing required field."}
+                    }
+                }
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                description="Node not found.",
+                response={
+                    "type": "object",
+                    "properties": {
+                        "error": {"type": "string", "example": "Node not found."}
+                    }
+                }
+            ),
+        },
+        tags=["Node API"]
+    ) 
     def delete(self, request):
         """
             Remove a node from NodeUser (hard-delete).
