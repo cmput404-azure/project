@@ -1,10 +1,5 @@
-import {
-  Alert,
-  CircularProgress,
-  Snackbar,
-  Tooltip,
-  Modal,
-} from "@mui/material";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+import { Alert, CircularProgress, Snackbar, Tooltip, Modal } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -24,13 +19,9 @@ import FollowService from "../../service/follow";
 import ProfileService from "../../service/profile";
 import ShareService from "../../service/share";
 import styles from "./Post.module.scss";
-import "@fortawesome/fontawesome-free/css/all.min.css";
-import userEvent from "@testing-library/user-event";
 import ShareDialogue from "../Post/ShareDialogue";
 import EllipseMenu from "../EllipseMenu/EllipseMenu";
-
 import { PostData } from "../../models/models";
-import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -49,10 +40,8 @@ export default function Post({
 }: PostProps) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
   const postID = postGiven ? null : postIDFromParams;
-
-  const [postData, setPostData] = useState<PostData>(postGiven);
-
   const authProvider = useAuth();
+  const navigate = useNavigate();
 
   const [post, setPost] = useState<PostModel | null>(null);
   const [likeCount, setLikeCount] = useState(0);
@@ -64,7 +53,6 @@ export default function Post({
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [commentList, setCommentList] = useState<any[]>([]);
   const [showAlert, setShowAlert] = useState(false);
-  const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAuthor, setCurrentAuthor] = useState<any>();
@@ -225,9 +213,6 @@ export default function Post({
       if (postGiven) {
         let encodedId = null;
         encodedId = encodeURIComponent(postGiven.id);
-        // if (postGiven.author.host != process.env.REACT_APP_API_BASE_URL){
-        //   encodedId = encodeURIComponent(`${postGiven.id}`);
-        // }
         const postData = await postService.getPost(`api/posts/${encodedId}`);
         const comments = postData.comments?.src
           ? postData.comments.src.reverse()

@@ -1,5 +1,4 @@
-import os
-from urllib.parse import quote, unquote, urljoin, urlparse
+from urllib.parse import quote
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,8 +8,7 @@ from ..serializers import PostSerializer
 from ..models import Post, User, Follow, Share, Inbox
 from .posts import PostsPagination
 from requests.auth import HTTPBasicAuth
-
-import requests
+import requests, os
 
 class PublicStreamView(APIView):
     pagination_provider = PostsPagination

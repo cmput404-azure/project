@@ -37,7 +37,6 @@ const StyledCommentInputField = styled(TextField)({
 });
 
 const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
-  // console.log("Received: ", authorObj);
   const [commentFieldClicked, setCommentFieldClicked] = useState(false);
   const [isTextError, setIsTextError] = useState<boolean>(false);
   const [textErrorMsg, setTextErrorMsg] = useState("");
@@ -58,11 +57,6 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
   };
 
   const handleCommentSubmit = async (authorObj: any) => {
-    console.log(`AuthorID: ${authorObj.id}`); // for testing, change to API call or whatever
-    console.log(`Author: ${authorObj.displayName}`); // for testing, change to API call or whatever
-    console.log(`Comment: "${textInField}" | Submitted`); // for testing, change to API call or whatever
-    console.log(`Post: "${post}"`);
-
     const comment_obj = {
       type: "comment",
       author: authorObj,
@@ -130,7 +124,7 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
             onClick={handleCommentFieldClick}
             onChange={handleTextInput}
             // From https://stackoverflow.com/questions/45939909/put-length-constraint-in-a-textfield-in-react-js, Downloaded 2024-10-24
-            inputProps={{ maxLength: MAX_CHARACTERS }} // MUI docs says thsi will be deprecated eventually, but works for now
+            inputProps={{ maxLength: MAX_CHARACTERS }} // MUI docs says this will be deprecated eventually, but works for now
             error={isTextError}
             helperText={textErrorMsg}
             value={textInField}

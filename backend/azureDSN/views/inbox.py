@@ -1,6 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-import json
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes, OpenApiExample, inline_serializer
 from rest_framework import status, serializers
@@ -10,7 +9,7 @@ from requests.auth import HTTPBasicAuth
 from urllib.parse import urlparse, quote, urlunparse
 from ..serializers import *
 from ..models import *
-import requests, os
+import requests, os, json
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
@@ -97,28 +96,15 @@ class InboxView(APIView):
         tags=['Inbox API']
     )
     def get(self, request, author_serial):
-        action = request.query_params.get('action', None)
-
         user_obj = get_object_or_404(User, uuid=author_serial)
         inbox_obj = get_object_or_404(Inbox, user=user_obj)
-        
-        # if action == 'posts':
-        # Assuming that `content_object` refers to a Post model, and that it has a 'visibility' field
-        # This will only fetch inbox items of type 'post' and visibility 2 or 3
-            # post_content_type = ContentType.objects.get(model="post")
-            # inbox_items_obj = InboxItem.objects.filter(
-            #                                             inbox=inbox_obj,
-            #                                             content_type=post_content_type,
-            #                                             object_id__in=Post.objects.filter(visibility__in=[2, 3]).values_list('uuid', flat=True)
-            #                                         ).order_by("-id")
-        # else:
         
         # Get the latest inbox items
         inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-time")
         
         serializer = InboxItemSerializer(inbox_items_obj, many=True, context={"request": request})
-        # author is return in format of her/his url
         uri = request.build_absolute_uri("/")
+
         data = {
                 'user': f"{uri}api/authors/{author_serial}",
                 'items': serializer.data,
@@ -251,8 +237,8 @@ class InboxView(APIView):
             parsed_url = urlparse(payload["id"]) 
             post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
             post_obj = Post.objects.get(uuid=post_id)
-            serializer = PostSerializer(post_obj, data=payload, context={"request": request})
-            # local post
+            
+            # Local post
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, post_obj, post_status="delete")
             return Response({"message": "We have noticed other users about your deleted post"}, status=status.HTTP_200_OK)
@@ -322,7 +308,8 @@ class InboxView(APIView):
             parsed_url = urlparse(payload["id"]) 
             post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
             post_obj = Post.objects.get(uuid=post_id)
-            # local post
+            
+            # Local post
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, post_obj, post_status="update")
             return Response({"message": "We have noticed other users about your updated post"}, status=status.HTTP_200_OK)
@@ -465,7 +452,6 @@ class InboxView(APIView):
         '''
 
         # If author_serial does not exist locally, then need to dig through payload to check for the remote host
-        # user_obj = get_object_or_404(User, uuid=author_serial)
         payload = request.data
        
         if "type" not in payload:
@@ -481,18 +467,11 @@ class InboxView(APIView):
                 return self.send_follow_request_to_remote(payload)
             elif payload["type"].lower() == "post":
                 # New post created locally but the followers/friends are remote
-                # remote follower info is in the payload
                 return self.send_post_to_remote(payload)
-            
             elif payload["type"].lower() == "like":
-                # To-do: Liking a remote post in my local stream
                 return self.send_like_to_remote(payload, request)
-
             elif payload["type"].lower() == "comment":
-                # To-do: Commenting on a remote post in my local stream
                 return self.send_comment_to_remote(payload, request)
-
-
             else:
                 return Response({"error": "User not found locally and type not supported for remote authors."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -621,21 +600,16 @@ class InboxView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def send_like_to_remote(self, payload, request):
-
         # use the request url to get the correct uuid of the post author
         full_url = request.build_absolute_uri()
         parsed_url = urlparse(full_url)
-
         payload_json = json.dumps(payload)
 
         # Remove 'api/' from author_host
         author_host = payload["post_host"].rstrip("/")
         if author_host.endswith("/api"):
             author_host = author_host[:-4]
-        headers = {
-            "Content-Type": "application/json",
-            "Content-Length": str(len(payload_json))
-        }
+
         # Replace the netloc (host) in full_url with author_host
         inbox_url = parsed_url._replace(netloc=urlparse(author_host).netloc)
         formatted_url = urlunparse(inbox_url)
@@ -645,14 +619,10 @@ class InboxView(APIView):
             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
             json=payload
         )
-        # connection = http.client.HTTPConnection(inbox_url.netloc)
-        # connection.request("POST", inbox_url.path, body=payload_json, headers = headers)
-        # response = connection.getresponse()
-        # data = json.loads(response.read().decode()) 
 
         return Response(response.text, response.status_code)  
     
-    
+
     def send_comment_to_remote(self, payload, request):
         full_url = request.build_absolute_uri()
         parsed_url = urlparse(full_url)
@@ -670,7 +640,6 @@ class InboxView(APIView):
         inbox_url = parsed_url._replace(netloc=author_host)
         formatted_url = urlunparse(inbox_url)
 
-        print(formatted_url)
         # Use requests to send the POST request
         response = requests.post(
             formatted_url,
@@ -688,11 +657,6 @@ class InboxView(APIView):
     we return the status only cause the they dont need to know what is stored in other person's inbox
     '''
     def create_follow_request(self, user_object, payload, request):
-
-        # If user_object (followee) is local
-
-        # If user_object is remote
-
         # Validate the follow request object sent with the payload
         follow_obj = FollowRequest.objects.create(object=user_object, actor=payload["actor"])
         serializer = FollowRequestSerializer(follow_obj, data=payload, context={"request": request})
@@ -708,7 +672,6 @@ class InboxView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
     '''
     payload is a comment object
     id is http://{server}/api/authors/{user_id}/commented/{comment_id}
@@ -776,7 +739,7 @@ class InboxView(APIView):
         sharer_obj = User.objects.get(uuid=share_uuid) # sharer is always local
         
         if User.objects.filter(uuid=author_serial).exists():
-            # recevier is local, we add share to both share model and inbox 
+            # Receiver is local, we add share to both share model and inbox 
             receiver_obj = User.objects.get(uuid=author_serial)
             
             share_obj = Share.objects.create(
@@ -815,7 +778,6 @@ def create_inbox_item(inbox, content=None, remote_payload=None, post_status=None
     else:
         inbox_item_object = InboxItem.objects.create(remote_payload=remote_payload, post_status=post_status)
     inbox.items.add(inbox_item_object)
-    
     
     
 def delete_inbox_item(inbox, inbox_item_obj):
