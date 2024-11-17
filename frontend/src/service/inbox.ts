@@ -1,4 +1,4 @@
-import { Inbox, InboxItem } from "../models/models";
+import { Inbox, InboxItem, PostData } from "../models/models";
 import { api } from "./config";
 
 class InboxService {
@@ -21,28 +21,16 @@ class InboxService {
     /* 
         Update the post in inbox
         @param uuid: string - the fqid of the user
-               post_id: string - the fqid of the post
-               title: string - the new title of the post
-               content: string - the new content of the post
-               visibility: number - the new status of the post  
+               post_obj: Post - the updated post object
         @returns: message: string 
     */
     public async updateInboxPost(
         uuid: string,
-        post_id: string,
-        title: string,
-        content: string,
-        visibility: number
+        post_obj: PostData
     ): Promise<string> {
         try {
-            post_id = post_id.split('/').pop()
             uuid = uuid.split('/').pop()
-            const response = await api.put<{ message: string }>(`/api/authors/${uuid}/inbox/`, {
-                id: post_id,
-                title,
-                content,
-                visibility,
-            });
+            const response = await api.put<{ message: string }>(`/api/authors/${uuid}/inbox/`, post_obj);
 
             return response.data.message;
         } catch (error) {
@@ -54,18 +42,17 @@ class InboxService {
     /* 
         Delete the inbox of the users
         @param uuid: string - the uuid of the user 
-               post_id: string - the fqid of the post
+               post_obj: Post - the updated post object
         @returns: message: string
     */
-    public async deleteInboxPost(uuid: string, post_id: string): Promise<string> {
+    public async deleteInboxPost(uuid: string, post_obj: PostData): Promise<string> {
         try {
-            post_id = post_id.split('/').pop()
             uuid = uuid.split('/').pop()
             const config = {
                 headers: {},
                 data: {
-                    id: `/api/authors/${uuid}/posts/${post_id}`,
-                    type: "post",
+                    post: post_obj,
+                    type: "post"
                 },
             };
 
