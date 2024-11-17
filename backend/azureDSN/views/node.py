@@ -1,45 +1,14 @@
 
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
 from django.core.validators import URLValidator
-from rest_framework import status, serializers
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from urllib.parse import urlparse
 from ..models.user import NodeUser, User
-
-class NodeSerializer(serializers.Serializer):
-    host = serializers.CharField(max_length=255)
-    username = serializers.CharField(max_length=255)
-    password = serializers.CharField(max_length=255)
-
-    class Meta:
-        examples = [
-            OpenApiExample(
-                name="Node Example",
-                value={
-                    "host": "http://newnode.com",
-                    "username": "newuser",
-                    "password": "newpassword123"
-                }
-            )
-        ]
-class NodeWithAuthenticationSerializer(NodeSerializer):
-    is_authenticated = serializers.BooleanField(default=True)
-
-    class Meta:
-        examples = [
-            OpenApiExample(
-                name="Node Example",
-                value={
-                    "host": "http://newnode.com",
-                    "username": "newuser",
-                    "password": "newpassword123",
-                    "is_authenticated": True
-                }
-            )
-        ]
+from ..serializers import NodeSerializer, NodeWithAuthenticationSerializer
 
 class GetNodesView(APIView):
     @extend_schema(
