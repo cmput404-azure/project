@@ -148,17 +148,17 @@ export default function Post({
             setHasShared(isShared);
           }
 
-          setCommentList(
-            postGiven.comments?.count > 0
-              ? postGiven.comments.src.reverse()
-              : []
-          );
+          const comments = Array.isArray(postGiven?.comments?.src) 
+              ? postGiven.comments.src.reverse() 
+              : [];
+          setCommentList(comments);
           
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : (postData.likes?.count || 0)
           );
           setCommentCount(
-            Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
+            // Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
+            comments.length
           );
         }
       } catch (error) {
@@ -228,17 +228,18 @@ export default function Post({
         }
         let encodedId = encodeURIComponent(postGiven.id);
         const postData = await postService.getPost(`api/posts/${encodedId}`); // this endpoint only works on local post
-        const comments = postData.comments
-          ? postData.comments.src.reverse()
-          : [];
+        const comments = Array.isArray(postData?.comments?.src) 
+            ? postData.comments.src.reverse() 
+            : [];
         setCommentList(comments);
         setCommentCount(
-          Array.isArray(postData.comments) ? 0 : postData.comments.count
+          (postData.comments) ? postData.comments.count : 0
+          // comments.length
         );
       }
     };
     fetchPost();
-  }, [isModalOpen]);
+  }, [isModalOpen, postGiven]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
