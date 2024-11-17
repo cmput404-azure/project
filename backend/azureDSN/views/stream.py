@@ -77,7 +77,7 @@ class PublicStreamView(APIView):
         all_posts = serialized_local_posts + unique_remote_posts
 
         # Separate logic for Post objects and JSON objects
-        all_posts.sort(key=lambda post: post['published'] if isinstance(post, dict) else post['created_at'], reverse=True)
+        all_posts.sort(key=lambda post: post['published'] if isinstance(post, dict) else post['modified_at'], reverse=True)
 
         pagination = PostsPagination()
         paginated_posts = pagination.paginate_queryset(all_posts, request, view=self)

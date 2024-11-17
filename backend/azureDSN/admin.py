@@ -59,7 +59,7 @@ class NodeUserAdmin(admin.ModelAdmin):
     list_filter = (ConnectionStatusFilter,)
 
     def get_connection_status(self, obj):
-        return "CONNECTED" if obj.is_authenticated else "NOT CONNECTED"
+        return "ALLOWED" if obj.is_authenticated else "NOT ALLOWED"
     get_connection_status.short_description = "Connection Status"
 
     def authenticate_nodes(self, request, queryset):
