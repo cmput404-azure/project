@@ -1,5 +1,7 @@
 import { Inbox, InboxItem, PostData } from "../models/models";
+
 import { api } from "./config";
+import { extractUUID } from "../util/formatting/extractUUID";
 
 class InboxService {
     /* 
@@ -21,15 +23,17 @@ class InboxService {
     /* 
         Update the post in inbox
         @param uuid: string - the fqid of the user
-               post_obj: Post - the updated post object
-        @returns: message: string 
+                post_id: string - the fqid of the post
+                title: string - the new title of the post
+                content: string - the new content of the post
+                visibility: number - the new status of the post  
     */
     public async updateInboxPost(
         uuid: string,
         post_obj: any
     ): Promise<string> {
         try {
-            uuid = uuid.split('/').pop()
+            uuid = extractUUID(uuid);
             const response = await api.put<{ message: string }>(`/api/authors/${uuid}/inbox/`, post_obj);
 
             return response.data.message;
@@ -45,21 +49,21 @@ class InboxService {
                post_obj: Post - the deleted post object
         @returns: message: string
     */
-    public async deleteInboxPost(uuid: string, post_obj: any): Promise<string> {
-        try {
-            uuid = uuid.split('/').pop()
-            const config = {
-                headers: {},
-                data: post_obj,
-            };
-
-            const response = await api.delete<{ message: string }>(`/api/authors/${uuid}/inbox/`, config);
-            return response.data.message;
-        } catch (error) {
-            console.error("Delete post in inbox error:", error);
-            return "";
+        public async deleteInboxPost(uuid: string, post_obj: any): Promise<string> {
+            try {
+                uuid = extractUUID(uuid);
+                const config = {
+                    headers: {},
+                    data: post_obj,
+                };
+    
+                const response = await api.delete<{ message: string }>(`/api/authors/${uuid}/inbox/`, config);
+                return response.data.message;
+            } catch (error) {
+                console.error("Delete post in inbox error:", error);
+                return "";
+            }
         }
-    }
 
 
     /* 
@@ -92,8 +96,7 @@ class InboxService {
     @returns: status
     */
     public async sendPostToInbox(fqid: string, inbox_item: object): Promise<any> {
-        const uuid = fqid.split('/').pop()
-        // handle local/remote in backend
+        const uuid = extractUUID(fqid);
         try {
             const inboxResponse = await api.post<any>(`/api/authors/${uuid}/inbox/`, inbox_item);
             return inboxResponse.status;
@@ -110,7 +113,7 @@ class InboxService {
     @returns: message: string 
     */
     public async sendCommentToInbox(uuid: string, inbox_item: object): Promise<Comment | null> {
-        uuid = uuid.split('/').pop()
+        uuid = extractUUID(uuid);
         try {
             const inboxResponse = await api.post<Comment>(`/api/authors/${uuid}/inbox/`, inbox_item);
             return inboxResponse.data;

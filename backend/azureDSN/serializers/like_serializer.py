@@ -45,6 +45,7 @@ class LikeSerializer(serializers.ModelSerializer):
         user_uuid = user_data.get('id', '')
         if (user_uuid):
             user_uuid = user_uuid.rstrip('/').split('/')[-1]
+            
         return f"{settings.BASE_URL}/api/authors/{user_uuid}/liked/{obj.uuid}"
     
     def get_object(self, obj): # currently only works for Post object

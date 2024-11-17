@@ -42,10 +42,12 @@ export default function NotificationList() {
             // Expected format for object: api/authors/author_id/posts/post_id
             const objectPath = item.object.startsWith("api/") ? item.object.slice(4) : item.object;
             try {
-              let post_resp = await api.get(`${item.author.host}${objectPath}`);
+              // post should be local 
+              let post_resp = await api.get(`${process.env.REACT_APP_API_BASE_URL}/api/${objectPath}`);
               post_obj = post_resp.data;
-              
-              if(post_obj.author.id.includes(authProvider.user.uuid)=== true){
+
+              //item.author.id is the author of the like
+              if(item.author.id.includes(authProvider.user.uuid)=== true){
                 // user liked their own post, don't need to notify
                 return null
               }
@@ -58,9 +60,10 @@ export default function NotificationList() {
             user = await fetchUser(encodedId);
             try {
               let post_resp = await api.get(item.post);
+              console.log(post_resp);
               post_obj = post_resp.data;
 
-              if(post_obj.author.id.includes(authProvider.user.uuid)=== true){
+              if(item.author.id.includes(authProvider.user.uuid)=== true){
                 // user commented on their own post, don't need to notify
                 return null
               }
@@ -70,7 +73,7 @@ export default function NotificationList() {
             }
           } 
           else if (item.type === "post") {
-            // Someone shared a friends only post
+            // Someone posted 
             let user_resp = await api.get(item.author.id);
             user = user_resp.data;
             post_obj = item;
