@@ -130,10 +130,10 @@ export default function Post({
 
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
-            Array.isArray(postData.likes) ? 0 : postData.likes.count
+            Array.isArray(postData.likes) ? 0 : (postData.likes?.count || 0)
           );
           setCommentCount(
-            Array.isArray(postData.comments) ? 0 : postData.comments.count
+            Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
           );
         } else {
           setPost(postGiven);
@@ -157,11 +157,12 @@ export default function Post({
               ? postGiven.comments.src.reverse()
               : []
           );
+
           setLikeCount(
-            postGiven.likes ? postGiven.likes.count : 0
+            Array.isArray(postData.likes) ? 0 : (postData.likes?.count || 0)
           );
           setCommentCount(
-            postGiven.comments ? postGiven.comments.count : 0
+            Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
           );
         }
       } catch (error) {
