@@ -177,8 +177,8 @@ const HomePage = () => {
             </div>
             <div
               className={`${styles.icon_section} ${activeFilterPost === "unlisted_friends-only"
-                  ? styles.active
-                  : ""
+                ? styles.active
+                : ""
                 }`}
               onClick={() => handleFilterPost("unlisted_friends-only")}
             >
@@ -238,14 +238,6 @@ const HomePage = () => {
             <RecommendedAuthors authors={recommended} />
           </Drawer>
         </div>
-
-
-        // <div className={styles.authorSection}>
-        //     <h2 className={styles.recommendedTitle}>Recommended for you</h2>
-        //     {recommended.map((author) => (
-        //       <AuthorPost key={author.id} author={author}/>
-        //     ))}
-        // </div>
       }
     </div>
   );
