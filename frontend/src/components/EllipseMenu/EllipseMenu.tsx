@@ -100,8 +100,7 @@ export default function EllipseMenu({
   const handleCopyLink = () => {
     if (post) {
       const domain = window.location.host;
-      const postId = post.id.split("/").pop();
-      const path = `/#/post/${postId}`;
+      const path = `/#/post/${encodeURIComponent(post.id)}`;
 
       const link = `${domain}${path}`;
       navigator.clipboard.writeText(link).then(
@@ -133,7 +132,8 @@ export default function EllipseMenu({
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target =
-        normalizeVisibility(postData.visibility) === 1 || normalizeVisibility(postData.visibility) === 3
+        normalizeVisibility(postData.visibility) === 1 ||
+        normalizeVisibility(postData.visibility) === 3
           ? followers
           : friends;
       for (const recipient of target) {
@@ -142,12 +142,15 @@ export default function EllipseMenu({
           ...(postData.type ? {} : { type: "post" }),
           title: updatedPost.title,
           content: updatedPost.content,
-          visibility: normalizeVisibility(updatedPost.visibility, true) as string,
+          visibility: normalizeVisibility(
+            updatedPost.visibility,
+            true
+          ) as string,
           follower: {
             type: "author",
             id: recipient.id,
             host: recipient.host,
-          }
+          },
         };
 
         await inbox.updateInboxPost(recipient.id, post_obj);
@@ -177,7 +180,8 @@ export default function EllipseMenu({
       const followers = await follow.getFollowers(extractUUID(authorUUID));
       const friends = await follow.getFriends(extractUUID(authorUUID));
       const target =
-        normalizeVisibility(postData.visibility) === 1 || normalizeVisibility(postData.visibility) === 3
+        normalizeVisibility(postData.visibility) === 1 ||
+        normalizeVisibility(postData.visibility) === 3
           ? followers
           : friends;
       for (const recipient of target) {
@@ -188,7 +192,7 @@ export default function EllipseMenu({
             type: "author",
             id: recipient.id,
             host: recipient.host,
-          }
+          },
         };
         await inbox.deleteInboxPost(recipient.id, deletedPost);
       }
