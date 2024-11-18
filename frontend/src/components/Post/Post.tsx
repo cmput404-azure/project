@@ -367,14 +367,22 @@ export default function Post({
   ) : (
     <div className={styles.card}>
       <div className={styles.grid}>
-        <Avatar
-          className={styles.profilePic}
-          src={
-            profileService.getProfilePicture(post.author)
-          }
-          alt={`${post.author.displayName}'s profile`}
-          onClick={redirectToAuthorProfile}
-        />
+        <div className="avatar">
+          <Avatar
+            className={styles.profilePic}
+            src={
+              profileService.getProfilePicture(post.author)
+            }
+            alt={`${post.author.displayName}'s profile`}
+            onClick={redirectToAuthorProfile}
+            sx={{
+              "&:hover": {
+                cursor: "pointer",
+                boxShadow: "0 0 2px 2px #55555559",
+              }
+            }}
+          />
+        </div>
         <div className={styles.headerContainer}>
           <div className={styles.headerText}>
             <span className={styles.userName} onClick={redirectToAuthorProfile}>
@@ -545,13 +553,12 @@ export default function Post({
           {commentList.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
-                <Avatar
-                  src={comment.author?.profileImage}
-                  alt={comment.author?.displayName}
-                  sx={{ marginRight: "0.5rem" }}
-                >
-                  {comment.author?.displayName.charAt(0)}
-                </Avatar>
+                <div className="avatar">
+                  <Avatar
+                    src={profileService.getProfilePicture(comment.author)}
+                    alt={comment.author?.displayName}
+                  />
+                </div>
               </div>
               <div className={styles.commentContent}>
                 <div className={styles.authorTime}>

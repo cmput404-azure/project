@@ -260,14 +260,16 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
   return (
     <div className={styles.container} ref={postBarRef} style={{ backgroundColor: showDetail ? "#777" : "transparent" }}>
       <section className={styles.post_bar} onClick={handleInputClick}>
-        <Avatar
-          src={
-            authProvider.user.profileImage ??
-            `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
-          }
-          alt="User"
-          className={styles.user_image}
-        />
+        <div className="avatar">
+          <Avatar
+            src={
+              authProvider.user.profileImage ??
+              `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+            }
+            alt="User"
+            className={styles.user_image}
+          />
+        </div>
         <div className={styles.vertical_divider}></div>
         <PostTitleField
           className={styles.post__input}
