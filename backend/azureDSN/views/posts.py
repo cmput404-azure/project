@@ -575,7 +575,7 @@ class PostView(APIView):
                 response = requests.get(decoded_post_fqid)
                 response = requests.get(
                     decoded_post_fqid,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME').strip(), os.getenv('NODE_PASSWORD').strip()),
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                 )
                 data = response.json()  # Parse the JSON response
                 post_visibility = data.get("visibility")
