@@ -1,48 +1,51 @@
 .card {
-  width: 800px;
-  border-radius: 10px;
-  padding: 20px;
-  margin: 20px auto;
-  min-height: max-content;
   background-color: rgb(123, 123, 123);
+  border-radius: 10px;
+  box-sizing: border-box;
   color: white; // Default text color for the whole card
+  margin: 20px auto;
+  max-width: 800px;
+  min-height: max-content;
+  min-width: 300px;
+  padding: 20px;
   transition: box-shadow 0.3s ease-in-out;
-
+  width: 100%;
+  
   &:hover {
     box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
   }
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: auto 15fr 1fr;
   align-items: center;
+  display: grid;
   gap: 15px;
+  grid-template-columns: auto 15fr 1fr;
 }
 
 .imgPlaceholder {
-  width: 100%;
-  height: 200px;
   background-color: rgba(
     255,
     255,
     255,
     0.2
   ); // Optional: Light background to match the theme
+  height: 200px;
+  width: 100%;
 }
 
 .profilePic {
-  height: 50px;
-  width: 50px;
   border-radius: 50%;
+  height: 50px;
   object-fit: cover;
+  width: 50px;
 }
 
 .headerContainer {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
   align-items: center;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
 
   .headerText {
     display: flex;
@@ -52,45 +55,45 @@
   .sharedLabel,
   .deletedLabel {
     border-radius: 3px;
-    padding: 2px 6px;
-    margin-left: 10px;
+    display: inline-block;
     font-size: 0.75em;
     font-weight: 600;
     line-height: 1.2;
-    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 6px;
   }
 
   .sharedLabel {
     background-color: rgba(112, 255, 174, 0.15);
-    color: #70ffae;
     border: 1px solid #70ffae;
+    color: #70ffae;
   }
 
   .deletedLabel {
     background-color: rgba(255, 99, 71, 0.15);
-    color: #ff6347;
     border: 1px solid #ff6347;
+    color: #ff6347;
   }
 }
 
 .userName {
-  font-weight: bold;
-  font-size: 1.1rem;
   color: white; // Ensures userName text is white
+  font-size: 1.1rem;
+  font-weight: bold;
   text-decoration: none;
 }
 
 .postTime {
-  font-size: 0.9rem;
   color: white; // Ensures post time text is white
+  font-size: 0.9rem;
 }
 
 .cardFooter {
-  height: 95%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   gap: 20px;
+  height: 95%;
+  justify-content: space-between;
 }
 
 .essentials {
@@ -100,16 +103,16 @@
 }
 
 .icon {
+  align-items: center;
+  color: white; // Ensures icons are white
   display: flex;
   flex-direction: column;
-  align-items: center;
   font-size: 1.2rem;
-  color: white; // Ensures icons are white
 }
 
 .icon i {
-  display: inline-block;
   color: white; // Icon color set to white
+  display: inline-block;
 }
 
 .disabled {
@@ -117,51 +120,51 @@
 }
 
 .cardFooter span {
-  font-size: 0.9rem;
   color: white; // Changed from #333 to white for footer text
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
 .cardContent {
-  flex-grow: 1;
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
   gap: 10px;
   height: 100%;
 }
 
 .postTitle {
-  font-size: 1.25rem;
   color: white;
+  font-size: 1.25rem;
 }
 
 .postText {
-  font-size: 1rem;
   color: white; // Changed from #333 to white for post content
+  font-size: 1rem;
   line-height: 1.5;
   text-align: justify;
 
   blockquote {
-    // Referenced from: https://css-tricks.com/examples/Blockquotes/
-    margin-top: 10px;
+    border-left: 3px solid #ccc;
     margin-bottom: 10px;
     margin-left: 50px;
+    // Referenced from: https://css-tricks.com/examples/Blockquotes/
+    margin-top: 10px;
     padding-left: 15px;
-    border-left: 3px solid #ccc;
   }
 }
 
 .imgContainer {
-  margin-top: 10px;
-  display: flex;
   align-items: center;
+  display: flex;
   justify-content: center; // Center image both horizontally and vertically
+  margin-top: 10px;
 }
 
 .imgContainer img {
-  max-width: 100%;
-  height: auto;
   border-radius: 8px;
+  height: auto;
+  max-width: 100%;
 }
 
 .liked i {
@@ -173,19 +176,19 @@
 }
 
 .comments {
-  display: flex;
-  flex-direction: column;
   background-color: rgb(123, 123, 123, 0.8); // slightly transparent
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
+  display: flex;
+  flex-direction: column;
   padding: 10px;
 }
 
 .commentsHeader {
-  padding-top: 10px;
-  padding-bottom: 7px;
-  color: #ffffff;
   border-bottom: 1px solid #ffffff;
+  color: #ffffff;
+  padding-bottom: 7px;
+  padding-top: 10px;
 }
 
 .commentsSection {
@@ -195,10 +198,10 @@
 }
 
 .userImage {
-  width: 40px;
-  height: 40px;
   border-radius: 50%;
+  height: 40px;
   margin-right: 8px;
+  width: 40px;
 }
 
 .commentContent {
@@ -209,19 +212,19 @@
 
 .authorTime {
   display: flex;
-  justify-content: space-between;
   gap: 10px;
+  justify-content: space-between;
 }
 
 .commentAuthor {
-  font-weight: bold;
   color: #ffffff;
+  font-weight: bold;
   margin-bottom: 4px;
 }
 
 .timePosted {
-  font-size: 0.8rem;
   color: #d0d0d0;
+  font-size: 0.8rem;
 }
 
 .comment {
