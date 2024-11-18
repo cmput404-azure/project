@@ -1,81 +1,93 @@
+
 .listImg {
-  width: 50px;
+  border-radius: 50%;
   height: 50px;
   object-fit: cover;
   object-position: 30% 0;
-  border-radius: 50%;
-  margin-right: 5px;
+  width: 50px;
 }
 
 .listImgPost {
-  width: 50px;
+  border-radius: 10%;
   height: 50px;
+  margin-right: 20px;
   object-fit: cover;
   object-position: 30% 0;
-  border-radius: 10%;
-  margin-right: 20px;
+  width: 50px;
 }
 
 .container {
-  display: flex;
   align-items: center;
+  background-color: #d1d1d1; 
+  border-radius: 8px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
   justify-content: space-between;
-  width: 100%;
-  padding: 5px;
-  border-bottom: 2px solid #333;
-  border-top: none;
-  border-left: none;
-  border-right: none;
+  margin-bottom: 8px;
+  padding: 10px; 
+  transition: all 0.2s ease;
+
+  &:hover{
+    background-color: #e0e0e0;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .profileLink {
-  display: flex;
-  align-items: start;
-  gap: 5px;
-  text-decoration: none;
   color: #333;
-  width: 100%;
   cursor: pointer;
+  display: flex;
+  gap: 10px;
+  text-decoration: none;
+  width: 100%;
 }
 
 .text {
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
-  text-align: left;
+  justify-content: center;
+  text-align: left; 
 
   h1 {
-    margin: 0;
-    font-weight: bold;
     font-size: 14px;
+    font-weight: bold;
+    line-height: 1.4;
+    margin: 0; 
   }
 
   p {
+    color: #666;
     font-size: 12px;
-    margin: 0;
+    margin: 0; 
   }
 }
 
 .additionalText {
+  color: #777;
   font-size: 14px;
   font-weight: normal;
   margin-left: 3px;
 }
 
-
-
 button {
+  background-color: #fafafa;
   border: none;
-  padding: 5px 10px;
   border-radius: 16px;
+  color: #333;
   cursor: pointer;
   font-size: 12px;
-  color: #333;
+  padding: 5px 10px; 
+  transition: background-color 0.3s ease; /* Add a slower transition for hover effect */
 }
 
 button:hover {
-  background-color: #ccc; 
+  background-color: #8b8b8b; 
+  color: #b9b9b9;
 }
 
 .buttonGroup {
   display: flex;
-  gap: 5px; 
+  gap: 10px;
 }
+

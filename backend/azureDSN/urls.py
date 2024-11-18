@@ -67,10 +67,10 @@ urlpatterns = [
 
     # Site and Node Configuration
     path('api/config/', SiteConfigView.as_view(), name='registration_toggle'),
-    path('api/nodes/', NodeView.as_view(), name="get_nodes"),
-    path('api/nodes/add/', NodeView.as_view(), name="add_node"),
-    path('api/nodes/update/', NodeView.as_view(), name="edit_node"),
-    path('api/nodes/delete/', NodeView.as_view(), name="remove_node"),
+    path('api/nodes/', GetNodesView.as_view(), name="get_nodes"),
+    path('api/nodes/add/', AddNodeView.as_view(), name="add_node"),
+    path('api/nodes/update/', UpdateNodeView.as_view(), name="edit_node"),
+    path('api/nodes/delete/', DeleteNodeView.as_view(), name="remove_node"),
 
     # Front end injection
     path('', TemplateView.as_view(template_name='index.html')),

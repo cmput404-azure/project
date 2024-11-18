@@ -15,11 +15,12 @@ import FollowService from "../../service/follow";
 import { GitHub } from "@mui/icons-material";
 import InboxService from "../../service/inbox";
 import LinkIcon from "@mui/icons-material/Link";
+import Post from "../Post/Post";
 import PostCard from "../PostCard/PostCard";
 import ProfileService from "../../service/profile";
+import profileService from "../../service/profile";
 import styles from "./PublicProfile.module.scss";
 import { useAuth } from "../../state";
-import Post from "../Post/Post";
 
 const FollowerModalTypes = {
   follower: "Follower",
@@ -127,6 +128,9 @@ export default function PublicProfile() {
     }
 
     async function checkRequested() {
+      // Re-initialize 
+      setIsRequested(false);
+
       // Check inbox of the user ID
       const userInbox = await InboxService.getInbox(userID);
       await Promise.all(
@@ -227,8 +231,7 @@ export default function PublicProfile() {
               <Avatar
                 alt={authorData.displayName}
                 src={
-                  authorData.profileImage ??
-                  "https://ui-avatars.com/api/?name=" + authorData.displayName
+                  profileService.getProfilePicture(authorData)
                 }
                 sx={{ width: 100, height: 100 }}
               />

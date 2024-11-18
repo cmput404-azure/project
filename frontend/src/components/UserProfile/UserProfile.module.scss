@@ -116,6 +116,7 @@
         flex-flow: column;
         height: 100%;
         margin: 2rem auto 0 auto;
+        overflow-x: hidden;
         overflow-y: scroll;
         padding: 2rem 0 0 0;
         width: 90%;
@@ -131,19 +132,31 @@
     display: flex;
     flex-flow: column;
     justify-content: flex-start;
-    padding: 1rem;
+    padding: 60px 20px; /* 4rem for top and bottom, 0 for left and right */
 
     .edit__profile__header {
+        align-items: center; /* Vertically center content */
         display: flex;
-        flex-flow: row;
-        justify-content: space-between;
-
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0;
-        }
-    }
+        justify-content: center; /* Center the h2 */
+        position: relative; /* Allow absolute positioning for the IconButton */
+        width: 300px;
+      }
+      
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        left: 50%;
+        margin: 0;
+        position: absolute;
+        transform: translateX(-50%); /* Center the h2 horizontally */
+      }
+      
+      .icon__button {
+        position: absolute; /* Take the IconButton out of normal flow */
+        right: 0; /* Align it to the right edge of the container */
+        top: 40%; /* Vertically center it */
+        transform: translateY(-130%); /* Correct for its height */
+      }
 
     .edit__profile__body {
         display: flex;
@@ -179,8 +192,56 @@
 
             .input {
                 margin-top: 1rem;
+                width: 250px;
             }
         }
     }
 }
 
+@media (max-width: 1000px) {
+    .container{
+        height: 98vh !important;
+        overflow: auto !important;
+        .header{
+            flex-flow: row wrap !important;
+            justify-content: center !important;
+            align-items: center !important;
+            .info{
+                flex-flow: row wrap !important;
+                align-items: center !important;
+                justify-content: center !important;
+
+                .icon{
+                    margin-right: 0 !important;
+                }
+
+                .user{
+                    align-self: center !important;
+                    width: 100% !important;
+
+                    .user__main{
+                        align-items: center !important;
+                        justify-content: center !important;
+                        margin-top: 1rem;
+                    }
+                    .user__secondary{
+                        align-items: center !important;
+                        justify-content: center !important;
+                        margin-top: 1rem;
+                    }
+                    
+                }
+                .footer{
+                    margin: 1rem auto !important;
+                }
+
+            }
+            .bio{
+                align-items: center !important;
+                p{
+                    font-size: 0.5rem;
+                }
+            }
+        }
+    }
+}

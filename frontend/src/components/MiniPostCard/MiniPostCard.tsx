@@ -12,9 +12,10 @@ import { extractUUID } from "../../util/formatting/extractUUID";
 import follow from "../../service/follow";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
+import profileService from "../../service/profile";
 import remarkGfm from 'remark-gfm';
 import styles from "./MiniPostCard.module.scss";
-import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 interface MiniPostCardProps {
   post: PostData;
@@ -40,8 +41,6 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
         const match = postData.content.match(imageRegex);
         if (match) {
           const imageUrl = match[1];
-          console.log("imageURL: ", imageUrl);
-
           if (imageUrl.startsWith("data:")) {
             setImageSrc(imageUrl);
           } else {
@@ -149,9 +148,7 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
           <img
             className={styles.profilePic}
             src={
-              postData.author.profileImage && postData.author.profileImage.trim() !== "" ?
-              postData.author.profileImage :
-              `https://ui-avatars.com/api/?background=random&name=${postData.author.displayName}`
+              profileService.getProfilePicture(postData.author)
             }
             alt={postData.author.displayName}
           />

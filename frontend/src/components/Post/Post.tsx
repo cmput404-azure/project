@@ -1,30 +1,32 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import { Alert, CircularProgress, Snackbar, Tooltip, Modal } from "@mui/material";
-import Avatar from "@mui/material/Avatar";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+
+import { Alert, CircularProgress, Modal, Snackbar, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { useAuth } from "../../state";
-import { ContentType } from "../../models/modelTypes";
-import { PostData as PostModel } from "../../models/models";
+
+import Avatar from "@mui/material/Avatar";
 import CommentInputField from "../CommentInput/CommentInput";
+import { ContentType } from "../../models/modelTypes";
+import EllipseMenu from "../EllipseMenu/EllipseMenu";
+import FollowService from "../../service/follow";
+import { PostData } from "../../models/models";
+import { PostData as PostModel } from "../../models/models";
+import ProfileService from "../../service/profile";
+import ReactMarkdown from "react-markdown";
+import ShareDialogue from "../Post/ShareDialogue";
+import ShareService from "../../service/share";
+import { api } from "../../service/config";
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import { formatCount } from "../../util/formatting/formatCount";
-import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
-import { api } from "../../service/config";
 import inbox from "../../service/inbox";
-import postService from "../../service/post";
-import FollowService from "../../service/follow";
-import ProfileService from "../../service/profile";
-import ShareService from "../../service/share";
-import styles from "./Post.module.scss";
-import ShareDialogue from "../Post/ShareDialogue";
-import EllipseMenu from "../EllipseMenu/EllipseMenu";
-
-import { PostData } from "../../models/models";
 import { normalizeURL } from "../../util/formatting/normalizeURL";
 import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
+import postService from "../../service/post";
+import profileService from "../../service/profile";
+import remarkGfm from "remark-gfm";
+import styles from "./Post.module.scss";
+import { useAuth } from "../../state";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -67,7 +69,6 @@ export default function Post({
       try {
 
         if (postID) {
-          console.log(`with postID: ${postID}`)
           const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
           let postDataList = [];
@@ -249,9 +250,15 @@ export default function Post({
     setIsCommentOpen(!isCommentOpen);
   };
 
-  const handleCommentButtonClick = () => {
-    if (isModal) return;
-    setIsModalOpen(true);
+  const handleCommentButtonClick = async () => {
+    if (isModal) return; 
+    try {
+      const postData = await postService.getPost(`api/posts/${encodeURIComponent(post.id)}`);
+      setPost(postData); 
+      setIsModalOpen(true); 
+    } catch (error) {
+      console.error("Error fetching post data:", error);
+    }
   };
 
   // handle when the comment modal is closed
@@ -293,6 +300,7 @@ export default function Post({
         object: post.id,
         post_host: postGiven.author.host
       };
+
       await inbox.sendPostToInbox(post.author.id, like_obj);
       setLikeCount(likeCount + 1);
       setHasLiked(true);
@@ -304,8 +312,7 @@ export default function Post({
   const handleCopyLink = () => {
     if (post) {
       const domain = window.location.host;
-      const postId = post.id.split("/").pop();
-      const path = `/#/post/${postId}`;
+      const path = `/#/post/${encodeURIComponent(post.id)}`;
 
       const link = `${domain}${path}`;
       navigator.clipboard.writeText(link).then(
@@ -359,16 +366,22 @@ export default function Post({
   ) : (
     <div className={styles.card}>
       <div className={styles.grid}>
-        <img
-          className={styles.profilePic}
-          src={
-            post.author.profileImage && post.author.profileImage.trim() !== "" // the nullish coalescing operator (??) treats empty as valid
-              ? post.author.profileImage
-              : `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
-          }
-          alt={`${post.author.displayName}'s profile`}
-          onClick={redirectToAuthorProfile}
-        />
+        <div className="avatar">
+          <Avatar
+            className={styles.profilePic}
+            src={
+              profileService.getProfilePicture(post.author)
+            }
+            alt={`${post.author.displayName}'s profile`}
+            onClick={redirectToAuthorProfile}
+            sx={{
+              "&:hover": {
+                cursor: "pointer",
+                boxShadow: "0 0 2px 2px #55555559",
+              }
+            }}
+          />
+        </div>
         <div className={styles.headerContainer}>
           <div className={styles.headerText}>
             <span className={styles.userName} onClick={redirectToAuthorProfile}>
@@ -539,13 +552,12 @@ export default function Post({
           {commentList.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div key={comment.id} className={styles.comment}>
-                <Avatar
-                  src={comment.author?.profileImage}
-                  alt={comment.author?.displayName}
-                  sx={{ marginRight: "0.5rem" }}
-                >
-                  {comment.author?.displayName.charAt(0)}
-                </Avatar>
+                <div className="avatar">
+                  <Avatar
+                    src={profileService.getProfilePicture(comment.author)}
+                    alt={comment.author?.displayName}
+                  />
+                </div>
               </div>
               <div className={styles.commentContent}>
                 <div className={styles.authorTime}>
@@ -563,7 +575,7 @@ export default function Post({
         </div>
       ) : null}
 
-      <Modal open={isModalOpen} onClose={handleCommentModalClose}>
+      <Modal open={isModalOpen} onClose={handleCommentModalClose} sx={{"overflow": "auto"}}>
         <>
           <Post postGiven={post} canToggleComments={false} isModal={true} />
         </>

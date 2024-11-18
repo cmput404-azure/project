@@ -1,17 +1,19 @@
 // @ts-nocheck
 
+import { Author, PostData } from "../../models/models"
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
+
 import { Avatar } from "@mui/material";
-import { api } from "../../service/config";
-import { extractUUID } from "../../util/formatting/extractUUID";
-import styles from "./ListItem.module.scss";
-import { useAuth } from "../../state";
 import FollowService from "../../service/follow";
 import InboxService from "../../service/inbox";
 import ProfileService from "../../service/profile";
-import { PostData, Author } from "../../models/models"
+import { api } from "../../service/config";
+import { extractUUID } from "../../util/formatting/extractUUID";
 import { normalizeURL } from "../../util/formatting/normalizeURL";
+import profileService from "../../service/profile";
+import styles from "./ListItem.module.scss";
+import { useAuth } from "../../state";
 
 interface ListItemProps {
   isRequest?: boolean;
@@ -55,6 +57,7 @@ export default function ListItem({
       setUserId(userListId);
       
       let following = false;
+
       if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
         // check if current user is already following the (local) user
         const loggedInFQID = `${authProvider.user.host}/api/authors/${authProvider.user.uuid}`
@@ -63,7 +66,6 @@ export default function ListItem({
       } else {
         try {
           following = await api.get(`/api/check/${authProvider.user.uuid}/follows/${user.id}`);
-          console.log(following)
         } catch (err) {
           if (err.response.status !== 404) {
             console.error('Fetch following error:', error);
@@ -76,9 +78,27 @@ export default function ListItem({
       }
     };
 
+    async function checkRequested() {
+      // Check inbox of the user ID
+      if (normalizeURL(user.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+        const userInbox = await InboxService.getInbox(extractUUID(user.id));
+        await Promise.all(
+          userInbox.map(async (item: any) => {
+            if (item && item.type === "follow") {
+              let actorId = item.actor.id.replace(/\/+$/, "").split("/").pop();
+              if (actorId === authProvider.user.uuid) {
+                setIsRequested(true);
+              }
+            }
+          })
+        );
+      }
+    }
+
     if (authProvider.isAuthenticated) {
       if (isUserList) {
         fetchData(); // Call the async function
+        checkRequested();
       }
       if (postObj != null) {
         if (postObj.post_status && postObj.post_status.includes("update")) {
@@ -154,7 +174,14 @@ export default function ListItem({
 
   const navigateToProfile = () => {
     closeModal?.();
-    navigate(`/authors/${extractUUID(user.id)}`);
+    let user_url = user["id"]
+    if (normalizeURL(user_url) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+      navigate(`/authors/${extractUUID(user.id)}`);
+    } else {
+      // To-do: Fetch correct information (posts, followers, followings, friends)
+      const encodedUserId = encodeURIComponent(user_url);
+      navigate(`/authors/${encodedUserId}`);
+    }
   };
 
   let additionalText = "";
@@ -169,12 +196,14 @@ export default function ListItem({
     <div className={styles.ListItemContainer}>
       <div className={styles.container}>
         <div className={styles.profileLink} onClick={navigateToProfile}>
-          <Avatar
-            className={styles.listImg}
-            alt={user.username}
-            src={user.profileImage}
-            sx={{ width: 48, height: 48 }}
-          />
+          <div className="avatar">
+            <Avatar
+              className={styles.listImg}
+              alt={user.username}
+              src={profileService.getProfilePicture(user)}
+              sx={{ width: 48, height: 48 }}
+            />
+          </div>
           <div className={styles.text}>
             <h1>
               {user.username}

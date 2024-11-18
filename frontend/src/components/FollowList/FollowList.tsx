@@ -74,7 +74,6 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
     try {
       let data = null;
       if (profileId) {
-        console.log("PROFILEID", profileId)
         data = await follow.getFollowers(profileId);
       } else {
         data = await follow.getFollowers(authProvider.user.uuid);

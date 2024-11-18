@@ -1,6 +1,7 @@
 import Avatar from "@mui/material/Avatar";
 import TextField from "@mui/material/TextField";
 import inbox from "../../service/inbox";
+import profileService from "../../service/profile";
 import styled from "@mui/material/styles/styled";
 import styles from "./CommentInput.module.scss";
 import { useState } from "react";
@@ -68,7 +69,7 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
       post.author.id,
       comment_obj
     );
-    console.log("returned comment is: ", response);
+
     if (response) {
       // In here  you will append the comment to the list. You can create a useState hook and then call something set comments
       onCommentAdded(response);
@@ -107,13 +108,12 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
     <section className={styles.commentInput}>
       <div className={styles.commentDisplay}>
         <div className={styles.userImageContainer}>
-          <Avatar
-            src={authorObj?.profileImage}
-            alt={authorObj?.displayName}
-            sx={{ marginRight: "0.5rem" }}
-          >
-            {authorObj?.displayName.charAt(0)}
-          </Avatar>
+          <div className="avatar">
+            <Avatar
+              src={profileService.getProfilePicture(authorObj)}
+              alt={authorObj.author?.displayName}
+            />
+          </div>
         </div>
         <div className={styles.textFieldContainer}>
           <StyledCommentInputField

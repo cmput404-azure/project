@@ -1,15 +1,16 @@
 // @ts-nocheck
 import { CircularProgress, responsiveFontSizes } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-import Modal from "react-modal";
-import { api } from "../../service/config";
-import inbox from "../../service/inbox";
-import PostService from "../../service/post"
-import { useAuth } from "../../state";
-import { normalizeURL } from '../../util/formatting/normalizeURL';
-import { extractUUID } from '../../util/formatting/extractUUID';
+
 import ListItem from "../ListItem/ListItem";
+import Modal from "react-modal";
+import PostService from "../../service/post"
+import { api } from "../../service/config";
+import { extractUUID } from '../../util/formatting/extractUUID';
+import inbox from "../../service/inbox";
+import { normalizeURL } from '../../util/formatting/normalizeURL';
 import styles from "./NotificationList.module.scss";
+import { useAuth } from "../../state";
 
 interface FollowerResponse {
   followers: Follower[];
@@ -28,8 +29,6 @@ export default function NotificationList() {
   const fetchNotifications = useCallback(async () => {
     try {
       const userResponse = await inbox.getInbox(authProvider.user.uuid);
-      console.log("USER RESPONSE", userResponse);
-
       const notificationsWithUsers = await Promise.all(
         userResponse.map(async (item: any) => {
           let user = null;
@@ -46,11 +45,11 @@ export default function NotificationList() {
               post_obj = post_resp.data;
 
               //item.author.id is the author of the like
-              if(item.author.id.includes(authProvider.user.uuid)=== true){
+              if (item.author.id.includes(authProvider.user.uuid) === true) {
                 // user liked their own post, don't need to notify
                 return null
               }
-            } catch{
+            } catch {
               // post got deleted
               return null
             }
@@ -59,18 +58,17 @@ export default function NotificationList() {
             user = await fetchUser(encodedId);
             try {
               let post_resp = await api.get(item.post);
-              console.log(post_resp);
               post_obj = post_resp.data;
 
-              if(item.author.id.includes(authProvider.user.uuid)=== true){
+              if (item.author.id.includes(authProvider.user.uuid) === true) {
                 // user commented on their own post, don't need to notify
                 return null
               }
-            } catch{
+            } catch {
               // post got deleted
               return null
             }
-          } 
+          }
           else if (item.type === "post") {
             // Someone posted 
             let user_resp = await api.get(item.author.id);
@@ -109,72 +107,72 @@ export default function NotificationList() {
   };
 
   return (
-    <div>
+    <div className={styles.notifications}>
       {loading ? (
         <div className={"loading_component"}><CircularProgress sx={{ color: "#70ffaf" }} /></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
-        <div>
+        <div className={styles.notifications__list}>
           {notifications.length === 0 ? (
-          // Display this message when there are no notifications
-          <p className={styles.noNotifications}>No notifications to display</p>
-        ) : (
-          <ul className={styles.customList}>
-            {notifications.map((item, index) => {
-              if (item.type === "follow") {
-                return (
-                  <ListItem
-                    key={index}
-                    isRequest={true}
-                    isPost={false}
-                    isLike={false}
-                    isFollowerList={false}
-                    isUserList={false}
-                    notif_id={item.id}
-                    user={item.user}
-                    onRefresh={handleRefresh}
-                  />
-                );
-              } else if (item.type === "like") {
-                return (
-                  <ListItem
-                    key={index}
-                    isLike={true}
-                    notif_id={item.id}
-                    postObj={item.post_obj}
-                    user={item.user}
-                    onRefresh={handleRefresh}
-                  />
-                );
-              } else if (item.type === "comment") {
-                return (
-                  <ListItem
-                    key={index}
-                    isComment={true}
-                    notif_id={item.id}
-                    postObj={item.post_obj}
-                    user={item.user}
-                    onRefresh={handleRefresh}
-                  />
-                );
-              } 
-              else if (item.type === "post") {
-                return (
-                  <ListItem
-                    key={index}
-                    isPost={true} 
-                    notif_id={item.id}
-                    postObj = {item.post_obj}
-                    user={item.user}
-                    onRefresh={handleRefresh}
-                  />
-                );
-              }
-              return null;
-            })}
-          </ul>
-              )}
+            // Display this message when there are no notifications
+            <p className={styles.noNotifications}>No notifications to display</p>
+          ) :
+            (
+              notifications.map((item, index) => {
+                if (item.type === "follow") {
+                  return (
+                    <ListItem
+                      key={index}
+                      isRequest={true}
+                      isPost={false}
+                      isLike={false}
+                      isFollowerList={false}
+                      isUserList={false}
+                      notif_id={item.id}
+                      user={item.user}
+                      onRefresh={handleRefresh}
+                    />
+                  );
+                } else if (item.type === "like") {
+                  return (
+                    <ListItem
+                      key={index}
+                      isLike={true}
+                      notif_id={item.id}
+                      postObj={item.post_obj}
+                      user={item.user}
+                      onRefresh={handleRefresh}
+                    />
+                  );
+                } else if (item.type === "comment") {
+                  return (
+                    <ListItem
+                      key={index}
+                      isComment={true}
+                      notif_id={item.id}
+                      postObj={item.post_obj}
+                      user={item.user}
+                      onRefresh={handleRefresh}
+                    />
+                  );
+                }
+                else if (item.type === "post") {
+                  return (
+                    <ListItem
+                      key={index}
+                      isPost={true}
+                      notif_id={item.id}
+                      postObj={item.post_obj}
+                      user={item.user}
+                      onRefresh={handleRefresh}
+                    />
+                  );
+                }
+                return null;
+              })
+            )
+          }
         </div>
       )}
     </div>

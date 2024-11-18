@@ -1,11 +1,25 @@
-.customList {
-    padding-left:0;
-    width: 98%;
+.notifications{
+    align-items: flex-start;
+    display: flex;
+    height: 50vh;
+    justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: white rgb(110, 110, 110);
+    width: 100%;
+}
+
+.notifications__list {
+    display: flex;
+    flex-flow: column;
+    padding: 0 1rem 1rem 1rem;
+    width: 100%;
 }
 
 .noNotifications {
-    text-align: center;
-    font-size: 1rem;
     color: #ffffff;
+    font-size: 1rem;
     margin-top: 20px;
+    text-align: center;
 }

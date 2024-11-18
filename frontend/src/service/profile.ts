@@ -125,6 +125,18 @@ class ProfileService {
          return [];
       }
    }
+
+   /**
+      Generates the profile picture if no profile picture is provided
+      @param author: Author - the author data
+      @returns string - the profile picture url
+   */
+   public getProfilePicture(author: Author, initial?: boolean): string {
+      if(initial){
+         return `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+      }
+      return author.profileImage || `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+   }
 }
 
 const profileService = new ProfileService();

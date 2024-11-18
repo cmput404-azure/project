@@ -10,7 +10,6 @@ from django.core.exceptions import ValidationError
 
 class LoginView(APIView):
     def post(self, request):
-        print("trying to login here")
         username = request.data.get('username')
         password = request.data.get('password')
 
@@ -20,7 +19,6 @@ class LoginView(APIView):
 
             # If approval is no longer required, activate the user automatically
             if not site_config.require_approval and not user.is_active:
-                print("Auto-activating user as approval is no longer required")
                 user.is_active = True
                 user.save()
 

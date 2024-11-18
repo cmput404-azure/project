@@ -35,6 +35,7 @@ const HomePage = () => {
   const [localUsers, setLocalUsers] = useState<any[]>([]);
   const pageSize = 15;
   const authProvider = useAuth();
+  const [isInitial, setIsInitial] = useState(true);
 
   const [isUserLoading, setIsUserLoading] = useState(true);
 
@@ -52,7 +53,6 @@ const HomePage = () => {
         setUser(authorReq.data);
         setIsUserLoading(false);
       } catch (err) {
-        console.log(err);
         setError("Failed to fetch user data.");
         setIsUserLoading(false);
       }
@@ -124,7 +124,6 @@ const HomePage = () => {
       setIsLoading(false);
 
     } catch (err) {
-      console.log(err);
       setError("Failed to fetch posts. Please try again.");
     }
   };
@@ -136,6 +135,14 @@ const HomePage = () => {
     }, 60000);
     return () => clearInterval(interval);
   }, [isUserLoading, privatePage, publicPage]);
+
+  useEffect(() => {
+    if (isInitial) {
+      setIsInitial(false); 
+      return;
+    }
+    fetchPosts(publicPage, privatePage);
+  }, [activeFilterPost]);
 
   const nextPublicPage = async () => {
     if (isLoading || publicPage >= totalPublicPages) return;

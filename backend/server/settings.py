@@ -43,8 +43,14 @@ CORS_ALLOWED_ORIGINS = [
     'http://ui19:3001',
     'https://azuredsn-889a4fb9b2bb.herokuapp.com',
     'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com',
-    "https://azuredsn-dev-ffe9709386a4.herokuapp.com"
+    "https://azuredsn-dev-ffe9709386a4.herokuapp.com",
+    "https://nate-azuredsn-5730aed3555b.herokuapp.com",
+    "https://kyle-azure404-3f95e69b77f4.herokuapp.com",
+    "https://quin-azure-404-3072d09930eb.herokuapp.com",
+    "https://azurenet-1a77a04e2260.herokuapp.com",
+    "https://azuredsn-cz-5f7fe1c47ca3.herokuapp.com",
 ]
+
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
@@ -52,7 +58,12 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:3001',
     'https://azuredsn-889a4fb9b2bb.herokuapp.com',
     'https://azuredsn-secondary-c0d9db3f5950.herokuapp.com',
-    "https://azuredsn-dev-ffe9709386a4.herokuapp.com"
+    "https://azuredsn-dev-ffe9709386a4.herokuapp.com",
+    "https://nate-azuredsn-5730aed3555b.herokuapp.com",
+    "https://kyle-azure404-3f95e69b77f4.herokuapp.com",
+    "https://quin-azure-404-3072d09930eb.herokuapp.com",
+    "https://azurenet-1a77a04e2260.herokuapp.com",
+    "https://azuredsn-cz-5f7fe1c47ca3.herokuapp.com"
 ]
 
 # Application definition
