@@ -310,7 +310,6 @@ export default function Post({
   const handleCopyLink = () => {
     if (post) {
       const domain = window.location.host;
-      // const postId = post.id.split("/").pop();
       const path = `/#/post/${encodeURIComponent(post.id)}`;
 
       const link = `${domain}${path}`;
