@@ -411,7 +411,7 @@ export function EditProfile({
   return (
     <div className={styles.edit__profile}>
       <div className={styles.edit__profile__header}>
-        <h2>Edit Profile</h2>
+        <h2>     Edit Profile    </h2>
         <IconButton
           className={styles.icon__button}
           size="small"
