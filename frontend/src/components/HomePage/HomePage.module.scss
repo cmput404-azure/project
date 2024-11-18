@@ -90,8 +90,13 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .recommended{
     width: 300px !important;
   }
+
+  .postSection{
+    margin-bottom: 5rem !important;
+  }
 }
+
