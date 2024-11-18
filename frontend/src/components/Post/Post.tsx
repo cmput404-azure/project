@@ -576,7 +576,7 @@ export default function Post({
         </div>
       ) : null}
 
-      <Modal open={isModalOpen} onClose={handleCommentModalClose}>
+      <Modal open={isModalOpen} onClose={handleCommentModalClose} sx={{"overflow": "auto"}}>
         <>
           <Post postGiven={post} canToggleComments={false} isModal={true} />
         </>
