@@ -1,30 +1,32 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import { Alert, CircularProgress, Snackbar, Tooltip, Modal } from "@mui/material";
-import Avatar from "@mui/material/Avatar";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+
+import { Alert, CircularProgress, Modal, Snackbar, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { useAuth } from "../../state";
-import { ContentType } from "../../models/modelTypes";
-import { PostData as PostModel } from "../../models/models";
+
+import Avatar from "@mui/material/Avatar";
 import CommentInputField from "../CommentInput/CommentInput";
+import { ContentType } from "../../models/modelTypes";
+import EllipseMenu from "../EllipseMenu/EllipseMenu";
+import FollowService from "../../service/follow";
+import { PostData } from "../../models/models";
+import { PostData as PostModel } from "../../models/models";
+import ProfileService from "../../service/profile";
+import ReactMarkdown from "react-markdown";
+import ShareDialogue from "../Post/ShareDialogue";
+import ShareService from "../../service/share";
+import { api } from "../../service/config";
+import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import { formatCount } from "../../util/formatting/formatCount";
-import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
-import { api } from "../../service/config";
 import inbox from "../../service/inbox";
-import postService from "../../service/post";
-import FollowService from "../../service/follow";
-import ProfileService from "../../service/profile";
-import ShareService from "../../service/share";
-import styles from "./Post.module.scss";
-import ShareDialogue from "../Post/ShareDialogue";
-import EllipseMenu from "../EllipseMenu/EllipseMenu";
-
-import { PostData } from "../../models/models";
 import { normalizeURL } from "../../util/formatting/normalizeURL";
 import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
+import postService from "../../service/post";
+import profileService from "../../service/profile";
+import remarkGfm from "remark-gfm";
+import styles from "./Post.module.scss";
+import { useAuth } from "../../state";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -365,12 +367,10 @@ export default function Post({
   ) : (
     <div className={styles.card}>
       <div className={styles.grid}>
-        <img
+        <Avatar
           className={styles.profilePic}
           src={
-            post.author.profileImage && post.author.profileImage.trim() !== "" // the nullish coalescing operator (??) treats empty as valid
-              ? post.author.profileImage
-              : `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
+            profileService.getProfilePicture(post.author)
           }
           alt={`${post.author.displayName}'s profile`}
           onClick={redirectToAuthorProfile}
