@@ -6,13 +6,14 @@
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: thin;
+    scrollbar-color: white rgb(110, 110, 110);
     width: 100%;
 }
 
 .notifications__list {
     display: flex;
     flex-flow: column;
-    padding: 1rem;
+    padding: 0 1rem 1rem 1rem;
     width: 100%;
 }
 

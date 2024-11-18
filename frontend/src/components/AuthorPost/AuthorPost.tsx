@@ -1,9 +1,12 @@
 import React, { useState }  from 'react';
-import styles from './AuthorPost.module.scss';
+
 import { Author } from '../../models/models';
-import { useAuth } from '../../state';
+import { Avatar } from "@mui/material";
 import InboxService from '../../service/inbox';
 import { api } from '../../service/config';
+import profileService from "../../service/profile";
+import styles from './AuthorPost.module.scss';
+import { useAuth } from '../../state';
 
 interface AuthorPostProps {
   author: Author;
@@ -54,11 +57,9 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
     <div className={styles.author_post}>
       <div className={styles.post_header}>
         <div className={styles.author_info}>
-          <img
+          <Avatar
             src={
-              author.profileImage && author.profileImage.trim() !== ""
-                ? author.profileImage
-                : `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+              profileService.getProfilePicture(author)
             }
             alt="Author"
             className={styles.author_avatar}

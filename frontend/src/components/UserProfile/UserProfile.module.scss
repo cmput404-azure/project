@@ -116,6 +116,7 @@
         flex-flow: column;
         height: 100%;
         margin: 2rem auto 0 auto;
+        overflow-x: hidden;
         overflow-y: scroll;
         padding: 2rem 0 0 0;
         width: 90%;
@@ -134,8 +135,8 @@
     padding: 60px 20px; /* 4rem for top and bottom, 0 for left and right */
 
     .edit__profile__header {
-        display: flex;
         align-items: center; /* Vertically center content */
+        display: flex;
         justify-content: center; /* Center the h2 */
         position: relative; /* Allow absolute positioning for the IconButton */
         width: 300px;
@@ -144,9 +145,9 @@
       h2 {
         font-size: 1.5rem;
         font-weight: 700;
+        left: 50%;
         margin: 0;
         position: absolute;
-        left: 50%;
         transform: translateX(-50%); /* Center the h2 horizontally */
       }
       
@@ -197,3 +198,50 @@
     }
 }
 
+@media (max-width: 1000px) {
+    .container{
+        height: 98vh !important;
+        overflow: auto !important;
+        .header{
+            flex-flow: row wrap !important;
+            justify-content: center !important;
+            align-items: center !important;
+            .info{
+                flex-flow: row wrap !important;
+                align-items: center !important;
+                justify-content: center !important;
+
+                .icon{
+                    margin-right: 0 !important;
+                }
+
+                .user{
+                    align-self: center !important;
+                    width: 100% !important;
+
+                    .user__main{
+                        align-items: center !important;
+                        justify-content: center !important;
+                        margin-top: 1rem;
+                    }
+                    .user__secondary{
+                        align-items: center !important;
+                        justify-content: center !important;
+                        margin-top: 1rem;
+                    }
+                    
+                }
+                .footer{
+                    margin: 1rem auto !important;
+                }
+
+            }
+            .bio{
+                align-items: center !important;
+                p{
+                    font-size: 0.5rem;
+                }
+            }
+        }
+    }
+}
