@@ -1,6 +1,12 @@
 .customList {
     padding-left:0;
-    width: 98%;
+    width: 95%;
+    width: calc(100% - 16px); 
+    max-height: 300px;
+    overflow-y: auto; 
+    overflow-x: hidden; 
+    scrollbar-width: thin;
+    scrollbar-color: white rgb(110, 110, 110); 
 }
 
 .noNotifications {
