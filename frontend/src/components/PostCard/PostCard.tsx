@@ -1,27 +1,28 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
+
+import { Author, Follower } from "../../models/models";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { useEffect, useState } from "react";
+
 import Alert from '@mui/material/Alert';
 import { ContentType } from "../../models/modelTypes";
 import { PostData as Post } from "../../models/models";
+import ProfileService from "../../service/profile";
+import ReactMarkdown from 'react-markdown';
 import Snackbar from '@mui/material/Snackbar';
 import Tooltip from '@mui/material/Tooltip';
+import { api } from "../../service/config";
+import auth from "../../service/auth";
+import { extractUUID } from "../../util/formatting/extractUUID";
 import follow from "../../service/follow";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 import profileService from "../../service/profile";
+import remarkGfm from 'remark-gfm';
 import styles from "./PostCard.module.scss";
 import { useAuth } from "../../state";
-import ProfileService from "../../service/profile";
-import { Author, Follower } from "../../models/models";
-import { useState, useEffect } from "react";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
-
-import { api } from "../../service/config";
-import { extractUUID } from "../../util/formatting/extractUUID";
-import auth from "../../service/auth";
-import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 interface PostCardProps {
   post: Post
@@ -204,8 +205,7 @@ function PostCard({
         <img
           className={styles.profilePic}
           src={
-            post.author.profileImage ??
-            `https://ui-avatars.com/api/?background=random&name=${post.author.displayName}`
+            profileService.getProfilePicture(post.author)
           }
           alt={`${post.author.displayName}'s profile`}
           onClick={redirectToAuthorProfile}

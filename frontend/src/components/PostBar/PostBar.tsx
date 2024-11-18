@@ -1,19 +1,20 @@
+import { Avatar, TextField, Tooltip } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
-import { TextField, Tooltip } from "@mui/material";
+import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
+
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import LinkIcon from '@mui/icons-material/Link';
 import PeopleIcon from '@mui/icons-material/People';
-import PublicIcon from '@mui/icons-material/Public';
-import styled from "@mui/material/styles/styled";
-import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
 import { PostData as Post } from "../../models/models";
+import PublicIcon from '@mui/icons-material/Public';
 import { api } from "../../service/config";
 import follow from "../../service/follow";
 import inbox from "../../service/inbox";
-import { useAuth } from "../../state";
 import { normalizeURL } from "../../util/formatting/normalizeURL";
-import styles from "./PostBar.module.scss";
 import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
+import styled from "@mui/material/styles/styled";
+import styles from "./PostBar.module.scss";
+import { useAuth } from "../../state";
 
 interface PostBarProps {
   author?: any;
@@ -259,14 +260,16 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
   return (
     <div className={styles.container} ref={postBarRef} style={{ backgroundColor: showDetail ? "#777" : "transparent" }}>
       <section className={styles.post_bar} onClick={handleInputClick}>
-        <img
-          src={
-            authProvider.user.profileImage ??
-            `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
-          }
-          alt="User"
-          className={styles.user_image}
-        />
+        <div className="avatar">
+          <Avatar
+            src={
+              authProvider.user.profileImage ??
+              `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+            }
+            alt="User"
+            className={styles.user_image}
+          />
+        </div>
         <div className={styles.vertical_divider}></div>
         <PostTitleField
           className={styles.post__input}
