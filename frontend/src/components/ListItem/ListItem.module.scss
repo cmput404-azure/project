@@ -1,3 +1,4 @@
+
 .listImg {
   width: 50px;
   height: 50px;
@@ -20,18 +21,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  padding: 5px;
-  border-bottom: 2px solid #333;
-  border-top: none;
-  border-left: none;
-  border-right: none;
+  width: 95.8%;
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: #d1d1d1; /* Light gray background for separation */
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow for separation */
+  border-radius: 8px; /* Rounded corners for a modern look */
 }
 
 .profileLink {
   display: flex;
-  align-items: start;
-  gap: 5px;
+  align-items: center; /* Center the avatar and text vertically */
+  gap: 10px; /* Larger gap for better spacing */
   text-decoration: none;
   color: #333;
   width: 100%;
@@ -41,16 +42,21 @@
 .text {
   flex-grow: 1;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center text vertically */
 
   h1 {
     margin: 0;
     font-weight: bold;
     font-size: 14px;
+    line-height: 1.4; /* Ensure consistent spacing between text lines */
   }
 
   p {
     font-size: 12px;
     margin: 0;
+    color: #666; /* Slightly lighter color for differentiation */
   }
 }
 
@@ -58,9 +64,8 @@
   font-size: 14px;
   font-weight: normal;
   margin-left: 3px;
+  color: #777; /* Subtle accent for additional text */
 }
-
-
 
 button {
   border: none;
@@ -69,13 +74,15 @@ button {
   cursor: pointer;
   font-size: 12px;
   color: #333;
+  background-color: #fafafa; 
 }
 
 button:hover {
-  background-color: #ccc; 
+  background-color: #fdfffc; 
 }
 
 .buttonGroup {
   display: flex;
-  gap: 5px; 
+  gap: 10px; /* Increased gap for better spacing */
 }
+
