@@ -189,41 +189,34 @@ class AuthStreamView(APIView):
             for inbox in user_inbox:
                 for item in inbox.items.filter(remote_payload__isnull=False):
                     remote_payload = item.remote_payload
-                    if remote_payload.get("type") == "post" and remote_payload.get("visibility") in ["FRIENDS", "UNLISTED"]:
-                        if post_id in processed_posts and processed_posts[post_id] == item.post_status:
-                            # Skip if the post has already been processed with the same status
+                    if remote_payload.get("type") == "post":
+                        visibility = remote_payload.get("visibility", "").upper()
+                        if visibility not in ["FRIENDS", "UNLISTED"]:
                             continue
 
-                        # if post_id not in processed_posts or (post_id in processed_posts and (item.post_status and item.post_status == "UPDATE")):
                         post_id = remote_payload.get("id")
+                        if post_id in processed_posts and processed_posts[post_id] == item.post_status:
+                            # Skip already processed posts with the same status
+                            continue
+
                         author_host = urlparse(remote_payload["author"]["host"])
                         base_author_host = f"{author_host.scheme}://{author_host.netloc}"
                         post_uuid = post_id.rstrip('/').split('/')[-1]
                         author_fqid = remote_payload["author"]["id"]
                         author_uuid = author_fqid.rstrip('/').split('/')[-1]
-
                         get_post_url = f"{base_author_host}/api/authors/{author_uuid}/posts/{post_uuid}/"
                         try:
-                            # Perform the GET request
                             response = requests.get(
                                 get_post_url,
                                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                             )
-
                             if response.status_code == 200:
                                 post_data = response.json()
-
-                                if post_id not in remote_posts: # Add if this post hasn't been added
-                                    remote_posts[post_id] = post_data
-                                elif item.post_status and item.post_status.upper() == "UPDATE":
-                                    # There's a newer version of this post
-                                    remote_posts[post_id] = post_data
-                            else:
-                                print(f"Failed to fetch post. Status code: {response.status_code}")
+                                remote_posts[post_id] = post_data
 
                             processed_posts[post_id] = item.post_status
                         except Exception as e:
-                            print(f"Error fetching remote post {get_post_url}: {e}")
+                            print(f"Error fetching post {post_id}: {e}")
 
             combined_posts = serialized_local_posts.copy()
             for remote_post in remote_posts:
