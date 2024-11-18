@@ -343,7 +343,6 @@ class FollowView(APIView):
 
         # Get the necessary information from follower_url
         decoded_url = unquote(follower_url)
-        print(decoded_url)
         parts = decoded_url.strip("/").split("/")
         follower_host = f"{parts[0]}//{parts[2]}"  
         follower_id = parts[-1]

@@ -562,8 +562,6 @@ class PostView(APIView):
             post_visibility = ""
             post_data = ""
 
-            print("POST_URL", decoded_post_fqid)
-
             parsed_url = urlparse(decoded_post_fqid)
             host = f"{parsed_url.scheme}://{parsed_url.netloc}"
             

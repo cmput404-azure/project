@@ -69,8 +69,6 @@ class NodeView(APIView):
         password = request.data.get('password')
         node_url = request.data.get('host')
 
-        print(username, password, node_url)
-
         if not username or not password or not node_url:
             return Response({'error': 'Missing required fields.'}, status=status.HTTP_400_BAD_REQUEST)
         

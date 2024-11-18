@@ -28,8 +28,6 @@ export default function NotificationList() {
   const fetchNotifications = useCallback(async () => {
     try {
       const userResponse = await inbox.getInbox(authProvider.user.uuid);
-      console.log("USER RESPONSE", userResponse);
-
       const notificationsWithUsers = await Promise.all(
         userResponse.map(async (item: any) => {
           let user = null;
@@ -59,7 +57,6 @@ export default function NotificationList() {
             user = await fetchUser(encodedId);
             try {
               let post_resp = await api.get(item.post);
-              console.log(post_resp);
               post_obj = post_resp.data;
 
               if(item.author.id.includes(authProvider.user.uuid)=== true){
