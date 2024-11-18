@@ -198,3 +198,50 @@
     }
 }
 
+@media (max-width: 1000px) {
+    .container{
+        height: 98vh !important;
+        overflow: auto !important;
+        .header{
+            flex-flow: row wrap !important;
+            justify-content: center !important;
+            align-items: center !important;
+            .info{
+                flex-flow: row wrap !important;
+                align-items: center !important;
+                justify-content: center !important;
+
+                .icon{
+                    margin-right: 0 !important;
+                }
+
+                .user{
+                    align-self: center !important;
+                    width: 100% !important;
+
+                    .user__main{
+                        align-items: center !important;
+                        justify-content: center !important;
+                        margin-top: 1rem;
+                    }
+                    .user__secondary{
+                        align-items: center !important;
+                        justify-content: center !important;
+                        margin-top: 1rem;
+                    }
+                    
+                }
+                .footer{
+                    margin: 1rem auto !important;
+                }
+
+            }
+            .bio{
+                align-items: center !important;
+                p{
+                    font-size: 0.5rem;
+                }
+            }
+        }
+    }
+}
