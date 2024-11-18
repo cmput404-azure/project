@@ -106,13 +106,13 @@ export default function NotificationList() {
   };
 
   return (
-    <div>
+    <div className={"boldddd"}>
       {loading ? (
         <div className={"loading_component"}><CircularProgress sx={{ color: "#70ffaf" }} /></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
-        <div>
+        <div className={"boldddd"}>
           {notifications.length === 0 ? (
           // Display this message when there are no notifications
           <p className={styles.noNotifications}>No notifications to display</p>
