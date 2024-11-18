@@ -1,23 +1,24 @@
-.boldddd{
-    width: 100%;
+.notifications{
+    align-items: flex-start;
     display: flex;
-    justify-content: center; /* Centers elements horizontally */
-    align-items: center; /* Centers elements vertically */
-}
-.customList {
-    padding-left:0;
-    width: 100%;
-    width: calc(100% - 3px); 
-    max-height: 300px;
-    overflow-y: auto; 
-    overflow-x: hidden; 
+    height: 50vh;
+    justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: white rgb(110, 110, 110); 
+    width: 100%;
+}
+
+.notifications__list {
+    display: flex;
+    flex-flow: column;
+    padding: 1rem;
+    width: 100%;
 }
 
 .noNotifications {
-    text-align: center;
-    font-size: 1rem;
     color: #ffffff;
+    font-size: 1rem;
     margin-top: 20px;
+    text-align: center;
 }

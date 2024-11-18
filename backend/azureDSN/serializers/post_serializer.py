@@ -113,8 +113,6 @@ class CreatePostSerializer(serializers.ModelSerializer):
     content = serializers.CharField(required=True, allow_blank=False) # must contain content (which is a base64 encoded image or normal text)
     github_id = serializers.CharField(required=False, allow_null=True)
     visibility = serializers.ChoiceField(choices=Post.VISIBILITY_CHOICES, default=1)
-    comments = serializers.ListField(default=[])
-    likes = serializers.ListField(default=[])
 
     class Meta:
         model = Post
@@ -129,8 +127,6 @@ class CreatePostSerializer(serializers.ModelSerializer):
             'published',
             'visibility',
             'github_id',
-            'likes',
-            'comments'
         )
 
     def create(self, validated_data):
