@@ -64,7 +64,6 @@ export default function ListItem({
       } else {
         try {
           following = await api.get(`/api/check/${authProvider.user.uuid}/follows/${user.id}`);
-          console.log(following)
         } catch (err) {
           if (err.response.status !== 404) {
             console.error('Fetch following error:', error);

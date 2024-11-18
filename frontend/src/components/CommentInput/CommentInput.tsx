@@ -68,7 +68,7 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
       post.author.id,
       comment_obj
     );
-    console.log("returned comment is: ", response);
+
     if (response) {
       // In here  you will append the comment to the list. You can create a useState hook and then call something set comments
       onCommentAdded(response);

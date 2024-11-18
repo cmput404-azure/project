@@ -135,7 +135,6 @@ export default function PublicProfile() {
       await Promise.all(
         userInbox.map(async (item: any) => {
           if (item && item.type === "follow") {
-            console.log(item);
             let actorId = item.actor.id.replace(/\/+$/, "").split("/").pop();
             if (actorId === authProvider.user.uuid) {
               setIsRequested(true);

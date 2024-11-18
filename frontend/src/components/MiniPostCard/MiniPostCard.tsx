@@ -40,8 +40,6 @@ function MiniPostCard({ post, authorUUID, onDelete }: MiniPostCardProps) {
         const match = postData.content.match(imageRegex);
         if (match) {
           const imageUrl = match[1];
-          console.log("imageURL: ", imageUrl);
-
           if (imageUrl.startsWith("data:")) {
             setImageSrc(imageUrl);
           } else {

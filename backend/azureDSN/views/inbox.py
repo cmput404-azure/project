@@ -645,7 +645,6 @@ class InboxView(APIView):
         except ObjectDoesNotExist:
             # Handle remote author
             if payload["type"].lower() == "follow":
-                print(f"HERE")
                 # Send to remote inbox, passing the payload and remote host information
                 return self.send_follow_request_to_remote(payload)
             elif payload["type"].lower() == "post":
@@ -707,8 +706,6 @@ class InboxView(APIView):
             
             # remove follower from payload to return to original post structure
             del payload["follower"]
-
-            print(f"Payload is now: {remote_follower}")
             
             follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
             remote_host = remote_follower.get("host")

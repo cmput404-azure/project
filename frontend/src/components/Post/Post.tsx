@@ -67,7 +67,6 @@ export default function Post({
       try {
 
         if (postID) {
-          console.log(`with postID: ${postID}`)
           const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
           let postDataList = [];
@@ -293,8 +292,7 @@ export default function Post({
         object: post.id,
         post_host: postGiven.author.host
       };
-      console.log(post.author.id)
-      console.log(postGiven.author.host)
+
       await inbox.sendPostToInbox(post.author.id, like_obj);
       setLikeCount(likeCount + 1);
       setHasLiked(true);

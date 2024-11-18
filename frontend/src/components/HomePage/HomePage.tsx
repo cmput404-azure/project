@@ -52,7 +52,6 @@ const HomePage = () => {
         setUser(authorReq.data);
         setIsUserLoading(false);
       } catch (err) {
-        console.log(err);
         setError("Failed to fetch user data.");
         setIsUserLoading(false);
       }
@@ -124,7 +123,6 @@ const HomePage = () => {
       setIsLoading(false);
 
     } catch (err) {
-      console.log(err);
       setError("Failed to fetch posts. Please try again.");
     }
   };
