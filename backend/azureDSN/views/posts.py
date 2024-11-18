@@ -1,18 +1,19 @@
 from urllib.parse import unquote, urlparse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from ..models import User, Post, Follow
+from ..models import User, Post, Follow, NodeUser
 from ..serializers import PostSerializer, UserSerializer, CreatePostSerializer
 from rest_framework.response import Response
+from rest_framework.authentication import get_authorization_header
 from rest_framework import status
+from requests.auth import HTTPBasicAuth
 from django.http import HttpResponse
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
-from django.conf import settings
-import requests, os
-from requests.auth import HTTPBasicAuth
+import requests, os, base64
+
 
 class AuthorPostView(APIView):
     """
@@ -566,7 +567,6 @@ class PostView(APIView):
             host = f"{parsed_url.scheme}://{parsed_url.netloc}"
             
             if host.strip().lower() == os.getenv('BASE_URL', 'http://localhost:8000').strip().lower():
-            # if (host == os.getenv('BASE_URL', 'http://localhost:8000')):
                 post = get_object_or_404(Post, uuid=post_serial)
                 post_visibility = post.visibility
                 serializer = PostSerializer(post)
@@ -581,28 +581,17 @@ class PostView(APIView):
                 post_visibility = data.get("visibility")
                 post_data = data
 
-            # if host!=base_url:
-            #     response = requests.get(decoded_post_fqid)
-            #     response = requests.get(
-            #         decoded_post_fqid,
-            #         auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-            #     )
-            #     data = response.json()  # Parse the JSON response
-            #     post_visibility = data.get("visibility")
-            #     post_data = data
-            # else:
-            #     post = get_object_or_404(Post, uuid=post_serial)
-            #     post_visibility = post.visibility
-            #     serializer = PostSerializer(post)
-            #     post_data = serializer.data
-
-
             # Check the visibility of the post
             if post_visibility in (1, "PUBLIC"): # Anyone can see PUBLIC posts
                 pass
-            elif post_visibility in (2, 3):  # FRIENDS or UNLISTED
+            elif post_visibility in (2, 3): # FRIENDS or UNLISTED
+                remote = False
                 if not request.user.is_authenticated:
-                    return Response("Authentication required to view this post.", status=403)
+                    auth_header = get_authorization_header(request).split()
+                    if len(auth_header) == 2 and auth_header[0].lower() == b"basic":
+                        remote = is_valid_basic_auth(auth_header[1].decode())
+                    if not remote:
+                        return Response("Authentication required to view this post.", status=403)
             elif post_visibility == 4:  # DELETED
                 if not (request.user.is_authenticated and request.user.is_staff):
                     return Response("Post does not exist.", status=404) # Don't disclose information for security purposes
@@ -610,3 +599,20 @@ class PostView(APIView):
             return Response(post_data, status=200)
         else:
             return Response("No post ID specified", status=400)
+        
+def is_valid_basic_auth(auth_header):
+    """
+        Validate Basic Auth credentials (for remote requests)
+    """
+    try:
+        # Decode Basic Auth credentials
+        decoded_credentials = base64.b64decode(auth_header).decode('utf-8')
+        username, password = decoded_credentials.split(':')
+        
+        # Validate credentials with data stored in database
+        node = NodeUser.objects.get(username=username)
+        if node.password == password and node.is_authenticated:
+            return True
+        return False
+    except Exception as e:
+        return False

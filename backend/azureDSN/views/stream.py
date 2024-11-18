@@ -36,6 +36,7 @@ class PublicStreamView(APIView):
                 visibility_filter.append(4)  # Add deleted posts for admin
 
         remote_posts = {}
+        processed_posts = {}  # A dictionary to track post_id and post_status
         for inbox in Inbox.objects.all(): # Iterate through all local inboxes
             for item in inbox.items.filter(remote_payload__isnull=False):
                 remote_payload = item.remote_payload
@@ -44,6 +45,10 @@ class PublicStreamView(APIView):
                     visibility = remote_payload.get("visibility")
                     
                     if visibility == "PUBLIC" and (item.post_status == None or item.post_status.upper() != "DELETE"):
+                        if post_id in processed_posts and processed_posts[post_id] == item.post_status:
+                            # Skip if the post has already been processed with the same status
+                            continue
+
                         author_host = urlparse(remote_payload["author"]["host"])
                         base_author_host = f"{author_host.scheme}://{author_host.netloc}"
                         post_uuid = post_id.rstrip('/').split('/')[-1]
@@ -66,8 +71,12 @@ class PublicStreamView(APIView):
                                 elif item.post_status and item.post_status.upper() == "UPDATE":
                                     # There's a newer version of this post
                                     remote_posts[post_id] = post_data
-                            else:
+
+                            else: # Remote node doesn't give authorization
                                 print(f"Failed to fetch post. Status code: {response.status_code}")
+
+                            processed_posts[post_id] = item.post_status # Regardless of whether fail or success
+
                         except Exception as e:
                             print(f"Error fetching remote post {get_post_url}: {e}")
 
@@ -173,23 +182,52 @@ class AuthStreamView(APIView):
             serialized_local_posts = PostSerializer(paginated_posts, many=True).data
 
             # Handle remote posts from the user's inbox
-            remote_posts = []
+            remote_posts = {}
+            processed_posts = {}
             user_inbox = Inbox.objects.filter(user=user)
 
             for inbox in user_inbox:
                 for item in inbox.items.filter(remote_payload__isnull=False):
                     remote_payload = item.remote_payload
                     if remote_payload.get("type") == "post":
-                        visibility = remote_payload.get("visibility")
-                        if visibility == "FRIENDS" or visibility == "UNLISTED":
-                            post_id = remote_payload.get("id")
+                        visibility = remote_payload.get("visibility", "").upper()
+                        if visibility not in ["FRIENDS", "UNLISTED"]:
+                            continue
 
-                            if post_id and post_id not in [post["id"] for post in remote_posts]:
-                                remote_posts.append(remote_payload)
+                        post_id = remote_payload.get("id")
+                        if post_id in processed_posts and processed_posts[post_id] == item.post_status:
+                            # Skip already processed posts with the same status
+                            continue
+
+                        author_host = urlparse(remote_payload["author"]["host"])
+                        base_author_host = f"{author_host.scheme}://{author_host.netloc}"
+                        
+                        encoded_url = quote(post_id, safe='')
+                        get_post_url = f"{base_author_host}/api/posts/{encoded_url}"
+
+                        try:
+                            response = requests.get(
+                                get_post_url,
+                                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                            )
+                            print(response.status_code)
+                            if response.status_code == 200:
+                                post_data = response.json()
+
+                                if post_id not in remote_posts: # Add if this post hasn't been added
+                                    remote_posts[post_id] = post_data
+                                elif item.post_status and item.post_status.upper() == "UPDATE":
+                                    # There's a newer version of this post
+                                    remote_posts[post_id] = post_data
+
+                            processed_posts[post_id] = item.post_status
+                        except Exception as e:
+                            print(f"Error fetching post {post_id}: {e}")
 
             combined_posts = serialized_local_posts.copy()
-            for remote_post in remote_posts:
-                combined_posts.append(remote_post)
+            
+            for post_id, post_data in remote_posts.items():
+                combined_posts.append(post_data)
 
             """
                 In this stream, there is also a case where user also see posts shared by people they follow
