@@ -1,6 +1,12 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-import { Alert, CircularProgress, Modal, Snackbar, Tooltip } from "@mui/material";
+import {
+  Alert,
+  CircularProgress,
+  Modal,
+  Snackbar,
+  Tooltip,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
@@ -62,12 +68,11 @@ export default function Post({
   const [imageSrc, setImageSrc] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAuthor, setCurrentAuthor] = useState<any>();
+  const [postAuthorID, setPostAuthorID] = useState("");
 
   useEffect(() => {
     const fetchPost = async () => {
-
       try {
-
         if (postID) {
           const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
@@ -95,7 +100,10 @@ export default function Post({
               );
               if (!authProvider.user.is_staff) {
                 if (normalizeVisibility(postData.visibility) !== 1) {
-                  if (!is_following && normalizeVisibility(postData.visibility) === 2) {
+                  if (
+                    !is_following &&
+                    normalizeVisibility(postData.visibility) === 2
+                  ) {
                     setOpenSnackbar(true);
                     setShowAlert(true);
                     setTimeout(() => {
@@ -122,18 +130,20 @@ export default function Post({
             // Call the function to check the share status
             checkIfShared();
           }
-          
+
           setPost(postData);
 
           setCommentList(postData.comments.src.reverse());
           setLikeCount(
-            Array.isArray(postData.likes) ? 0 : (postData.likes?.count || 0)
+            Array.isArray(postData.likes) ? 0 : postData.likes?.count || 0
           );
           setCommentCount(
-            Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
+            Array.isArray(postData.comments) ? 0 : postData.comments?.count || 0
           );
         } else {
           setPost(postGiven);
+          const postAuthorID = postGiven.author.id.split("/").pop();
+          setPostAuthorID(postAuthorID);
 
           if (authProvider.user && postGiven.likes?.count > 0) {
             setHasLiked(
@@ -149,13 +159,13 @@ export default function Post({
             setHasShared(isShared);
           }
 
-          const comments = Array.isArray(postGiven?.comments?.src) 
-              ? postGiven.comments.src.reverse() 
-              : [];
+          const comments = Array.isArray(postGiven?.comments?.src)
+            ? postGiven.comments.src.reverse()
+            : [];
           setCommentList(comments);
-          
+
           setLikeCount(
-            Array.isArray(postData.likes) ? 0 : (postData.likes?.count || 0)
+            Array.isArray(postData.likes) ? 0 : postData.likes?.count || 0
           );
           setCommentCount(
             // Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
@@ -224,17 +234,20 @@ export default function Post({
     const fetchPost = async () => {
       if (postGiven) {
         // only call if post is local otherwise this is going to raise error
-        if (normalizeURL(postGiven.author.host) !== process.env.REACT_APP_API_BASE_URL) {
+        if (
+          normalizeURL(postGiven.author.host) !==
+          process.env.REACT_APP_API_BASE_URL
+        ) {
           return;
         }
         let encodedId = encodeURIComponent(postGiven.id);
         const postData = await postService.getPost(`api/posts/${encodedId}`); // this endpoint only works on local post
-        const comments = Array.isArray(postData?.comments?.src) 
-            ? postData.comments.src.reverse() 
-            : [];
+        const comments = Array.isArray(postData?.comments?.src)
+          ? postData.comments.src.reverse()
+          : [];
         setCommentList(comments);
         setCommentCount(
-          (postData.comments) ? postData.comments.count : 0
+          postData.comments ? postData.comments.count : 0
           // comments.length
         );
       }
@@ -251,11 +264,13 @@ export default function Post({
   };
 
   const handleCommentButtonClick = async () => {
-    if (isModal) return; 
+    if (isModal) return;
     try {
-      const postData = await postService.getPost(`api/posts/${encodeURIComponent(post.id)}`);
-      setPost(postData); 
-      setIsModalOpen(true); 
+      const postData = await postService.getPost(
+        `api/posts/${encodeURIComponent(post.id)}`
+      );
+      setPost(postData);
+      setIsModalOpen(true);
     } catch (error) {
       console.error("Error fetching post data:", error);
     }
@@ -298,7 +313,7 @@ export default function Post({
         author: currentUser.data,
         published: new Date(post.published).toISOString(),
         object: post.id,
-        post_host: postGiven.author.host
+        post_host: postGiven.author.host,
       };
 
       await inbox.sendPostToInbox(post.author.id, like_obj);
@@ -369,16 +384,14 @@ export default function Post({
         <div className="avatar">
           <Avatar
             className={styles.profilePic}
-            src={
-              profileService.getProfilePicture(post.author)
-            }
+            src={profileService.getProfilePicture(post.author)}
             alt={`${post.author.displayName}'s profile`}
             onClick={redirectToAuthorProfile}
             sx={{
               "&:hover": {
                 cursor: "pointer",
                 boxShadow: "0 0 2px 2px #55555559",
-              }
+              },
             }}
           />
         </div>
@@ -403,16 +416,16 @@ export default function Post({
           </div>
         </div>
 
-        {!disableLikeComment ? (
-          <Tooltip title="Copy link">
-            <i className="fas fa-link" onClick={handleCopyLink}></i>
-          </Tooltip>
-        ) : (
+        {authProvider.user.uuid == postAuthorID ? (
           <EllipseMenu
             post={postGiven}
             authorUUID={postGiven.author.id}
             onDelete={onDeletePost}
           />
+        ) : (
+          <Tooltip title="Copy link">
+            <i className="fas fa-link" onClick={handleCopyLink}></i>
+          </Tooltip>
         )}
 
         <Snackbar
@@ -575,7 +588,11 @@ export default function Post({
         </div>
       ) : null}
 
-      <Modal open={isModalOpen} onClose={handleCommentModalClose} sx={{"overflow": "auto"}}>
+      <Modal
+        open={isModalOpen}
+        onClose={handleCommentModalClose}
+        sx={{ overflow: "auto" }}
+      >
         <>
           <Post postGiven={post} canToggleComments={false} isModal={true} />
         </>
