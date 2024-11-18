@@ -119,11 +119,9 @@ class AuthorsSpecificView(APIView):
 
             author_host = urlparse(author_fqid)
             host = f"{author_host.scheme}://{author_host.netloc}"
-            print(f"AUTHOR HOST IS: {host}")
 
             if host.strip().lower() == os.getenv('BASE_URL', 'http://localhost:8000').strip().lower():
                 local_user = get_object_or_404(User, uuid=author_serial)
-                print(f"LOCAL USER: {local_user}")
                 serializer = UserSerializer(local_user)
                 return Response(serializer.data, status=200)
 
