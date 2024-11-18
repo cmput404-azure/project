@@ -28,7 +28,7 @@ INTERNAL_API_SECRET = os.getenv('INTERNAL_API_SECRET', '')
 SECRET_KEY = 'django-insecure-d)u%dgq_2j6c2x47&zel_b^t51-u^@dp6f5%&rfc$st&fm3xit'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
