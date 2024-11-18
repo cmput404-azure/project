@@ -127,7 +127,6 @@ function Auth() {
           navigate("/");
         })
         .catch((error) => {
-          console.log(error);
           setError(error.response.data.message);
         });
     }

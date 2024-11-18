@@ -81,7 +81,6 @@ export default function UserProfileOld() {
     tempAuthorData.displayName = data.displayName;
     tempAuthorData.github = data.githubLink;
     updateUserInfo(tempAuthorData);
-    console.log(data);
     setIsEditingProfile(false);
   };
 
@@ -112,9 +111,6 @@ export default function UserProfileOld() {
 
   // From https://devsarticles.com/react-copy-to-clipboard, Downloaded on 2024-10-26
   async function handleGetProfileLinkButtonClicked() {
-    console.log("Get Profile Link button clicked");
-    console.log(window.location.href);
-
     // From https://stackoverflow.com/questions/39823681/read-the-current-full-url-with-react, Downloaded on 2024-10-27
     let url = window.location.href;
     let parse = url.split("/");
@@ -124,7 +120,6 @@ export default function UserProfileOld() {
 
     try {
       await navigator.clipboard.writeText(content);
-      console.log("Copied to clipboard:", content);
       setHasCopiedProfileLink(true);
     } catch (error) {
       console.error("Unable to copy to clipboard:", error);
@@ -168,7 +163,6 @@ export default function UserProfileOld() {
     };
 
     if (userID) {
-      console.log(userID);
       setUserToGet(userID);
       setIsEditing(false);
     } else if (authProvider.user) {

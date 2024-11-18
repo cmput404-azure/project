@@ -99,7 +99,6 @@ class FollowService{
      }
  
       try {
-         console.log(`/api/authors/${userId}/followers/${encodedUrl}/`)
          await api.delete(`/api/authors/${userId}/followers/${encodedUrl}/`);
       } catch (error) {
          console.error('Fetch error:', error);

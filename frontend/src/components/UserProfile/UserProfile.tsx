@@ -73,7 +73,6 @@ export default function UserProfile() {
     setPosts((prevPosts) => {
       const existingIds = new Set(prevPosts.map((post) => post.id));
       const newPosts = src.filter((post) => !existingIds.has(post.id));
-      console.log(...prevPosts, ...newPosts);
       return [...prevPosts, ...newPosts];
     });
 
@@ -412,7 +411,7 @@ export function EditProfile({
   return (
     <div className={styles.edit__profile}>
       <div className={styles.edit__profile__header}>
-        <h2>Edit Profile</h2>
+        <h2>     Edit Profile    </h2>
         <IconButton
           className={styles.icon__button}
           size="small"

@@ -10,5 +10,5 @@ from .stream import PublicStreamView, AuthStreamView
 from .image import ImageView
 from .share import ShareView
 from .site_config import SiteConfigView
-from .node import NodeView
+from .node import GetNodesView, AddNodeView, UpdateNodeView, DeleteNodeView
 from .remote import RemoteAuthorsView, RemoteFolloweeView

@@ -131,19 +131,31 @@
     display: flex;
     flex-flow: column;
     justify-content: flex-start;
-    padding: 1rem;
+    padding: 60px 20px; /* 4rem for top and bottom, 0 for left and right */
 
     .edit__profile__header {
         display: flex;
-        flex-flow: row;
-        justify-content: space-between;
-
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0;
-        }
-    }
+        align-items: center; /* Vertically center content */
+        justify-content: center; /* Center the h2 */
+        position: relative; /* Allow absolute positioning for the IconButton */
+        width: 300px;
+      }
+      
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%); /* Center the h2 horizontally */
+      }
+      
+      .icon__button {
+        position: absolute; /* Take the IconButton out of normal flow */
+        right: 0; /* Align it to the right edge of the container */
+        top: 40%; /* Vertically center it */
+        transform: translateY(-130%); /* Correct for its height */
+      }
 
     .edit__profile__body {
         display: flex;
@@ -179,6 +191,7 @@
 
             .input {
                 margin-top: 1rem;
+                width: 250px;
             }
         }
     }

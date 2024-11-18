@@ -645,7 +645,6 @@ class InboxView(APIView):
         except ObjectDoesNotExist:
             # Handle remote author
             if payload["type"].lower() == "follow":
-                print(f"HERE")
                 # Send to remote inbox, passing the payload and remote host information
                 return self.send_follow_request_to_remote(payload)
             elif payload["type"].lower() == "post":
@@ -707,8 +706,6 @@ class InboxView(APIView):
             
             # remove follower from payload to return to original post structure
             del payload["follower"]
-
-            print(f"Payload is now: {remote_follower}")
             
             follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
             remote_host = remote_follower.get("host")
@@ -770,9 +767,13 @@ class InboxView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def send_like_to_remote(self, payload, request):
-        # use the request url to get the correct uuid of the post author
-        full_url = request.build_absolute_uri()
+    def send_like_to_remote(self, payload, request, test=False):
+
+        if test:
+            full_url = request
+        else:
+            # use the request url to get the correct uuid of the post author
+            full_url = request.build_absolute_uri()
         parsed_url = urlparse(full_url)
         payload_json = json.dumps(payload)
 
@@ -785,6 +786,9 @@ class InboxView(APIView):
         inbox_url = parsed_url._replace(netloc=urlparse(author_host).netloc)
         formatted_url = urlunparse(inbox_url)
 
+        if test:
+            return formatted_url
+        
         response = requests.post(
             formatted_url,
             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
@@ -793,9 +797,12 @@ class InboxView(APIView):
 
         return Response(response.text, response.status_code)  
     
-
-    def send_comment_to_remote(self, payload, request):
-        full_url = request.build_absolute_uri()
+    
+    def send_comment_to_remote(self, payload, request, test=False):
+        if test:
+            full_url = request
+        else:
+            full_url = request.build_absolute_uri()
         parsed_url = urlparse(full_url)
         
         post_url = payload["post"]
@@ -811,6 +818,9 @@ class InboxView(APIView):
         inbox_url = parsed_url._replace(netloc=author_host)
         formatted_url = urlunparse(inbox_url)
 
+        print(formatted_url)
+        if test:
+            return formatted_url
         # Use requests to send the POST request
         response = requests.post(
             formatted_url,

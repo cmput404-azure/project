@@ -67,7 +67,6 @@ export default function Post({
       try {
 
         if (postID) {
-          console.log(`with postID: ${postID}`)
           const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
           let postDataList = [];
@@ -249,9 +248,15 @@ export default function Post({
     setIsCommentOpen(!isCommentOpen);
   };
 
-  const handleCommentButtonClick = () => {
-    if (isModal) return;
-    setIsModalOpen(true);
+  const handleCommentButtonClick = async () => {
+    if (isModal) return; 
+    try {
+      const postData = await postService.getPost(`api/posts/${encodeURIComponent(post.id)}`);
+      setPost(postData); 
+      setIsModalOpen(true); 
+    } catch (error) {
+      console.error("Error fetching post data:", error);
+    }
   };
 
   // handle when the comment modal is closed
@@ -293,8 +298,7 @@ export default function Post({
         object: post.id,
         post_host: postGiven.author.host
       };
-      console.log(post.author.id)
-      console.log(postGiven.author.host)
+
       await inbox.sendPostToInbox(post.author.id, like_obj);
       setLikeCount(likeCount + 1);
       setHasLiked(true);
