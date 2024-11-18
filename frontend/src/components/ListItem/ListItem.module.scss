@@ -24,15 +24,14 @@
   width: 95.8%;
   padding: 10px;
   margin-bottom: 8px;
-  background-color: #d1d1d1; /* Light gray background for separation */
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow for separation */
-  border-radius: 8px; /* Rounded corners for a modern look */
+  background-color: #d1d1d1;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); 
+  border-radius: 8px; 
 }
 
 .profileLink {
   display: flex;
-  align-items: center; /* Center the avatar and text vertically */
-  gap: 10px; /* Larger gap for better spacing */
+  gap: 10px;
   text-decoration: none;
   color: #333;
   width: 100%;
@@ -44,19 +43,19 @@
   text-align: left;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center text vertically */
+  justify-content: center; 
 
   h1 {
     margin: 0;
     font-weight: bold;
     font-size: 14px;
-    line-height: 1.4; /* Ensure consistent spacing between text lines */
+    line-height: 1.4; 
   }
 
   p {
     font-size: 12px;
     margin: 0;
-    color: #666; /* Slightly lighter color for differentiation */
+    color: #666; 
   }
 }
 
@@ -64,7 +63,7 @@
   font-size: 14px;
   font-weight: normal;
   margin-left: 3px;
-  color: #777; /* Subtle accent for additional text */
+  color: #777;
 }
 
 button {
@@ -83,6 +82,6 @@ button:hover {
 
 .buttonGroup {
   display: flex;
-  gap: 10px; /* Increased gap for better spacing */
+  gap: 10px;
 }
 

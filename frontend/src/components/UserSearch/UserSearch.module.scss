@@ -28,14 +28,12 @@
 
 .customList {
     padding-left: 0;
-    width: calc(100% - 16px); /* Account for the scrollbar width */
-    max-height: 300px; /* Limit the height of the list to 300px */
-    overflow-y: auto; /* Enable vertical scrolling if the content exceeds the height */
-    overflow-x: hidden; /* Prevent horizontal scrolling */
-
-  /* Scrollbar styling */
-  scrollbar-width: thin; /* For Firefox: Makes scrollbar thinner */
-  scrollbar-color: white rgb(110, 110, 110); /* For Firefox: White handle, gray background */
+    width: calc(100% - 16px); 
+    max-height: 300px;
+    overflow-y: auto; 
+    overflow-x: hidden; 
+    scrollbar-width: thin;
+    scrollbar-color: white rgb(110, 110, 110); 
 }
 
 .modalOverlay {
@@ -44,7 +42,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); // Semi-transparent black overlay
+    background-color: rgba(0, 0, 0, 0.5); 
     display: flex;
     justify-content: center;
     align-items: center;
