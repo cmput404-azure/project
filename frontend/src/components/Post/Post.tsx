@@ -66,7 +66,8 @@ export default function Post({
 
       try {
 
-        if (postID) {
+        if (postID) { // UUID
+          console.log(postID);
           const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
           let postDataList = [];
@@ -166,6 +167,7 @@ export default function Post({
         } else if (error.response && error.response.status === 404) {
           navigate("/"); // back to stream since they are not an admin
         } else {
+          console.log("AA")
           console.error("Error fetching post data:", error);
         }
       }
@@ -310,8 +312,8 @@ export default function Post({
   const handleCopyLink = () => {
     if (post) {
       const domain = window.location.host;
-      const postId = post.id.split("/").pop();
-      const path = `/#/post/${postId}`;
+      // const postId = post.id.split("/").pop();
+      const path = `/#/post/${encodeURIComponent(post.id)}`;
 
       const link = `${domain}${path}`;
       navigator.clipboard.writeText(link).then(
