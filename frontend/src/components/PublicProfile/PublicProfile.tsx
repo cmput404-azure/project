@@ -127,6 +127,9 @@ export default function PublicProfile() {
     }
 
     async function checkRequested() {
+      // Re-initialize 
+      setIsRequested(false);
+
       // Check inbox of the user ID
       const userInbox = await InboxService.getInbox(userID);
       await Promise.all(

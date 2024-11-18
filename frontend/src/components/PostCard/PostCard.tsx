@@ -167,7 +167,6 @@ function PostCard({
         const match = post.content.match(imageRegex);
         if (match) {
           const imageUrl = match[1]; // Get the URL from the Markdown
-          console.log("imageURL: ", imageUrl);
 
           // Check if the imageUrl is a data URL
           if (imageUrl.startsWith("data:")) {
@@ -177,7 +176,6 @@ function PostCard({
             // If it's not a data URL, fetch from the endpoint
             try {
               const response = await fetch(imageUrl);
-              console.log(response);
               if (response.ok) {
                 const jsonResponse = await response.json();
                 const imageData = jsonResponse.image;

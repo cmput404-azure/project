@@ -1,6 +1,18 @@
+.boldddd{
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Centers elements horizontally */
+    align-items: center; /* Centers elements vertically */
+}
 .customList {
     padding-left:0;
-    width: 98%;
+    width: 100%;
+    width: calc(100% - 3px); 
+    max-height: 300px;
+    overflow-y: auto; 
+    overflow-x: hidden; 
+    scrollbar-width: thin;
+    scrollbar-color: white rgb(110, 110, 110); 
 }
 
 .noNotifications {

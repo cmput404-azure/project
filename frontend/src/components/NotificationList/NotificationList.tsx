@@ -28,8 +28,6 @@ export default function NotificationList() {
   const fetchNotifications = useCallback(async () => {
     try {
       const userResponse = await inbox.getInbox(authProvider.user.uuid);
-      console.log("USER RESPONSE", userResponse);
-
       const notificationsWithUsers = await Promise.all(
         userResponse.map(async (item: any) => {
           let user = null;
@@ -59,7 +57,6 @@ export default function NotificationList() {
             user = await fetchUser(encodedId);
             try {
               let post_resp = await api.get(item.post);
-              console.log(post_resp);
               post_obj = post_resp.data;
 
               if(item.author.id.includes(authProvider.user.uuid)=== true){
@@ -109,13 +106,13 @@ export default function NotificationList() {
   };
 
   return (
-    <div>
+    <div className={"boldddd"}>
       {loading ? (
         <div className={"loading_component"}><CircularProgress sx={{ color: "#70ffaf" }} /></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
-        <div>
+        <div className={"boldddd"}>
           {notifications.length === 0 ? (
           // Display this message when there are no notifications
           <p className={styles.noNotifications}>No notifications to display</p>
