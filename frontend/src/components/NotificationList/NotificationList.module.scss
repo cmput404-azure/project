@@ -1,7 +1,13 @@
+.boldddd{
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Centers elements horizontally */
+    align-items: center; /* Centers elements vertically */
+}
 .customList {
     padding-left:0;
-    width: 95%;
-    width: calc(100% - 16px); 
+    width: 100%;
+    width: calc(100% - 3px); 
     max-height: 300px;
     overflow-y: auto; 
     overflow-x: hidden; 
