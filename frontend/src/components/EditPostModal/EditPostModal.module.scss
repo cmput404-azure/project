@@ -12,13 +12,15 @@
   background-color: #424242;
   border-radius: 10px;
   max-width: 600px;
-  margin: auto;
+  margin: 1rem auto;
   padding: 20px;
   position: relative;
   top: 50%;
   transform: translateY(-50%);
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
   outline: none;
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 .title {

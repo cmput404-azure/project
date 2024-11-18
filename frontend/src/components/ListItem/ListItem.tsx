@@ -1,17 +1,19 @@
 // @ts-nocheck
 
+import { Author, PostData } from "../../models/models"
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
+
 import { Avatar } from "@mui/material";
-import { api } from "../../service/config";
-import { extractUUID } from "../../util/formatting/extractUUID";
-import styles from "./ListItem.module.scss";
-import { useAuth } from "../../state";
 import FollowService from "../../service/follow";
 import InboxService from "../../service/inbox";
 import ProfileService from "../../service/profile";
-import { PostData, Author } from "../../models/models"
+import { api } from "../../service/config";
+import { extractUUID } from "../../util/formatting/extractUUID";
 import { normalizeURL } from "../../util/formatting/normalizeURL";
+import profileService from "../../service/profile";
+import styles from "./ListItem.module.scss";
+import { useAuth } from "../../state";
 
 interface ListItemProps {
   isRequest?: boolean;
@@ -194,12 +196,14 @@ export default function ListItem({
     <div className={styles.ListItemContainer}>
       <div className={styles.container}>
         <div className={styles.profileLink} onClick={navigateToProfile}>
-          <Avatar
-            className={styles.listImg}
-            alt={user.username}
-            src={user.profileImage}
-            sx={{ width: 48, height: 48 }}
-          />
+          <div className="avatar">
+            <Avatar
+              className={styles.listImg}
+              alt={user.username}
+              src={profileService.getProfilePicture(user)}
+              sx={{ width: 48, height: 48 }}
+            />
+          </div>
           <div className={styles.text}>
             <h1>
               {user.username}
