@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from urllib.parse import urlparse
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -6,7 +7,40 @@ from ..models import NodeUser, Follow
 from requests.auth import HTTPBasicAuth
 import requests, random, os
 
-
+@extend_schema(
+    summary="Retrieve Remote Authors.",
+    description="Fetch a list of remote authors from remote nodes listed in NodeUser, using basic authentication.",
+    responses={
+        status.HTTP_200_OK: OpenApiResponse(
+            description="A response containing a list of selected remote authors.",
+            response={
+                "type": "object",
+                "properties": {
+                    "type": {"type": "string", "example": "authors"},
+                    "authors": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {"type": "string", "example": "author"},
+                                "id": {"type": "string", "example": "http://nodeaaaa/api/authors/111"},
+                                "host": {"type": "string", "example": "http://nodeaaaa/api/"},
+                                "displayName": {"type": "string", "example": "Greg Johnson"},
+                                "github": {"type": "string", "example": "http://github.com/gjohnson"},
+                                "profileImage": {"type": "string", "example": "https://i.imgur.com/k7XVwpB.jpeg"},
+                                "page": {"type": "string", "example": "http://nodeaaaa/authors/greg"}
+                            }
+                        }
+                    }
+                }
+            }
+        ),
+        status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiResponse(
+            description="An error occurred while fetching remote authors."
+        ),
+    },
+    tags=["Remote API"]
+)
 class RemoteAuthorsView(APIView):
     def get(self, request):
         """
@@ -70,7 +104,48 @@ class RemoteAuthorsView(APIView):
         """
         count = min(len(authors), random.randint(min_count, max_count))
         return random.sample(authors, count)
-    
+
+@extend_schema(
+    summary="Check Follow Status of Remote Followee.",
+    description="Check if the local user with `local_serial` is following the remote user with `remote_fqid`.",
+    parameters=[
+        OpenApiParameter(
+            name="local_serial",
+            description="UUID of the local user whose following status we want to check.",
+            type=str,
+            required=True,
+            location=OpenApiParameter.PATH
+        ),
+        OpenApiParameter(
+            name="remote_fqid",
+            description="Fully qualified ID (FQID) of the remote followee to check.",
+            type=str,
+            required=True,
+            location=OpenApiParameter.PATH
+        ),
+    ],
+    responses={
+        status.HTTP_200_OK: OpenApiResponse(
+            description="The local user is following the remote followee.",
+            response={
+                "type": "object",
+                "properties": {
+                    "is_follower": {"type": "boolean", "example": True}
+                }
+            }
+        ),
+        status.HTTP_404_NOT_FOUND: OpenApiResponse(
+            description="The local user is not following the remote followee.",
+            response={
+                "type": "object",
+                "properties": {
+                    "is_follower": {"type": "boolean", "example": False}
+                }
+            }
+        ),
+    },
+    tags=["Remote API"]
+)
 class RemoteFolloweeView(APIView):
     def get(self, request, local_serial, remote_fqid):
         """
