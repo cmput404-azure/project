@@ -199,7 +199,7 @@ export default function ListItem({
           <div className="avatar">
             <Avatar
               className={styles.listImg}
-              alt={user.username}
+              alt="User icon"
               src={profileService.getProfilePicture(user)}
               sx={{ width: 48, height: 48 }}
             />
