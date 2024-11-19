@@ -13,6 +13,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
 import requests, os, base64
+from ..utils.auth import is_valid_basic_auth
 
 
 class AuthorPostView(APIView):
@@ -73,8 +74,13 @@ class AuthorPostView(APIView):
 
             elif post.visibility == 2:  # FRIENDS
                 # Friends-only posts require authentication
+                remote = False
                 if not request.user.is_authenticated:
-                    return HttpResponse("Friends-only posts must be authenticated to view.", status=403)
+                    auth_header = get_authorization_header(request).split()
+                    if len(auth_header) == 2 and auth_header[0].lower() == b"basic":
+                        remote = is_valid_basic_auth(auth_header[1].decode())
+                    if not remote:
+                        return Response("Friends-only posts must be authenticated to view.", status=403)
                 # Check if the request user is the author or a friend of the author
                 if request.user != author and request.user not in author.friends.all():
                     return HttpResponse("You do not have permission to view this friend's post.", status=403)
@@ -85,8 +91,13 @@ class AuthorPostView(APIView):
 
             elif post.visibility == 3:  # UNLISTED
                 # Unlisted posts require authentication
+                remote = False
                 if not request.user.is_authenticated:
-                    return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
+                    auth_header = get_authorization_header(request).split()
+                    if len(auth_header) == 2 and auth_header[0].lower() == b"basic":
+                        remote = is_valid_basic_auth(auth_header[1].decode())
+                    if not remote:
+                        return Response("Unlisted posts must be authenticated to view.", status=403)
                 
                 # If authenticated, return the post
                 serializer = PostSerializer(post)
@@ -607,20 +618,3 @@ class PostView(APIView):
             return Response(post_data, status=200)
         else:
             return Response("No post ID specified", status=400)
-        
-def is_valid_basic_auth(auth_header):
-    """
-        Validate Basic Auth credentials (for remote requests)
-    """
-    try:
-        # Decode Basic Auth credentials
-        decoded_credentials = base64.b64decode(auth_header).decode('utf-8')
-        username, password = decoded_credentials.split(':')
-        
-        # Validate credentials with data stored in database
-        node = NodeUser.objects.get(username=username)
-        if node.password == password and node.is_authenticated:
-            return True
-        return False
-    except Exception as e:
-        return False
