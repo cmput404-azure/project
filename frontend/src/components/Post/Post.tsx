@@ -416,7 +416,7 @@ export default function Post({
           </div>
         </div>
 
-        {authProvider.user.uuid == postAuthorID && disableLikeComment ? (
+        {authProvider.user?.uuid == postAuthorID && disableLikeComment ? (
           <EllipseMenu
             post={postGiven}
             authorUUID={postGiven.author.id}
