@@ -231,11 +231,10 @@ export default function Post({
 
   // To refresh comment count when comment modal is closed
   useEffect(() => {
-    console.log("THIS IS CALLED")
     const fetchPost = async () => {
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
-        const postData = await postService.getPost(`api/posts/${encodedId}`); // this endpoint only works on local post
+        const postData = await postService.getPost(`api/posts/${encodedId}`);
         console.log(postData)
         const comments = Array.isArray(postData?.comments?.src)
           ? postData.comments.src.reverse()
