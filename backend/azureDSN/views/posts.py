@@ -1,7 +1,8 @@
 from urllib.parse import unquote, urlparse
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from ..models import User, Post, Follow, NodeUser
+from ..models import User, Post, Follow
 from ..serializers import PostSerializer, UserSerializer, CreatePostSerializer
 from rest_framework.response import Response
 from rest_framework.authentication import get_authorization_header
@@ -12,8 +13,9 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
-import requests, os, base64
+import requests, os
 from ..utils.auth import is_valid_basic_auth
+from .follow import FollowCustomView
 
 
 class AuthorPostView(APIView):
@@ -81,9 +83,27 @@ class AuthorPostView(APIView):
                         remote = is_valid_basic_auth(auth_header[1].decode())
                     if not remote:
                         return Response("Friends-only posts must be authenticated to view.", status=403)
-                # Check if the request user is the author or a friend of the author
-                if request.user != author and request.user not in author.friends.all():
-                    return HttpResponse("You do not have permission to view this friend's post.", status=403)
+                    
+                # Check if the request user is the author or a friend of the author,
+                # remote request has no request.user, but will only get the post if they are friends
+                elif request.user:
+                    get_friends = requests.get(
+                        f"{os.getenv('BASE_URL')}/api/authors/{author.uuid}/following/?action=following",
+                        headers={"Internal-Auth": settings.INTERNAL_API_SECRET}
+                    )
+
+                    friends = get_friends.json().get('followers', [])
+
+                    is_friend = False
+                    for friend in friends:
+                        friend_uuid = friend['id'].split('/')[-1]
+
+                        if friend_uuid == str(request.user.uuid):
+                            is_friend = True
+                            break
+
+                    if not is_friend:
+                        return Response("You do not have permission to view this friend's post.", status=403)
                 
                 # If permission is granted, serialize and return the post
                 serializer = PostSerializer(post)
