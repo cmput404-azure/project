@@ -15,7 +15,6 @@ from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
 import requests, os
 from ..utils.auth import is_valid_basic_auth
-from .follow import FollowCustomView
 
 
 class AuthorPostView(APIView):
@@ -87,23 +86,26 @@ class AuthorPostView(APIView):
                 # Check if the request user is the author or a friend of the author,
                 # remote request has no request.user, but will only get the post if they are friends
                 elif request.user:
-                    get_friends = requests.get(
-                        f"{os.getenv('BASE_URL')}/api/authors/{author.uuid}/following/?action=following",
-                        headers={"Internal-Auth": settings.INTERNAL_API_SECRET}
-                    )
+                    if (request.user.uuid != author.uuid):
+                        get_friends = requests.get(
+                            f"{settings.BASE_URL}/api/authors/{author.uuid}/following/?action=following",
+                            headers={"Internal-Auth": settings.INTERNAL_API_SECRET}
+                        )
 
-                    friends = get_friends.json().get('followers', [])
+                        friends = get_friends.json().get('followers', [])
 
-                    is_friend = False
-                    for friend in friends:
-                        friend_uuid = friend['id'].split('/')[-1]
+                        is_friend = False
+                        for friend in friends:
+                            friend_uuid = friend['id'].split('/')[-1]
 
-                        if friend_uuid == str(request.user.uuid):
-                            is_friend = True
-                            break
+                            if friend_uuid == str(request.user.uuid):
+                                is_friend = True
+                                break
 
-                    if not is_friend:
-                        return Response("You do not have permission to view this friend's post.", status=403)
+                        if not is_friend:
+                            return Response("You do not have permission to view this friend's post.", status=403)
+                    
+                    # Else this author is trying to view their own friends-only post
                 
                 # If permission is granted, serialize and return the post
                 serializer = PostSerializer(post)
