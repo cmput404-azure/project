@@ -235,7 +235,6 @@ export default function Post({
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
         const postData = await postService.getPost(`api/posts/${encodedId}`);
-        console.log(postData)
         const comments = Array.isArray(postData?.comments?.src)
           ? postData.comments.src.reverse()
           : [];
