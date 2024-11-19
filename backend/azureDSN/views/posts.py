@@ -572,14 +572,22 @@ class PostView(APIView):
                 serializer = PostSerializer(post)
                 post_data = serializer.data
             else:
-                response = requests.get(decoded_post_fqid)
-                response = requests.get(
-                    decoded_post_fqid,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                )
-                data = response.json()  # Parse the JSON response
-                post_visibility = data.get("visibility")
-                post_data = data
+                try:
+                    response = requests.get(
+                        decoded_post_fqid,
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    )
+                    if (response.status_code == 200):
+                        post_data = response.json()
+                        post_visibility = post_data.get("visibility")
+                    elif (response.status_code == 403):
+                        # The other user does not authorize any requests sent from our local node
+                        print(f"Access forbidden to the remote node.")
+                        return
+                    else:
+                        return
+                except Exception as e:
+                    print(f"Error fetching remote post {decoded_post_fqid}: {e}")
 
             # Check the visibility of the post
             if post_visibility in (1, "PUBLIC"): # Anyone can see PUBLIC posts
