@@ -33,6 +33,9 @@ export default function NotificationList() {
         userResponse.map(async (item: any) => {
           let user = null;
           let post_obj = null;
+          if (item === null){
+            return null;
+          }
           if (item.type === "follow") {
             user = await fetchUser(item.actor.id);
           } else if (item.type === "like") {
