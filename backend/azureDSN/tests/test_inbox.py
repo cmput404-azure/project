@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -7,7 +8,6 @@ from ..models import User, Inbox, InboxItem, Post, FollowRequest, Share
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 import uuid
-from unittest.mock import patch, MagicMock
 from rest_framework.response import Response
 from ..views import InboxView
 
@@ -48,6 +48,7 @@ class InboxViewTestCase(TestCase):
         response = self.client.get(self.inbox_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print(f"RESPONSE DATA: {response.data}")
         self.assertEqual(response.data["items"][0]["type"], "follow")
         self.assertEqual(response.data['type'], 'inbox')
 
@@ -108,7 +109,7 @@ class InboxViewTestCase(TestCase):
                 "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
                 "host": "http://localhost:8001/api/"
             },
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -146,7 +147,7 @@ class InboxViewTestCase(TestCase):
                 "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
                 "host": "http://localhost:8001/api/"
             },
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe4c",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe4c",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -184,7 +185,7 @@ class InboxViewTestCase(TestCase):
                 "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
                 "host": "http://localhost:8001/api/"
             },
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe4c",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe4c",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -225,7 +226,7 @@ class InboxViewTestCase(TestCase):
                 "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
                 "host": "http://localhost:8001/api/"
             },
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe5d",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe5d",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -255,7 +256,7 @@ class InboxViewTestCase(TestCase):
                 "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
                 "host": "http://localhost:8001/api/"
             },
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe6c",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/2677192c-bce3-4583-afe3-b6592155fe6c",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -289,7 +290,7 @@ class InboxViewTestCase(TestCase):
             "content": "dfsfdsf",
             "contentType": "text/plain",
             "description": "dsfdfsdf",
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -320,7 +321,7 @@ class InboxViewTestCase(TestCase):
                 "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
                 "host": "http://localhost:8001/api/"
             },
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -355,7 +356,7 @@ class InboxViewTestCase(TestCase):
             "content": "dfsfdsf",
             "contentType": "text/plain",
             "description": "dsfdfsdf",
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -386,7 +387,7 @@ class InboxViewTestCase(TestCase):
                 "id": "http://localhost:8001/api/authors/a2d00814-ec38-4ea0-a297-7aa64b24a262",
                 "host": "http://localhost:8001/api/"
             },
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -411,7 +412,7 @@ class InboxViewTestCase(TestCase):
         # Call to update request
         payload = {
             "type": "abc",
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/e09c9fff-c5dc-4d9d-9fb1-667a564cd3dd",
             "likes": [],
             "modified_at": "2024-11-17T02:17:33.067586Z",
             "published": "2024-11-17T02:17:33.022000Z",
@@ -427,7 +428,7 @@ class InboxViewTestCase(TestCase):
         """Test creating a post in the inbox."""
         payload = {
             "type": "hihi",
-            "id": f"http://localhost:8000/api/authors/2677192c-bce3-4583-afe3-b6592155fe4c/posts/{self.post.uuid}",
+            "id": f"{settings.BASE_URL}/api/authors/2677192c-bce3-4583-afe3-b6592155fe4c/posts/{self.post.uuid}",
             "description": "This post is a test",
             "contentType": "text/plain",
             "content": "Quin public a post, this notifies kyle's inbox",
@@ -442,7 +443,7 @@ class InboxViewTestCase(TestCase):
     def test_post_missing_type(self):
         """Test creating a post in the inbox."""
         payload = {
-            "id": f"http://localhost:8000/api/authors/2677192c-bce3-4583-afe3-b6592155fe5a/posts/{self.post.uuid}",
+            "id": f"{settings.BASE_URL}/api/authors/2677192c-bce3-4583-afe3-b6592155fe5a/posts/{self.post.uuid}",
             "description": "This post is a test",
             "contentType": "text/plain",
             "content": "Quin public a post, this notifies kyle's inbox",
@@ -461,11 +462,11 @@ class InboxViewTestCase(TestCase):
         """Test creating a follow request in the inbox."""
         payload = {
             "type": "follow",
-            "id": f"http://localhost:8000/api/authors/{self.user.uuid}/followers/{self.follower.uuid}",
+            "id": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/followers/{self.follower.uuid}",
             "actor":{
                 "type":"author",
-                "id":"http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
-                "host":"http://127.0.0.1:8000/azureDSN/",
+                "id":f"{settings.BASE_URL}/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                "host":f"{settings.BASE_URL}/azureDSN/",
                 "displayName":"Quin Nguyen",
                 "github": "https://github.com/QuinNguyen02",
                 "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
@@ -473,10 +474,10 @@ class InboxViewTestCase(TestCase):
             },
             "object":{
                 "type":"author",
-                "id":"http://127.0.0.1:8000/api/authors/80ad41f4-7455-4771-a38a-2dedec3c1b00",
-                "host":"http://127.0.0.1:8000/azureDSN/",
+                "id":f"{settings.BASE_URL}/api/authors/80ad41f4-7455-4771-a38a-2dedec3c1b00",
+                "host":f"{settings.BASE_URL}/azureDSN/",
                 "displayName":"Kyle Quach",
-                "page":"http://127.0.0.1:8000/azureDSN/authors/kyle",
+                "page":f"{settings.BASE_URL}/azureDSN/authors/kyle",
                 "github": "https://github.com/KyleQuach03",
                 "profileImage": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
             }
@@ -494,11 +495,11 @@ class InboxViewTestCase(TestCase):
         """Test creating a comment in the inbox."""
         payload = {
             "type": "comment",
-            "post": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "author":{
                 "type":"author",
-                "id":"http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
-                "host":"http://127.0.0.1:8000/azureDSN/",
+                "id":f"{settings.BASE_URL}/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                "host":f"{settings.BASE_URL}/azureDSN/",
                 "displayName":"Quin Nguyen",
                 "github": "https://github.com/QuinNguyen02",
                 "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
@@ -517,11 +518,11 @@ class InboxViewTestCase(TestCase):
         """Test creating a like in the inbox."""
         payload = {
             "type": "like",
-            "object": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "object": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "author":{
                 "type":"author",
-                "id":"http://127.0.0.1:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
-                "host":"http://127.0.0.1:8000/azureDSN/",
+                "id":f"{settings.BASE_URL}/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                "host":f"{settings.BASE_URL}/azureDSN/",
                 "displayName":"Quin Nguyen",
                 "github": "https://github.com/QuinNguyen02",
                 "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
@@ -542,7 +543,7 @@ class InboxViewTestCase(TestCase):
         payload = {
             "type": "share",
             "sharer": f"{self.follower.uuid}",
-            "post": "http://localhost:8000/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e12/posts/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e68"
+            "post": f"{settings.BASE_URL}/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e12/posts/82ae5a8c-02dd-4e47-a1e7-8d0d248f8e68"
         }
         response = self.client.post(self.inbox_url, data=payload, format='json')
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
@@ -559,7 +560,7 @@ class InboxViewTestCase(TestCase):
     def test_send_comment_to_remote(self, mock_send_comment):
         payload = {
             "type": "comment",
-            "post": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "author":{
                 "type":"author",
                 "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
@@ -580,7 +581,7 @@ class InboxViewTestCase(TestCase):
     def test_send_comment_to_remote_url(self):
         payload = {
             "type": "comment",
-            "post": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "author":{
                 "type":"author",
                 "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
@@ -595,14 +596,14 @@ class InboxViewTestCase(TestCase):
         inbox_view = InboxView()
 
         response = inbox_view.send_comment_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
-        self.assertEqual(response,f'http://localhost:8000/api/authors/{self.user.uuid}/inbox/' )
+        self.assertEqual(response,f"{settings.BASE_URL}/api/authors/{self.user.uuid}/inbox/")
 
     # Tests that it is able to direct comments made on a remote post to the correct method
     @patch('azureDSN.views.inbox.InboxView.send_like_to_remote')  
     def test_send_like_to_remote(self, mock_send_like):
         payload = {
             "type": "like",
-            "post": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "author":{
                 "type":"author",
                 "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
@@ -624,7 +625,7 @@ class InboxViewTestCase(TestCase):
     def test_send_like_to_remote_url(self):
             payload = {
                 "type": "like",
-                "post": f"http://localhost:8000/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+                "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
                 "author":{
                     "type":"author",
                     "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
@@ -635,12 +636,12 @@ class InboxViewTestCase(TestCase):
                     "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
                 },
                 "comment": "Nice post!",
-                "post_host": "http://localhost:8000/api/"
+                "post_host": f"{settings.BASE_URL}/api/"
             }
             inbox_view = InboxView()
 
             response = inbox_view.send_like_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
-            self.assertEqual(response,f'http://localhost:8000/api/authors/{self.user.uuid}/inbox/' )
+            self.assertEqual(response,f"{settings.BASE_URL}/api/authors/{self.user.uuid}/inbox/")
 
         
         
@@ -652,9 +653,9 @@ def create_user():
     user_obj = User.objects.create(
                                     display_name=f"Test User{random_suffix}",
                                     username=f"Test User{random_suffix}",
-                                    host="http://localhost:8000/",
+                                    host=f"{settings.BASE_URL}/",
                                     github="http://github.com/testuser",
-                                    page="http://localhost:8000/authors/testuser",
+                                    page=f"{settings.BASE_URL}/authors/testuser",
                                     profile_image=None
                                 )
 
@@ -674,9 +675,9 @@ def create_user_givenID(user_id):
     user_obj = {
         "type": "author",
         "username": f"TestUser{random_suffix}",
-        "id": f"http://127.0.0.1:8000/authors/{user_id}",
-        "url": f"http://127.0.0.1:8000/authors/{user_id}",
-        "host": "http://127.0.0.1:8000/",
+        "id": f"{settings.BASE_URL}/authors/{user_id}",
+        "url": f"{settings.BASE_URL}/authors/{user_id}",
+        "host": f"{settings.BASE_URL}/",
         "displayName": f"TestUser{random_suffix}",
         "github": "http://github.com/quin",
         "profileImage": "http://testserver/profile"
