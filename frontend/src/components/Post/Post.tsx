@@ -168,8 +168,8 @@ export default function Post({
             Array.isArray(postData.likes) ? 0 : postData.likes?.count || 0
           );
           setCommentCount(
-            // Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
-            comments.length
+            Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
+            // comments.length
           );
         }
       } catch (error) {

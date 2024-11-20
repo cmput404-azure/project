@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,7 +12,7 @@ import requests, os, json
 from ..serializers import *
 from ..models import *
 from datetime import datetime
-from ..utils import *
+from ..utils import url_parser
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
@@ -103,13 +104,43 @@ class InboxView(APIView):
         
         # Get the latest inbox items
         inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-time")
+
+
         
         serializer = InboxItemSerializer(inbox_items_obj, many=True, context={"request": request})
+        filtered_data = []
+        for json in serializer.data:
+            if json.get("type") in ["like", "post", "comment"]:
+                base_host = url_parser.get_base_host(json.get('id'))
+            elif json.get("type") == "follow":
+                base_host = url_parser.get_base_host(json.get('actor').get('id'))
+
+                if base_host != settings.BASE_URL: # only for remote objects
+                    try:
+                        req = requests.get(
+                            f"{base_host}/api/authors/?page=1&size=1", # Any endpoint to ensure connection
+                            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                        )
+
+                        if req.status_code == 200:
+                            filtered_data.append(json)
+                        elif req.status_code == 403:
+                            # Local node in remote node's list, but connection not allowed
+                            continue
+                        else:
+                            continue
+                    except requests.exceptions.RequestException as e:
+                        print(f"Error occurred while fetching {base_host}: {e}")
+                        return Response({"error: Something went wrong", 500})
+                else: # local objects
+                    filtered_data.append(json)
+                
+
         uri = request.build_absolute_uri("/")
 
         data = {
                 'user': f"{uri}api/authors/{author_serial}",
-                'items': serializer.data,
+                'items': filtered_data,
                 'type': 'inbox',
         }
         return Response(data, status=status.HTTP_200_OK)
