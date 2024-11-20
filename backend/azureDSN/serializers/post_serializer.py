@@ -166,9 +166,9 @@ class CreatePostSerializer(serializers.ModelSerializer):
         author_uuid = instance.user.uuid
         post_uuid = str(instance.uuid)
         
-        base_url = settings.BASE_URL.strip()
-        post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
-        representation['id'] = urljoin(base_url, post_url)
+        # base_url = settings.BASE_URL.strip()
+        # post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
+        # representation['id'] = urljoin(base_url, post_url)
         
         visibility_str = dict(Post.VISIBILITY_CHOICES).get(instance.visibility)
         representation['visibility'] = visibility_str
@@ -178,29 +178,50 @@ class CreatePostSerializer(serializers.ModelSerializer):
         post_url = f'/api/authors/{author_uuid}/posts/{post_uuid}'
         representation['id'] = urljoin(base_url, post_url)
         
-        # Fetch all likes of the post
-        like_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
-        headers = {"Internal-Auth": settings.INTERNAL_API_SECRET} # To get through the auth layer
+        # # Fetch all likes of the post
+        # like_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/likes"
+        # headers = {"Internal-Auth": settings.INTERNAL_API_SECRET} # To get through the auth layer
         
-        try:
-            response = requests.get(like_url, headers=headers)
-            if response.status_code == 200:
-                representation['likes'] = response.json()
-            else:
-                representation['likes'] = []
-        except requests.RequestException as e:
-            representation['likes'] = []
+        # try:
+        #     response = requests.get(like_url, headers=headers)
+        #     if response.status_code == 200:
+        #         representation['likes'] = response.json()
+        #     else:
+        #         representation['likes'] = []
+        # except requests.RequestException as e:
+        #     representation['likes'] = []
+
+        # Empty pagination objects on creation, without calling Likes and Comments API
+        representation['likes'] = {
+            "type": "likes",
+            "page": f"{representation["id"]}",
+            "id": f"{representation["id"]}/likes",
+            "page_number": 1,
+            "size": 5,
+            "count": 0,
+            "src": []
+        }
+
+        representation['comments'] = {
+            "type": "comments",
+            "page": f"{representation["id"]}",
+            "id": f"{representation["id"]}/comments",
+            "page_number": 1,
+            "size": 5,
+            "count": 0,
+            "src": []
+        }
             
-        # Fetch all comments of the post
-        comment_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
+        # # Fetch all comments of the post
+        # comment_url = f"{base_url}/api/authors/{instance.user.uuid}/posts/{instance.uuid}/comments"
         
-        try:
-            response = requests.get(comment_url, headers=headers)
-            if response.status_code == 200:
-                representation['comments'] = response.json()
-            else:
-                representation['comments'] = []
-        except requests.RequestException as e:
-            representation['comments'] = []
+        # try:
+        #     response = requests.get(comment_url, headers=headers)
+        #     if response.status_code == 200:
+        #         representation['comments'] = response.json()
+        #     else:
+        #         representation['comments'] = []
+        # except requests.RequestException as e:
+        #     representation['comments'] = []
         
         return representation
