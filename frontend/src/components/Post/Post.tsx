@@ -159,7 +159,7 @@ export default function Post({
             setHasShared(isShared);
           }
 
-          const comments = Array.isArray(postGiven?.comments?.src)
+          const comments = Array.isArray(postGiven.comments?.src)
             ? postGiven.comments.src.reverse()
             : [];
           setCommentList(comments);

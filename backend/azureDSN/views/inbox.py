@@ -115,25 +115,25 @@ class InboxView(APIView):
             elif json.get("type") == "follow":
                 base_host = url_parser.get_base_host(json.get('actor').get('id'))
 
-                if base_host != settings.BASE_URL: # only for remote objects
-                    try:
-                        req = requests.get(
-                            f"{base_host}/api/authors/?page=1&size=1", # Any endpoint to ensure connection
-                            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                        )
+            if base_host != settings.BASE_URL: # only for remote objects
+                try:
+                    req = requests.get(
+                        f"{base_host}/api/authors/?page=1&size=1", # Any endpoint to ensure connection
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    )
 
-                        if req.status_code == 200:
-                            filtered_data.append(json)
-                        elif req.status_code == 403:
-                            # Local node in remote node's list, but connection not allowed
-                            continue
-                        else:
-                            continue
-                    except requests.exceptions.RequestException as e:
-                        print(f"Error occurred while fetching {base_host}: {e}")
-                        return Response({"error: Something went wrong", 500})
-                else: # local objects
-                    filtered_data.append(json)
+                    if req.status_code == 200:
+                        filtered_data.append(json)
+                    elif req.status_code == 403:
+                        # Local node in remote node's list, but connection not allowed
+                        continue
+                    else:
+                        continue
+                except requests.exceptions.RequestException as e:
+                    print(f"Error occurred while fetching {base_host}: {e}")
+                    return Response({"error: Something went wrong", 500})
+            else: # local objects
+                filtered_data.append(json)
                 
 
         uri = request.build_absolute_uri("/")
