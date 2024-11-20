@@ -194,8 +194,8 @@ class CreatePostSerializer(serializers.ModelSerializer):
         # Empty pagination objects on creation, without calling Likes and Comments API
         representation['likes'] = {
             "type": "likes",
-            "page": f"{representation["id"]}",
-            "id": f"{representation["id"]}/likes",
+            "page": f"{representation['id']}",
+            "id": f"{representation['id']}/likes",
             "page_number": 1,
             "size": 5,
             "count": 0,
@@ -204,8 +204,8 @@ class CreatePostSerializer(serializers.ModelSerializer):
 
         representation['comments'] = {
             "type": "comments",
-            "page": f"{representation["id"]}",
-            "id": f"{representation["id"]}/comments",
+            "page": f"{representation['id']}",
+            "id": f"{representation['id']}/comments",
             "page_number": 1,
             "size": 5,
             "count": 0,
