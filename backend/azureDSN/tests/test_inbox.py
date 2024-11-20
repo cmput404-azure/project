@@ -48,7 +48,6 @@ class InboxViewTestCase(TestCase):
         response = self.client.get(self.inbox_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(f"RESPONSE DATA: {response.data}")
         self.assertEqual(response.data["items"][0]["type"], "follow")
         self.assertEqual(response.data['type'], 'inbox')
 
