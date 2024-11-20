@@ -1,7 +1,8 @@
 from urllib.parse import unquote, urlparse
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from ..models import User, Post, Follow, NodeUser
+from ..models import User, Post, Follow
 from ..serializers import PostSerializer, UserSerializer, CreatePostSerializer
 from rest_framework.response import Response
 from rest_framework.authentication import get_authorization_header
@@ -12,7 +13,8 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
-import requests, os, base64
+import requests, os
+from ..utils.auth import is_valid_basic_auth
 
 
 class AuthorPostView(APIView):
@@ -73,11 +75,37 @@ class AuthorPostView(APIView):
 
             elif post.visibility == 2:  # FRIENDS
                 # Friends-only posts require authentication
+                remote = False
                 if not request.user.is_authenticated:
-                    return HttpResponse("Friends-only posts must be authenticated to view.", status=403)
-                # Check if the request user is the author or a friend of the author
-                if request.user != author and request.user not in author.friends.all():
-                    return HttpResponse("You do not have permission to view this friend's post.", status=403)
+                    auth_header = get_authorization_header(request).split()
+                    if len(auth_header) == 2 and auth_header[0].lower() == b"basic":
+                        remote = is_valid_basic_auth(auth_header[1].decode())
+                    if not remote:
+                        return Response("Friends-only posts must be authenticated to view.", status=403)
+                    
+                # Check if the request user is the author or a friend of the author,
+                # remote request has no request.user, but will only get the post if they are friends
+                elif request.user:
+                    if (request.user.uuid != author.uuid):
+                        get_friends = requests.get(
+                            f"{settings.BASE_URL}/api/authors/{author.uuid}/following/?action=following",
+                            headers={"Internal-Auth": settings.INTERNAL_API_SECRET}
+                        )
+
+                        friends = get_friends.json().get('followers', [])
+
+                        is_friend = False
+                        for friend in friends:
+                            friend_uuid = friend['id'].split('/')[-1]
+
+                            if friend_uuid == str(request.user.uuid):
+                                is_friend = True
+                                break
+
+                        if not is_friend:
+                            return Response("You do not have permission to view this friend's post.", status=403)
+                    
+                    # Else this author is trying to view their own friends-only post
                 
                 # If permission is granted, serialize and return the post
                 serializer = PostSerializer(post)
@@ -85,8 +113,13 @@ class AuthorPostView(APIView):
 
             elif post.visibility == 3:  # UNLISTED
                 # Unlisted posts require authentication
+                remote = False
                 if not request.user.is_authenticated:
-                    return HttpResponse("Unlisted posts must be authenticated to view.", status=403)
+                    auth_header = get_authorization_header(request).split()
+                    if len(auth_header) == 2 and auth_header[0].lower() == b"basic":
+                        remote = is_valid_basic_auth(auth_header[1].decode())
+                    if not remote:
+                        return Response("Unlisted posts must be authenticated to view.", status=403)
                 
                 # If authenticated, return the post
                 serializer = PostSerializer(post)
@@ -572,14 +605,22 @@ class PostView(APIView):
                 serializer = PostSerializer(post)
                 post_data = serializer.data
             else:
-                response = requests.get(decoded_post_fqid)
-                response = requests.get(
-                    decoded_post_fqid,
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-                )
-                data = response.json()  # Parse the JSON response
-                post_visibility = data.get("visibility")
-                post_data = data
+                try:
+                    response = requests.get(
+                        decoded_post_fqid,
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    )
+                    if (response.status_code == 200):
+                        post_data = response.json()
+                        post_visibility = post_data.get("visibility")
+                    elif (response.status_code == 403):
+                        # The other user does not authorize any requests sent from our local node
+                        print(f"Access forbidden to the remote node.")
+                        return
+                    else:
+                        return
+                except Exception as e:
+                    print(f"Error fetching remote post {decoded_post_fqid}: {e}")
 
             # Check the visibility of the post
             if post_visibility in (1, "PUBLIC"): # Anyone can see PUBLIC posts
@@ -599,20 +640,3 @@ class PostView(APIView):
             return Response(post_data, status=200)
         else:
             return Response("No post ID specified", status=400)
-        
-def is_valid_basic_auth(auth_header):
-    """
-        Validate Basic Auth credentials (for remote requests)
-    """
-    try:
-        # Decode Basic Auth credentials
-        decoded_credentials = base64.b64decode(auth_header).decode('utf-8')
-        username, password = decoded_credentials.split(':')
-        
-        # Validate credentials with data stored in database
-        node = NodeUser.objects.get(username=username)
-        if node.password == password and node.is_authenticated:
-            return True
-        return False
-    except Exception as e:
-        return False
