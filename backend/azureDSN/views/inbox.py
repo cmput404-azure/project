@@ -107,10 +107,6 @@ class InboxView(APIView):
 
         
         serializer = InboxItemSerializer(inbox_items_obj, many=True, context={"request": request})
-        print(serializer.data)
-        # lists of json obj, if type is post comment or like check id
-        # try to call endpoint of id, if 200 then keep, otherwise remove the whole json from the list
-        # if follow req..?
         filtered_data = []
         for json in serializer.data:
             if json.get("type") in ["like", "post", "comment"]:
