@@ -233,22 +233,14 @@ export default function Post({
   useEffect(() => {
     const fetchPost = async () => {
       if (postGiven) {
-        // only call if post is local otherwise this is going to raise error
-        if (
-          normalizeURL(postGiven.author.host) !==
-          process.env.REACT_APP_API_BASE_URL
-        ) {
-          return;
-        }
         let encodedId = encodeURIComponent(postGiven.id);
-        const postData = await postService.getPost(`api/posts/${encodedId}`); // this endpoint only works on local post
+        const postData = await postService.getPost(`api/posts/${encodedId}`);
         const comments = Array.isArray(postData?.comments?.src)
           ? postData.comments.src.reverse()
           : [];
         setCommentList(comments);
         setCommentCount(
           postData.comments ? postData.comments.count : 0
-          // comments.length
         );
       }
     };
@@ -416,7 +408,7 @@ export default function Post({
           </div>
         </div>
 
-        {authProvider.user.uuid == postAuthorID && disableLikeComment ? (
+        {authProvider.user?.uuid == postAuthorID && disableLikeComment ? (
           <EllipseMenu
             post={postGiven}
             authorUUID={postGiven.author.id}
