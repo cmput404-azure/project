@@ -1,4 +1,5 @@
-from urllib.parse import urlparse
+from requests.auth import HTTPBasicAuth
+from django.conf import settings
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from ..models import User, Post
@@ -7,6 +8,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework import status
 from ..utils import url_parser
+import os, requests
 
 class ImageView(APIView):
     # This end point decodes image posts as images. This allows the use of image tags in Markdown.
@@ -112,13 +114,45 @@ class ImageView(APIView):
             except (IndexError, ValueError):
                 return Response({"detail": "Invalid FQID format."}, status=400)
             
-            post = get_object_or_404(Post, uuid=post_serial)
+            base_host = url_parser.get_base_host(post_fqid)
+            if base_host != settings.BASE_URL:
+                try:
+                    response = requests.get(
+                        decoded, # if we call the image endpoint, I don't know response structure of other groups
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    )
 
-        if post.has_image:
-            img_type = post.content_type.split(';')[0]
-            data = f"data:{post.content_type},{post.content}"
+                    if response.status_code == 200:
+                        # Reconstruct Image URI using content and contentType
+                        post_data = response.json()
+                        content_type = post_data.get("contentType") # must be image/png;base64 or image/jpeg;base64 or application/base64
+                        content = post_data.get("content")
 
-            return Response({"image": data, "content_type": img_type}, status=200)
-        
-        else:
-            return Response({"error": "post is not an image."}, status=404)
+                        img_type = content_type.split(';')[0]
+                        data = f"data:{content_type},{content}"
+
+                        return Response({"image": data, "content_type": img_type}, status=200)
+                    elif response.status_code == 403:
+                        # They don't give us access
+                        print(f"Access forbidden to the remote node.")
+                        return
+                    elif response.status_code == 404:
+                        # The remote post/image we are trying to reference isn't an Image Post
+                        return Response({"error": "post is not an image."}, status=404)
+                    else:
+                        return
+                except Exception as e:
+                    return Response({"Something went wrong."}, status=500)
+            
+            else:
+                # Should return the data url if image, otherwise 404, or 403 if unauthorized
+                post = get_object_or_404(Post, uuid=post_serial)
+
+                if post.has_image: # This will only be in local DB
+                    img_type = post.content_type.split(';')[0]
+                    data = f"data:{post.content_type},{post.content}"
+
+                    return Response({"image": data, "content_type": img_type}, status=200)
+                
+                else:
+                    return Response({"error": "post is not an image."}, status=404)
