@@ -6,6 +6,7 @@ from uuid import UUID
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework import status
+from ..utils import url_parser
 
 class ImageView(APIView):
     # This end point decodes image posts as images. This allows the use of image tags in Markdown.
@@ -96,8 +97,6 @@ class ImageView(APIView):
             author = get_object_or_404(User, uuid=author_serial) # assume local user
             post = get_object_or_404(Post, uuid=post_serial) # assume local posts
 
-            # To-do: add a check to ensure the post belongs to that user
-
         elif post_fqid:
             """
                 URL: ://service/api/posts/{POST_FQID}/image
@@ -106,16 +105,9 @@ class ImageView(APIView):
             """
             try:
                 # Extract the POST FQID's path
-                parsed_url = urlparse(post_fqid)
-                path_parts = parsed_url.path.strip('/').split('/')
-                
-                # Check structure to locate post UUID and validate it
-                if len(path_parts) >= 5 and path_parts[-2] == 'posts':
-                    post_serial = path_parts[-1]
-                    UUID(post_serial) 
-
-                else:
-                    raise ValueError("Invalid FQID format")
+                decoded = url_parser.percent_decode(post_fqid).rstrip('/')
+                post_serial = url_parser.extract_uuid(decoded.rstrip('/image'))
+                UUID(post_serial)
 
             except (IndexError, ValueError):
                 return Response({"detail": "Invalid FQID format."}, status=400)
