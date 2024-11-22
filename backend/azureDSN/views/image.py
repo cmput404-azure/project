@@ -89,7 +89,6 @@ class ImageView(APIView):
         tags=['Image Posts API']
     )
     def get(self, request, author_serial=None, post_serial=None, post_fqid=None):
-        print(f"RECEIVED REQ: {request}")
         if (author_serial and post_serial):
             """
                 URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/image
@@ -99,6 +98,15 @@ class ImageView(APIView):
             # Validate incoming data
             author = get_object_or_404(User, uuid=author_serial) # assume local user
             post = get_object_or_404(Post, uuid=post_serial) # assume local posts
+
+            if post.has_image: # This will only be in local DB
+                img_type = post.content_type.split(';')[0]
+                data = f"data:{post.content_type},{post.content}"
+
+                return Response({"image": data, "content_type": img_type}, status=200)
+            
+            else:
+                return Response({"error": "post is not an image."}, status=404)
 
         elif post_fqid:
             """
@@ -146,9 +154,8 @@ class ImageView(APIView):
                         return
                 except Exception as e:
                     return Response({"Something went wrong."}, status=500)
-            
+
             else:
-                # Should return the data url if image, otherwise 404, or 403 if unauthorized
                 post = get_object_or_404(Post, uuid=post_serial)
 
                 if post.has_image: # This will only be in local DB
