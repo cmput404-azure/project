@@ -11,7 +11,8 @@ const ImageView = () => {
   useEffect(() => {
     const fetchImage = async () => {
       try {
-        const response = await api.get<{"image": string, "content_type": string}>(decodeURIComponent(postID) + "/image");
+        // Call local image backend, handle remote posts there
+        const response = await api.get<{"image": string, "content_type": string}>(`${process.env.REACT_APP_API_BASE_URL}/api/posts/` + encodeURIComponent(postID) + "/image");
         const json = response.data;
         setImageSrc(json.image);
       } catch (err) {

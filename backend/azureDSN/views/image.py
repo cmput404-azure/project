@@ -89,6 +89,7 @@ class ImageView(APIView):
         tags=['Image Posts API']
     )
     def get(self, request, author_serial=None, post_serial=None, post_fqid=None):
+        print(f"RECEIVED REQ: {request}")
         if (author_serial and post_serial):
             """
                 URL: ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/image
@@ -107,8 +108,10 @@ class ImageView(APIView):
             """
             try:
                 # Extract the POST FQID's path
-                decoded = url_parser.percent_decode(post_fqid).rstrip('/')
-                post_serial = url_parser.extract_uuid(decoded.rstrip('/image'))
+                post_fqid = post_fqid.rstrip('/')
+                if post_fqid.endswith('/image'):
+                    post_fqid = post_fqid[:-len('/image')]
+                post_serial = url_parser.extract_uuid(post_fqid)
                 UUID(post_serial)
 
             except (IndexError, ValueError):
@@ -118,7 +121,7 @@ class ImageView(APIView):
             if base_host != settings.BASE_URL:
                 try:
                     response = requests.get(
-                        decoded, # if we call the image endpoint, I don't know response structure of other groups
+                        post_fqid, # if we call the image endpoint, I don't know response structure of other groups
                         auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
                     )
 
