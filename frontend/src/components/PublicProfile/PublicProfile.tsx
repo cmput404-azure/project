@@ -18,6 +18,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import Post from "../Post/Post";
 import PostCard from "../PostCard/PostCard";
 import ProfileService from "../../service/profile";
+import { extractHost } from "../../util/formatting/extractHost";
 import profileService from "../../service/profile";
 import styles from "./PublicProfile.module.scss";
 import { useAuth } from "../../state";
@@ -294,7 +295,7 @@ export default function PublicProfile() {
                 )}
               </div>
               <div className={styles.user__secondary}>
-                <p className={styles.username}>@{authorData.username}</p>
+                <p className={styles.username}>@{authorData.username ?? extractHost(authorData.host)}</p>
 
                 <div className={styles.follows}>
                   <p className={styles.posts__count}>

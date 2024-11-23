@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from django.conf import settings
 from rest_framework.test import APITestCase, APIClient
 from ..models import User, Post
 from django.urls import reverse
@@ -12,9 +13,9 @@ class ImageAPITest(APITestCase):
         self.user = User.objects.create(
             display_name="Test User",
             username="Test User",
-            host="http://localhost:8000/api/",
+            host=f"{settings.BASE_URL}/api/",
             github="http://github.com/testuser",
-            page="http://localhost:8000/authors/testuser",
+            page=f"{settings.BASE_URL}/authors/testuser",
             profile_image=None
         )
 
@@ -61,7 +62,7 @@ class ImageAPITest(APITestCase):
     def test_get_image_binary_by_fqid(self):
         # Test get image data url by post fqid
         url = reverse('get_image_by_fqid', kwargs={
-            'post_fqid': f"http://{self.user.host}authors/{self.user.uuid}/posts/{self.post.uuid}/"
+            'post_fqid': f"{self.user.host}authors/{self.user.uuid}/posts/{self.post.uuid}/"
         })
 
         response = self.client.get(url)
@@ -74,7 +75,7 @@ class ImageAPITest(APITestCase):
     def test_invalid_fqid(self):
         # Test error state using invalid post uuid that invalidates the fqid
         url = reverse('get_image_by_fqid', kwargs={
-            'post_fqid': f"http://{self.user.host}authors/{self.user.uuid}/posts/not-a-valid-uuid/"
+            'post_fqid': f"{self.user.host}authors/{self.user.uuid}/posts/not-a-valid-uuid/"
         })
 
         response = self.client.get(url)

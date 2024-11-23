@@ -4,6 +4,7 @@ import { Author } from '../../models/models';
 import { Avatar } from "@mui/material";
 import InboxService from '../../service/inbox';
 import { api } from '../../service/config';
+import { extractHost } from "../../util/formatting/extractHost";
 import profileService from "../../service/profile";
 import styles from './AuthorPost.module.scss';
 import { useAuth } from '../../state';
@@ -66,7 +67,7 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
           />
           <div>
             <h3>{author.displayName}</h3>
-            <p>@{author.username}</p>
+            <p>@{author.username ?? extractHost(author.host)}</p>
           </div>
         </div>
         <button

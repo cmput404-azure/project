@@ -104,18 +104,17 @@ class InboxView(APIView):
         
         # Get the latest inbox items
         inbox_items_obj =  InboxItem.objects.filter(inbox=inbox_obj).order_by("-time")
-
-
         
         serializer = InboxItemSerializer(inbox_items_obj, many=True, context={"request": request})
         filtered_data = []
         for json in serializer.data:
-            if json.get("type") in ["like", "post", "comment"]:
-                base_host = url_parser.get_base_host(json.get('id'))
-            elif json.get("type") == "follow":
-                base_host = url_parser.get_base_host(json.get('actor').get('id'))
-
-            if base_host.strip().lower() != (settings.BASE_URL).strip().lower(): # only for remote objects
+            if json:
+                if json.get("type") in ["like", "post", "comment"]:
+                    base_host = url_parser.get_base_host(json.get('id'))
+                elif json.get("type") == "follow":
+                    base_host = url_parser.get_base_host(json.get('actor').get('id'))
+                    
+            if base_host.strip().lower() != (settings.BASE_URL).strip().lower():  # only for remote objects
                 try:
                     req = requests.get(
                         f"{base_host}/api/authors/?page=1&size=1", # Any endpoint to ensure connection
@@ -135,9 +134,9 @@ class InboxView(APIView):
             else: # local objects
                 filtered_data.append(json)
                 
-
+       
         uri = request.build_absolute_uri("/")
-
+                
         data = {
                 'user': f"{uri}api/authors/{author_serial}",
                 'items': filtered_data,
@@ -677,6 +676,7 @@ class InboxView(APIView):
             # Handle remote author
             if payload["type"].lower() == "follow":
                 # Send to remote inbox, passing the payload and remote host information
+                print("FOLLOW REQUEST FOR REMOTE", payload)
                 return self.send_follow_request_to_remote(payload)
             elif payload["type"].lower() == "post":
                 # New post created locally but the followers/friends are remote
@@ -768,6 +768,7 @@ class InboxView(APIView):
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
             remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox/"
             
+            print("REMOTE INBOX URL", remote_inbox_url)
             response = requests.post(
                 remote_inbox_url,
                 json=payload,
