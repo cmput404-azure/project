@@ -127,14 +127,14 @@ export default function ListItem({
 
     const followRequest = {
       type: "follow",
-      summary: `${myInfo.username} wants to follow ${user.username}`,
+      summary: `${myInfo.username} wants to follow ${user.displayName}`,
       actor: { // person who sends the request
         type: "author",
         id: `${myInfo.id}`,
         host: `${myInfo.host}`,
         displayName: `${myInfo.displayName}`,
-        username: `${myInfo.username}`,
-        bio: `${myInfo.bio}`,
+        username: myInfo.username || "",
+        bio: myInfo.bio || "",
         profileImage: `${myInfo.profileImage}`,
         github: `${myInfo.github}`,
         page: `${myInfo.page}`,
@@ -144,8 +144,8 @@ export default function ListItem({
         id: `${user.id}`,
         host: `${user.host}`,
         displayName: `${user.displayName}`,
-        username: `${user.username}`,
-        bio: `${user.bio}`,
+        username: user.username || "",
+        bio: user.bio || "",
         profileImage: `${user.profileImage}`,
         github: `${user.github}`,
         page: `${user.page}`,
