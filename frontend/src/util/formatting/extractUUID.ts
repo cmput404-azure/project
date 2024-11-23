@@ -1,4 +1,5 @@
 export function extractUUID(fqid: string): string {
-    const uuid = fqid.split('/').pop();
+    const sanitizedFqid = fqid.replace(/\/+$/, ''); // Remove trailing slash for consistency
+    const uuid = sanitizedFqid.split('/').pop();
     return uuid;
 }
