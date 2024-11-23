@@ -665,6 +665,7 @@ class InboxView(APIView):
 
         # If author_serial does not exist locally, then need to dig through payload to check for the remote host
         payload = request.data
+        print(f"RECEIVED PAYLOAD: {payload}")
        
         if "type" not in payload:
             return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
@@ -679,6 +680,7 @@ class InboxView(APIView):
                 print("FOLLOW REQUEST FOR REMOTE", payload)
                 return self.send_follow_request_to_remote(payload)
             elif payload["type"].lower() == "post":
+                print(f"SENDING REMOTE POST")
                 # New post created locally but the followers/friends are remote
                 return self.send_post_to_remote(payload)
             elif payload["type"].lower() == "like":
@@ -689,6 +691,7 @@ class InboxView(APIView):
                 return Response({"error": "User not found locally and type not supported for remote authors."}, status=status.HTTP_400_BAD_REQUEST)
 
         if payload["type"].lower() == "post":
+            print(f"CREATE POST LOCALLY")
             return self.create_post(user_obj, payload, request)
         elif payload["type"].lower() == "follow":
             return self.create_follow_request(user_obj, payload, request)
