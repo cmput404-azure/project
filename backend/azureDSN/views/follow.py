@@ -189,29 +189,61 @@ class FollowerView(APIView):
         Get all the followers of a local user
 
         """
-        # Get the followers list from Follow model
-        followers = Follow.objects.filter(local_followee_id=user_id) 
-        local_followers = []
-        remote_followers = []
-        for follower in followers:
-            if follower.remote_follower:  # Remote follower handling
-                remote_data = fetch_remote_follower_data(follower.remote_follower)
-                if remote_data:
-                    remote_followers.append(remote_data)
-            else:  # Local follower handling
-                try:
-                    user = User.objects.get(uuid=follower.local_follower_id)
-                    local_followers.append(user)
-                except User.DoesNotExist:
-                    return Response({"error": "Local follower not found."}, status=404)
+        try:
+            # local user
+            User.objects.get(uuid=user_id)
+            # Get the followers list from Follow model
+            followers = Follow.objects.filter(local_followee_id=user_id) 
+            local_followers = []
+            remote_followers = []
+            for follower in followers:
+                if follower.remote_follower:  # Remote follower handling
+                    remote_data = fetch_remote_follower_data(follower.remote_follower)
+                    if remote_data:
+                        remote_followers.append(remote_data)
+                else:  # Local follower handling
+                    try:
+                        user = User.objects.get(uuid=follower.local_follower_id)
+                        local_followers.append(user)
+                    except User.DoesNotExist:
+                        return Response({"error": "Local follower not found."}, status=404)
 
-        local_serializer = UserSerializer(local_followers, many=True)
+            local_serializer = UserSerializer(local_followers, many=True)
 
-        response_data = {
-            "type": "followers",
-            "followers": local_serializer.data + remote_followers,
-        }
-        return Response(response_data, status=200)
+            response_data = {
+                "type": "followers",
+                "followers": local_serializer.data + remote_followers,
+            }
+            return Response(response_data, status=200)
+            
+        except User.DoesNotExist:
+            # remote user
+            try:
+                remote_host = request.GET.get('host')
+                if not remote_host:
+                    return Response({"message": "Host is required for remote users."}, status=status.HTTP_400_BAD_REQUEST)
+                
+                parsed_url = urlparse(remote_host)
+                base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                
+                # send request to fetch all posts
+                remote_user_url = f"{base_host}/api/authors/{user_id}/followers/"
+                response = requests.get(
+                    url=remote_user_url,  
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                )
+                if response.status_code == 200:
+                    return Response(response.json(), status=status.HTTP_200_OK)
+                else:
+                    return Response({
+                        "message": f"Failed to fetch posts from remote host. Status code: {response.status_code}",
+                        "details": response.text
+                    }, status=status.HTTP_502_BAD_GATEWAY)
+            
+            except Exception as e:
+                return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        
     
 class FollowView(APIView):        
     http_method_names = ['get', 'put', 'delete'] 
