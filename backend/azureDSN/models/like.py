@@ -8,5 +8,6 @@ class Like(models.Model):
     type = models.TextField(default="like", editable=False)
     user = models.JSONField(default=dict) # to account for remote users
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    remote_post = models.URLField(blank=True, null=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     created_at = models.DateTimeField("date liked", default=datetime.now)

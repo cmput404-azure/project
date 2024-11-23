@@ -297,23 +297,25 @@ export default function Post({
     console.log(`IN HANDLE LIKE POST: ${JSON.stringify(post, null, 2)}`)
 
     try {
-      const currentUser = await api.get(
-        `/api/authors/${authProvider.user.uuid}/`
-      );
+      // const currentUser = await api.get(
+      //   `/api/authors/${authProvider.user.uuid}/`
+      // );
       const like_obj = {
         type: "like",
-        author: currentUser.data,
-        published: new Date(post.published).toISOString(),
-        object: post.id,
-        post_host: postGiven.author.host, // what is this
-      };
+        object: post.id, // should be the post FQID
+        authorHost: post.author.host
+        // author: currentUser.data,
+        // published: new Date(post.published).toISOString(),
+        // object: post.id, // should be fqid
+        // post_host: postGiven.author.host, // what is this
+      }; // build json in the backend
 
       console.log(`LIKE OBJ: ${JSON.stringify(like_obj, null, 2)}`);
 
 
-      // await inbox.sendPostToInbox(post.author.id, like_obj);
-      // setLikeCount(likeCount + 1);
-      // setHasLiked(true);
+      await inbox.sendPostToInbox(post.author.id, like_obj);
+      setLikeCount(likeCount + 1);
+      setHasLiked(true);
     } catch (error) {
       console.error("Error liking post:", error);
     }

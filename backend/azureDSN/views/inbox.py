@@ -684,6 +684,7 @@ class InboxView(APIView):
                 # New post created locally but the followers/friends are remote
                 return self.send_post_to_remote(payload)
             elif payload["type"].lower() == "like":
+                print(f"SENDING REMOTE LIKE to uuid {author_serial}")
                 return self.send_like_to_remote(payload, request)
             elif payload["type"].lower() == "comment":
                 return self.send_comment_to_remote(payload, request)
@@ -808,28 +809,59 @@ class InboxView(APIView):
 
     def send_like_to_remote(self, payload, request, test=False):
 
-        if test:
-            full_url = request
-        else:
-            # use the request url to get the correct uuid of the post author
-            full_url = request.build_absolute_uri()
-        parsed_url = urlparse(full_url)
-        payload_json = json.dumps(payload)
+        print(f"REQUEST USER: {request.user}")
+
+        if (request.user):
+            user = User.objects.get(uuid=request.user.uuid)
+
+        payload["author"] = UserSerializer(user).data
+
+        print(f"PAYLOAD WITH AUTHOR: {payload}")
+
+        # base_host = url_parser.get_base_host(payload["author"].get("host")) # Base host from post FQID
+
+        # Create like object that references remote post
+        new_like, created = Like.objects.get_or_create(
+            user=payload["author"],
+            remote_post=payload["object"] # Should be FQID of the post
+        )
+
+        if created:
+            payload["id"] = f"{url_parser.get_base_host(user.host)}/api/authors/{user.uuid}/liked/{new_like.uuid}"
+
+        base_host = url_parser.get_base_host(payload['object']) # Base host from post FQID
+        remote_author_serial = url_parser.extract_uuid(payload['authorHost'])
+        remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox/"
+
+        del payload['authorHost'] # Don't need this anymore
+
+        print(f"FINAL REMOTE LIKE PAYLOAD: {payload}")
+
+        
+
+
+        # if test:
+        #     full_url = request
+        # else:
+        #     # use the request url to get the correct uuid of the post author
+        #     full_url = request.build_absolute_uri()
+        # parsed_url = urlparse(full_url)
+        # payload_json = json.dumps(payload)
 
         # Remove 'api/' from author_host
-        author_host = payload["post_host"].rstrip("/")
-        if author_host.endswith("/api"):
-            author_host = author_host[:-4]
+        # author_host = payload["post_host"].rstrip("/")
+        # if author_host.endswith("/api"):
+        #     author_host = author_host[:-4]
 
-        # Replace the netloc (host) in full_url with author_host
-        inbox_url = parsed_url._replace(netloc=urlparse(author_host).netloc)
-        formatted_url = urlunparse(inbox_url)
+        # # Replace the netloc (host) in full_url with author_host
+        # inbox_url = parsed_url._replace(netloc=urlparse(author_host).netloc)
+        # formatted_url = urlunparse(inbox_url)
 
-        if test:
-            return formatted_url
+        # if test:
+        #     return formatted_url
         
         response = requests.post(
-            formatted_url,
+            remote_inbox_api,
             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
             json=payload
         )
@@ -920,10 +952,12 @@ class InboxView(APIView):
     id is in format: http://{server}/api/authors/{user_id}/liked/{like_id}
     '''
     def create_like(self, user_object, payload, request):
-        parsed_url = urlparse(payload["object"]) 
-        payload.pop("post_host", None)
+        # This is always called when a remote/local Like object is sent in relation to a Local Post
+        # parsed_url = urlparse(payload["object"]) 
+        # payload.pop("post_host", None)
+        post_fqid = payload['object']
 
-        post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+        post_id = url_parser.extract_uuid(post_fqid)
         post_obj = Post.objects.get(uuid=post_id)
         like_obj = Like.objects.create(user=payload["author"], 
                                        created_at=payload["published"], 
