@@ -415,10 +415,10 @@ class PostTests(APITestCase):
     # ------------------------404 Not Found------------------------
     # test getting all posts from an author that does not exist
     def test_get_all_posts_author_not_found(self):
-        """Test retrieving all posts from an author that does not exist."""
+        """Test retrieving all posts from an author that does not exist. They will try to find in remote"""
         url = reverse('create_post', kwargs={'author_serial': str(uuid4())})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     # ------------------------401 Unauthorized------------------------
     # test getting public AND friends-only posts without authentication
