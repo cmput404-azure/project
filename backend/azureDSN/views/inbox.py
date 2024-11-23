@@ -115,7 +115,7 @@ class InboxView(APIView):
             elif json.get("type") == "follow":
                 base_host = url_parser.get_base_host(json.get('actor').get('id'))
 
-            if base_host != settings.BASE_URL: # only for remote objects
+            if base_host.strip().lower() != (settings.BASE_URL).strip().lower(): # only for remote objects
                 try:
                     req = requests.get(
                         f"{base_host}/api/authors/?page=1&size=1", # Any endpoint to ensure connection

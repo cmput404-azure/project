@@ -6,7 +6,7 @@ import {
   IconButton,
   Snackbar,
 } from "@mui/material";
-import { Author, PostData as PostModel } from "../../models/models";
+import { Author, Follower, PostData as PostModel } from "../../models/models";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -45,6 +45,7 @@ export default function PublicProfile() {
     type: "Follower",
   });
   const [followersCount, setFollowersCount] = useState(0);
+  const [followers, setFollowers] = useState<Follower[]>();
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -114,11 +115,12 @@ export default function PublicProfile() {
         const host = userID.split("authors")[0]
         const followers = await FollowService.getFollowers(id, host);
         setFollowersCount(followers.length);
+        setFollowers(followers)
       } catch (error) {
         console.error("Failed to fetch counts:", error);
       }
     }
-    async function checkFollowing() {
+    async function checkFollowingAndRequested() {
       const authUser = await ProfileService.fetchAuthorData(
         userID
       );
@@ -141,16 +143,7 @@ export default function PublicProfile() {
       }
 
       setIsFollowing(following);
-    }
-
-    async function checkRequested() {
-      // Re-initialize 
       setIsRequested(false);
-
-      // get the current user data
-      const authUser = await ProfileService.fetchAuthorData(
-        userID
-      );
 
       // For remote, we will use follow endpoint because we assume once send request, we requested => either follow or unfollow
       // For local, we use inbox
@@ -185,8 +178,7 @@ export default function PublicProfile() {
       } else {
         // this makes sure that the button for following/managing profile is displayed correctly
         setIsOwnProfile(false);
-        checkRequested();
-        checkFollowing();
+        checkFollowingAndRequested()
       }
     }
   }, [userID, authProvider]);
@@ -327,6 +319,7 @@ export default function PublicProfile() {
                     }
                     isFollowerList={followersModal.type}
                     profileId={userID}
+                    followersProp={followers}
                   />
                 </div>
               </div>
