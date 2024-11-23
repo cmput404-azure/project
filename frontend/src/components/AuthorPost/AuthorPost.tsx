@@ -23,14 +23,14 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
 
     const followRequest = {
       type: "follow",
-      summary: `${myInfo.username} wants to follow ${author.username}`,
+      summary: `${myInfo.username} wants to follow ${author.displayName}`,
       actor: { // person who sends the request
         type: "author",
         id: `${myInfo.id}`,
         host: `${myInfo.host}`,
         displayName: `${myInfo.displayName}`,
-        username: `${myInfo.username}`,
-        bio: `${myInfo.bio}`,
+        username: myInfo.username || "",
+        bio: myInfo.bio || "",
         profileImage: `${myInfo.profileImage}`,
         github: `${myInfo.github}`,
         page: `${myInfo.page}`,
@@ -40,8 +40,8 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
         id: `${author.id}`,
         host: `${author.host}`,
         displayName: `${author.displayName}`,
-        username: `${author.username}`,
-        bio: `${author.bio}`,
+        username: author.username || "",
+        bio: author.bio || "",
         profileImage: `${author.profileImage}`,
         github: `${author.github}`,
         page: `${author.page}`,
