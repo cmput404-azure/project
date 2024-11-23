@@ -753,7 +753,7 @@ class InboxView(APIView):
                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                 )
 
-            if response.status_code == 200:
+            if response.status_code == 200 or response.status_code == 201:
                 return Response({"message": "Post successfully sent to remote inbox."}, status=status.HTTP_200_OK)
             else:
                 return Response({"error": f"Failed to send post: {response.text}"}, status=response.status_code)
@@ -778,7 +778,7 @@ class InboxView(APIView):
                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
             )
 
-            if response.status_code == 200:
+            if response.status_code == 200 or response.status_code == 201:
                 # If successful, make a Follow object in local regardless of whether the remote request is going to be accepted
                 local_follower_uuid = payload["actor"].get("id").split('/')[-1]
                 
