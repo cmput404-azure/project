@@ -678,6 +678,7 @@ class InboxView(APIView):
             # Handle remote author
             if payload["type"].lower() == "follow":
                 # Send to remote inbox, passing the payload and remote host information
+                print("FOLLOW REQUEST FOR REMOTE", payload)
                 return self.send_follow_request_to_remote(payload)
             elif payload["type"].lower() == "post":
                 # New post created locally but the followers/friends are remote
@@ -769,6 +770,7 @@ class InboxView(APIView):
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
             remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox/"
             
+            print("REMOTE INBOX URL", remote_inbox_url)
             response = requests.post(
                 remote_inbox_url,
                 json=payload,
