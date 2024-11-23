@@ -206,10 +206,10 @@ export default function ListItem({
           </div>
           <div className={styles.text}>
             <h1>
-              {user.username}
+              {user.displayName}
               <span className={styles.additionalText}>{additionalText}</span>
             </h1>
-            <p>@{user.username}</p>
+            <p>@{user.displayName}</p>
           </div>
         </div>
 
