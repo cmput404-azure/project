@@ -39,14 +39,21 @@ class ProfileService {
       @param userId: string - the id of the user to fetch
       @returns: Post[] - the author posts or null if error
    */
-   public async fetchAuthorPosts(userId: string, page: number = 1, size: number = 10): Promise<AuthorPostsResponse> {
+   public async fetchAuthorPosts(userId: string, page: number = 1, size: number = 10, host?: string): Promise<AuthorPostsResponse> {
       try {
+         const params: Record<string, any> = {
+            page: page,
+            size: size,
+         };
+
+         // Add `host` only if it is provided
+         if (host) {
+               params.host = host;
+         }
          const response = await api.get<AuthorPostsResponse>(`/api/authors/${userId}/posts/`, {
-            params: {
-               page: page,
-               size: size,
-            },
+            params,
          });
+
          return {
             count: response.data.count,
             src: response.data.src,
