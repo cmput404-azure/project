@@ -100,7 +100,7 @@ const HomePage = () => {
       const publicResponse = await stream.getStream(false, publicPage);
       const privateResponse = await stream.getStream(true, privatePage);
 
-      console.log(`FETCHED: ${JSON.stringify(publicResponse, null, 2)}`)
+      // console.log(`FETCHED: ${JSON.stringify(publicResponse, null, 2)}`)
       
       setPublicPosts(prevPosts => {
         const existingIds = new Set(prevPosts.map(post => post.id));
