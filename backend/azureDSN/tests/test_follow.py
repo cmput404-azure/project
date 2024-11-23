@@ -92,10 +92,13 @@ class FollowTests(APITestCase):
         self.assertEqual(len(response.data["followers"]), 0)
     
     def test_get_non_existing_follower(self):
+        '''
+        If follower not avail in local, we try to find in remote and if given host param is not provided => neither remote nor local
+        '''
         random_uuid = uuid.uuid4()
         url = reverse('get_followers', args=[random_uuid])  
         response = self.client.get(f"{url}")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_follower(self):
         follower_url = f'{settings.BASE_URL}/api/authors/{self.user3.uuid}'

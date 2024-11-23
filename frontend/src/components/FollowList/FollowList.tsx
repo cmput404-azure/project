@@ -26,11 +26,12 @@ interface FollowerListProps {
   onClose: () => void;
   isFollowerList: string;
   profileId?: string;
+  followersProp?: Follower[];
 }
 
 Modal.setAppElement('#root');
 
-export default function FollowList({ isOpen, onClose, isFollowerList, profileId, }: FollowerListProps) {
+export default function FollowList({ isOpen, onClose, isFollowerList, profileId, followersProp, }: FollowerListProps) {
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,18 +72,23 @@ export default function FollowList({ isOpen, onClose, isFollowerList, profileId,
   };
 
   const fetchFollowers = async () => {
-    try {
-      let data = null;
-      if (profileId) {
-        data = await follow.getFollowers(profileId);
-      } else {
-        data = await follow.getFollowers(authProvider.user.uuid);
+    if (followersProp) {
+      setFollowers(followersProp)
+      setLoading(false)
+    } else {
+      try {
+        let data = null;
+        if (profileId) {
+          data = await follow.getFollowers(profileId);
+        } else {
+          data = await follow.getFollowers(authProvider.user.uuid);
+        }
+        setFollowers(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Fetch error:', error);
+        setLoading(false);
       }
-      setFollowers(data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Fetch error:', error);
-      setLoading(false);
     }
   };
 

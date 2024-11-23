@@ -108,15 +108,13 @@ class InboxView(APIView):
         serializer = InboxItemSerializer(inbox_items_obj, many=True, context={"request": request})
         filtered_data = []
         for json in serializer.data:
-
             if json:
                 if json.get("type") in ["like", "post", "comment"]:
                     base_host = url_parser.get_base_host(json.get('id'))
                 elif json.get("type") == "follow":
                     base_host = url_parser.get_base_host(json.get('actor').get('id'))
-
                 
-            if base_host != settings.BASE_URL: # only for remote objects
+            if base_host.strip().lower() != (settings.BASE_URL).strip().lower():  # only for remote objects
                 try:
                     req = requests.get(
                         f"{base_host}/api/authors/?page=1&size=1", # Any endpoint to ensure connection
@@ -132,7 +130,7 @@ class InboxView(APIView):
                         continue
                 except requests.exceptions.RequestException as e:
                     print(f"Error occurred while fetching {base_host}: {e}")
-                    return Response({"error: Something went wrong", 500})
+                    continue
             else: # local objects
                 filtered_data.append(json)
                 
