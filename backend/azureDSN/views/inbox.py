@@ -736,7 +736,7 @@ class InboxView(APIView):
             # If post is from remote user, treat it as a json object
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, remote_payload=payload)
-            return Response({"message": "We have noticed other users about your post"}, status=status.HTTP_200_OK)
+            return Response({"message": "Remote post received successfully."}, status=status.HTTP_200_OK)
         
     def send_post_to_remote(self, payload):
         try:
