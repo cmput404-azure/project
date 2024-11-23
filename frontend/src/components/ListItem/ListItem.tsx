@@ -207,10 +207,10 @@ export default function ListItem({
           </div>
           <div className={styles.text}>
             <h1>
-              {user.username ?? extractHost(user.host)}
+              {user.displayName ?? extractHost(user.host)}
               <span className={styles.additionalText}>{additionalText}</span>
             </h1>
-            <p>@{user.username ?? extractHost(user.host)}</p>
+            <p>@{user.displayName ?? extractHost(user.host)}</p>
           </div>
         </div>
 
