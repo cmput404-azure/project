@@ -21,6 +21,9 @@ import ProfileService from "../../service/profile";
 import profileService from "../../service/profile";
 import styles from "./PublicProfile.module.scss";
 import { useAuth } from "../../state";
+import { normalizeURL } from "../../util/formatting/normalizeURL";
+import { extractUUID } from "../../util/formatting/extractUUID";
+import { api } from "../../service/config";
 
 const FollowerModalTypes = {
   follower: "Follower",
@@ -42,7 +45,6 @@ export default function PublicProfile() {
     type: "Follower",
   });
   const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -76,7 +78,9 @@ export default function PublicProfile() {
   const fetchPosts = async (userId: string, page: number = 1) => {
     if (loading) return;
     setLoading(true);
-    const { count, src } = await ProfileService.fetchAuthorPosts(userId, page);
+    const id = userId.split("/").pop()
+    const host = userId.split("authors")[0]
+    const { count, src } = await ProfileService.fetchAuthorPosts(id, page, 10, host);
     setPostCount(count); // if filter is done properly, count should represent the number of public posts
 
     setPosts((prevPosts) => {
@@ -106,43 +110,66 @@ export default function PublicProfile() {
 
     async function fetchCounts() {
       try {
-        const followers = await FollowService.getFollowers(userID);
-        const following = await FollowService.getFollowing(userID);
+        const id = userID.split("/").pop()
+        const host = userID.split("authors")[0]
+        const followers = await FollowService.getFollowers(id, host);
         setFollowersCount(followers.length);
-        setFollowingCount(following.length);
       } catch (error) {
         console.error("Failed to fetch counts:", error);
       }
     }
     async function checkFollowing() {
       const authUser = await ProfileService.fetchAuthorData(
-        authProvider.user.uuid
+        userID
       );
-      let url = `${authUser.host}authors/${authProvider.user.uuid}`;
-      const encodedUrl = encodeURIComponent(url);
-      const is_following = await FollowService.checkFollowing(
-        userID,
-        encodedUrl
-      );
-      setIsFollowing(is_following);
+      let following = false;
+
+      if (normalizeURL(authUser.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+        // check if current user is already following the (local) user
+        const loggedInFQID = `${authProvider.user.host}/api/authors/${authProvider.user.uuid}`
+        const encodedURL = encodeURIComponent(loggedInFQID);
+        following = await FollowService.checkFollowing(extractUUID(userID), encodedURL);
+      } else {
+        try {
+          const response = await api.get(`/api/check/${authProvider.user.uuid}/follows/${userID}`);
+          following = response.status === 200; 
+        } catch (err) {
+            if (err.response?.status !== 404) {
+                console.error('Fetch following error:', err);
+            }
+        }
+      }
+
+      setIsFollowing(following);
     }
 
     async function checkRequested() {
       // Re-initialize 
       setIsRequested(false);
 
-      // Check inbox of the user ID
-      const userInbox = await InboxService.getInbox(userID);
-      await Promise.all(
-        userInbox.map(async (item: any) => {
-          if (item && item.type === "follow") {
-            let actorId = item.actor.id.replace(/\/+$/, "").split("/").pop();
-            if (actorId === authProvider.user.uuid) {
-              setIsRequested(true);
-            }
-          }
-        })
+      // get the current user data
+      const authUser = await ProfileService.fetchAuthorData(
+        userID
       );
+
+      // For remote, we will use follow endpoint because we assume once send request, we requested => either follow or unfollow
+      // For local, we use inbox
+      if (normalizeURL(authUser.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
+        console.log(userID.split("/")[1])
+        const userInbox = await InboxService.getInbox(userID.split("/").pop());
+        if (userInbox) {
+          await Promise.all(
+            userInbox.map(async (item: any) => {
+              if (item && item.type === "follow") {
+                let actorId = item.actor.id.replace(/\/+$/, "").split("/").pop();
+                if (actorId === authProvider.user.uuid) {
+                  setIsRequested(true);
+                }
+              }
+            })
+          );
+        }
+      }
     }
 
     fetchCounts();
@@ -293,18 +320,6 @@ export default function PublicProfile() {
                     <b>{followersCount}</b>{" "}
                     {followersCount === 1 ? "follower" : "followers"}
                   </p>
-                  <p
-                    className={styles.following__count}
-                    onClick={() =>
-                      setfollowersModal({
-                        open: true,
-                        type: FollowerModalTypes.following,
-                      })
-                    }
-                  >
-                    <b>{followingCount}</b> following
-                  </p>
-
                   <FollowList
                     isOpen={followersModal.open}
                     onClose={() =>
