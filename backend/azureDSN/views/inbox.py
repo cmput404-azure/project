@@ -714,11 +714,14 @@ class InboxView(APIView):
     '''
     def create_post(self, user_object, payload, request):
         try:
-            parsed_url = urlparse(payload["id"]) 
-            post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+            # parsed_url = urlparse(payload["id"]) 
+            # base_host = url_parser.get_base_host(payload["id"])
+            post_id = url_parser.extract_uuid(payload["id"])
+            print(f"THE POST ID: {post_id}")
+            # post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
             # Validate the post object sent with the payload
             post_obj = Post.objects.get(uuid=post_id)
-            serializer = PostSerializer(post_obj, data=payload, context={"request": request})
+            # serializer = PostSerializer(post_obj, data=payload, context={"request": request})
 
             # if serializer.is_valid():
             # Temporary remove validation because it is weird 
@@ -729,6 +732,7 @@ class InboxView(APIView):
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Post.DoesNotExist:
+            print(f"POST IS FROM REMOTE USER")
             # If post is from remote user, treat it as a json object
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, remote_payload=payload)
@@ -992,6 +996,7 @@ def create_inbox_item(inbox, content=None, remote_payload=None, post_status=None
         id = getattr(content, 'uuid', getattr(content, 'id', None))
         inbox_item_object = InboxItem.objects.create(content_type=content_type, object_id=id, content_object=content, post_status=post_status)
     else:
+        print(f"CREATING INBOX ITEM WITH REMOTE OBJECT")
         inbox_item_object = InboxItem.objects.create(remote_payload=remote_payload, post_status=post_status)
     inbox.items.add(inbox_item_object)
     
