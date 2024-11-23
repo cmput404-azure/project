@@ -208,14 +208,11 @@ export default function Post({
           } else {
             // If it's not a data URL, fetch from the endpoint
             try {
-              const response = await fetch(imageUrl);
-              if (response.ok) {
-                const jsonResponse = await response.json();
-                const imageData = jsonResponse.image;
-                setImageSrc(imageData);
-              } else {
-                console.error("Error fetching image:", response.statusText);
-              }
+              const response = await api.get<PostData>(imageUrl);
+              const jsonResponse = response.data;
+              const imageData = `data:${jsonResponse.contentType},${jsonResponse.content}`;
+              setImageSrc(imageData);
+
             } catch (error) {
               console.error("Error fetching image:", error);
             }

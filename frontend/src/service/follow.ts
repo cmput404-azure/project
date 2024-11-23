@@ -31,9 +31,15 @@ class FollowService{
       @param uuid: string - the uuid of the user
       @returns: Follower[] - the list of followers
    */
-   public async getFollowers(uuid: string): Promise<Follower[]> {
+   public async getFollowers(uuid: string, host?: string): Promise<Follower[]> {
       try {
+         const params: Record<string, string> = {};
+         if (host) {
+               params.host = host; // Add host only if provided
+         }
+        
          const response = await api.get<FollowerResponse>(`/api/authors/${uuid}/followers/`, {
+            params: params,
          });
 
          /* 
