@@ -9,6 +9,7 @@ import FollowService from "../../service/follow";
 import InboxService from "../../service/inbox";
 import ProfileService from "../../service/profile";
 import { api } from "../../service/config";
+import { extractHost } from "../../util/formatting/extractHost";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import { normalizeURL } from "../../util/formatting/normalizeURL";
 import profileService from "../../service/profile";
@@ -206,10 +207,10 @@ export default function ListItem({
           </div>
           <div className={styles.text}>
             <h1>
-              {user.username}
+              {user.username ?? extractHost(user.host)}
               <span className={styles.additionalText}>{additionalText}</span>
             </h1>
-            <p>@{user.username}</p>
+            <p>@{user.username ?? extractHost(user.host)}</p>
           </div>
         </div>
 

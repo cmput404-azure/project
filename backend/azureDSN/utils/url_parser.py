@@ -1,4 +1,4 @@
-from urllib.parse import urljoin, quote
+from urllib.parse import urljoin, quote, unquote
 
 def get_base_host(url):
     return urljoin(url, '/').rstrip('/')
@@ -8,3 +8,6 @@ def extract_uuid(url):
 
 def percent_encode(url):
     return quote(url, safe='')
+
+def percent_decode(url):
+    return unquote(url)
