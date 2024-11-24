@@ -849,7 +849,7 @@ class InboxView(APIView):
                 json=payload
             )
 
-            if response.status_code == 200:
+            if response.status_code == 200 or response.status_code == 201:
                 return Response({"message": "Like sent to remote inbox."}, status=status.HTTP_200_OK)
             elif response.status_code == 403:
                 return Response({"message": "Unauthorized on remote node."}, status=status.HTTP_403_FORBIDDEN)
