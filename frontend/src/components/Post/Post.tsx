@@ -254,9 +254,10 @@ export default function Post({
 
   const handleCommentButtonClick = async () => {
     if (isModal) return;
+    console.log(`IN HANDLE COMMENT BUTTON: ${JSON.stringify(post, null, 2)}`)
     try {
       const postData = await postService.getPost(
-        `api/posts/${encodeURIComponent(post.id)}`
+        `api/posts/${encodeURIComponent(post.id)}` // this doesnt work as well because UUID?
       );
       setPost(postData);
       setIsModalOpen(true);
@@ -293,17 +294,17 @@ export default function Post({
 
     if (hasLiked) return;
 
+    console.log(`IN HANDLE LIKE POST: ${JSON.stringify(post, null, 2)}`)
+
     try {
-      const currentUser = await api.get(
-        `/api/authors/${authProvider.user.uuid}/`
-      );
       const like_obj = {
         type: "like",
-        author: currentUser.data,
-        published: new Date(post.published).toISOString(),
-        object: post.id,
-        post_host: postGiven.author.host,
-      };
+        object: post.id, // should be the post FQID
+        authorId: post.author.id
+      }; // build json in the backend
+
+      console.log(`LIKE OBJ: ${JSON.stringify(like_obj, null, 2)}`);
+
 
       await inbox.sendPostToInbox(post.author.id, like_obj);
       setLikeCount(likeCount + 1);
