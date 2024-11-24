@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from django.utils.timezone import is_aware, make_aware
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
@@ -829,7 +830,12 @@ class InboxView(APIView):
 
             if created:
                 payload["id"] = f"{url_parser.get_base_host(user.host)}/api/authors/{user.uuid}/liked/{new_like.uuid}"
-                payload["published"] = new_like.created_at.isoformat()
+
+                # Ensure timezone-awareness
+                if not is_aware(created_at):
+                    created_at = make_aware(created_at)
+
+                payload["published"] = created_at.replace(microsecond=0).isoformat()
 
             base_host = url_parser.get_base_host(payload['object']) # Base host from post FQID
             remote_author_serial = url_parser.extract_uuid(payload['authorId'])
