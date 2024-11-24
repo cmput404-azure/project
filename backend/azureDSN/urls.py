@@ -2,6 +2,7 @@ from django.urls import path
 from .views import *
 from .views.posts import * # raises warning for PostCreation if not imported
 from django.urls import path
+from django.urls import re_path
 from django.views.generic import TemplateView
 
 # urlpatterns contains all of the routes that this application supports routing for.
@@ -16,7 +17,9 @@ urlpatterns = [
     path('api/authors/<uuid:user_id>/following/', FollowCustomView.as_view(), name='following'),  
 
     # Inbox API
-    path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+    # path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+    # From gemini 23/11/2024
+    re_path(r"^api/authors/(?P<author_serial>[0-9a-f-]+)/inbox/?$", InboxView.as_view(), name="inbox"),
 
     # Remote API
     path("api/authors/recommended/", RemoteAuthorsView.as_view(), name="get_recommended_authors"),
