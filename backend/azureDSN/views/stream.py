@@ -6,6 +6,7 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse
 from django.shortcuts import get_object_or_404
 from ..serializers import PostSerializer
 from ..models import Post, User, Follow, Share, Inbox
+from ..utils import url_parser
 from .posts import PostsPagination
 from requests.auth import HTTPBasicAuth
 import requests, os
@@ -43,19 +44,28 @@ class PublicStreamView(APIView):
                 if remote_payload.get("type") == "post": # And get the public remote posts
                     post_id = remote_payload.get("id")
                     visibility = remote_payload.get("visibility")
+
+                    if (visibility == "DELETED") and not user.is_staff:
+                        continue
                     
                     if visibility == "PUBLIC" and (item.post_status == None or item.post_status.upper() != "DELETE"):
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip if the post has already been processed with the same status
                             continue
 
-                        author_host = urlparse(remote_payload["author"]["host"])
-                        base_author_host = f"{author_host.scheme}://{author_host.netloc}"
-                        post_uuid = post_id.rstrip('/').split('/')[-1]
-                        author_fqid = remote_payload["author"]["id"]
-                        author_uuid = author_fqid.rstrip('/').split('/')[-1]
+                        # author_host = urlparse(remote_payload["author"]["host"])
+                        # base_author_host = f"{author_host.scheme}://{author_host.netloc}"
+                        # post_uuid = post_id.rstrip('/').split('/')[-1]
+                        # author_fqid = remote_payload["author"]["id"]
+                        # author_uuid = author_fqid.rstrip('/').split('/')[-1]
 
-                        get_post_url = f"{base_author_host}/api/authors/{author_uuid}/posts/{post_uuid}/"
+                        author_host = remote_payload["author"]["host"]
+                        base_author_host = url_parser.get_base_host(author_host)
+                        post_uuid = url_parser.extract_uuid(post_id)
+                        author_fqid = remote_payload["author"]["id"]
+                        author_uuid = url_parser.extract_uuid(author_fqid)
+
+                        get_post_url = f"{base_author_host}/api/authors/{author_uuid}/posts/{post_uuid}"
                         try:
                             # Perform the GET request
                             response = requests.get(
