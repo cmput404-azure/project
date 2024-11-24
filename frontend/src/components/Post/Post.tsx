@@ -229,6 +229,7 @@ export default function Post({
   // To refresh comment count when comment modal is closed
   useEffect(() => {
     const fetchPost = async () => {
+      console.log("Refreshing comment count");
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
         const postData = await postService.getPost(`api/posts/${encodedId}`);
@@ -241,8 +242,11 @@ export default function Post({
         );
       }
     };
-    fetchPost();
-  }, [isModalOpen, postGiven]);
+
+    if(isCommentOpen || isModalOpen) {
+      fetchPost();
+    }
+  }, [isModalOpen, postGiven, isCommentOpen]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
