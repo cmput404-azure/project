@@ -14,6 +14,7 @@ from ..serializers import *
 from ..models import *
 from datetime import datetime
 from ..utils import url_parser
+import logging
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
@@ -668,6 +669,8 @@ class InboxView(APIView):
         payload = request.data
         print(f"RECEIVED PAYLOAD: {payload}")
        
+        logging.info(f"Entered Post inbox endpoint: {payload}")
+
         if "type" not in payload:
             return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -678,7 +681,8 @@ class InboxView(APIView):
             # Handle remote author
             if payload["type"].lower() == "follow":
                 # Send to remote inbox, passing the payload and remote host information
-                print("FOLLOW REQUEST FOR REMOTE", payload)
+                logging.info("Sending follow request to remote author")
+                logging.info(payload)
                 return self.send_follow_request_to_remote(payload)
             elif payload["type"].lower() == "post":
                 print(f"SENDING REMOTE POST")
@@ -696,6 +700,7 @@ class InboxView(APIView):
             print(f"CREATE POST LOCALLY")
             return self.create_post(user_obj, payload, request)
         elif payload["type"].lower() == "follow":
+            logging.info("USING LOCAL")
             return self.create_follow_request(user_obj, payload, request)
         elif payload["type"].lower() == "comment":
             return self.create_comment(user_obj, payload, request)
@@ -768,7 +773,7 @@ class InboxView(APIView):
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
             remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox/"
             
-            print("REMOTE INBOX URL", remote_inbox_url)
+            logging.info(f"Remote Inbox: {remote_inbox_url}")
             response = requests.post(
                 remote_inbox_url,
                 json=payload,
