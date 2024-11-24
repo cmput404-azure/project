@@ -21,7 +21,7 @@ def fetch_remote_follower_data(remote_url):
         base_host = url_parser.get_base_host(remote_url)
         author_uuid = url_parser.extract_uuid(remote_url)
 
-        remote_api_url = f"{base_host}/api/authors/{author_uuid}"
+        remote_api_url = f"{base_host}/api/authors/{author_uuid}/"
         response = requests.get(
             remote_api_url,
             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
@@ -226,7 +226,7 @@ class FollowerView(APIView):
                 base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
                 
                 # send request to fetch all posts
-                remote_user_url = f"{base_host}/api/authors/{user_id}/followers/"
+                remote_user_url = f"{base_host}/api/authors/{user_id}/followers"
                 response = requests.get(
                     url=remote_user_url,  
                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
