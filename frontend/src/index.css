@@ -30,9 +30,8 @@ code {
   width: 100%;
 }
 
-.avatar {
-  background-color: #9c9c9c;
-  border-radius: 50%;
+.MuiAvatar-root {
+  background-color: #9c9c9c !important;
 }
 
 * {
