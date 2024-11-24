@@ -842,6 +842,7 @@ class InboxView(APIView):
             print(f"Error creating Like object: {e}")
             return
 
+        print(f"FINAL LIKE OBJECT TO BE SENT TO {remote_inbox_api}: {payload}")
         try:
             response = requests.post(
                 remote_inbox_api,
@@ -943,10 +944,12 @@ class InboxView(APIView):
         # This is always called when a remote/local Like object is sent in relation to a Local Post
         try:
             # Need to get author of the like now from author fqid
-            author = payload.get('author', None)
-            author_fqid = payload.get('authorId', None)
+            author = payload.get('author', None) # From remote has this
+            author_fqid = payload.get('authorId', None) # Liking a local post
             if (author_fqid):
-                author = User.objects.get(uuid=url_parser.extract_uuid(author_fqid))
+                author_uuid = url_parser.extract_uuid(author_fqid)
+                print(f"Author of Like obj (should be local): {author_uuid}")
+                author = get_object_or_404(User, uuid=author_uuid)
                 author = UserSerializer(author).data
 
             time = payload.get('published', None)
