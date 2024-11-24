@@ -839,7 +839,7 @@ class InboxView(APIView):
 
             base_host = url_parser.get_base_host(payload['object']) # Base host from post FQID
             remote_author_serial = url_parser.extract_uuid(payload['authorId'])
-            remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox"
+            remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox/"
 
             del payload['authorId'] # Don't need this anymore
 
@@ -848,30 +848,6 @@ class InboxView(APIView):
             print(f"Error creating Like object: {e}")
             return
 
-        
-
-        
-
-
-        # if test:
-        #     full_url = request
-        # else:
-        #     # use the request url to get the correct uuid of the post author
-        #     full_url = request.build_absolute_uri()
-        # parsed_url = urlparse(full_url)
-        # payload_json = json.dumps(payload)
-
-        # Remove 'api/' from author_host
-        # author_host = payload["post_host"].rstrip("/")
-        # if author_host.endswith("/api"):
-        #     author_host = author_host[:-4]
-
-        # # Replace the netloc (host) in full_url with author_host
-        # inbox_url = parsed_url._replace(netloc=urlparse(author_host).netloc)
-        # formatted_url = urlunparse(inbox_url)
-
-        # if test:
-        #     return formatted_url
         
         response = requests.post(
             remote_inbox_api,
