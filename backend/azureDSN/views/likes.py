@@ -68,8 +68,17 @@ class LikeView(APIView):
                 GET [local, remote] a single like
                 Returns: like object
                 """
-                author = get_object_or_404(User, uuid=author_serial)
-                like = get_object_or_404(Like, uuid=like_serial)
+                try:
+                    author = User.objects.get(uuid=author_serial)
+                    like = Like.objects.get(uuid=like_serial)
+                except User.DoesNotExist:
+                    return Response(
+                        {"detail": "Author not found."}, status=status.HTTP_404_NOT_FOUND
+                    )
+                except Like.DoesNotExist:
+                    return Response(
+                        {"detail": "Like not found."}, status=status.HTTP_404_NOT_FOUND
+                    )
             
             elif (like_fqid):
                 """
@@ -81,12 +90,11 @@ class LikeView(APIView):
                     like_fqid = url_parser.percent_decode(like_fqid)
                     like_serial = url_parser.extract_uuid(like_fqid)
                     UUID(like_serial)
+                    like = Like.objects.get(uuid=like_serial)
                 except (IndexError, ValueError):
                     return Response(
                         {"detail": "Invalid Like FQID."}, status=status.HTTP_400_BAD_REQUEST
                     )
-                
-                like = get_object_or_404(Like, uuid=like_serial)
 
             else:
                 return Response(
@@ -95,11 +103,11 @@ class LikeView(APIView):
                 )
 
             serialized_like = LikeSerializer(like).data
-
             return Response(serialized_like, status=status.HTTP_200_OK) # for consistency with drf-spectacular
+        
         except Exception as e:
             print(f"ERROR: {str(e)}")
-            return
+            return Response({"detail": "An error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     
 class AuthorLikesView(APIView):
