@@ -830,7 +830,7 @@ class InboxView(APIView):
 
             if created:
                 payload["id"] = f"{url_parser.get_base_host(user.host)}/api/authors/{user.uuid}/liked/{new_like.uuid}"
-
+                created_at = new_like.created_at
                 # Ensure timezone-awareness
                 if not is_aware(created_at):
                     created_at = make_aware(created_at)
