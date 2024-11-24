@@ -500,10 +500,10 @@ class InboxView(APIView):
             remote_follower = payload["follower"]
             del payload["follower"] # reconstruct payload to post object format
 
-            follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
-            remote_host = remote_follower.get("host")
-            parsed_url = urlparse(remote_host)
-            base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            print(f"UPDATED POST JSON to be sent: {payload}")
+
+            follower_serial = url_parser.extract_uuid(remote_follower.get("id"))
+            base_host = url_parser.extract_uuid(remote_follower.get("host"))
 
             if payload["visibility"] == "FRIENDS":
                 # Need a check here if remote follower indeed has accepted follow request of post's author in their node
@@ -955,6 +955,9 @@ class InboxView(APIView):
 
             post_id = url_parser.extract_uuid(post_fqid)
             post_obj = Post.objects.get(uuid=post_id)
+
+            if (Post.DoesNotExist):
+                return Response({"message": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
             
             if (time):
                 like_obj = Like.objects.create(user=author, 
