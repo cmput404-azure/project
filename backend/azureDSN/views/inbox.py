@@ -972,8 +972,23 @@ class InboxView(APIView):
             else:
                 like_obj = Like.objects.create(user=author, 
                                             post=post_obj)
+                
+
+            created_at = like_obj.created_at
+            # Ensure timezone-awareness
+            if not is_aware(created_at):
+                created_at = make_aware(created_at)
             
-            serializer = LikeSerializer(like_obj, data=payload, context={"request": request})
+            # new_payload = {
+            #     "type": "like",
+            #     "author": author,
+            #     "id": f"{url_parser.get_base_host(author.host)}/api/authors/{author.uuid}/liked/{like_obj.uuid}",
+            #     "published": created_at.replace(microsecond=0).isoformat(),
+            #     "object": payload["object"]
+
+            # }
+            serializer = LikeSerializer(like_obj, context={"request": request})
+            print(f"SERIALIZED DATA: {serializer.data}")
 
             if serializer.is_valid():
                 like_instance =serializer.save()
@@ -984,6 +999,7 @@ class InboxView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
         except Exception as e:
             print(f"SOMETHING WRONG: {str(e)}")
+            return Response({"message": "Something went wrong."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
     '''
