@@ -666,7 +666,8 @@ class InboxView(APIView):
 
         # If author_serial does not exist locally, then need to dig through payload to check for the remote host
         payload = request.data
-       
+        logging.info(f"Entered Post inbox endpoint: {payload}")
+
         if "type" not in payload:
             return Response({"error": "A 'type' field is required in the inbox post request"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -693,6 +694,7 @@ class InboxView(APIView):
         if payload["type"].lower() == "post":
             return self.create_post(user_obj, payload, request)
         elif payload["type"].lower() == "follow":
+            logging.info("USING LOCAL")
             return self.create_follow_request(user_obj, payload, request)
         elif payload["type"].lower() == "comment":
             return self.create_comment(user_obj, payload, request)
