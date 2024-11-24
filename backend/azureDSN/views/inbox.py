@@ -842,14 +842,19 @@ class InboxView(APIView):
             print(f"Error creating Like object: {e}")
             return
 
-        
-        response = requests.post(
-            remote_inbox_api,
-            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-            json=payload
-        )
+        try:
+            response = requests.post(
+                remote_inbox_api,
+                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                json=payload
+            )
 
-        return Response(response.text, response.status_code)
+            if response.status_code == 200:
+                return Response({"message": "Like sent to remote inbox."}, status=status.HTTP_200_OK)
+            elif response.status_code == 403:
+                return Response({"message": "Unauthorized on remote node."}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
     def send_comment_to_remote(self, payload, request, test=False):
