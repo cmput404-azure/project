@@ -944,22 +944,40 @@ class InboxView(APIView):
         # This is always called when a remote/local Like object is sent in relation to a Local Post
         # parsed_url = urlparse(payload["object"]) 
         # payload.pop("post_host", None)
-        post_fqid = payload['object']
+        try:
+            # Need to get author of the like now from author fqid
+            author = payload.get('author', None)
+            author_fqid = payload.get('authorId', None)
+            if (author_fqid):
+                author = User.objects.get(uuid=url_parser.extract_uuid(author_fqid))
+                author = UserSerializer(author).data
 
-        post_id = url_parser.extract_uuid(post_fqid)
-        post_obj = Post.objects.get(uuid=post_id)
-        like_obj = Like.objects.create(user=payload["author"], 
-                                       created_at=payload["published"], 
-                                       post=post_obj)
-        serializer = LikeSerializer(like_obj, data=payload, context={"request": request})
+            time = payload.get('published', None)
+            
+            post_fqid = payload['object']
 
-        if serializer.is_valid():
-            like_instance =serializer.save()
-            inbox_obj = get_object_or_404(Inbox, user=user_object)
-            create_inbox_item(inbox_obj, like_instance)
-            return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
+            post_id = url_parser.extract_uuid(post_fqid)
+            post_obj = Post.objects.get(uuid=post_id)
+            
+            if (time):
+                like_obj = Like.objects.create(user=author, 
+                                            created_at=time, 
+                                            post=post_obj)
+            else:
+                like_obj = Like.objects.create(user=author, 
+                                            post=post_obj)
+            
+            serializer = LikeSerializer(like_obj, data=payload, context={"request": request})
+
+            if serializer.is_valid():
+                like_instance =serializer.save()
+                inbox_obj = get_object_or_404(Inbox, user=user_object)
+                create_inbox_item(inbox_obj, like_instance)
+                return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
+        except Exception as e:
+            print(f"SOMETHING WRONG: {str(e)}")
     
 
     '''
