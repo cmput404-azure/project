@@ -303,7 +303,7 @@ export default function Post({
       const like_obj = {
         type: "like",
         object: post.id, // should be the post FQID
-        authorHost: post.author.host
+        authorId: post.author.id
         // author: currentUser.data,
         // published: new Date(post.published).toISOString(),
         // object: post.id, // should be fqid

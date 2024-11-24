@@ -830,10 +830,10 @@ class InboxView(APIView):
             payload["id"] = f"{url_parser.get_base_host(user.host)}/api/authors/{user.uuid}/liked/{new_like.uuid}"
 
         base_host = url_parser.get_base_host(payload['object']) # Base host from post FQID
-        remote_author_serial = url_parser.extract_uuid(payload['authorHost'])
+        remote_author_serial = url_parser.extract_uuid(payload['authorId'])
         remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox/"
 
-        del payload['authorHost'] # Don't need this anymore
+        del payload['authorId'] # Don't need this anymore
 
         print(f"FINAL REMOTE LIKE PAYLOAD: {payload}")
 
