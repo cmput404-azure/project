@@ -139,11 +139,9 @@ class ProfileService {
       @returns string - the profile picture url
    */
    public getProfilePicture(author: Author, initial?: boolean): string {
-      console.log(`AUTHOR: ${author}`)
       if(initial){
          return `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
       }
-      console.log(`PROFILE IMAGE: ${author.profileImage}`)
       return author.profileImage || `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
    }
 }

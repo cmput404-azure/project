@@ -297,17 +297,10 @@ export default function Post({
     console.log(`IN HANDLE LIKE POST: ${JSON.stringify(post, null, 2)}`)
 
     try {
-      // const currentUser = await api.get(
-      //   `/api/authors/${authProvider.user.uuid}/`
-      // );
       const like_obj = {
         type: "like",
         object: post.id, // should be the post FQID
         authorId: post.author.id
-        // author: currentUser.data,
-        // published: new Date(post.published).toISOString(),
-        // object: post.id, // should be fqid
-        // post_host: postGiven.author.host, // what is this
       }; // build json in the backend
 
       console.log(`LIKE OBJ: ${JSON.stringify(like_obj, null, 2)}`);

@@ -716,26 +716,17 @@ class InboxView(APIView):
     '''
     def create_post(self, user_object, payload, request):
         try:
-            # parsed_url = urlparse(payload["id"]) 
-            # base_host = url_parser.get_base_host(payload["id"])
             post_id = url_parser.extract_uuid(payload["id"])
-            print(f"THE POST ID: {post_id}")
-            # post_id = parsed_url.path.split("/")[-1] # extract id of the post (the uuid)
+
             # Validate the post object sent with the payload
             post_obj = Post.objects.get(uuid=post_id)
-            # serializer = PostSerializer(post_obj, data=payload, context={"request": request})
 
-            # if serializer.is_valid():
-            # Temporary remove validation because it is weird 
-            if True:
-                inbox_obj = get_object_or_404(Inbox, user=user_object)
-                create_inbox_item(inbox_obj, post_obj)
-                return Response({"message": "We have noticed other users about your post"}, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            inbox_obj = get_object_or_404(Inbox, user=user_object)
+            create_inbox_item(inbox_obj, post_obj)
+            return Response({"message": "We have noticed other users about your post"}, status=status.HTTP_200_OK)
+
         except Post.DoesNotExist:
-            print(f"POST IS FROM REMOTE USER")
-            # If post is from remote user, treat it as a json object
+            # If post is from remote user, treat it as a JSON object
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, remote_payload=payload)
             return Response({"message": "Remote post received successfully."}, status=status.HTTP_200_OK)
@@ -810,16 +801,12 @@ class InboxView(APIView):
 
     def send_like_to_remote(self, payload, request, test=False):
 
-        print(f"REQUEST USER: {request.user}")
-
-        if (request.user):
+        if (request and request.user):
             user = User.objects.get(uuid=request.user.uuid)
+            payload["author"] = UserSerializer(user).data
 
-        payload["author"] = UserSerializer(user).data
-
-        print(f"PAYLOAD WITH AUTHOR: {payload}")
-
-        # base_host = url_parser.get_base_host(payload["author"].get("host")) # Base host from post FQID
+        else:
+            pass # Test case, payload author already defined
 
         # Create like object that references remote post
         try:
@@ -828,7 +815,7 @@ class InboxView(APIView):
                 remote_post=payload["object"]
             )
 
-            if created:
+            if created and not test:
                 payload["id"] = f"{url_parser.get_base_host(user.host)}/api/authors/{user.uuid}/liked/{new_like.uuid}"
                 created_at = new_like.created_at
                 # Ensure timezone-awareness
@@ -841,9 +828,11 @@ class InboxView(APIView):
             remote_author_serial = url_parser.extract_uuid(payload['authorId'])
             remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox/"
 
+            if (test):
+                return Response(remote_inbox_api, 200)  
+
             del payload['authorId'] # Don't need this anymore
 
-            print(f"FINAL REMOTE LIKE PAYLOAD: {payload}")
         except Exception as e:
             print(f"Error creating Like object: {e}")
             return
@@ -855,7 +844,7 @@ class InboxView(APIView):
             json=payload
         )
 
-        return Response(response.text, response.status_code)  
+        return Response(response.text, response.status_code)
     
     
     def send_comment_to_remote(self, payload, request, test=False):
@@ -942,8 +931,6 @@ class InboxView(APIView):
     '''
     def create_like(self, user_object, payload, request):
         # This is always called when a remote/local Like object is sent in relation to a Local Post
-        # parsed_url = urlparse(payload["object"]) 
-        # payload.pop("post_host", None)
         try:
             # Need to get author of the like now from author fqid
             author = payload.get('author', None)
@@ -1037,7 +1024,6 @@ def create_inbox_item(inbox, content=None, remote_payload=None, post_status=None
         id = getattr(content, 'uuid', getattr(content, 'id', None))
         inbox_item_object = InboxItem.objects.create(content_type=content_type, object_id=id, content_object=content, post_status=post_status)
     else:
-        print(f"CREATING INBOX ITEM WITH REMOTE OBJECT")
         inbox_item_object = InboxItem.objects.create(remote_payload=remote_payload, post_status=post_status)
     inbox.items.add(inbox_item_object)
     
