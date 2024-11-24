@@ -624,7 +624,7 @@ class InboxViewTestCase(TestCase):
     def test_send_like_to_remote_url(self):
             payload = {
                 "type": "like",
-                "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+                "object": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
                 "author":{
                     "type":"author",
                     "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
@@ -634,13 +634,13 @@ class InboxViewTestCase(TestCase):
                     "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
                     "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
                 },
-                "comment": "Nice post!",
-                "post_host": f"{settings.BASE_URL}/api/"
+                "authorId": f"{settings.BASE_URL}/api/authors/{self.user.uuid}"
             }
             inbox_view = InboxView()
 
-            response = inbox_view.send_like_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
-            self.assertEqual(response,f"{settings.BASE_URL}/api/authors/{self.user.uuid}/inbox/")
+            response = inbox_view.send_like_to_remote(payload=payload, request=None, test=True)
+
+            self.assertEqual(response.status_code, 200)
 
         
         

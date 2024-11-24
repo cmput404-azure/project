@@ -1,4 +1,4 @@
-from django.http import Http404
+from ..utils import url_parser
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,12 +17,11 @@ def fetch_remote_follower_data(remote_url):
     """
     try:
         # Parse the remote URL to get the host and remote author uuid
-        remote_url = unquote(remote_url)
-        parsed_url = urlparse(remote_url)
-        base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-        author_uuid = os.path.split(parsed_url.path.rstrip('/'))[-1]
+        remote_url = url_parser.percent_decode(remote_url)
+        base_host = url_parser.get_base_host(remote_url)
+        author_uuid = url_parser.extract_uuid(remote_url)
 
-        remote_api_url = f"{base_host}/api/authors/{author_uuid}"
+        remote_api_url = f"{base_host}/api/authors/{author_uuid}/"
         response = requests.get(
             remote_api_url,
             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),

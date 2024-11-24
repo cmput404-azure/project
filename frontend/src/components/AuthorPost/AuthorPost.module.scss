@@ -11,13 +11,13 @@
 
 .post_header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
 .author_info {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 
   div {
     display: flex;
@@ -69,21 +69,23 @@
 
 // From Gemini 16/11/2024
 .add_button__requested {
-  border-radius: 12px;
-  padding: 4px 12px;
+  border-radius: 5px;
+  padding: 0.5rem 2rem;
   width: auto;
   min-width: 80px;
   margin-left: auto;
-  font-size: 14px;
+  font-size: 12px;
   text-align: center;
   transition: all 0.3s ease;
-  color: #333;
+  color: #ffffff;
+
 }
 
 .post_content {
   font-size: 14px;
   color: #ffffff;
   margin-top: 8px;
+  margin-left: 3rem;
   text-align: left;
   display: -webkit-box; /* Required for line clamp */
   -webkit-box-orient: vertical;

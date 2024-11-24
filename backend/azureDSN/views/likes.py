@@ -7,6 +7,7 @@ from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
+from ..utils import url_parser
 
 class LikesPagination(PageNumberPagination):
     page_size=5
@@ -60,40 +61,53 @@ class LikeView(APIView):
     )
     def get(self, request, like_fqid=None, author_serial=None, like_serial=None):
         """Handle retrieval of a single like."""
-        if (like_serial):
-            """
-            URL: ://service/api/authors/{AUTHOR_SERIAL}/liked/{LIKE_SERIAL}
-            GET [local, remote] a single like
-            Returns: like object
-            """
-            author = get_object_or_404(User, uuid=author_serial)
-            like = get_object_or_404(Like, user__id = str(author.uuid), uuid=like_serial)
-        
-        elif (like_fqid):
-            """
-            URL: ://service/api/liked/{LIKE_FQID}
-            GET [local] a single like
-            Returns: like object
-            """
-            try:
-                like_serial = like_fqid.rstrip('/').split('/')[-1]
-                UUID(like_serial)
-            except (IndexError, ValueError):
-                return Response(
-                    {"detail": "Invalid Like FQID."}, status=status.HTTP_400_BAD_REQUEST
-                )
+        try:
+            if (author_serial and like_serial):
+                """
+                URL: ://service/api/authors/{AUTHOR_SERIAL}/liked/{LIKE_SERIAL}
+                GET [local, remote] a single like
+                Returns: like object
+                """
+                try:
+                    author = User.objects.get(uuid=author_serial)
+                    like = Like.objects.get(uuid=like_serial)
+                except User.DoesNotExist:
+                    return Response(
+                        {"detail": "Author not found."}, status=status.HTTP_404_NOT_FOUND
+                    )
+                except Like.DoesNotExist:
+                    return Response(
+                        {"detail": "Like not found."}, status=status.HTTP_404_NOT_FOUND
+                    )
             
-            like = get_object_or_404(Like, uuid=like_serial)
+            elif (like_fqid):
+                """
+                URL: ://service/api/liked/{LIKE_FQID}
+                GET [local] a single like
+                Returns: like object
+                """
+                try:
+                    like_fqid = url_parser.percent_decode(like_fqid)
+                    like_serial = url_parser.extract_uuid(like_fqid)
+                    UUID(like_serial)
+                    like = Like.objects.get(uuid=like_serial)
+                except (IndexError, ValueError):
+                    return Response(
+                        {"detail": "Invalid Like FQID."}, status=status.HTTP_400_BAD_REQUEST
+                    )
 
-        else:
-            return Response(
-                {"detail": "At least one of like_fqid or both author_serial and like_serial must be provided."}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            else:
+                return Response(
+                    {"detail": "At least one of like_fqid or both author_serial and like_serial must be provided."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        serialized_like = LikeSerializer(like).data
-
-        return Response(serialized_like, status=status.HTTP_200_OK) # for consistency with drf-spectacular
+            serialized_like = LikeSerializer(like).data
+            return Response(serialized_like, status=status.HTTP_200_OK) # for consistency with drf-spectacular
+        
+        except Exception as e:
+            print(f"ERROR: {str(e)}")
+            return Response({"detail": "An error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     
 class AuthorLikesView(APIView):

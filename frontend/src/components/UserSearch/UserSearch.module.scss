@@ -1,40 +1,46 @@
-.componentWidth {
-    width: 98%;
-    display: flex;
-    flex-direction: column;
+.user__search {
     align-items: center;
-    padding-top:0px;
-    /* Center children horizontally */
+    display: flex;
+    flex-flow: column;
+    height: 350px;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 100%;
 }
 
-.searchContainer {
+.results__container{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: white rgb(110, 110, 110);
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+.search__container {
     background-color: #aeaeae;
     display: flex;
     align-items: center;
-    width: 200px;
-    padding: 10px;
-    border-radius: 16px;
+    width: 96%;
+    box-sizing: border-box;
+    border-radius: 5px;
     justify-content: center;
+    margin: 0 1rem 1rem 1rem;
 }
 
-.searchInput {
+.search__input {
     border: none;
     outline: none;
     background: none;
     font-size: 12px;
     width: 100%;
-}
+    padding: 10px;
 
-.customList {
-    padding-left: 0;
-    width: calc(100% - 16px); 
-    max-height: 300px;
-    overflow-y: auto; 
-    overflow-x: hidden; 
-    scrollbar-width: thin;
-    scrollbar-color: white rgb(110, 110, 110); 
 }
-
 .modalOverlay {
     position: fixed;
     top: 0;

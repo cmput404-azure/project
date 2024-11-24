@@ -99,9 +99,10 @@ export default function NotificationList() {
 
   const handleRefresh = () => setRefreshTrigger(prev => prev + 1);
 
-  const fetchUser = async (id: string) => {
+  const fetchUser = async (id: string) => { // is the fqid
     try {
-      const response = await api.get(`/api/authors/${id}/`);
+      const formattedId = id.endsWith('/') ? id : `${id}/`;
+      const response = await api.get(`/api/authors/${formattedId}`);
       return response.data;
     } catch (err) {
       console.error(`Error fetching user with id: ${id}:`, err);

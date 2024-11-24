@@ -1,5 +1,6 @@
 import React, { useState }  from 'react';
 
+import AddIcon from '@mui/icons-material/Add';
 import { Author } from '../../models/models';
 import { Avatar } from "@mui/material";
 import InboxService from '../../service/inbox';
@@ -75,7 +76,7 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
           onClick={handleAddButton}
           disabled={isRequested}
         >
-          {isRequested ? 'Requested' : '+'}
+          {isRequested ? 'Requested' : (<AddIcon/>)}
         </button>
       </div>
       {author.bio && author.bio.trim() !== "" && (
