@@ -60,38 +60,43 @@ export default function UserSearch({ closeModal }: userSearchProps) {
   }, []);
 
   return (
-    <div>
-      <div className={styles.componentWidth}>
-        <div className={styles.searchContainer}>
-          <i className="fa-solid fa-magnifying-glass"></i>
-          <input
-            className={styles.searchInput}
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={handleInputChange}
-          />
-        </div>
+    <div className={styles.user__search}>
+      <div className={styles.search__container}>
+        <input
+          className={styles.search__input}
+          type="text"
+          placeholder="Search users..."
+          value={searchTerm}
+          onChange={handleInputChange}
+        />
+      </div>
 
-        {loading && <div className={"loading_component"}><CircularProgress sx={{ color: "#70ffaf" }} /></div>}
-        {error && <p>{error}</p>}
-        {filteredResults.length > 0 ? (
-          <ul className={styles.customList}>
-            {filteredResults.map((user) => (
-              <ListItem
-                key={user.id}
-                isRequest={false}
-                isPost={false}
-                isLike={false}
-                isFollowerList={false}
-                isUserList={true}
-                user={user}
-                closeModal={closeModal}
-              />
-            ))}
-          </ul>
+      <div className={styles.results__container}>
+        {loading ? (
+          <div className={"loading_component"}>
+            <CircularProgress sx={{ color: "#70ffaf" }} />
+          </div>
+        ) : error ? (
+          <p className={styles.error}>{error}</p>
         ) : (
-          searchTerm && <p>No users found</p> // Show message when there are no matches
+          <div className={styles.results__list}>
+            {filteredResults.length === 0 ? (
+              <p className={styles.no__results}>No users found</p>
+            ) : (
+              filteredResults.map((user) => (
+                <ListItem
+                  key={user.id}
+                  isRequest={false}
+                  isPost={false}
+                  isLike={false}
+                  isFollowerList={false}
+                  isUserList={true}
+                  user={user}
+                  closeModal={closeModal}
+                />
+              ))
+            )}
+          </div>
         )}
       </div>
     </div>
