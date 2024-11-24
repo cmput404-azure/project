@@ -41,23 +41,22 @@ class PublicStreamView(APIView):
         for inbox in Inbox.objects.all(): # Iterate through all local inboxes
             for item in inbox.items.filter(remote_payload__isnull=False):
                 remote_payload = item.remote_payload
-                if remote_payload.get("type") == "post": # And get the public remote posts
+                if remote_payload.get("type") == "post": # And get the remote posts
                     post_id = remote_payload.get("id")
                     visibility = remote_payload.get("visibility")
 
-                    if (visibility == "DELETED") and not user.is_staff:
-                        continue
+                    if (visibility.upper() == "DELETED"):
+                        # I am not an admin so I shouldn't be able to see deleted remote posts
+                        if not user.is_staff:
+                            if post_id in remote_posts:
+                                remote_posts.pop(post_id) # Remove deleted post
+                        continue # If admin, show the deleted post ONCE
                     
-                    if visibility == "PUBLIC" and (item.post_status == None or item.post_status.upper() != "DELETE"):
+                    if visibility == "PUBLIC" and (item.post_status == None or item.post_status.upper() != "DELETE"): # This logic only works for local, local-remote posts
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip if the post has already been processed with the same status
+                            # This should work for remote-remote edited posts? Because we are fetching post from their endpoint directly (it will show latest content)
                             continue
-
-                        # author_host = urlparse(remote_payload["author"]["host"])
-                        # base_author_host = f"{author_host.scheme}://{author_host.netloc}"
-                        # post_uuid = post_id.rstrip('/').split('/')[-1]
-                        # author_fqid = remote_payload["author"]["id"]
-                        # author_uuid = author_fqid.rstrip('/').split('/')[-1]
 
                         author_host = remote_payload["author"]["host"]
                         base_author_host = url_parser.get_base_host(author_host)
