@@ -520,7 +520,7 @@ class InboxView(APIView):
                     return Response({"message": "Friends-only post is not sent to remote node."}, status=status.HTTP_200_OK)
             
             # Send the updated/deleted post to the remote inbox
-            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
+            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox"
             response = requests.request(
                 method=http_method,
                 url=remote_inbox_url,
@@ -747,7 +747,7 @@ class InboxView(APIView):
             remote_host = remote_follower.get("host")
             parsed_url = urlparse(remote_host)
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
+            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox"
             
             response = requests.post(
                     remote_inbox_url,
@@ -771,7 +771,7 @@ class InboxView(APIView):
             author_serial = payload["object"].get("id").rstrip('/').split('/')[-1]  # Get last part of fqid
             parsed_url = urlparse(remote_host)
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-            remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox/"
+            remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox"
             
             logging.info(f"Remote Inbox: {remote_inbox_url}")
             response = requests.post(
