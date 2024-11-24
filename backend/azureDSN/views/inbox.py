@@ -821,21 +821,27 @@ class InboxView(APIView):
         # base_host = url_parser.get_base_host(payload["author"].get("host")) # Base host from post FQID
 
         # Create like object that references remote post
-        new_like, created = Like.objects.get_or_create(
-            user=payload["author"],
-            remote_post=payload["object"] # Should be FQID of the post
-        )
+        try:
+            new_like, created = Like.objects.get_or_create(
+                user=payload["author"],
+                remote_post=payload["object"]
+            )
 
-        if created:
-            payload["id"] = f"{url_parser.get_base_host(user.host)}/api/authors/{user.uuid}/liked/{new_like.uuid}"
+            if created:
+                payload["id"] = f"{url_parser.get_base_host(user.host)}/api/authors/{user.uuid}/liked/{new_like.uuid}"
 
-        base_host = url_parser.get_base_host(payload['object']) # Base host from post FQID
-        remote_author_serial = url_parser.extract_uuid(payload['authorId'])
-        remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox/"
+            base_host = url_parser.get_base_host(payload['object']) # Base host from post FQID
+            remote_author_serial = url_parser.extract_uuid(payload['authorId'])
+            remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox/"
 
-        del payload['authorId'] # Don't need this anymore
+            del payload['authorId'] # Don't need this anymore
 
-        print(f"FINAL REMOTE LIKE PAYLOAD: {payload}")
+            print(f"FINAL REMOTE LIKE PAYLOAD: {payload}")
+        except Exception as e:
+            print(f"Error creating Like object: {e}")
+            return
+
+        
 
         
 
