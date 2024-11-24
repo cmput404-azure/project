@@ -957,7 +957,10 @@ class InboxView(APIView):
             post_fqid = payload['object']
 
             post_id = url_parser.extract_uuid(post_fqid)
+            print(f"Extracted UUID: {post_id}")
+
             post_obj = Post.objects.get(uuid=post_id)
+            print(f"POST IS: {post_obj}")
 
             if (Post.DoesNotExist):
                 return Response({"message": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
