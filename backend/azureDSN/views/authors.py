@@ -130,7 +130,7 @@ class AuthorsSpecificView(APIView):
                 parsed_url = urlparse(author_fqid)
                 base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-                remote_author_url = f"{base_host}/api/authors/{author_serial}/"
+                remote_author_url = f"{base_host}/api/authors/{author_serial}"
                 response = requests.get(
                     remote_author_url,
                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
