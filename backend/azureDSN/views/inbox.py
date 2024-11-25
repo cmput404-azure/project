@@ -911,7 +911,6 @@ class InboxView(APIView):
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
             remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox"
 
-            logging.info(f"Remote Inbox: {remote_inbox_url}")
             response = requests.post(
                 remote_inbox_url,
                 json=payload,
@@ -1038,14 +1037,12 @@ class InboxView(APIView):
             user=payload["author"], remote_post = post_url, comment=payload["comment"]
         )
         comment_id = comment_obj.uuid
-        comment_url = f""
+        comment_url = f"{payload['author']['id']}/commented/{comment_id}"
+
         payload_json = json.dumps(payload)
         payload_json["contentType"] = "text/plain"
         payload_json["post"] = post_url
-        payload_json["id"]
-        # need to store local id
-        # payload_json["id"]
-        
+        payload_json["id"] = comment_url
 
         headers = {
             "Content-Type": "application/json",
