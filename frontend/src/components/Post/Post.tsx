@@ -135,7 +135,7 @@ export default function Post({
 
           setPost(postData);
 
-          setCommentList(postData.comments.src.reverse());
+          setCommentList(postData.comments.src);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes?.count || 0
           );
