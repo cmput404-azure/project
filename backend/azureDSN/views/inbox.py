@@ -501,10 +501,10 @@ class InboxView(APIView):
             remote_follower = payload["follower"]
             del payload["follower"] # reconstruct payload to post object format
 
-            follower_serial = remote_follower.get("id").rstrip('/').split('/')[-1]
-            remote_host = remote_follower.get("host")
-            parsed_url = urlparse(remote_host)
-            base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            print(f"UPDATED POST JSON to be sent: {payload}")
+
+            follower_serial = url_parser.extract_uuid(remote_follower.get("id"))
+            base_host = url_parser.extract_uuid(remote_follower.get("host"))
 
             if payload["visibility"] == "FRIENDS":
                 # Need a check here if remote follower indeed has accepted follow request of post's author in their node
@@ -528,7 +528,7 @@ class InboxView(APIView):
                 http_method = "POST"
                 
             # Send the updated/deleted post to the remote inbox
-            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
+            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox"
             response = requests.request(
                 method=http_method,
                 url=remote_inbox_url,
@@ -771,7 +771,7 @@ class InboxView(APIView):
             remote_host = remote_follower.get("host")
             parsed_url = urlparse(remote_host)
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
+            remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox"
             
             response = requests.post(
                     remote_inbox_url,
@@ -795,7 +795,7 @@ class InboxView(APIView):
             author_serial = payload["object"].get("id").rstrip('/').split('/')[-1]  # Get last part of fqid
             parsed_url = urlparse(remote_host)
             base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-            remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox/"
+            remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox"
             
             logging.info(f"Remote Inbox: {remote_inbox_url}")
             response = requests.post(
@@ -855,7 +855,7 @@ class InboxView(APIView):
 
             base_host = url_parser.get_base_host(payload['object']) # Base host from post FQID
             remote_author_serial = url_parser.extract_uuid(payload['authorId'])
-            remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox/"
+            remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox"
 
             if (test):
                 return Response(remote_inbox_api, 200)  
@@ -866,14 +866,20 @@ class InboxView(APIView):
             print(f"Error creating Like object: {e}")
             return
 
-        
-        response = requests.post(
-            remote_inbox_api,
-            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
-            json=payload
-        )
+        print(f"FINAL LIKE OBJECT TO BE SENT TO {remote_inbox_api}: {payload}")
+        try:
+            response = requests.post(
+                remote_inbox_api,
+                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                json=payload
+            )
 
-        return Response(response.text, response.status_code)
+            if response.status_code == 200 or response.status_code == 201:
+                return Response({"message": "Like sent to remote inbox."}, status=status.HTTP_200_OK)
+            elif response.status_code == 403:
+                return Response({"message": "Unauthorized on remote node."}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
     def send_comment_to_remote(self, payload, request, test=False):
@@ -959,41 +965,37 @@ class InboxView(APIView):
     id is in format: http://{server}/api/authors/{user_id}/liked/{like_id}
     '''
     def create_like(self, user_object, payload, request):
-        # This is always called when a remote/local Like object is sent in relation to a Local Post
+
+        from_remote = 'authorId' not in payload
+        if not from_remote:
+            author = UserSerializer(user_object).data
+            payload['author'] = author
+            del payload['authorId']
+
+        time = payload.get('published', None)
+            
+        post_fqid = payload['object']
+
+        post_id = url_parser.extract_uuid(post_fqid)
+
         try:
-            # Need to get author of the like now from author fqid
-            author = payload.get('author', None)
-            author_fqid = payload.get('authorId', None)
-            if (author_fqid):
-                author = User.objects.get(uuid=url_parser.extract_uuid(author_fqid))
-                author = UserSerializer(author).data
-
-            time = payload.get('published', None)
-            
-            post_fqid = payload['object']
-
-            post_id = url_parser.extract_uuid(post_fqid)
             post_obj = Post.objects.get(uuid=post_id)
-            
-            if (time):
-                like_obj = Like.objects.create(user=author, 
-                                            created_at=time, 
-                                            post=post_obj)
-            else:
-                like_obj = Like.objects.create(user=author, 
-                                            post=post_obj)
-            
-            serializer = LikeSerializer(like_obj, data=payload, context={"request": request})
 
-            if serializer.is_valid():
-                like_instance =serializer.save()
-                inbox_obj = get_object_or_404(Inbox, user=user_object)
-                create_inbox_item(inbox_obj, like_instance)
-                return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
-        except Exception as e:
-            print(f"SOMETHING WRONG: {str(e)}")
+        except Post.DoesNotExist:
+                return Response({"message": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+        if (time):
+            like_obj = Like.objects.create(user=payload['author'], 
+                                        created_at=time, 
+                                        post=post_obj)
+        else:
+            like_obj = Like.objects.create(user=payload['author'], 
+                                        post=post_obj)
+
+
+        inbox_obj = get_object_or_404(Inbox, user=user_object)
+        create_inbox_item(inbox_obj, like_obj)
+        return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_200_OK)
     
 
     '''

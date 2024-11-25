@@ -19,8 +19,6 @@ urlpatterns = [
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
     path("api/authors/<uuid:author_serial>/inbox", InboxView.as_view(), name="inbox_no_slash"),
-    # From gemini 23/11/2024
-    # re_path(r"^api/authors/(?P<author_serial>[0-9a-f-]+)/inbox/?$", InboxView.as_view(), name="inbox"),
 
     # Remote API
     path("api/authors/recommended/", RemoteAuthorsView.as_view(), name="get_recommended_authors"),
