@@ -32,7 +32,6 @@ const HomePage = () => {
   const [privatePage, setPrivatePage] = useState(1);
   const [totalPublicPages, setTotalPublicPages] = useState(0);
   const [totalPrivatePages, setTotalPrivatePages] = useState(0);
-  const [localUsers, setLocalUsers] = useState<any[]>([]);
   const pageSize = 15;
   const authProvider = useAuth();
   const [isInitial, setIsInitial] = useState(true);
@@ -99,8 +98,6 @@ const HomePage = () => {
     try {
       const publicResponse = await stream.getStream(false, publicPage);
       const privateResponse = await stream.getStream(true, privatePage);
-
-      // console.log(`FETCHED: ${JSON.stringify(publicResponse, null, 2)}`)
       
       setPublicPosts(prevPosts => {
         const existingIds = new Set(prevPosts.map(post => post.id));
