@@ -740,8 +740,12 @@ class InboxView(APIView):
             ),
         ],
         responses={
-            status.HTTP_201_CREATED: OpenApiResponse(description='Inbox item added successfully'),
-            status.HTTP_400_BAD_REQUEST: OpenApiResponse(description='Invalid payload or missing type field'),
+            status.HTTP_201_CREATED: OpenApiResponse(
+                description="Inbox item added successfully"
+            ),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                description="Invalid payload or missing type field"
+            ),
         },
         tags=["Inbox API"],
     )
@@ -845,14 +849,20 @@ class InboxView(APIView):
 
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, post_obj)
-            return Response({"message": "We have notified other users about your post"}, status=status.HTTP_201_CREATED)
+            return Response(
+                {"message": "We have notified other users about your post"},
+                status=status.HTTP_201_CREATED,
+            )
 
         except Post.DoesNotExist:
             # If post is from remote user, treat it as a JSON object
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, remote_payload=payload)
-            return Response({"message": "Remote post received successfully."}, status=status.HTTP_201_CREATED)
-        
+            return Response(
+                {"message": "Remote post received successfully."},
+                status=status.HTTP_201_CREATED,
+            )
+
     def send_post_to_remote(self, payload):
         try:
             remote_follower = payload["follower"]
@@ -875,7 +885,10 @@ class InboxView(APIView):
             )
 
             if response.status_code == 200 or response.status_code == 201:
-                return Response({"message": "Post successfully sent to remote inbox."}, status=status.HTTP_201_CREATED)
+                return Response(
+                    {"message": "Post successfully sent to remote inbox."},
+                    status=status.HTTP_201_CREATED,
+                )
             else:
                 return Response(
                     {"error": f"Failed to send post: {response.text}"},
@@ -920,7 +933,10 @@ class InboxView(APIView):
                 serializer = FollowSerializer(data=follow_data)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response({"message": "Follow request sent to remote inbox."}, status=status.HTTP_201_CREATED)
+                    return Response(
+                        {"message": "Follow request sent to remote inbox."},
+                        status=status.HTTP_201_CREATED,
+                    )
                 else:
                     print(serializer.errors)
                     return Response(
@@ -969,8 +985,8 @@ class InboxView(APIView):
             remote_author_serial = url_parser.extract_uuid(payload["authorId"])
             remote_inbox_api = f"{base_host}/api/authors/{remote_author_serial}/inbox"
 
-            if (test):
-                return Response(remote_inbox_api, 201)  
+            if test:
+                return Response(remote_inbox_api, 201)
 
             del payload["authorId"]  # Don't need this anymore
 
@@ -989,7 +1005,10 @@ class InboxView(APIView):
             )
 
             if response.status_code == 200 or response.status_code == 201:
-                return Response({"message": "Like sent to remote inbox."}, status=status.HTTP_201_CREATED)
+                return Response(
+                    {"message": "Like sent to remote inbox."},
+                    status=status.HTTP_201_CREATED,
+                )
 
             elif response.status_code == 403:
                 return Response(
@@ -1013,11 +1032,11 @@ class InboxView(APIView):
         author_host = parsed_post_url.netloc
 
         comment_obj = Comment.objects.create(
-            user=payload["author"], remote_post = post_url, comment=payload["comment"]
+            user=payload["author"], remote_post=post_url, comment=payload["comment"]
         )
         comment_id = comment_obj.uuid
         comment_url = f"{payload['author']['id']}/commented/{comment_id}"
-       
+
         payload["contentType"] = "text/plain"
         payload["post"] = post_url
         payload["id"] = comment_url
@@ -1067,7 +1086,10 @@ class InboxView(APIView):
             follow_instance = serializer.save()
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, follow_instance)
-            return Response({"message": "Follow request sent successfully"}, status=status.HTTP_201_CREATED)
+            return Response(
+                {"message": "Follow request sent successfully"},
+                status=status.HTTP_201_CREATED,
+            )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1105,17 +1127,16 @@ class InboxView(APIView):
 
         from_remote = "authorId" not in payload
         if not from_remote:
-            if (request and request.user):
+            if request and request.user:
                 author = User.objects.get(uuid=request.user.uuid)
                 payload["author"] = UserSerializer(author).data
 
-            del payload['authorId']
+            del payload["authorId"]
 
         time = payload.get("published", None)
-
         post_fqid = payload["object"]
-
         post_id = url_parser.extract_uuid(post_fqid)
+        author_id = payload["author"]["id"]
 
         try:
             post_obj = Post.objects.get(uuid=post_id)
@@ -1123,6 +1144,13 @@ class InboxView(APIView):
         except Post.DoesNotExist:
             return Response(
                 {"message": "Post not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Check if like already exists
+        if Like.objects.filter(user__id=author_id, post=post_obj).exists():
+            return Response(
+                {"message": "You already liked this post."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         if time:
@@ -1134,9 +1162,10 @@ class InboxView(APIView):
 
         inbox_obj = get_object_or_404(Inbox, user=user_object)
         create_inbox_item(inbox_obj, like_obj)
-        return Response({"message": "Notified post's owner about your like successfully."}, status=status.HTTP_201_CREATED)
-    
-
+        return Response(
+            {"message": "Notified post's owner about your like successfully."},
+            status=status.HTTP_201_CREATED,
+        )
 
     """
     Here the author_serial is the receiver uuid
@@ -1174,15 +1203,19 @@ class InboxView(APIView):
                 # Get or create the Inbox for the receiver and add the Share object to it
                 inbox_obj = get_object_or_404(Inbox, user=receiver_obj)
                 create_inbox_item(inbox_obj, share_obj)
-                
-                return Response({"message": "Stored share successfully"}, status=status.HTTP_201_CREATED)
+
+                return Response(
+                    {"message": "Stored share successfully"},
+                    status=status.HTTP_201_CREATED,
+                )
 
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            return Response({"message": "Don't handle remote user"}, status=status.HTTP_201_CREATED)
-            
+            return Response(
+                {"message": "Don't handle remote user"}, status=status.HTTP_201_CREATED
+            )
 
 
 """
