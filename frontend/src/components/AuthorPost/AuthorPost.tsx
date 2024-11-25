@@ -50,7 +50,7 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
     };
   
     const status = await InboxService.sendPostToInbox(author.id, followRequest);
-    if (status === 200) {
+    if (status === 200 || status === 201) {
       setIsRequested(true); // Change button state on success
     }
   }
