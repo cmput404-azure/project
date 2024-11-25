@@ -135,7 +135,7 @@ export default function Post({
 
           setPost(postData);
 
-          setCommentList(postData.comments.src.reverse());
+          setCommentList(postData.comments.src);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes?.count || 0
           );
@@ -162,7 +162,7 @@ export default function Post({
           }
 
           const comments = Array.isArray(postGiven.comments?.src)
-            ? postGiven.comments.src.reverse()
+            ? postGiven.comments.src
             : [];
           setCommentList(comments);
 
@@ -236,7 +236,7 @@ export default function Post({
         let encodedId = encodeURIComponent(postGiven.id);
         const postData = await postService.getPost(`api/posts/${encodedId}`);
         const comments = Array.isArray(postData?.comments?.src)
-          ? postData.comments.src.reverse()
+          ? postData.comments.src
           : [];
         setCommentList(comments);
         setCommentCount(
