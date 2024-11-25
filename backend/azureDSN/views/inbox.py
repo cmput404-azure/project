@@ -941,65 +941,42 @@ class InboxView(APIView):
     id is in format: http://{server}/api/authors/{user_id}/liked/{like_id}
     '''
     def create_like(self, user_object, payload, request):
-        # This is always called when a remote/local Like object is sent in relation to a Local Post
-        try:
-            # Need to get author of the like now from author fqid
-            author = payload.get('author', None) # From remote has this
-            author_fqid = payload.get('authorId', None) # Liking a local post
-            if (author_fqid):
-                author_uuid = url_parser.extract_uuid(author_fqid)
-                print(f"Author of Like obj (should be local): {author_uuid}")
-                author = get_object_or_404(User, uuid=author_uuid)
-                author = UserSerializer(author).data
 
-            time = payload.get('published', None)
+        from_remote = 'authorId' not in payload
+        if not from_remote:
+            author = UserSerializer(user_object).data
+            payload['author'] = author
+            del payload['authorId']
+
+        time = payload.get('published', None)
             
-            post_fqid = payload['object']
+        post_fqid = payload['object']
 
-            post_id = url_parser.extract_uuid(post_fqid)
-            print(f"Extracted UUID: {post_id}")
+        post_id = url_parser.extract_uuid(post_fqid)
 
+        try:
             post_obj = Post.objects.get(uuid=post_id)
-            print(f"POST IS: {post_obj}")
 
-            if (Post.DoesNotExist):
+        except Post.DoesNotExist:
                 return Response({"message": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
             
-            if (time):
-                like_obj = Like.objects.create(user=author, 
-                                            created_at=time, 
-                                            post=post_obj)
-            else:
-                like_obj = Like.objects.create(user=author, 
-                                            post=post_obj)
+        if (time):
+            like_obj = Like.objects.create(user=payload['author'], 
+                                        created_at=time, 
+                                        post=post_obj)
+        else:
+            like_obj = Like.objects.create(user=payload['author'], 
+                                        post=post_obj)
                 
 
-            created_at = like_obj.created_at
-            # Ensure timezone-awareness
-            if not is_aware(created_at):
-                created_at = make_aware(created_at)
-            
-            # new_payload = {
-            #     "type": "like",
-            #     "author": author,
-            #     "id": f"{url_parser.get_base_host(author.host)}/api/authors/{author.uuid}/liked/{like_obj.uuid}",
-            #     "published": created_at.replace(microsecond=0).isoformat(),
-            #     "object": payload["object"]
+        created_at = like_obj.created_at
+        # Ensure timezone-awareness
+        if not is_aware(created_at):
+            created_at = make_aware(created_at)
 
-            # }
-            serializer = LikeSerializer(like_obj, context={"request": request})
-            print(f"SERIALIZED DATA: {serializer.data}")
-
-            if serializer.is_valid():
-                like_instance =serializer.save()
-                inbox_obj = get_object_or_404(Inbox, user=user_object)
-                create_inbox_item(inbox_obj, like_instance)
-                return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
-        except Exception as e:
-            print(f"SOMETHING WRONG: {str(e)}")
-            return Response({"message": "Something went wrong."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        inbox_obj = get_object_or_404(Inbox, user=user_object)
+        create_inbox_item(inbox_obj, like_obj)
+        return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_200_OK)
     
 
     '''
