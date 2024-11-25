@@ -208,8 +208,7 @@ class AuthStreamView(APIView):
                             # Skip already processed posts with the same status
                             continue
 
-                        author_host = urlparse(remote_payload["author"]["host"])
-                        base_author_host = f"{author_host.scheme}://{author_host.netloc}"
+                        base_author_host = url_parser.get_base_host(remote_payload.get('author').get('host'))
                         
                         encoded_url = quote(post_id, safe='')
                         get_post_url = f"{base_author_host}/api/posts/{encoded_url}"
@@ -219,7 +218,7 @@ class AuthStreamView(APIView):
                                 get_post_url,
                                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                             )
-                            print(response.status_code)
+
                             if response.status_code == 200:
                                 post_data = response.json()
 

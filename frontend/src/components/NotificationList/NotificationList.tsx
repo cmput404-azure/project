@@ -32,7 +32,7 @@ export default function NotificationList() {
           page,
           notificationsPerPage
         );
-        const { items } = response; // Adjust based on your API response format
+        const { items } = response;
 
         // Fetch additional user/post details for each item
         const notificationsWithUsers = await Promise.all(
@@ -41,11 +41,12 @@ export default function NotificationList() {
             let post_obj = null;
 
             if (item.type === "follow") {
-              user = await fetchUser(item.actor.id);
+              user = item["actor"]
             } else if (item.type === "like" || item.type === "comment") {
-              user = await fetchUser(item.author.id);
+              user = item["author"]
               try {
-                const postResp = await api.get(item.object || item.post);
+                const field = item.type === "like" ? "object" : "post";
+                const postResp = await api.get(item[field]);
                 post_obj = postResp.data;
               } catch {
                 return null; // Skip deleted posts
@@ -138,7 +139,7 @@ export default function NotificationList() {
             >
               Load More
             </button>
-          ) : (
+          ) : notifications.length > 0 && ( 
             <div className={styles.noNotifications}>No more notifications</div>
           )}
         </div>
