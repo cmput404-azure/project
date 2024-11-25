@@ -1,4 +1,5 @@
 from django.conf import settings
+from ..utils import url_parser
 from rest_framework import serializers
 from ..models import Like, Post
 from django.utils.timezone import make_aware
@@ -64,7 +65,7 @@ class LikeSerializer(serializers.ModelSerializer):
         author_data = validated_data.pop('author') # json/dict object
 
         object_url = validated_data['object'] # the Post object URL
-        post_id = object_url.split('/')[-1] # Post 'id' is always the last part of the URL
+        post_id = url_parser.extract_uuid(object_url)
 
         post = Post.objects.get(uuid=post_id)
         like = Like.objects.create(

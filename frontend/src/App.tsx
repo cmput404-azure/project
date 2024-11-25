@@ -14,6 +14,7 @@ import UserProfileOld from "./components/UserProfile/UserProfileOld";
 import styles from "./App.module.scss";
 import { useAuth } from "./state";
 import SettingsPage from "./components/SettingsPage/SettingsPage";
+import ImageView from "./components/ImageView/ImageView";
 
 export default function App() {
   const nav = useNavigate();
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/logout" element={<Logout />} />
           </Route>
           <Route path="/post/:postID" element={<Post />} />
+          <Route path="/post/:postID/image" element={<ImageView />} />
           <Route path="/authors/:userID" element={<PublicProfile />} />
           <Route path="*" element={<ErrorPage />} />
         </Routes>

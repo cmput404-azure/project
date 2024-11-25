@@ -1,9 +1,11 @@
 import React, { useState }  from 'react';
 
+import AddIcon from '@mui/icons-material/Add';
 import { Author } from '../../models/models';
 import { Avatar } from "@mui/material";
 import InboxService from '../../service/inbox';
 import { api } from '../../service/config';
+import { extractHost } from "../../util/formatting/extractHost";
 import profileService from "../../service/profile";
 import styles from './AuthorPost.module.scss';
 import { useAuth } from '../../state';
@@ -22,14 +24,14 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
 
     const followRequest = {
       type: "follow",
-      summary: `${myInfo.username} wants to follow ${author.username}`,
+      summary: `${myInfo.username} wants to follow ${author.displayName}`,
       actor: { // person who sends the request
         type: "author",
         id: `${myInfo.id}`,
         host: `${myInfo.host}`,
         displayName: `${myInfo.displayName}`,
-        username: `${myInfo.username}`,
-        bio: `${myInfo.bio}`,
+        username: myInfo.username || "",
+        bio: myInfo.bio || "",
         profileImage: `${myInfo.profileImage}`,
         github: `${myInfo.github}`,
         page: `${myInfo.page}`,
@@ -39,8 +41,8 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
         id: `${author.id}`,
         host: `${author.host}`,
         displayName: `${author.displayName}`,
-        username: `${author.username}`,
-        bio: `${author.bio}`,
+        username: author.username || "",
+        bio: author.bio || "",
         profileImage: `${author.profileImage}`,
         github: `${author.github}`,
         page: `${author.page}`,
@@ -48,7 +50,7 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
     };
   
     const status = await InboxService.sendPostToInbox(author.id, followRequest);
-    if (status === 200) {
+    if (status === 200 || status === 201) {
       setIsRequested(true); // Change button state on success
     }
   }
@@ -66,7 +68,7 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
           />
           <div>
             <h3>{author.displayName}</h3>
-            <p>@{author.username}</p>
+            <p>@{author.username ?? extractHost(author.host)}</p>
           </div>
         </div>
         <button
@@ -74,7 +76,7 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
           onClick={handleAddButton}
           disabled={isRequested}
         >
-          {isRequested ? 'Requested' : '+'}
+          {isRequested ? 'Requested' : (<AddIcon/>)}
         </button>
       </div>
       {author.bio && author.bio.trim() !== "" && (

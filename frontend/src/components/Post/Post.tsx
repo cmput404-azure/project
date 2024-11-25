@@ -113,12 +113,14 @@ export default function Post({
                 }
               }
             }
-            setHasLiked(
-              postData.likes.src.some((like) =>
-                like.id.includes(authProvider.user?.uuid)
-              )
-            );
 
+            if(postData.likes.count > 0) {
+              setHasLiked(
+                postData.likes.src.some((like) =>
+                  like.id.includes(authProvider.user?.uuid)
+                )
+              );
+            }
             const checkIfShared = async () => {
               const isShared = await ShareService.checkShare(
                 postData.id,
@@ -133,7 +135,7 @@ export default function Post({
 
           setPost(postData);
 
-          setCommentList(postData.comments.src.reverse());
+          setCommentList(postData.comments.src);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes?.count || 0
           );
@@ -148,7 +150,7 @@ export default function Post({
           if (authProvider.user && postGiven.likes?.count > 0) {
             setHasLiked(
               postGiven.likes.src.some((like) =>
-                like.id.includes(authProvider.user.uuid)
+                like.author.id.includes(authProvider.user.uuid) // whitesmoke changed the like.id so need to compare with author.id instead
               )
             );
 
@@ -159,8 +161,8 @@ export default function Post({
             setHasShared(isShared);
           }
 
-          const comments = Array.isArray(postGiven?.comments?.src)
-            ? postGiven.comments.src.reverse()
+          const comments = Array.isArray(postGiven.comments?.src)
+            ? postGiven.comments.src
             : [];
           setCommentList(comments);
 
@@ -208,14 +210,11 @@ export default function Post({
           } else {
             // If it's not a data URL, fetch from the endpoint
             try {
-              const response = await fetch(imageUrl);
-              if (response.ok) {
-                const jsonResponse = await response.json();
-                const imageData = jsonResponse.image;
-                setImageSrc(imageData);
-              } else {
-                console.error("Error fetching image:", response.statusText);
-              }
+              const response = await api.get<PostData>(imageUrl);
+              const jsonResponse = response.data;
+              const imageData = `data:${jsonResponse.contentType},${jsonResponse.content}`;
+              setImageSrc(imageData);
+
             } catch (error) {
               console.error("Error fetching image:", error);
             }
@@ -232,11 +231,12 @@ export default function Post({
   // To refresh comment count when comment modal is closed
   useEffect(() => {
     const fetchPost = async () => {
+      console.log("Refreshing comment count");
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
         const postData = await postService.getPost(`api/posts/${encodedId}`);
         const comments = Array.isArray(postData?.comments?.src)
-          ? postData.comments.src.reverse()
+          ? postData.comments.src
           : [];
         setCommentList(comments);
         setCommentCount(
@@ -244,8 +244,11 @@ export default function Post({
         );
       }
     };
-    fetchPost();
-  }, [isModalOpen, postGiven]);
+
+    if(isCommentOpen || isModalOpen) {
+      fetchPost();
+    }
+  }, [isModalOpen, postGiven, isCommentOpen]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
@@ -257,9 +260,10 @@ export default function Post({
 
   const handleCommentButtonClick = async () => {
     if (isModal) return;
+    console.log(`IN HANDLE COMMENT BUTTON: ${JSON.stringify(post, null, 2)}`)
     try {
       const postData = await postService.getPost(
-        `api/posts/${encodeURIComponent(post.id)}`
+        `api/posts/${encodeURIComponent(post.id)}` // this doesnt work as well because UUID?
       );
       setPost(postData);
       setIsModalOpen(true);
@@ -296,17 +300,17 @@ export default function Post({
 
     if (hasLiked) return;
 
+    console.log(`IN HANDLE LIKE POST: ${JSON.stringify(post, null, 2)}`)
+
     try {
-      const currentUser = await api.get(
-        `/api/authors/${authProvider.user.uuid}/`
-      );
       const like_obj = {
         type: "like",
-        author: currentUser.data,
-        published: new Date(post.published).toISOString(),
-        object: post.id,
-        post_host: postGiven.author.host,
-      };
+        object: post.id, // should be the post FQID
+        authorId: post.author.id
+      }; // build json in the backend
+
+      console.log(`LIKE OBJ: ${JSON.stringify(like_obj, null, 2)}`);
+
 
       await inbox.sendPostToInbox(post.author.id, like_obj);
       setLikeCount(likeCount + 1);

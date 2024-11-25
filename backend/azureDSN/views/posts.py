@@ -334,40 +334,73 @@ class AuthorPostsAllView(APIView):
         if not author_serial:
             return Response("Need to specify at least an author ID", status=400)
         
-        author = get_object_or_404(User, uuid=author_serial)
+        try:
+            # local user 
+            author = User.objects.get(uuid=author_serial)
+            self.fetch_github_activity(author)
 
-        self.fetch_github_activity(author)
+            posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3]).order_by('-modified_at')
+            # Likes and Comments will be handled in PostSerializer below
 
-        posts = Post.objects.filter(user=author).filter(visibility__in=[1, 2, 3]).order_by('-modified_at')
-        # Likes and Comments will be handled in PostSerializer below
-
-        if request.user.is_authenticated:
-            if request.user == author:  # "I want to view my own public profile page"
-                pass
-            else:
-                # Retrieve the followees (users the current user who made the request is following)
-                followee_uuids = Follow.objects.filter(local_follower=request.user).values_list('local_followee', flat=True)
-                followees = User.objects.filter(uuid__in=followee_uuids)
-
-                friends = Follow.objects.filter(
-                    local_followee=request.user,
-                    local_follower__in=followees
-                ).values_list('local_follower_id', flat=True)
-
-                if author.uuid in friends:
-                    posts = posts.filter(visibility__in=[1, 2])
+            if request.user.is_authenticated:
+                if request.user == author:  # "I want to view my own public profile page"
+                    pass
                 else:
-                    # The user who made the request has no relationship with the author whose profile page they want to view
-                    posts = posts.filter(visibility=1)
-        else:
-            # Unauthenticated users should only see public posts
-            posts = posts.filter(visibility=1)
-        
-        pagination = self.pagination_provider()
-        page = pagination.paginate_queryset(posts, request)
-        serialized_posts = PostSerializer(page, many=True).data
+                    # Retrieve the followees (users the current user who made the request is following)
+                    followee_uuids = Follow.objects.filter(local_follower=request.user).values_list('local_followee', flat=True)
+                    followees = User.objects.filter(uuid__in=followee_uuids)
 
-        return pagination.get_paginated_response(serialized_posts)
+                    friends = Follow.objects.filter(
+                        local_followee=request.user,
+                        local_follower__in=followees
+                    ).values_list('local_follower_id', flat=True)
+
+                    if author.uuid in friends:
+                        posts = posts.filter(visibility__in=[1, 2])
+                    else:
+                        # The user who made the request has no relationship with the author whose profile page they want to view
+                        posts = posts.filter(visibility=1)
+            else:
+                # Unauthenticated users should only see public posts
+                posts = posts.filter(visibility=1)
+            
+            pagination = self.pagination_provider()
+            page = pagination.paginate_queryset(posts, request)
+            serialized_posts = PostSerializer(page, many=True).data
+
+            return pagination.get_paginated_response(serialized_posts)
+        
+        except User.DoesNotExist:
+            # author_serial is remote user
+            try:
+                remote_host = request.GET.get('host')
+                if not remote_host:
+                    return Response({"message": "Host is required for remote users."}, status=status.HTTP_400_BAD_REQUEST)
+                
+                parsed_url = urlparse(remote_host)
+                base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                
+                # send request to fetch all posts
+                remote_user_url = f"{base_host}/api/authors/{author_serial}/posts/"
+                response = requests.get(
+                    url=remote_user_url,
+                    params={"page": 1, "size": 10},  
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                )
+                if response.status_code == 200:
+                    return Response(response.json(), status=status.HTTP_200_OK)
+                else:
+                    return Response({
+                        "message": f"Failed to fetch posts from remote host. Status code: {response.status_code}",
+                        "details": response.text
+                    }, status=status.HTTP_502_BAD_GATEWAY)
+            
+            except Exception as e:
+                return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            
+        
+        
     
     @extend_schema(
         summary="Create a new post",
@@ -605,6 +638,7 @@ class PostView(APIView):
                 serializer = PostSerializer(post)
                 post_data = serializer.data
             else:
+                # Dealing with remote post
                 try:
                     response = requests.get(
                         decoded_post_fqid,

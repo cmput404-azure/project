@@ -295,7 +295,7 @@ class InboxViewTestCase(TestCase):
             "published": "2024-11-17T02:17:33.022000Z",
             "title": "second post",
             "type": "post",
-            "visibility": 3
+            "visibility": "PUBLIC"
         }
         response = self.client.post(self.inbox_url, data=payload, format='json')
         # try update post
@@ -326,12 +326,12 @@ class InboxViewTestCase(TestCase):
             "published": "2024-11-17T02:17:33.022000Z",
             "title": "This is the new title",
             "type": "post",
-            "visibility": 1
+            "visibility": "PUBLIC"
         }
         response = self.client.put(self.inbox_url, data=payload, format='json')
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "We have noticed other users about your updated post")
+        self.assertEqual(response.data["message"], "We have notified other users about your updated post")
         self.assertEqual(len(inbox_obj.items.all()), 2)
         self.assertEqual(inbox_obj.items.last().post_status, "update")
         self.assertEqual(inbox_obj.items.first().post_status, "edited")
@@ -398,7 +398,7 @@ class InboxViewTestCase(TestCase):
         response = self.client.put(self.inbox_url, data=payload, format='json')
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "We have noticed other users about your updated post")
+        self.assertEqual(response.data["message"], "We have notified other users about your updated post")
         self.assertEqual(len(inbox_obj.items.all()), 2)
         self.assertEqual(inbox_obj.items.last().post_status, "update")
         self.assertEqual(inbox_obj.items.first().post_status, "edited") 
@@ -485,7 +485,7 @@ class InboxViewTestCase(TestCase):
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         response = self.client.post(self.inbox_url, data=payload, format='json')
         self.assertEqual(len(inbox_obj.items.all()), 1)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["message"], "Follow request sent successfully")
 
 
@@ -510,7 +510,7 @@ class InboxViewTestCase(TestCase):
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         response = self.client.post(self.inbox_url, data=payload, format='json')
         self.assertEqual(len(inbox_obj.items.all()), 1)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     # Test sending a like into one's inbox
     def test_create_like(self):
@@ -533,9 +533,9 @@ class InboxViewTestCase(TestCase):
         response = self.client.post(self.inbox_url, data=payload, format='json')
 
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(inbox_obj.items.all()), 1)
-        self.assertEqual(response.data["message"], "Notice post's owner about your like successfully")
+        self.assertEqual(response.data["message"], "Notified post's owner about your like successfully.")
         
     # Test sending a share into one's inbox
     def test_create_share(self):
@@ -546,7 +546,7 @@ class InboxViewTestCase(TestCase):
         }
         response = self.client.post(self.inbox_url, data=payload, format='json')
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(inbox_obj.items.all()), 1)
         try:
             share_obj = Share.objects.get(id=1)
@@ -624,7 +624,7 @@ class InboxViewTestCase(TestCase):
     def test_send_like_to_remote_url(self):
             payload = {
                 "type": "like",
-                "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+                "object": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
                 "author":{
                     "type":"author",
                     "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
@@ -634,13 +634,13 @@ class InboxViewTestCase(TestCase):
                     "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
                     "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
                 },
-                "comment": "Nice post!",
-                "post_host": f"{settings.BASE_URL}/api/"
+                "authorId": f"{settings.BASE_URL}/api/authors/{self.user.uuid}"
             }
             inbox_view = InboxView()
 
-            response = inbox_view.send_like_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
-            self.assertEqual(response,f"{settings.BASE_URL}/api/authors/{self.user.uuid}/inbox/")
+            response = inbox_view.send_like_to_remote(payload=payload, request=None, test=True)
+
+            self.assertEqual(response.status_code, 201)
 
         
         
