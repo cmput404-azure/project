@@ -37,9 +37,9 @@ export default function NotificationList() {
             return null;
           }
           if (item.type === "follow") {
-            user = await fetchUser(item.actor.id);
+            user = item["actor"]
           } else if (item.type === "like") {
-            user = await fetchUser(item.author.id);
+            user = item["author"]
             // Expected format for author's host: http://host/api/
             // Expected format for object: http://host/api/authors/<author_uuid>/posts/<post_uuid>
             try {
@@ -58,7 +58,7 @@ export default function NotificationList() {
             }
           } else if (item.type === "comment") {
             let encodedId = encodeURIComponent(item.author.id);
-            user = await fetchUser(encodedId);
+            user = item["author"]
             try {
               let post_resp = await api.get(item.post);
               post_obj = post_resp.data;
@@ -74,8 +74,7 @@ export default function NotificationList() {
           }
           else if (item.type === "post") {
             // Someone posted 
-            let user_resp = await api.get(item.author.id);
-            user = user_resp.data;
+            user = item["author"];
             post_obj = item;
           }
           return { ...item, user, post_obj };

@@ -139,10 +139,10 @@ class ProfileService {
       @returns string - the profile picture url
    */
    public getProfilePicture(author: Author, initial?: boolean): string {
-      if(initial){
-         return `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+      if (initial || !author.profileImage) {
+         return `https://ui-avatars.com/api/?background=random&name=${author.displayName}`;
       }
-      return author.profileImage || `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
+      return author.profileImage;
    }
 }
 

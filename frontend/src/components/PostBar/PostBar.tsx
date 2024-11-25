@@ -263,7 +263,8 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
         <div className="avatar">
           <Avatar
             src={
-              authProvider.user.profileImage ??
+              authProvider.user.profileImage && authProvider.user.profileImage !== "" ?
+              authProvider.user.profileImage : 
               `https://ui-avatars.com/api/?background=random&name=${author.displayName}`
             }
             alt="User"
