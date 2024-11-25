@@ -46,14 +46,13 @@ export default function NotificationList() {
               user = item["author"]
               try {
                 const field = item.type === "like" ? "object" : "post";
-                const postResp = await api.get(item[field]);
+                const postResp = await api.get(item[field]); // always local post
                 post_obj = postResp.data;
               } catch {
                 return null; // Skip deleted posts
               }
             } else if (item.type === "post") {
-              const userResp = await api.get(item.author.id);
-              user = userResp.data;
+              user = item["author"]
               post_obj = item;
             }
             return { ...item, user, post_obj };
@@ -86,16 +85,6 @@ export default function NotificationList() {
   useEffect(() => {
     fetchNotifications(currentPage);
   }, [fetchNotifications, currentPage]);
-
-  const fetchUser = async (id: string) => {
-    try {
-      const response = await api.get(`/api/authors/${id}/`);
-      return response.data;
-    } catch (err) {
-      console.error(`Error fetching user with id: ${id}:`, err);
-      return null;
-    }
-  };
 
   const loadMoreNotifications = () => {
     if (hasMore) {
