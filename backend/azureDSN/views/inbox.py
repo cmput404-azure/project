@@ -1030,9 +1030,19 @@ class InboxView(APIView):
         parsed_post_url = urlparse(post_url)
         author_host = parsed_post_url.netloc
 
+        parsed_url = urlparse(payload["post"])
+        post_id = parsed_url.path.split("/")[-1]  # extract id of the post (the uuid)
+        post_obj = Post.objects.get(uuid=post_id)
+
+        comment_obj = Comment.objects.create(
+            user=payload["author"], remote_post = post_url, comment=payload["comment"]
+        )
+        comment_id = comment_obj.uuid
+        comment_url = f""
         payload_json = json.dumps(payload)
         payload_json["contentType"] = "text/plain"
         payload_json["post"] = post_url
+        payload_json["id"]
         # need to store local id
         # payload_json["id"]
         
