@@ -295,7 +295,7 @@ class InboxViewTestCase(TestCase):
             "published": "2024-11-17T02:17:33.022000Z",
             "title": "second post",
             "type": "post",
-            "visibility": 3
+            "visibility": "PUBLIC"
         }
         response = self.client.post(self.inbox_url, data=payload, format='json')
         # try update post
@@ -326,7 +326,7 @@ class InboxViewTestCase(TestCase):
             "published": "2024-11-17T02:17:33.022000Z",
             "title": "This is the new title",
             "type": "post",
-            "visibility": 1
+            "visibility": "PUBLIC"
         }
         response = self.client.put(self.inbox_url, data=payload, format='json')
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
