@@ -113,12 +113,14 @@ export default function Post({
                 }
               }
             }
-            setHasLiked(
-              postData.likes.src.some((like) =>
-                like.id.includes(authProvider.user?.uuid)
-              )
-            );
 
+            if(postData.likes.count > 0) {
+              setHasLiked(
+                postData.likes.src.some((like) =>
+                  like.id.includes(authProvider.user?.uuid)
+                )
+              );
+            }
             const checkIfShared = async () => {
               const isShared = await ShareService.checkShare(
                 postData.id,
