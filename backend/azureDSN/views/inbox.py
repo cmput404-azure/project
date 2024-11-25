@@ -1125,9 +1125,11 @@ class InboxView(APIView):
 
         from_remote = "authorId" not in payload
         if not from_remote:
-            author = UserSerializer(user_object).data
-            payload["author"] = author
-            del payload["authorId"]
+            if (request and request.user):
+                author = User.objects.get(uuid=request.user.uuid)
+                payload["author"] = UserSerializer(author).data
+
+            del payload['authorId']
 
         time = payload.get("published", None)
 

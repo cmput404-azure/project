@@ -150,7 +150,7 @@ export default function Post({
           if (authProvider.user && postGiven.likes?.count > 0) {
             setHasLiked(
               postGiven.likes.src.some((like) =>
-                like.id.includes(authProvider.user.uuid)
+                like.author.id.includes(authProvider.user.uuid) // whitesmoke changed the like.id so need to compare with author.id instead
               )
             );
 
