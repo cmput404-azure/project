@@ -376,7 +376,7 @@ class InboxView(APIView):
 
                 create_inbox_item(inbox_obj, post_obj, post_status="delete")
                 return Response(
-                    {"message": "We have noticed other users about your deleted post"},
+                    {"message": "We have notified other users about your deleted post"},
                     status=status.HTTP_200_OK,
                 )
 
@@ -393,7 +393,7 @@ class InboxView(APIView):
                     inbox_obj, remote_payload=payload, post_status="delete"
                 )
                 return Response(
-                    {"message": "We have noticed other users about your deleted post"},
+                    {"message": "We have notified other users about your deleted post"},
                     status=status.HTTP_200_OK,
                 )
 
@@ -520,7 +520,7 @@ class InboxView(APIView):
                 create_inbox_item(inbox_obj, post_obj, post_status="update")
 
                 return Response(
-                    {"message": "We have noticed other users about your updated post"},
+                    {"message": "We have notified other users about your updated post"},
                     status=status.HTTP_200_OK,
                 )
 
@@ -551,7 +551,7 @@ class InboxView(APIView):
                 )
 
                 return Response(
-                    {"message": "We have noticed other users about your updated post"},
+                    {"message": "We have notified other users about your updated post"},
                     status=status.HTTP_200_OK,
                 )
 

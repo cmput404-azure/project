@@ -331,7 +331,7 @@ class InboxViewTestCase(TestCase):
         response = self.client.put(self.inbox_url, data=payload, format='json')
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "We have noticed other users about your updated post")
+        self.assertEqual(response.data["message"], "We have notified other users about your updated post")
         self.assertEqual(len(inbox_obj.items.all()), 2)
         self.assertEqual(inbox_obj.items.last().post_status, "update")
         self.assertEqual(inbox_obj.items.first().post_status, "edited")
@@ -398,7 +398,7 @@ class InboxViewTestCase(TestCase):
         response = self.client.put(self.inbox_url, data=payload, format='json')
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "We have noticed other users about your updated post")
+        self.assertEqual(response.data["message"], "We have notified other users about your updated post")
         self.assertEqual(len(inbox_obj.items.all()), 2)
         self.assertEqual(inbox_obj.items.last().post_status, "update")
         self.assertEqual(inbox_obj.items.first().post_status, "edited") 
@@ -535,7 +535,7 @@ class InboxViewTestCase(TestCase):
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(inbox_obj.items.all()), 1)
-        self.assertEqual(response.data["message"], "Notice post's owner about your like successfully")
+        self.assertEqual(response.data["message"], "Notified post's owner about your like successfully.")
         
     # Test sending a share into one's inbox
     def test_create_share(self):
