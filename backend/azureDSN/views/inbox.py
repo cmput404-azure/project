@@ -967,12 +967,7 @@ class InboxView(APIView):
         else:
             like_obj = Like.objects.create(user=payload['author'], 
                                         post=post_obj)
-                
 
-        created_at = like_obj.created_at
-        # Ensure timezone-awareness
-        if not is_aware(created_at):
-            created_at = make_aware(created_at)
 
         inbox_obj = get_object_or_404(Inbox, user=user_object)
         create_inbox_item(inbox_obj, like_obj)
