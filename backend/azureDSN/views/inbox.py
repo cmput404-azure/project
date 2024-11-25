@@ -15,6 +15,7 @@ from ..models import *
 from datetime import datetime
 from ..utils import url_parser
 import logging
+import requests
 
 '''
 a POST request occurs if someone like, comment, share post or send follow request to our local user
@@ -304,6 +305,7 @@ class InboxView(APIView):
     The deleted post might be local or remote
     '''
     def delete_post(self, author_serial, request):
+        print(f"CALLING DELETE METHOD")
         '''
         We can't send directly to remote inbox => we have to send it from our backend
         Idea is to send the whole post obj that is deleted with the receiver object
@@ -431,6 +433,7 @@ class InboxView(APIView):
                 + we just simply send a put request with a whole edited post obj to their endpoint
         return message indicating successful or not
         '''
+        print(f"CALLING PUT METHOD")
         payload = request.data
         
         if "type" not in payload:
@@ -519,6 +522,10 @@ class InboxView(APIView):
                 if response.status_code == 404: # User not a follower of remote follower
                     return Response({"message": "Friends-only post is not sent to remote node."}, status=status.HTTP_200_OK)
             
+            # Send POST request to other group if not sharing same code base with us
+            if "azure" not in base_host or "8000" not in base_host:
+                http_method = "POST"
+                
             # Send the updated/deleted post to the remote inbox
             remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox/"
             response = requests.request(
@@ -695,10 +702,29 @@ class InboxView(APIView):
                 return self.send_comment_to_remote(payload, request)
             else:
                 return Response({"error": "User not found locally and type not supported for remote authors."}, status=status.HTTP_400_BAD_REQUEST)
-
+        
+        # Now because all other groups will send a POST request for delete and update post
+        # we check if the post's visibility is DELETED => call delete
+        # we check if the remote payload in our inbox, if there is one with type post and same id => call update
         if payload["type"].lower() == "post":
-            print(f"CREATE POST LOCALLY")
-            return self.create_post(user_obj, payload, request)
+            if payload["visibility"].upper() == "DELETED":
+                return self.delete_post(self, author_serial, request)
+            else:
+                inbox_obj = get_object_or_404(Inbox, user=user_obj)
+                # Find the old version of that posts in inbox
+                existing_item_obj = InboxItem.objects.filter(
+                    inbox=inbox_obj,
+                    remote_payload__id=payload["id"]  # Check if remote_payload's id matches the incoming id
+                )
+                if existing_item_obj.exists():
+                    # this is the updated remote post so we map to put
+                    self.put(request, author_serial)
+                else:
+                    print(f"CREATE POST LOCALLY")
+                    return self.create_post(user_obj, payload, request)
+                    
+        # if payload["type"].lower() == "post":
+            
         elif payload["type"].lower() == "follow":
             logging.info("USING LOCAL")
             return self.create_follow_request(user_obj, payload, request)
