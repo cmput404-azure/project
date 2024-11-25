@@ -11,4 +11,5 @@ class Comment(models.Model):
     contentType = models.TextField(default='text/plain')
     created_at = models.DateTimeField("date commented", default=datetime.now)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)  # The ID of comment 
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null = True, blank = True)
+    remote_post = models.URLField(blank=True, null=True)
