@@ -148,10 +148,19 @@ export default function Post({
           setPostAuthorID(postAuthorID);
 
           if (authProvider.user && postGiven.likes?.count > 0) {
+            console.log(`POST GIVEN: ${JSON.stringify(postGiven.likes, null, 2)}`)
+            // setHasLiked(
+            //   postGiven.likes.src.some((like) =>
+            //     like.id.includes(authProvider.user.uuid)
+            //   )
+            // );
             setHasLiked(
-              postGiven.likes.src.some((like) =>
-                like.id.includes(authProvider.user.uuid)
-              )
+              postGiven.likes.src.some((like) => {
+                const doesInclude = like.id.includes(authProvider.user.uuid);
+                console.log(`Checking like ID: ${like.id}`);
+                console.log(`Does it include UUID (${authProvider.user.uuid})? ${doesInclude}`);
+                return doesInclude;
+              })
             );
 
             const isShared = await ShareService.checkShare(
