@@ -485,7 +485,7 @@ class InboxViewTestCase(TestCase):
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         response = self.client.post(self.inbox_url, data=payload, format='json')
         self.assertEqual(len(inbox_obj.items.all()), 1)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["message"], "Follow request sent successfully")
 
 
@@ -510,7 +510,7 @@ class InboxViewTestCase(TestCase):
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
         response = self.client.post(self.inbox_url, data=payload, format='json')
         self.assertEqual(len(inbox_obj.items.all()), 1)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     # Test sending a like into one's inbox
     def test_create_like(self):
@@ -533,7 +533,7 @@ class InboxViewTestCase(TestCase):
         response = self.client.post(self.inbox_url, data=payload, format='json')
 
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(inbox_obj.items.all()), 1)
         self.assertEqual(response.data["message"], "Notice post's owner about your like successfully")
         
@@ -640,7 +640,7 @@ class InboxViewTestCase(TestCase):
 
             response = inbox_view.send_like_to_remote(payload=payload, request=None, test=True)
 
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 201)
 
         
         
