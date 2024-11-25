@@ -546,7 +546,7 @@ class InboxViewTestCase(TestCase):
         }
         response = self.client.post(self.inbox_url, data=payload, format='json')
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(inbox_obj.items.all()), 1)
         try:
             share_obj = Share.objects.get(id=1)
