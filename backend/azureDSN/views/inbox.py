@@ -304,7 +304,6 @@ class InboxView(APIView):
     The deleted post might be local or remote
     '''
     def delete_post(self, author_serial, request):
-        print(f"CALLING DELETE METHOD")
         '''
         We can't send directly to remote inbox => we have to send it from our backend
         Idea is to send the whole post obj that is deleted with the receiver object
@@ -432,7 +431,7 @@ class InboxView(APIView):
                 + we just simply send a put request with a whole edited post obj to their endpoint
         return message indicating successful or not
         '''
-        print(f"CALLING PUT METHOD")
+        # print(f"CALLING PUT METHOD")
         payload = request.data
         
         if "type" not in payload:
