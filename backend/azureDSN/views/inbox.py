@@ -845,7 +845,7 @@ class InboxView(APIView):
 
             inbox_obj = get_object_or_404(Inbox, user=user_object)
             create_inbox_item(inbox_obj, post_obj)
-            return Response({"message": "We have noticed other users about your post"}, status=status.HTTP_201_CREATED)
+            return Response({"message": "We have notified other users about your post"}, status=status.HTTP_201_CREATED)
 
         except Post.DoesNotExist:
             # If post is from remote user, treat it as a JSON object
@@ -1132,7 +1132,7 @@ class InboxView(APIView):
 
         inbox_obj = get_object_or_404(Inbox, user=user_object)
         create_inbox_item(inbox_obj, like_obj)
-        return Response({"message": "Notice post's owner about your like successfully"}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Notified post's owner about your like successfully."}, status=status.HTTP_201_CREATED)
     
 
 
@@ -1173,7 +1173,7 @@ class InboxView(APIView):
                 inbox_obj = get_object_or_404(Inbox, user=receiver_obj)
                 create_inbox_item(inbox_obj, share_obj)
                 
-                return Response({"message": "Store share successfully"}, status=status.HTTP_201_CREATED)
+                return Response({"message": "Stored share successfully"}, status=status.HTTP_201_CREATED)
 
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
