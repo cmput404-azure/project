@@ -431,7 +431,7 @@ class InboxView(APIView):
                 + we just simply send a put request with a whole edited post obj to their endpoint
         return message indicating successful or not
         '''
-        # print(f"CALLING PUT METHOD")
+
         payload = request.data
         
         if "type" not in payload:
@@ -722,10 +722,7 @@ class InboxView(APIView):
                     self.put(request, author_serial)
                 else:
                     print(f"CREATE POST LOCALLY")
-                    return self.create_post(user_obj, payload, request)
-                    
-        # if payload["type"].lower() == "post":
-            
+                    return self.create_post(user_obj, payload, request)            
         elif payload["type"].lower() == "follow":
             logging.info("USING LOCAL")
             return self.create_follow_request(user_obj, payload, request)
