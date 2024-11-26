@@ -125,7 +125,6 @@ class AuthorsSpecificView(APIView):
 
             try:
                 # Send request to remote server to get remote author's info
-
                 remote_author_url = f"{base_host}/api/authors/{author_serial}/"
                 response = requests.get(
                     remote_author_url,
