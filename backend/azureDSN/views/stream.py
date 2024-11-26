@@ -200,34 +200,38 @@ class AuthStreamView(APIView):
                     remote_payload = item.remote_payload
                     if remote_payload.get("type") == "post":
                         visibility = remote_payload.get("visibility", "").upper()
+                        print(f"\nPrivate Post Visibility: {visibility}")
                         if visibility not in ["FRIENDS", "UNLISTED"]:
                             continue
 
                         post_id = remote_payload.get("id")
+                        print(f"Remote Post ID: {post_id}")
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip already processed posts with the same status
                             continue
 
-                        author_host = urlparse(remote_payload["author"]["host"])
-                        base_author_host = f"{author_host.scheme}://{author_host.netloc}"
-                        
-                        encoded_url = quote(post_id, safe='')
-                        get_post_url = f"{base_author_host}/api/posts/{encoded_url}"
+                        base_author_host = url_parser.get_base_host(remote_payload.get("author").get("host"))
+                        encoded_post_fqid = url_parser.percent_encode(post_id)
+                        get_post_url = f"{base_author_host}/api/posts/{encoded_post_fqid}"
 
                         try:
                             response = requests.get(
                                 get_post_url,
                                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                             )
-                            print(response.status_code)
+
                             if response.status_code == 200:
                                 post_data = response.json()
+                                print(f"Fetched remote post: {post_data}")
 
                                 if post_id not in remote_posts: # Add if this post hasn't been added
                                     remote_posts[post_id] = post_data
                                 elif item.post_status and item.post_status.upper() == "UPDATE":
                                     # There's a newer version of this post
                                     remote_posts[post_id] = post_data
+
+                            else:
+                                print(f"Unable to fetch remote post with ID: {post_id}")
 
                             processed_posts[post_id] = item.post_status
                         except Exception as e:
