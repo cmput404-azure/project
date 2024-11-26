@@ -167,7 +167,7 @@ export default function PublicProfile() {
       }
     }
 
-    fetchCounts(userID, authorData);
+    // fetchCounts(userID, authorData);
 
     if (authProvider.isAuthenticated === false) {
       setIsAuthenticated(false);
