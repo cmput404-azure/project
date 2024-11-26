@@ -200,12 +200,10 @@ class AuthStreamView(APIView):
                     remote_payload = item.remote_payload
                     if remote_payload.get("type") == "post":
                         visibility = remote_payload.get("visibility", "").upper()
-                        print(f"\nPrivate Post Visibility: {visibility}")
                         if visibility not in ["FRIENDS", "UNLISTED"]:
                             continue
 
                         post_id = remote_payload.get("id")
-                        print(f"Remote Post ID: {post_id}")
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip already processed posts with the same status
                             continue
@@ -232,7 +230,6 @@ class AuthStreamView(APIView):
 
                             if response.status_code == 200:
                                 post_data = response.json()
-                                print(f"Fetched remote post: {post_data}")
 
                                 if post_id not in remote_posts: # Add if this post hasn't been added
                                     remote_posts[post_id] = post_data
@@ -243,8 +240,8 @@ class AuthStreamView(APIView):
                             else:
                                 print(f"Unable to fetch remote post with ID: {post_id}")
                 
-
                             processed_posts[post_id] = item.post_status
+
                         except Exception as e:
                             print(f"Error fetching post {post_id}: {e}")
 
