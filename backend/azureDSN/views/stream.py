@@ -209,31 +209,38 @@ class AuthStreamView(APIView):
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip already processed posts with the same status
                             continue
-                        
-                        remote_author = remote_payload.get("author")
-                        base_author_host = url_parser.get_base_host(remote_author.get("host"))
-                        author_uuid = url_parser.extract_uuid(remote_author.get("id"))
-                        post_uuid = url_parser.extract_uuid(post_id)
-                        get_post_url = f"{base_author_host}/api/authors/{author_uuid}/posts/{post_uuid}"
+
+                        base_author_host = url_parser.get_base_host(remote_payload.get("author").get("host"))
+                        encoded_post_fqid = url_parser.percent_encode(post_id)
+                        get_post_url = f"{base_author_host}/api/posts/{encoded_post_fqid}"
 
                         try:
-                            response = requests.get(
-                                get_post_url,
-                                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
-                            )
+                            if visibility == "UNLISTED":
+                                response = requests.get(
+                                    get_post_url,
+                                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                                )
 
-                            if response.status_code == 200:
-                                post_data = response.json()
-                                print(f"Fetched remote post: {post_data}")
+                                if response.status_code == 200:
+                                    post_data = response.json()
+                                    print(f"Fetched remote post: {post_data}")
 
-                                if post_id not in remote_posts: # Add if this post hasn't been added
+                                    if post_id not in remote_posts: # Add if this post hasn't been added
+                                        remote_posts[post_id] = post_data
+                                    elif item.post_status and item.post_status.upper() == "UPDATE":
+                                        # There's a newer version of this post
+                                        remote_posts[post_id] = post_data
+
+                                else:
+                                    print(f"Unable to fetch remote post with ID: {post_id}")
+
+                            elif visibility == "FRIENDS":
+                                # Cannot fetch whitesmoke's friends-only post with endpoint :)
+                                if post_id not in remote_posts:
                                     remote_posts[post_id] = post_data
                                 elif item.post_status and item.post_status.upper() == "UPDATE":
                                     # There's a newer version of this post
                                     remote_posts[post_id] = post_data
-
-                            else:
-                                print(f"Unable to fetch remote post with ID: {post_id}")
 
                             processed_posts[post_id] = item.post_status
                         except Exception as e:
