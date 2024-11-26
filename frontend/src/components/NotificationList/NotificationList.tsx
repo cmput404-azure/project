@@ -1,13 +1,20 @@
 // @ts-nocheck
-import { CircularProgress } from "@mui/material";
+import { CircularProgress, responsiveFontSizes } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 
 import ListItem from "../ListItem/ListItem";
 import Modal from "react-modal";
+import PostService from "../../service/post"
 import { api } from "../../service/config";
+import { extractUUID } from '../../util/formatting/extractUUID';
 import inbox from "../../service/inbox";
+import { normalizeURL } from '../../util/formatting/normalizeURL';
 import styles from "./NotificationList.module.scss";
 import { useAuth } from "../../state";
+
+interface FollowerResponse {
+  followers: Follower[];
+}
 
 Modal.setAppElement("#root");
 
@@ -15,124 +22,151 @@ export default function NotificationList() {
   const [notifications, setNotifications] = useState<Follower[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [hasMore, setHasMore] = useState<boolean>(true); // Track if more pages are available
-  const notificationsPerPage = 5;
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   const authProvider = useAuth();
 
-  const fetchNotifications = useCallback(
-    async (page: number = 1) => {
-      try {
-        setLoading(true);
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const userResponse = await inbox.getInbox(authProvider.user.uuid);
+      const notificationsWithUsers = await Promise.all(
+        userResponse.map(async (item: any) => {
+          let user = null;
+          let post_obj = null;
+          if (item === null){
+            return null;
+          }
+          if (item.type === "follow") {
+            user = item["actor"]
+          } else if (item.type === "like") {
+            user = item["author"]
+            // Expected format for author's host: http://host/api/
+            // Expected format for object: http://host/api/authors/<author_uuid>/posts/<post_uuid>
+            try {
+              // post should be local 
+              let post_resp = await api.get(item.object);
+              post_obj = post_resp.data;
 
-        // Fetch paginated data
-        const response = await inbox.getInboxPaginated(
-          authProvider.user.uuid,
-          page,
-          notificationsPerPage
-        );
-        const { items } = response;
-
-        // Fetch additional user/post details for each item
-        const notificationsWithUsers = await Promise.all(
-          response.map(async (item: any) => {
-            let user = null;
-            let post_obj = null;
-
-            if (item.type === "follow") {
-              user = item["actor"]
-            } else if (item.type === "like" || item.type === "comment") {
-              user = item["author"]
-              try {
-                const field = item.type === "like" ? "object" : "post";
-                const postResp = await api.get(item[field]); // always local post
-                post_obj = postResp.data;
-              } catch {
-                return null; // Skip deleted posts
+              //item.author.id is the author of the like
+              if (item.author.id.includes(authProvider.user.uuid) === true) {
+                // user liked their own post, don't need to notify
+                return null
               }
-            } else if (item.type === "post") {
-              user = item["author"]
-              post_obj = item;
+            } catch {
+              // post got deleted
+              return null
             }
-            return { ...item, user, post_obj };
-          })
-        );
+          } else if (item.type === "comment") {
+            let encodedId = encodeURIComponent(item.author.id);
+            user = item["author"]
+            try {
+              let post_resp = await api.get(item.post);
+              post_obj = post_resp.data;
 
-        const validNotifications = notificationsWithUsers.filter(
-          (notification) => notification !== null
-        );
+              if (item.author.id.includes(authProvider.user.uuid) === true) {
+                // user commented on their own post, don't need to notify
+                return null
+              }
+            } catch {
+              // post got deleted
+              return null
+            }
+          }
+          else if (item.type === "post") {
+            // Someone posted 
+            user = item["author"];
+            post_obj = item;
+          }
+          return { ...item, user, post_obj };
+        })
+      );
+      const validNotifications = notificationsWithUsers.filter((notification) => notification !== null);
+      console.log("NOTIFICATONS", validNotifications);
+      setNotifications(validNotifications);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+      setError("Failed to fetch notifications");
+      setLoading(false);
+    }
+  }, [authProvider.user.uuid]);
 
-        // Deduplicate notifications based on their `id`
-        setNotifications((prev) => {
-          const notificationMap = new Map(
-            [...prev, ...validNotifications].map((n) => [n.id, n])
-          );
-          return Array.from(notificationMap.values());
-        });
-
-        setHasMore(validNotifications.length === notificationsPerPage); // Check if we received a full page
-      } catch (err) {
-        console.error("Error fetching notifications:", err);
-        setError("Failed to fetch notifications");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [authProvider.user.uuid]
-  );
 
   useEffect(() => {
-    fetchNotifications(currentPage);
-  }, [fetchNotifications, currentPage]);
+    fetchNotifications();
+  }, [fetchNotifications, refreshTrigger]);
 
-  const loadMoreNotifications = () => {
-    if (hasMore) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
+  const handleRefresh = () => setRefreshTrigger(prev => prev + 1);
 
   return (
     <div className={styles.notifications}>
-      {loading && currentPage === 1 ? (
-        <div className={"loading_component"}>
-          <CircularProgress sx={{ color: "#70ffaf" }} />
-        </div>
+      {loading ? (
+        <div className={"loading_component"}><CircularProgress sx={{ color: "#70ffaf" }} /></div>
       ) : error ? (
         <p>{error}</p>
       ) : (
         <div className={styles.notifications__list}>
           {notifications.length === 0 ? (
-            <p className={styles.noNotifications}>
-              No notifications to display
-            </p>
-          ) : (
-            notifications.map((item, index) => (
-              <ListItem
-                key={item.id} // Ensure key is unique
-                isRequest={item.type === "follow"}
-                isPost={item.type === "post"}
-                isLike={item.type === "like"}
-                isComment={item.type === "comment"}
-                notif_id={item.id}
-                user={item.user}
-                postObj={item.post_obj}
-                onRefresh={() => fetchNotifications(1)} // Refresh all data
-              />
-            ))
-          )}
-          {hasMore ? (
-            <button
-              className={styles.loadMoreButton}
-              onClick={loadMoreNotifications}
-            >
-              Load More
-            </button>
-          ) : notifications.length > 0 && ( 
-            <div className={styles.noNotifications}>No more notifications</div>
-          )}
+            // Display this message when there are no notifications
+            <p className={styles.noNotifications}>No notifications to display</p>
+          ) :
+            (
+              notifications.map((item, index) => {
+                if (item.type === "follow") {
+                  return (
+                    <ListItem
+                      key={index}
+                      isRequest={true}
+                      isPost={false}
+                      isLike={false}
+                      isFollowerList={false}
+                      isUserList={false}
+                      notif_id={item.id}
+                      user={item.user}
+                      onRefresh={handleRefresh}
+                    />
+                  );
+                } else if (item.type === "like") {
+                  return (
+                    <ListItem
+                      key={index}
+                      isLike={true}
+                      notif_id={item.id}
+                      postObj={item.post_obj}
+                      user={item.user}
+                      onRefresh={handleRefresh}
+                    />
+                  );
+                } else if (item.type === "comment") {
+                  return (
+                    <ListItem
+                      key={index}
+                      isComment={true}
+                      notif_id={item.id}
+                      postObj={item.post_obj}
+                      user={item.user}
+                      onRefresh={handleRefresh}
+                    />
+                  );
+                }
+                else if (item.type === "post") {
+                  return (
+                    <ListItem
+                      key={index}
+                      isPost={true}
+                      notif_id={item.id}
+                      postObj={item.post_obj}
+                      user={item.user}
+                      onRefresh={handleRefresh}
+                    />
+                  );
+                }
+                return null;
+              })
+            )
+          }
         </div>
       )}
     </div>
   );
-}
+}  
