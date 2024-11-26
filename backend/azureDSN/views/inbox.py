@@ -563,12 +563,13 @@ class InboxView(APIView):
 
     def send_modified_post_to_remote(self, payload, http_method):
         try:
-            print(f"UPDATED POST JSON to be sent: {payload}")
+            
             remote_follower = payload["follower"]
             del payload["follower"]  # reconstruct payload to post object format
 
             follower_serial = url_parser.extract_uuid(remote_follower.get("id"))
             base_host = url_parser.get_base_host(remote_follower.get("host"))
+            print(f"UPDATED POST JSON to be sent: {payload}")
 
             if payload["visibility"] == "FRIENDS":
                 # Need a check here if remote follower indeed has accepted follow request of post's author in their node
@@ -599,6 +600,7 @@ class InboxView(APIView):
             # Send POST request to other group if not sharing same code base with us
             if "azure" not in base_host:
                 http_method = "POST"
+            print(f"method to be sent: {http_method}")
 
             # Send the updated/deleted post to the remote inbox
             remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox"
