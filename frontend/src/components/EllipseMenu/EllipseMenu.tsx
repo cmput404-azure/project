@@ -153,25 +153,8 @@ export default function EllipseMenu({
             host: recipient.host,
           },
         };
-        if (normalizeURL(recipient.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
-          await inbox.updateInboxPost(recipient.id, post_obj);
-        }else {
-          const enrichedPost = { // to handle remote followers
-            ...postData,
-            follower: {
-              type: "author",
-              id: recipient.id,
-              host: recipient.host,
-              displayName: recipient.displayName,
-              page: recipient.page,
-              github: recipient.github,
-              profileImage: recipient.profileImage
-            }
-          };
-          await inbox.updateInboxPost(recipient.id, enrichedPost);
-        }
         
-
+        await inbox.updateInboxPost(recipient.id, post_obj);
       }
 
       // Update local postData state

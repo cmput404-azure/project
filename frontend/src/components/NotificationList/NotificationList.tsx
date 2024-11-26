@@ -1,14 +1,11 @@
 // @ts-nocheck
+
 import { CircularProgress, responsiveFontSizes } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-
 import ListItem from "../ListItem/ListItem";
 import Modal from "react-modal";
-import PostService from "../../service/post"
 import { api } from "../../service/config";
-import { extractUUID } from '../../util/formatting/extractUUID';
 import inbox from "../../service/inbox";
-import { normalizeURL } from '../../util/formatting/normalizeURL';
 import styles from "./NotificationList.module.scss";
 import { useAuth } from "../../state";
 
@@ -57,7 +54,6 @@ export default function NotificationList() {
               return null
             }
           } else if (item.type === "comment") {
-            let encodedId = encodeURIComponent(item.author.id);
             user = item["author"]
             try {
               let post_resp = await api.get(item.post);
@@ -97,17 +93,6 @@ export default function NotificationList() {
   }, [fetchNotifications, refreshTrigger]);
 
   const handleRefresh = () => setRefreshTrigger(prev => prev + 1);
-
-  const fetchUser = async (id: string) => { // is the fqid
-    try {
-      const formattedId = id.endsWith('/') ? id : `${id}/`;
-      const response = await api.get(`/api/authors/${formattedId}`);
-      return response.data;
-    } catch (err) {
-      console.error(`Error fetching user with id: ${id}:`, err);
-      return null;
-    }
-  };
 
   return (
     <div className={styles.notifications}>
