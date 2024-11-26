@@ -209,10 +209,12 @@ class AuthStreamView(APIView):
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip already processed posts with the same status
                             continue
-
-                        base_author_host = url_parser.get_base_host(remote_payload.get("author").get("host"))
-                        encoded_post_fqid = url_parser.percent_encode(post_id)
-                        get_post_url = f"{base_author_host}/api/posts/{encoded_post_fqid}"
+                        
+                        remote_author = remote_payload.get("author")
+                        base_author_host = url_parser.get_base_host(remote_author.get("host"))
+                        author_uuid = url_parser.extract_uuid(remote_author.get("id"))
+                        post_uuid = url_parser.extract_uuid(post_id)
+                        get_post_url = f"{base_author_host}/api/authors/{author_uuid}/posts/{post_uuid}"
 
                         try:
                             response = requests.get(
