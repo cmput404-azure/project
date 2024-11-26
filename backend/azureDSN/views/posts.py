@@ -379,9 +379,10 @@ class AuthorPostsAllView(APIView):
                 
                 parsed_url = urlparse(remote_host)
                 base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-                
+                print(f"BASE HOST IS {base_host}")
                 # send request to fetch all posts
                 remote_user_url = f"{base_host}/api/authors/{author_serial}/posts/"
+                print(f"REMOTE USER URL IS {remote_user_url}")
                 response = requests.get(
                     url=remote_user_url,
                     params={"page": 1, "size": 10},  
