@@ -74,6 +74,7 @@ export default function PublicProfile() {
       setAuthorData(author);
       setPage(1);
       await fetchPosts(userID, author);
+      await fetchCounts(userID, author);
     }
   };
 
@@ -101,6 +102,18 @@ export default function PublicProfile() {
     setPage((prevPage) => prevPage + 1);
   };
 
+  const fetchCounts = async (userId: string, author: Author | null) => {
+    try {
+      const id = extractUUID(userId)
+      const host = author?.id.split("authors")[0]
+      const followers = await FollowService.getFollowers(id, host);
+      setFollowersCount(followers.length);
+      setFollowers(followers)
+    } catch (error) {
+      console.error("Failed to fetch counts:", error);
+    }
+  }
+
   useEffect(() => {
     // Wait for authProvider to initialize
     if (authProvider.isAuthenticated === undefined) {
@@ -110,17 +123,6 @@ export default function PublicProfile() {
 
     setIsAuthLoading(false);
 
-    async function fetchCounts() {
-      try {
-        const id = extractUUID(userID)
-        const host = authorData?.id.split("authors")[0]
-        const followers = await FollowService.getFollowers(id, host);
-        setFollowersCount(followers.length);
-        setFollowers(followers)
-      } catch (error) {
-        console.error("Failed to fetch counts:", error);
-      }
-    }
     async function checkFollowingAndRequested() {
       const authUser = await ProfileService.fetchAuthorData(
         userID
@@ -165,7 +167,7 @@ export default function PublicProfile() {
       }
     }
 
-    fetchCounts();
+    fetchCounts(userID, authorData);
 
     if (authProvider.isAuthenticated === false) {
       setIsAuthenticated(false);
