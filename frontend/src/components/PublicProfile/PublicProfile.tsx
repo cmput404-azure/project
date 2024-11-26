@@ -73,15 +73,15 @@ export default function PublicProfile() {
       const author = await ProfileService.fetchAuthorData(userID);
       setAuthorData(author);
       setPage(1);
-      await fetchPosts(userID);
+      await fetchPosts(userID, author);
     }
   };
 
-  const fetchPosts = async (userId: string, page: number = 1) => {
+  const fetchPosts = async (userId: string, author: Author | null,  page: number = 1) => {
     if (loading) return;
     setLoading(true);
-    const id = userId.split("/").pop()
-    const host = userId.split("authors")[0]
+    const id = extractUUID(userId)
+    const host = author?.id.split("authors")[0]
     const { count, src } = await ProfileService.fetchAuthorPosts(id, page, 10, host);
     setPostCount(count); // if filter is done properly, count should represent the number of public posts
 
@@ -97,7 +97,7 @@ export default function PublicProfile() {
 
   const nextPage = async () => {
     if (loading || page >= totalPages) return;
-    await fetchPosts(userID, page + 1);
+    await fetchPosts(userID, authorData, page + 1);
     setPage((prevPage) => prevPage + 1);
   };
 
@@ -112,8 +112,8 @@ export default function PublicProfile() {
 
     async function fetchCounts() {
       try {
-        const id = userID.split("/").pop()
-        const host = userID.split("authors")[0]
+        const id = extractUUID(userID)
+        const host = authorData?.id.split("authors")[0]
         const followers = await FollowService.getFollowers(id, host);
         setFollowersCount(followers.length);
         setFollowers(followers)
@@ -149,8 +149,7 @@ export default function PublicProfile() {
       // For remote, we will use follow endpoint because we assume once send request, we requested => either follow or unfollow
       // For local, we use inbox
       if (normalizeURL(authUser.host) === normalizeURL(process.env.REACT_APP_API_BASE_URL)) {
-        console.log(userID.split("/")[1])
-        const userInbox = await InboxService.getInbox(userID.split("/").pop());
+        const userInbox = await InboxService.getInbox(extractUUID(userID));
         if (userInbox) {
           await Promise.all(
             userInbox.map(async (item: any) => {
@@ -172,7 +171,7 @@ export default function PublicProfile() {
       setIsAuthenticated(false);
       // this makes sure that the button for following/managing profile is displayed correctly
       setIsOwnProfile(false);
-      fetchPosts(userID);
+      fetchPosts(userID, authorData);
     } else {
       if (userID === authProvider.user.uuid) {
         setIsOwnProfile(true);
