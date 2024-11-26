@@ -7,6 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from ..models import User
 from ..serializers import UserSerializer
+from ..utils import url_parser
 from urllib.parse import urlparse
 from uuid import UUID
 import requests, os
@@ -114,22 +115,16 @@ class AuthorsSpecificView(APIView):
             return Response(serializer.data, status=200)
         
         elif (author_fqid):
-            author_serial = author_fqid.rstrip('/').split('/')[-1]
-            UUID(author_serial)
+            author_serial = url_parser.extract_uuid(author_fqid) # cornflowerblue uses integer, so don't check for UUID
+            base_host = url_parser.get_base_host(author_fqid)
 
-            author_host = urlparse(author_fqid)
-            host = f"{author_host.scheme}://{author_host.netloc}"
-
-            if host.strip().lower() == os.getenv('BASE_URL', 'http://localhost:8000').strip().lower():
+            if base_host.strip().lower() == os.getenv('BASE_URL', 'http://localhost:8000').strip().lower():
                 local_user = get_object_or_404(User, uuid=author_serial)
                 serializer = UserSerializer(local_user)
                 return Response(serializer.data, status=200)
 
             try:
                 # Send request to remote server to get remote author's info
-                parsed_url = urlparse(author_fqid)
-                base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-
                 remote_author_url = f"{base_host}/api/authors/{author_serial}/"
                 response = requests.get(
                     remote_author_url,

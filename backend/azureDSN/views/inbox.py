@@ -971,6 +971,12 @@ class InboxView(APIView):
                 user=payload["author"], remote_post=payload["object"]
             )
 
+            if not created:
+                return Response(
+                {"message": "You already liked this post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
             if created and not test:
                 payload["id"] = (
                     f"{url_parser.get_base_host(user.host)}/api/authors/{user.uuid}/liked/{new_like.uuid}"
