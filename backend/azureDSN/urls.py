@@ -19,6 +19,7 @@ urlpatterns = [
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
     path("api/authors/<uuid:author_serial>/inbox", InboxView.as_view(), name="inbox_no_slash"),
+    path("api/authors/<uuid:author_serial>/inbox/paginated/", PaginatedInboxView.as_view(), name="paginated_inbox"),
 
     # Remote API
     path("api/authors/recommended/", RemoteAuthorsView.as_view(), name="get_recommended_authors"),

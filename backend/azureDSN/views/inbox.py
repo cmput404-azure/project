@@ -22,6 +22,8 @@ from ..models import *
 from datetime import datetime
 from ..utils import url_parser
 import logging
+from rest_framework.pagination import PageNumberPagination
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 """
 a POST request occurs if someone like, comment, share post or send follow request to our local user
@@ -561,12 +563,13 @@ class InboxView(APIView):
 
     def send_modified_post_to_remote(self, payload, http_method):
         try:
-            print(f"UPDATED POST JSON to be sent: {payload}")
+            
             remote_follower = payload["follower"]
             del payload["follower"]  # reconstruct payload to post object format
 
             follower_serial = url_parser.extract_uuid(remote_follower.get("id"))
             base_host = url_parser.get_base_host(remote_follower.get("host"))
+            print(f"UPDATED POST JSON to be sent: {payload}")
 
             if payload["visibility"] == "FRIENDS":
                 # Need a check here if remote follower indeed has accepted follow request of post's author in their node
@@ -597,6 +600,7 @@ class InboxView(APIView):
             # Send POST request to other group if not sharing same code base with us
             if "azure" not in base_host:
                 http_method = "POST"
+            print(f"method to be sent: {http_method}")
 
             # Send the updated/deleted post to the remote inbox
             remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox"
@@ -967,6 +971,12 @@ class InboxView(APIView):
                 user=payload["author"], remote_post=payload["object"]
             )
 
+            if not created:
+                return Response(
+                {"message": "You already liked this post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
             if created and not test:
                 payload["id"] = (
                     f"{url_parser.get_base_host(user.host)}/api/authors/{user.uuid}/liked/{new_like.uuid}"
@@ -1246,3 +1256,119 @@ def delete_inbox_item(inbox, inbox_item_obj):
         # content_object is the actual object (FollowRequest or Post)
         if item.content_object == inbox_item_obj:
             inbox.items.remove(item)
+
+
+class PaginatedInboxView(APIView): 
+     @extend_schema(
+        summary="Retrieve Inbox with Pagination",
+        description="Fetch paginated inbox items for the specified author.",
+        parameters=[
+            OpenApiParameter(
+                name='author_serial',
+                description='UUID of the author whose inbox to retrieve',
+                type=str,
+                required=True,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name='page',
+                description='Page number to retrieve',
+                type=int,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name='size',
+                description='Number of items per page',
+                type=int,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=inline_serializer(
+                    name="PaginatedInboxResponse",
+                    fields={
+                        'user': serializers.CharField(),
+                        'items': serializers.ListField(
+                            child=serializers.JSONField(),
+                            help_text="List of paginated inbox items."
+                        ),
+                        'type': serializers.CharField(),
+                        'page': serializers.IntegerField(),
+                        'size': serializers.IntegerField(),
+                        'total_pages': serializers.IntegerField(),
+                        'total_items': serializers.IntegerField(),
+                    }
+                ),
+                description="Paginated Inbox items retrieved successfully",
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                description="Author not found."
+            ),
+        },
+        tags=['Inbox API']
+    )
+     def get(self, request, author_serial):
+        try:
+            user_obj = get_object_or_404(User, uuid=author_serial)
+            inbox_obj = get_object_or_404(Inbox, user=user_obj)
+            inbox_items_obj = InboxItem.objects.filter(inbox=inbox_obj).order_by("-time")
+
+            # Pagination parameters
+            page = request.query_params.get('page', 1)
+            size = request.query_params.get('size', 5)  # Default size is 5
+
+            paginator = Paginator(inbox_items_obj, size)
+            try:
+                paginated_items = paginator.page(page)
+            except PageNotAnInteger:
+                paginated_items = paginator.page(1)
+            except EmptyPage:
+                paginated_items = []
+
+            serializer = InboxItemSerializer(paginated_items, many=True, context={"request": request})
+            
+            filtered_data = []
+            for json in serializer.data:
+                
+                if (json == None):
+                    continue
+                
+                if json.get("type") in ["like", "post", "comment"]:
+                    base_host = url_parser.get_base_host(json.get('id'))
+                elif json.get("type") == "follow":
+                    base_host = url_parser.get_base_host(json.get('actor').get('id'))
+
+                if base_host != settings.BASE_URL:
+                    try:
+                        req = requests.get(
+                            f"{base_host}/api/authors/?page=1&size=1",
+                            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                        )
+                        if req.status_code == 200:
+                            filtered_data.append(json)
+                        elif req.status_code == 403:
+                            continue
+                    except requests.exceptions.RequestException:
+                        continue
+                else:
+                    filtered_data.append(json)
+
+            uri = request.build_absolute_uri("/")
+
+            data = {
+                'user': f"{uri}api/authors/{author_serial}",
+                'items': filtered_data,
+                'type': 'inbox',
+                'page': int(page),
+                'size': int(size),
+                'total_pages': paginator.num_pages,
+                'total_items': paginator.count,
+            }
+            print(data)
+            return Response(data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"ERROR: {e}")
+    

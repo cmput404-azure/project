@@ -2,7 +2,7 @@ from .index import index
 from .posts import *
 from .authors import *
 from .follow import FollowView, FollowCustomView, FollowerView
-from .inbox import InboxView
+from .inbox import InboxView, PaginatedInboxView
 from .comments import MultipleCommentsView, SingleCommentView
 from .likes import LikeView, AuthorLikesView, LikesView
 from .auth import LoginView, LogoutView, RegisterView, CheckAuthView
