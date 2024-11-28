@@ -770,18 +770,21 @@ class InboxView(APIView):
         logging.info(f"Entered Post inbox endpoint: {payload}")
 
         if "type" not in payload:
+            print("No type field in payload")
             return Response(
                 {"error": "A 'type' field is required in the inbox post request"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if "authorId" not in payload:
+            print("No authorId field in payload")
             return Response(
                 {"error": "A 'authorId' field is required in the inbox post request"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         
         if "object" not in payload:
+            print("No object field in payload")
             return Response(
                 {"error": "A 'object' field is required in the inbox post request"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -789,6 +792,7 @@ class InboxView(APIView):
         
         # Check if request is malformed
         if payload["authorId"] == "" or payload["object"] == "" or payload["authorId"] == None or payload["object"] == None:
+            print(("Author ID or Object is empty")
             return Response(
                 {"error": "A 'authorId' and 'object' field is required in the inbox post request"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -796,12 +800,14 @@ class InboxView(APIView):
         
         # Check if the FQID is valid url
         if not validators.url(payload["object"]):
+            print("Object is malformed")
             return Response(
                 {"error": "Object is malformed"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         
         if not validators.url(payload["authorId"]):
+        print("Author ID is malformed")
             return Response(
                 {"error": "Author ID is malformed"},
                 status=status.HTTP_400_BAD_REQUEST,
