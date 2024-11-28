@@ -527,6 +527,7 @@ class InboxViewTestCase(TestCase):
                 "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
                 "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
             },
+            "authorId": f"{settings.BASE_URL}/api/authors/{self.user.uuid}",
             "published": '2024-10-21T00:00:00Z'
         }
 
@@ -612,6 +613,7 @@ class InboxViewTestCase(TestCase):
                 "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
                 "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
             },
+            "authorId": f"{settings.BASE_URL}/api/authors/{self.user.uuid}",
             "published": '2024-10-21T00:00:00Z'
 
         }

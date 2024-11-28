@@ -774,45 +774,8 @@ class InboxView(APIView):
             return Response(
                 {"error": "A 'type' field is required in the inbox post request"},
                 status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if "authorId" not in payload:
-            print("No authorId field in payload")
-            return Response(
-                {"error": "A 'authorId' field is required in the inbox post request"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        if "object" not in payload:
-            print("No object field in payload")
-            return Response(
-                {"error": "A 'object' field is required in the inbox post request"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        # Check if request is malformed
-        if payload["authorId"] == "" or payload["object"] == "" or payload["authorId"] == None or payload["object"] == None:
-            print("Author ID or Object is empty")
-            return Response(
-                {"error": "A 'authorId' and 'object' field is required in the inbox post request"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        # Check if the FQID is valid url
-        if not validators.url(payload["object"]):
-            print("Object is malformed")
-            return Response(
-                {"error": "Object is malformed"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        if not validators.url(payload["authorId"]):
-            print("Author ID is malformed")
-            return Response(
-                {"error": "Author ID is malformed"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+            )  
+                     
         # Check if user exists locally
         try:
             user_obj = User.objects.get(uuid=author_serial)
@@ -828,9 +791,67 @@ class InboxView(APIView):
                 # New post created locally but the followers/friends are remote
                 return self.send_post_to_remote(payload)
             elif payload["type"].lower() == "like":
+                # Check if attribute exists
+                if "authorId" not in payload:
+                    print("No authorId field in payload")
+                    return Response(
+                        {"error": "A 'authorId' field is required in the inbox post request"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if "object" not in payload:
+                        print("No object field in payload")
+                        return Response(
+                            {"error": "A 'object' field is required in the inbox post request"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    
+                # Check if request is malformed
+                if payload["authorId"] == "" or payload["object"] == "" or payload["authorId"] == None or payload["object"] == None:
+                    print("Author ID or Object is empty")
+                    return Response(
+                        {"error": "A 'authorId' and 'object' field is required in the inbox post request"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
+                # Check if the FQID is valid url
+                if not validators.url(payload["object"]):
+                    print("Object is malformed")
+                    return Response(
+                        {"error": "Object is malformed"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
+                if not validators.url(payload["authorId"]):
+                    print("Author ID is malformed")
+                    return Response(
+                        {"error": "Author ID is malformed"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
                 print(f"SENDING REMOTE LIKE to uuid {author_serial}")
                 return self.send_like_to_remote(payload, request)
             elif payload["type"].lower() == "comment":
+                if "author" not in payload:
+                    print("No author field in payload")
+                    return Response(
+                        {"error": "A 'author' field is required in the inbox post request"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
+                if "post" not in payload:
+                    print("No post field in payload")
+                    return Response(
+                        {"error": "A 'post' field is required in the inbox post request"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
+                # Check if request is malformed
+                if not validators.url(payload["post"]):
+                    print("Post is malformed")
+                    return Response(
+                        {"error": "Post is malformed"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 return self.send_comment_to_remote(payload, request)
             else:
                 return Response(
