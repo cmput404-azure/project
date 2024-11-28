@@ -641,6 +641,19 @@ class InboxViewTestCase(TestCase):
             response = inbox_view.send_like_to_remote(payload=payload, request=None, test=True)
 
             self.assertEqual(response.status_code, 201)
+    
+    # Tests that malformed object fqids
+    def test_send_like_to_remote_url(self):
+            payload = {
+                "type": "like",
+                "object": f"",
+                "authorId": f""
+            }
+            inbox_view = InboxView()
+
+            response = inbox_view.send_like_to_remote(payload=payload, request=None, test=True)
+
+            self.assertEqual(response.status_code, 400)
 
         
         

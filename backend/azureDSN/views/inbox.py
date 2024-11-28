@@ -22,6 +22,7 @@ from ..models import *
 from datetime import datetime
 from ..utils import url_parser
 import logging
+import validators
 from rest_framework.pagination import PageNumberPagination
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -771,6 +772,38 @@ class InboxView(APIView):
         if "type" not in payload:
             return Response(
                 {"error": "A 'type' field is required in the inbox post request"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if "authorId" not in payload:
+            return Response(
+                {"error": "A 'authorId' field is required in the inbox post request"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if "object" not in payload:
+            return Response(
+                {"error": "A 'object' field is required in the inbox post request"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Check if request is malformed
+        if payload["authorId"] == "" or payload["object"] == "" or payload["authorId"] == None or payload["object"] == None:
+            return Response(
+                {"error": "A 'authorId' and 'object' field is required in the inbox post request"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Check if the FQID is valid url
+        if not validators.url(payload["object"]):
+            return Response(
+                {"error": "Object is malformed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if not validators.url(payload["authorId"]):
+            return Response(
+                {"error": "Author ID is malformed"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
