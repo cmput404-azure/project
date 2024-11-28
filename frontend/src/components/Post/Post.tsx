@@ -334,15 +334,8 @@ export default function Post({
   };
 
   const redirectToAuthorProfile = () => {
-    const isExternalLink = !post.author.host.includes(window.location.hostname);
-
-    if (isExternalLink) {
-      // Later when able to connect to other nodes, fetch the remote author info using FQID
-      // Then display the remote user info in our layout
-    } else {
-      const authorURL = `/authors/${extractUUID(post.author.id)}`;
-      navigate(authorURL);
-    }
+    const authorURL = `/authors/${post.author.id}`;
+    navigate(authorURL);
   };
 
   const handleCloseSnackbar = (
