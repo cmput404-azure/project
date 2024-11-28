@@ -807,7 +807,7 @@ class InboxView(APIView):
             )
         
         if not validators.url(payload["authorId"]):
-        print("Author ID is malformed")
+            print("Author ID is malformed")
             return Response(
                 {"error": "Author ID is malformed"},
                 status=status.HTTP_400_BAD_REQUEST,
