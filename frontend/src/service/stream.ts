@@ -28,7 +28,7 @@ class StreamService{
       * @param size - the number of items per page
       * @returns paginated stream data
    */
-   public async getStream(auth: boolean = false, page: number = 1, size: number = 15): Promise<PaginatedResponse> {
+   public async getStream(auth: boolean = false, page: number = 1, size: number = 10): Promise<PaginatedResponse> {
       try {
          const endpoint = auth ? "/api/stream/auth" : "/api/stream/";
          const req = await api.get<PaginatedResponse>(endpoint, {
