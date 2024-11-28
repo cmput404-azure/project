@@ -792,7 +792,7 @@ class InboxView(APIView):
         
         # Check if request is malformed
         if payload["authorId"] == "" or payload["object"] == "" or payload["authorId"] == None or payload["object"] == None:
-            print(("Author ID or Object is empty")
+            print("Author ID or Object is empty")
             return Response(
                 {"error": "A 'authorId' and 'object' field is required in the inbox post request"},
                 status=status.HTTP_400_BAD_REQUEST,
