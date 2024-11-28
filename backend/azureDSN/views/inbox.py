@@ -847,7 +847,7 @@ class InboxView(APIView):
                 
                 # Check if request is malformed
                 if not validators.url(payload["post"]):
-                    print("Post is malformed")
+                    print("Post is malformed", payload["post"], validators.url(payload["post"]))
                     return Response(
                         {"error": "Post is malformed"},
                         status=status.HTTP_400_BAD_REQUEST,
