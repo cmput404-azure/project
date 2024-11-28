@@ -23,10 +23,8 @@ import ShareDialogue from "../Post/ShareDialogue";
 import ShareService from "../../service/share";
 import { api } from "../../service/config";
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
-import { extractUUID } from "../../util/formatting/extractUUID";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
-import { normalizeURL } from "../../util/formatting/normalizeURL";
 import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 import postService from "../../service/post";
 import profileService from "../../service/profile";
@@ -334,7 +332,8 @@ export default function Post({
   };
 
   const redirectToAuthorProfile = () => {
-    const authorURL = `/authors/${post.author.id}`;
+    const encodedId = encodeURIComponent(post.author.id);
+    const authorURL = `/authors/${encodedId}`;
     navigate(authorURL);
   };
 
