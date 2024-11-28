@@ -1,6 +1,6 @@
 from unittest.mock import patch
 from django.conf import settings
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -530,7 +530,9 @@ class InboxViewTestCase(TestCase):
             "authorId": f"{settings.BASE_URL}/api/authors/{self.user.uuid}",
             "published": '2024-10-21T00:00:00Z'
         }
-
+        self.user.set_password('abc123!!!')
+        self.user.save()
+        self.client.login(username=self.user.username, password='abc123!!!')
         response = self.client.post(self.inbox_url, data=payload, format='json')
 
         inbox_obj = Inbox.objects.get(user=self.user.uuid)
@@ -603,6 +605,7 @@ class InboxViewTestCase(TestCase):
     def test_send_like_to_remote(self, mock_send_like):
         payload = {
             "type": "like",
+            "object": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
             "author":{
                 "type":"author",
@@ -615,7 +618,6 @@ class InboxViewTestCase(TestCase):
             },
             "authorId": f"{settings.BASE_URL}/api/authors/{self.user.uuid}",
             "published": '2024-10-21T00:00:00Z'
-
         }
         mock_send_like.return_value = Response(200)
 
@@ -645,7 +647,7 @@ class InboxViewTestCase(TestCase):
             self.assertEqual(response.status_code, 201)
     
     # Tests that malformed object fqids
-    def test_send_like_to_remote_url(self):
+    def test_send_malformed_like_to_remote_url(self):
             payload = {
                 "type": "like",
                 "object": f"",

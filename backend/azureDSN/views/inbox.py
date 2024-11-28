@@ -22,7 +22,6 @@ from ..models import *
 from datetime import datetime
 from ..utils import url_parser
 import logging
-import validators
 from rest_framework.pagination import PageNumberPagination
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -767,8 +766,6 @@ class InboxView(APIView):
         payload = request.data
         print(f"RECEIVED PAYLOAD: {payload}")
 
-        logging.info(f"Entered Post inbox endpoint: {payload}")
-
         if "type" not in payload:
             print("No type field in payload")
             return Response(
@@ -1059,8 +1056,8 @@ class InboxView(APIView):
             del payload["authorId"]  # Don't need this anymore
 
         except Exception as e:
-            print(f"Error creating Like object: {e}")
-            return
+            return Response(f"Error creating Like object: {e}", status=status.HTTP_400_BAD_REQUEST)
+
 
         print(f"FINAL LIKE OBJECT TO BE SENT TO {remote_inbox_api}: {payload}")
         try:
@@ -1093,10 +1090,13 @@ class InboxView(APIView):
             full_url = request
         else:
             full_url = request.build_absolute_uri()
+        # reuse the request url which is calling our host instead of the remote host
         parsed_url = urlparse(full_url)
 
         post_url = payload["post"]
         parsed_post_url = urlparse(post_url)
+
+        # this is the remote host where the post is
         author_host = parsed_post_url.netloc
 
         comment_obj = Comment.objects.create(
