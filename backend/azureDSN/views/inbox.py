@@ -814,14 +814,14 @@ class InboxView(APIView):
                     )
                 
                 # Check if the FQID is valid url
-                if not validators.url(payload["object"]):
+                if "api/authors" not in (payload["object"]):
                     print("Object is malformed")
                     return Response(
                         {"error": "Object is malformed"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
                 
-                if not validators.url(payload["authorId"]):
+                if "api/authors" not in (payload["authorId"]):
                     print("Author ID is malformed")
                     return Response(
                         {"error": "Author ID is malformed"},
@@ -846,8 +846,7 @@ class InboxView(APIView):
                     )
                 
                 # Check if request is malformed
-                if not validators.url(payload["post"]):
-                    print(validators.url(payload["post"]))
+                if "api/authors" not in payload["post"]:
                     return Response(
                         {"error": "Post is malformed"},
                         status=status.HTTP_400_BAD_REQUEST,
