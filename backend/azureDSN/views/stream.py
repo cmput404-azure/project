@@ -208,17 +208,37 @@ class AuthStreamView(APIView):
                             # Skip already processed posts with the same status
                             continue
 
-                        if visibility == "FRIENDS":
-                            # Cannot fetch whitesmoke's friends-only post with endpoint :)
-                            if post_id not in remote_posts:
-                                remote_posts[post_id] = remote_payload
-                            elif item.post_status and item.post_status.upper() == "UPDATE":
-                                # There's a newer version of this post
-                                remote_posts[post_id] = remote_payload
-                            processed_posts[post_id] = item.post_status
-                            continue
-
                         base_author_host = url_parser.get_base_host(remote_payload.get("author").get("host"))
+                        
+
+                        # if visibility == "FRIENDS":
+                        #     # Cannot fetch whitesmoke's friends-only post with endpoint :)
+                        #     # Need to fetch likes and comments from their endpoint to make sure it's the latest
+                        #     author_serial = url_parser.extract_uuid(remote_payload.get("author").get("id"))
+                        #     post_serial = url_parser.extract_uuid(remote_payload.get("id"))
+                        #     # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments
+                        #     # ://service/api/posts/{POST_FQID}/comments
+                        #     # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/likes
+                        #     try:
+                        #         response = requests.get(
+                        #             f"{base_author_host}/api/authors/{author_serial}/posts/{post_serial}/likes",
+                        #             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                        #         )
+
+                        #         if response.json == 200:
+
+
+                        #     except Exception as e:
+                        #         print(f"Error fetching likes and comments {post_id}: {e}")
+                        #     if post_id not in remote_posts:
+                        #         remote_posts[post_id] = remote_payload
+                        #     elif item.post_status and item.post_status.upper() == "UPDATE":
+                        #         # There's a newer version of this post
+                        #         remote_posts[post_id] = remote_payload
+                        #     processed_posts[post_id] = item.post_status
+                        #     continue
+
+                        
                         encoded_post_fqid = url_parser.percent_encode(post_id)
                         get_post_url = f"{base_author_host}/api/posts/{encoded_post_fqid}"
 
@@ -228,6 +248,8 @@ class AuthStreamView(APIView):
                                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                             )
 
+                            print(f"Check status code from {base_author_host}: {response.status_code}")
+
                             if response.status_code == 200:
                                 post_data = response.json()
 
@@ -236,6 +258,43 @@ class AuthStreamView(APIView):
                                 elif item.post_status and item.post_status.upper() == "UPDATE":
                                     # There's a newer version of this post
                                     remote_posts[post_id] = post_data
+
+                            elif response.status_code == 500: # Whitesmoke post endpoint
+                                if visibility == "FRIENDS":
+                                    author_serial = url_parser.extract_uuid(remote_payload.get("author").get("id"))
+                                    post_serial = url_parser.extract_uuid(remote_payload.get("id"))
+
+                                    try:
+                                        # Fetch friends-only likes
+                                        response = requests.get(
+                                            f"{base_author_host}/api/authors/{author_serial}/posts/{post_serial}/likes",
+                                            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                                        )
+
+                                        if response.json == 200:
+                                            remote_payload['likes'] = response.json()
+
+                                            # Fetch friends-only comments
+                                            response = requests.get(
+                                                f"{base_author_host}/api/authors/{author_serial}/posts/{post_serial}/comments",
+                                                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                                            )
+
+                                            if response.json == 200:
+                                                remote_payload['comments'] = response.json()
+
+                                        else:
+                                            print(f"Unable to fetch remote post with ID: {post_id}")
+
+                                    except Exception as e:
+                                        print(f"Error fetching likes and comments {post_id}: {e}")
+
+                                    print(f"This should contain latest likes and comments: {remote_payload}")
+                                    if post_id not in remote_posts: # Add if this post hasn't been added
+                                        remote_posts[post_id] = remote_payload
+                                    elif item.post_status and item.post_status.upper() == "UPDATE":
+                                        # There's a newer version of this post
+                                        remote_posts[post_id] = remote_payload
 
                             else:
                                 print(f"Unable to fetch remote post with ID: {post_id}")
