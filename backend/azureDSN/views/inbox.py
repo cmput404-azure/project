@@ -766,14 +766,13 @@ class InboxView(APIView):
         payload = request.data
         print(f"RECEIVED PAYLOAD: {payload}")
 
-        logging.info(f"Entered Post inbox endpoint: {payload}")
-
         if "type" not in payload:
+            print("No type field in payload")
             return Response(
                 {"error": "A 'type' field is required in the inbox post request"},
                 status=status.HTTP_400_BAD_REQUEST,
-            )
-
+            )  
+                     
         # Check if user exists locally
         try:
             user_obj = User.objects.get(uuid=author_serial)
@@ -789,9 +788,66 @@ class InboxView(APIView):
                 # New post created locally but the followers/friends are remote
                 return self.send_post_to_remote(payload)
             elif payload["type"].lower() == "like":
+                # Check if attribute exists
+                if "authorId" not in payload:
+                    print("No authorId field in payload")
+                    return Response(
+                        {"error": "A 'authorId' field is required in the inbox post request"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if "object" not in payload:
+                        print("No object field in payload")
+                        return Response(
+                            {"error": "A 'object' field is required in the inbox post request"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    
+                # Check if request is malformed
+                if payload["authorId"] == "" or payload["object"] == "" or payload["authorId"] == None or payload["object"] == None:
+                    print("Author ID or Object is empty")
+                    return Response(
+                        {"error": "A 'authorId' and 'object' field is required in the inbox post request"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
+                # Check if the FQID is valid url
+                if "api/authors" not in (payload["object"]):
+                    print("Object is malformed")
+                    return Response(
+                        {"error": "Object is malformed"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
+                if "api/authors" not in (payload["authorId"]):
+                    print("Author ID is malformed")
+                    return Response(
+                        {"error": "Author ID is malformed"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
                 print(f"SENDING REMOTE LIKE to uuid {author_serial}")
                 return self.send_like_to_remote(payload, request)
             elif payload["type"].lower() == "comment":
+                if "author" not in payload:
+                    print("No author field in payload")
+                    return Response(
+                        {"error": "A 'author' field is required in the inbox post request"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
+                if "post" not in payload:
+                    print("No post field in payload")
+                    return Response(
+                        {"error": "A 'post' field is required in the inbox post request"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
+                # Check if request is malformed
+                if "api/authors" not in payload["post"]:
+                    return Response(
+                        {"error": "Post is malformed"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 return self.send_comment_to_remote(payload, request)
             else:
                 return Response(
@@ -1000,8 +1056,8 @@ class InboxView(APIView):
             del payload["authorId"]  # Don't need this anymore
 
         except Exception as e:
-            print(f"Error creating Like object: {e}")
-            return
+            return Response(f"Error creating Like object: {e}", status=status.HTTP_400_BAD_REQUEST)
+
 
         print(f"FINAL LIKE OBJECT TO BE SENT TO {remote_inbox_api}: {payload}")
         try:
@@ -1034,10 +1090,13 @@ class InboxView(APIView):
             full_url = request
         else:
             full_url = request.build_absolute_uri()
+        # reuse the request url which is calling our host instead of the remote host
         parsed_url = urlparse(full_url)
 
         post_url = payload["post"]
         parsed_post_url = urlparse(post_url)
+
+        # this is the remote host where the post is
         author_host = parsed_post_url.netloc
 
         comment_obj = Comment.objects.create(
