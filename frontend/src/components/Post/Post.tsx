@@ -260,10 +260,10 @@ export default function Post({
     if (isModal) return;
     console.log(`IN HANDLE COMMENT BUTTON: ${JSON.stringify(post, null, 2)}`)
     try {
-      const postData = await postService.getPost(
-        `api/posts/${encodeURIComponent(post.id)}` // this doesnt work as well because UUID?
-      );
-      setPost(postData);
+      // const postData = await postService.getPost(
+      //   `api/posts/${encodeURIComponent(post.id)}`
+      // );
+      setPost(post);
       setIsModalOpen(true);
     } catch (error) {
       console.error("Error fetching post data:", error);
