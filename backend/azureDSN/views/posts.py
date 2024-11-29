@@ -15,6 +15,7 @@ from rest_framework.pagination import PageNumberPagination
 from uuid import UUID
 import requests, os
 from ..utils.auth import is_valid_basic_auth
+from utils import url_parser
 
 
 class AuthorPostView(APIView):
@@ -621,16 +622,13 @@ class PostView(APIView):
             - friends-only posts: must be authenticated
         """
         if post_fqid:
-            decoded_post_fqid = unquote(post_fqid)
-            post_serial = decoded_post_fqid.split("/")[-1]
-            UUID(post_serial)
+            decoded_post_fqid = url_parser.percent_decode(post_fqid)
+            post_serial = url_parser.extract_uuid(decoded_post_fqid)
+            host = url_parser.get_base_host(decoded_post_fqid)
 
             post_visibility = ""
             post_data = ""
 
-            parsed_url = urlparse(decoded_post_fqid)
-            host = f"{parsed_url.scheme}://{parsed_url.netloc}"
-            
             if host.strip().lower() == os.getenv('BASE_URL', 'http://localhost:8000').strip().lower():
                 post = get_object_or_404(Post, uuid=post_serial)
                 post_visibility = post.visibility
@@ -650,6 +648,8 @@ class PostView(APIView):
                         # The other user does not authorize any requests sent from our local node
                         print(f"Access forbidden to the remote node.")
                         return
+                    elif (response.status_code == 500): # whitesmoke friends only posts
+                        return Response({"message": "should already have post data in frontend"}, status=204)
                     else:
                         return
                 except Exception as e:

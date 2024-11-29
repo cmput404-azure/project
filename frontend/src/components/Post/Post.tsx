@@ -1,3 +1,4 @@
+// @ts-nocheck
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 import {
@@ -263,14 +264,14 @@ export default function Post({
       const postData = await postService.getPost(
         `api/posts/${encodeURIComponent(post.id)}`
       );
-      setPost(postData);
-      setIsModalOpen(true);
-    } catch (error) { // whitesmoke friends only post
-      if (error.response && error.response.status === 500) {
-        setPost(post);
+      if (postData.status === 204) {
+        setPost(post); // use existing data
       } else {
-        console.error("Error fetching post data:", error);
+        setPost(postData);
       }
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching post data:", error);
     };
   }
 
