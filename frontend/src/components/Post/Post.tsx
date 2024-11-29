@@ -260,15 +260,19 @@ export default function Post({
     if (isModal) return;
     console.log(`IN HANDLE COMMENT BUTTON: ${JSON.stringify(post, null, 2)}`)
     try {
-      // const postData = await postService.getPost(
-      //   `api/posts/${encodeURIComponent(post.id)}`
-      // );
-      setPost(post);
+      const postData = await postService.getPost(
+        `api/posts/${encodeURIComponent(post.id)}`
+      );
+      setPost(postData);
       setIsModalOpen(true);
-    } catch (error) {
-      console.error("Error fetching post data:", error);
-    }
-  };
+    } catch (error) { // whitesmoke friends only post
+      if (error.response && error.response.status === 500) {
+        setPost(post);
+      } else {
+        console.error("Error fetching post data:", error);
+      }
+    };
+  }
 
   // handle when the comment modal is closed
   const handleCommentModalClose = () => {
