@@ -1,4 +1,4 @@
-from urllib.parse import unquote, urlparse
+from urllib.parse import urlparse
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -12,10 +12,9 @@ from django.http import HttpResponse
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.pagination import PageNumberPagination
-from uuid import UUID
 import requests, os
 from ..utils.auth import is_valid_basic_auth
-from utils import url_parser
+from ..utils import url_parser
 
 
 class AuthorPostView(APIView):
