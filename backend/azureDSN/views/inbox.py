@@ -766,13 +766,14 @@ class InboxView(APIView):
         payload = request.data
         print(f"RECEIVED PAYLOAD: {payload}")
 
+        logging.info(f"Entered Post inbox endpoint: {payload}")
+
         if "type" not in payload:
-            print("No type field in payload")
             return Response(
                 {"error": "A 'type' field is required in the inbox post request"},
                 status=status.HTTP_400_BAD_REQUEST,
-            )  
-                     
+            )
+
         # Check if user exists locally
         try:
             user_obj = User.objects.get(uuid=author_serial)
@@ -785,6 +786,7 @@ class InboxView(APIView):
                 # New post created locally but the followers/friends are remote
                 return self.send_post_to_remote(payload)
             elif payload["type"].lower() == "like":
+                print(f"SENDING REMOTE LIKE to uuid {author_serial}")
                 return self.send_like_to_remote(payload, request)
             elif payload["type"].lower() == "comment":
                 return self.send_comment_to_remote(payload, request)
@@ -1082,7 +1084,6 @@ class InboxView(APIView):
             full_url = request
         else:
             full_url = request.build_absolute_uri()
-        # reuse the request url which is calling our host instead of the remote host
         parsed_url = urlparse(full_url)
 
         check_author = payload.get("author")
@@ -1102,8 +1103,6 @@ class InboxView(APIView):
         
         post_url = payload["post"]
         parsed_post_url = urlparse(post_url)
-
-        # this is the remote host where the post is
         author_host = parsed_post_url.netloc
 
         
