@@ -600,6 +600,56 @@ class InboxViewTestCase(TestCase):
         response = inbox_view.send_comment_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
         self.assertEqual(response,f"{settings.BASE_URL}/api/authors/{self.user.uuid}/inbox/")
 
+        # Tests that it is able to build the correct url to send to the remote server
+    def test_send_comment_to_remote_no_author(self):
+        payload = {
+            "type": "comment",
+            "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "comment": "Nice post!",
+        }
+        inbox_view = InboxView()
+
+        response = inbox_view.send_comment_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_send_comment_to_remote_invalid_author_id(self):
+        payload = {
+            "type": "comment",
+            "post": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+            "author":{
+                "type":"author",
+                "id":"nope",
+                "host":"http://localhost:8001/azureDSN/",
+                "displayName":"Quin Nguyen",
+                "github": "https://github.com/QuinNguyen02",
+                "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+            },
+            "comment": "Nice post!",
+        }
+        inbox_view = InboxView()
+
+        response = inbox_view.send_comment_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_send_comment_to_remote_no_post(self):
+        payload = {
+            "type": "comment",
+            "author":{
+                "type":"author",
+                "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                "host":"http://localhost:8001/azureDSN/",
+                "displayName":"Quin Nguyen",
+                "github": "https://github.com/QuinNguyen02",
+                "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+            },
+            "comment": "Nice post!",
+        }
+        inbox_view = InboxView()
+
+        response = inbox_view.send_comment_to_remote(payload=payload, request=f"http://testserver/api/authors/{self.user.uuid}/inbox/", test=True)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     # Tests that it is able to direct comments made on a remote post to the correct method
     @patch('azureDSN.views.inbox.InboxView.send_like_to_remote')  
     def test_send_like_to_remote(self, mock_send_like):
@@ -647,18 +697,151 @@ class InboxViewTestCase(TestCase):
             self.assertEqual(response.status_code, 201)
     
     # Tests that malformed object fqids
-    def test_send_malformed_like_to_remote_url(self):
-            payload = {
+    def test_send_like_to_remote_no_authorId(self):
+        payload = {
                 "type": "like",
-                "object": f"",
-                "authorId": f""
+                "object": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+                "author":{
+                    "type":"author",
+                    "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                    "host":"http://localhost:8001/azureDSN/",
+                    "displayName":"Quin Nguyen",
+                    "github": "https://github.com/QuinNguyen02",
+                    "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                    "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                },
             }
-            inbox_view = InboxView()
+        
+        inbox_view = InboxView()
 
-            response = inbox_view.send_like_to_remote(payload=payload, request=None, test=True)
+        response = inbox_view.send_like_to_remote(payload=payload, request=None, test=True)
+        self.assertEqual(response.status_code, 400)
 
-            self.assertEqual(response.status_code, 400)
+    def test_send_like_to_remote_no_object(self):
+        payload = {
+                "type": "like",
+                "author":{
+                    "type":"author",
+                    "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                    "host":"http://localhost:8001/azureDSN/",
+                    "displayName":"Quin Nguyen",
+                    "github": "https://github.com/QuinNguyen02",
+                    "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                    "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                },
+                "authorId": f"{settings.BASE_URL}/api/authors/{self.user.uuid}"
+            }
+        
+        inbox_view = InboxView()
 
+        response = inbox_view.send_like_to_remote(payload=payload, request=None, test=True)
+        self.assertEqual(response.status_code, 400)
+    
+    def test_send_like_to_remote_malformed_authorId(self):
+        payload = {
+                "type": "like",
+                "object": f"{settings.BASE_URL}/api/authors/{self.user.uuid}/posts/{self.post.uuid}",
+                "author":{
+                    "type":"author",
+                    "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                    "host":"http://localhost:8001/azureDSN/",
+                    "displayName":"Quin Nguyen",
+                    "github": "https://github.com/QuinNguyen02",
+                    "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                    "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                },
+                "authorId": "bad"
+            }
+        inbox_view = InboxView()
+        response = inbox_view.send_like_to_remote(payload=payload, request=None, test=True)
+        self.assertEqual(response.status_code, 400)
+
+    def test_send_follow_request_to_remote_no_actor(self):
+        payload = {
+                "type": "follow",
+                 "object":{
+                    "type":"author",
+                    "id":"http://nodebbbb/api/authors/222",
+                    "host":"http://nodebbbb/api/",
+                    "displayName":"Lara Croft",
+                    "page":"http://nodebbbb/authors/222",
+                    "github": "http://github.com/laracroft",
+                    "profileImage": "http://nodebbbb/api/authors/222/posts/217/image"
+                }
+            }
+        inbox_view = InboxView()
+        response = inbox_view.send_follow_request_to_remote(payload=payload)
+        self.assertEqual(response.status_code, 400)
+
+    def test_send_follow_request_to_remote_invalid_actor_id(self):
+        payload = {
+                "type": "follow",
+                "actor":{
+                    "type":"author",
+                    "id":"",
+                    "host":"http://localhost:8001/azureDSN/",
+                    "displayName":"Quin Nguyen",
+                    "github": "https://github.com/QuinNguyen02",
+                    "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                    "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                },
+                 "object":{
+                    "type":"author",
+                    "id":"http://nodebbbb/api/authors/222",
+                    "host":"http://nodebbbb/api/",
+                    "displayName":"Lara Croft",
+                    "page":"http://nodebbbb/authors/222",
+                    "github": "http://github.com/laracroft",
+                    "profileImage": "http://nodebbbb/api/authors/222/posts/217/image"
+                }
+            }
+        inbox_view = InboxView()
+        response = inbox_view.send_follow_request_to_remote(payload=payload)
+        self.assertEqual(response.status_code, 400)
+
+    def test_send_follow_request_to_remote_no_object(self):
+        payload = {
+                "type": "follow",
+                "actor":{
+                    "type":"author",
+                    "id":"http://localhost:8001/api/authors/82ae5a8c-02dd-4e47-a1e7-8d0d248f8ee0",
+                    "host":"http://localhost:8001/azureDSN/",
+                    "displayName":"Quin Nguyen",
+                    "github": "https://github.com/QuinNguyen02",
+                    "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                    "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                },
+                
+            }
+        inbox_view = InboxView()
+        response = inbox_view.send_follow_request_to_remote(payload=payload)
+        self.assertEqual(response.status_code, 400)
+
+    def test_send_follow_request_to_remote_invalid_object_id(self):
+        payload = {
+                "type": "follow",
+                "actor":{
+                    "type":"author",
+                    "id":"",
+                    "host":"http://localhost:8001/azureDSN/",
+                    "displayName":"Quin Nguyen",
+                    "github": "https://github.com/QuinNguyen02",
+                    "profileImage": "https://i.imgur.com/k7XVwpB.jpeg",
+                    "page": "profile_pictures/Screenshot_2024-10-17_014549_YLob4WX.png"
+                },
+                 "object":{
+                    "type":"author",
+                    "id":"error",
+                    "host":"http://nodebbbb/api/",
+                    "displayName":"Lara Croft",
+                    "page":"http://nodebbbb/authors/222",
+                    "github": "http://github.com/laracroft",
+                    "profileImage": "http://nodebbbb/api/authors/222/posts/217/image"
+                }
+            }
+        inbox_view = InboxView()
+        response = inbox_view.send_follow_request_to_remote(payload=payload)
+        self.assertEqual(response.status_code, 400)
         
         
 
