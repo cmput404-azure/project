@@ -237,30 +237,13 @@ export default function Post({
         let encodedId = encodeURIComponent(postGiven.id);
         console.log(`Post FQID: ${encodedId}`)
         
-        try {
-          const response = await api.get(`/api/posts/${encodedId}/comments/`); // Only need to fetch comments
-          console.log(`Response: ${JSON.stringify(response, null, 2)}`)
-          console.log(`Response data: ${JSON.stringify(response.data, null, 2)}`)
-          const comments = Array.isArray(response.data?.src) ? response.data.src : [];
-          setCommentList(comments);
-          setCommentCount(response.data.comments ? response.data.comments.count : 0)
-        } catch (error) {
-          if (error.response) {
-            console.error("API Error Response:", error.response.status, error.response.data);
-      
-            // Try to recover if the error response has partial data
-            const fallbackComments = Array.isArray(error.response.data?.src)
-              ? error.response.data.src
-              : [];
-            setCommentList(fallbackComments);
-      
-            const fallbackCount = error.response.data?.count ?? 0;
-            setCommentCount(fallbackCount);
-          } else {
-            // Handle unexpected errors
-            console.error("Unexpected Error:", error);
-          }
-        }
+        const response = await api.get(`/api/posts/${encodedId}/comments/`); // Only need to fetch comments
+        console.log(`Response: ${JSON.stringify(response, null, 2)}`)
+        console.log(`Response data: ${JSON.stringify(response.data, null, 2)}`)
+        const comments = Array.isArray(response.data?.src) ? response.data.src : [];
+        setCommentList(comments);
+        setCommentCount(response.data.comments ? response.data.comments.count : 0)
+
       }
     };
 

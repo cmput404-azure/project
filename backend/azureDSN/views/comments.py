@@ -112,22 +112,27 @@ class MultipleCommentsView(APIView):
 
             except Post.DoesNotExist:
                 remote_comments = []
-                # call remote endpoint
-                response = requests.get(
-                    f"{post_fqid}/comments",
-                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
-                )
+                try:
+                    # call remote endpoint
+                    response = requests.get(
+                        f"{post_fqid}/comments",
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                    )
 
-                if response.status_code == 200:
-                    remote_comments = response.json()
-                    print(f"Fetched comments: {remote_comments} from endpoint: {post_fqid}/comments")
-                    pagination = self.pagination_provider()
-                    page = pagination.paginate_queryset(remote_comments, request)
+                    if response.status_code == 200:
+                        remote_comments = response.json()
+                        # remote_comments = remote_comments_data.get("src", [])
 
-                    return pagination.get_paginated_response(page)
-                
-                else:
-                    return Response({"detail": "Unable to fetch remote comments."}, status=response.status_code)
+                        print(f"Fetched comments: {remote_comments} from endpoint: {post_fqid}/comments")
+                        
+                        # Return the paginated response directly
+                        return Response(remote_comments, status=200)
+                    
+                    else:
+                        return Response({"detail": "Unable to fetch remote comments."}, status=response.status_code)
+                except Exception as e:
+                    print(f"Something went wrong: {str(e)}")
+                    return Response({"detail": "An internal server error occurred."}, status=500)
 
 
 
