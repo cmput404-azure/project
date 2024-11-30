@@ -69,6 +69,7 @@ export default function Post({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAuthor, setCurrentAuthor] = useState<any>();
   const [postAuthorID, setPostAuthorID] = useState("");
+  const prevIsModalOpenRef = useRef();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -242,15 +243,23 @@ export default function Post({
         console.log(`Response data: ${JSON.stringify(response.data, null, 2)}`)
         const comments = Array.isArray(response.data?.src) ? response.data.src : [];
         setCommentList(comments);
-        setCommentCount(response.data.comments ? response.data.comments.count : 0)
+        setCommentCount(response.data.count ? response.data.count : 0)
 
       }
     };
 
-    if(isCommentOpen || isModalOpen) {
+    // if(isCommentOpen || isModalOpen) {
+    //   fetchPost();
+    // }\
+
+    // Compare previous state and current state to detect when modal closes
+    if (prevIsModalOpenRef.current && !isModalOpen) {
+      // The modal was open before and is now closed, so fetch comments
       fetchPost();
     }
-  }, [isModalOpen]);
+    // Update the ref with the current modal state
+    prevIsModalOpenRef.current = isModalOpen;
+  }, [isModalOpen, isCommentOpen]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
@@ -264,15 +273,6 @@ export default function Post({
     if (isModal) return;
     console.log(`IN HANDLE COMMENT BUTTON: ${JSON.stringify(post, null, 2)}`)
     try {
-      // const postData = await postService.getPost(
-      //   `api/posts/${encodeURIComponent(post.id)}`
-      // );
-      // console.log(`PostData status: ${postData.status}`)
-      // if (postData.status === 204) {
-      //   setPost(post); // use existing data
-      // } else {
-      //   setPost(postData);
-      // }
       setPost(post);
       setIsModalOpen(true);
     } catch (error) {
