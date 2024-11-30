@@ -32,6 +32,7 @@ import profileService from "../../service/profile";
 import remarkGfm from "remark-gfm";
 import styles from "./Post.module.scss";
 import { useAuth } from "../../state";
+import { extractUUID } from "../../util/formatting/extractUUID";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -143,7 +144,9 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
-          const postAuthorID = postGiven.author.id.split("/").pop();
+          console.log(`Post Given when opening comment modal: ${JSON.stringify(postGiven, null, 2)}`)
+          // const postAuthorID = postGiven.author.id.split("/").pop();
+          const postAuthorID = extractUUID(postGiven.author.id);
           setPostAuthorID(postAuthorID);
 
           if (authProvider.user && postGiven.likes?.count > 0) {
@@ -264,6 +267,7 @@ export default function Post({
       const postData = await postService.getPost(
         `api/posts/${encodeURIComponent(post.id)}`
       );
+      console.log(`PostData status: ${postData.status}`)
       if (postData.status === 204) {
         setPost(post); // use existing data
       } else {
