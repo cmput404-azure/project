@@ -145,7 +145,6 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
-          // const postAuthorID = postGiven.author.id.split("/").pop();
           const postAuthorID = extractUUID(postGiven.author.id);
           setPostAuthorID(postAuthorID);
 
@@ -239,7 +238,6 @@ export default function Post({
         console.log(`Post FQID: ${encodedId}`)
         
         const response = await api.get(`/api/posts/${encodedId}/comments/`); // Only need to fetch comments
-        console.log(`Response: ${JSON.stringify(response, null, 2)}`)
         console.log(`Response data: ${JSON.stringify(response.data, null, 2)}`)
         const comments = Array.isArray(response.data?.src) ? response.data.src : [];
         setCommentList(comments);
@@ -247,10 +245,6 @@ export default function Post({
 
       }
     };
-
-    // if(isCommentOpen || isModalOpen) {
-    //   fetchPost();
-    // }\
 
     // Compare previous state and current state to detect when modal closes
     if (prevIsModalOpenRef.current && !isModalOpen) {

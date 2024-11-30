@@ -92,6 +92,13 @@ class MultipleCommentsView(APIView):
             '''
             post_id = post_serial
             post_obj = get_object_or_404(Post, uuid=post_serial, user__uuid=author_serial)
+            comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
+            pagination = self.pagination_provider()
+            page = pagination.paginate_queryset(comments, request)
+
+            serialized_comments = CommentSerializer(page, many=True).data
+            return pagination.get_paginated_response(serialized_comments)
+
         else:
             '''
             URL: ://service/api/posts/{POST_FQID}/comments
