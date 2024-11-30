@@ -231,14 +231,10 @@ export default function Post({
 
   // To refresh comment count when comment modal is closed
   useEffect(() => {
-    const fetchPost = async () => {
-      console.log("Refreshing comment count");
+    const fetchPostComment = async () => {
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
-        console.log(`Post FQID: ${encodedId}`)
-        
         const response = await api.get(`/api/posts/${encodedId}/comments/`); // Only need to fetch comments
-        console.log(`Response data: ${JSON.stringify(response.data, null, 2)}`)
         const comments = Array.isArray(response.data?.src) ? response.data.src : [];
         setCommentList(comments);
         setCommentCount(response.data.count ? response.data.count : 0)
@@ -249,7 +245,7 @@ export default function Post({
     // Compare previous state and current state to detect when modal closes
     if (prevIsModalOpenRef.current && !isModalOpen) {
       // The modal was open before and is now closed, so fetch comments
-      fetchPost();
+      fetchPostComment();
     }
     // Update the ref with the current modal state
     prevIsModalOpenRef.current = isModalOpen;

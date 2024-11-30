@@ -109,6 +109,13 @@ class MultipleCommentsView(APIView):
             post_id = url_parser.extract_uuid(post_fqid)
 
             try:
+                uuid.UUID(post_id)
+            except ValueError:
+                # If not a UUID, check if it's an integer
+                if not post_id.isdigit():
+                    return Response({"detail": "Invalid post identifier"}, status=400)
+
+            try:
                 post_obj = Post.objects.get(uuid=post_id)
                 comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
                 pagination = self.pagination_provider()
@@ -140,11 +147,7 @@ class MultipleCommentsView(APIView):
                 except Exception as e:
                     print(f"Something went wrong: {str(e)}")
                     return Response({"detail": "An internal server error occurred."}, status=500)
-
-
-
-        
-        
+ 
 
 '''
 URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
