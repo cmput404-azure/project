@@ -236,28 +236,38 @@ export default function Post({
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
         console.log(`Post FQID: ${encodedId}`)
-
-        const response = await api.get(`/api/posts/${encodedId}/comments`); // Only need to fetch comments
-        console.log(`Response: ${response}`)
-        console.log(`Response data: ${response.data}`)
-        const comments = Array.isArray(response.data?.src) ? response.data.src : [];
-        // const postData = await postService.getPost(`api/posts/${encodedId}`);
-        // const comments = Array.isArray(postData?.comments?.src)
-        //   ? postData.comments.src
-        //   : [];
-        // setCommentList(comments);
-        // setCommentCount(
-        //   postData.comments ? postData.comments.count : 0
-        // );
-        setCommentList(comments);
-        setCommentCount(response.data.comments ? response.data.comments.count : 0)
+        
+        try {
+          const response = await api.get(`/api/posts/${encodedId}/comments/`); // Only need to fetch comments
+          console.log(`Response: ${JSON.stringify(response, null, 2)}`)
+          console.log(`Response data: ${JSON.stringify(response.data, null, 2)}`)
+          const comments = Array.isArray(response.data?.src) ? response.data.src : [];
+          setCommentList(comments);
+          setCommentCount(response.data.comments ? response.data.comments.count : 0)
+        } catch (error) {
+          if (error.response) {
+            console.error("API Error Response:", error.response.status, error.response.data);
+      
+            // Try to recover if the error response has partial data
+            const fallbackComments = Array.isArray(error.response.data?.src)
+              ? error.response.data.src
+              : [];
+            setCommentList(fallbackComments);
+      
+            const fallbackCount = error.response.data?.count ?? 0;
+            setCommentCount(fallbackCount);
+          } else {
+            // Handle unexpected errors
+            console.error("Unexpected Error:", error);
+          }
+        }
       }
     };
 
     if(isCommentOpen || isModalOpen) {
       fetchPost();
     }
-  }, [isModalOpen, postGiven, isCommentOpen]);
+  }, [isModalOpen]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
