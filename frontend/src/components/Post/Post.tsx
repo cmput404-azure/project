@@ -8,7 +8,7 @@ import {
   Snackbar,
   Tooltip,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 
 import Avatar from "@mui/material/Avatar";
