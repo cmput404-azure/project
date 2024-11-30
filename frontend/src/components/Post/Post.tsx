@@ -74,8 +74,8 @@ export default function Post({
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        if (postID) {
-          const postData = await postService.getPost(`api/posts/${postID}`);
+        if (postID) { // when opening the post via link
+          const postData = await postService.getPost(`api/posts/${postID}`); // whitesmoke friends only post fail here
           // put the post data into a list to be able to decode it
           let postDataList = [];
           postDataList.push(postData);
