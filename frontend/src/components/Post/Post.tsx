@@ -144,7 +144,6 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
-          console.log(`Post Given when opening comment modal: ${JSON.stringify(postGiven, null, 2)}`)
           // const postAuthorID = postGiven.author.id.split("/").pop();
           const postAuthorID = extractUUID(postGiven.author.id);
           setPostAuthorID(postAuthorID);
@@ -236,14 +235,22 @@ export default function Post({
       console.log("Refreshing comment count");
       if (postGiven) {
         let encodedId = encodeURIComponent(postGiven.id);
-        const postData = await postService.getPost(`api/posts/${encodedId}`);
-        const comments = Array.isArray(postData?.comments?.src)
-          ? postData.comments.src
-          : [];
+        console.log(`Post FQID: ${encodedId}`)
+
+        const response = await api.get(`/api/posts/${encodedId}/comments`); // Only need to fetch comments
+        console.log(`Response: ${response}`)
+        console.log(`Response data: ${response.data}`)
+        const comments = Array.isArray(response.data?.src) ? response.data.src : [];
+        // const postData = await postService.getPost(`api/posts/${encodedId}`);
+        // const comments = Array.isArray(postData?.comments?.src)
+        //   ? postData.comments.src
+        //   : [];
+        // setCommentList(comments);
+        // setCommentCount(
+        //   postData.comments ? postData.comments.count : 0
+        // );
         setCommentList(comments);
-        setCommentCount(
-          postData.comments ? postData.comments.count : 0
-        );
+        setCommentCount(response.data.comments ? response.data.comments.count : 0)
       }
     };
 

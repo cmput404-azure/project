@@ -9,7 +9,10 @@ from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
 from ..serializers import *
 from ..models import *
-from ..utils import *
+from ..utils import url_parser
+import requests, os
+from itertools import chain
+from requests.auth import HTTPBasicAuth
 
 class CommentsPagination(PageNumberPagination):
     page_size=5
@@ -95,23 +98,41 @@ class MultipleCommentsView(APIView):
             vd:POST_FQID: http://nodebbbb/api/authors/222/posts/249
             GET [local, remote]: the comments on the post (that our server knows about)    
             '''
-            post_id = post_fqid.split('/')[-1]
+            post_fqid = url_parser.percent_decode(post_fqid)
+            post_id = url_parser.extract_uuid(post_fqid)
 
-            # Validate if `post_id` is a valid UUID
             try:
-                uuid.UUID(post_id)
-            except ValueError:
-                return Response({"detail": "Invalid post FQID."}, status=status.HTTP_400_BAD_REQUEST)
+                post_obj = Post.objects.get(uuid=post_id)
+                comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
+                pagination = self.pagination_provider()
+                page = pagination.paginate_queryset(comments, request)
 
-            post_obj = get_object_or_404(Post, uuid=post_id)
+                serialized_comments = CommentSerializer(page, many=True).data
+                return pagination.get_paginated_response(serialized_comments)
 
-        comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
+            except Post.DoesNotExist:
+                remote_comments = []
+                # call remote endpoint
+                response = requests.get(
+                    f"{post_fqid}/comments",
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                )
 
-        pagination = self.pagination_provider()
-        page = pagination.paginate_queryset(comments, request)
+                if response.status_code == 200:
+                    remote_comments = response.json()
+                    print(f"Fetched comments: {remote_comments} from endpoint: {post_fqid}/comments")
+                    pagination = self.pagination_provider()
+                    page = pagination.paginate_queryset(remote_comments, request)
 
-        serialized_comments = CommentSerializer(page, many=True).data
-        return pagination.get_paginated_response(serialized_comments)
+                    return pagination.get_paginated_response(page)
+                
+                else:
+                    return Response({"detail": "Unable to fetch remote comments."}, status=response.status_code)
+
+
+
+        
+        
 
 '''
 URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
