@@ -1,4 +1,3 @@
-import uuid
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,12 +6,11 @@ from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes
 from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
+from requests.auth import HTTPBasicAuth
 from ..serializers import *
 from ..models import *
 from ..utils import url_parser
-import requests, os
-from itertools import chain
-from requests.auth import HTTPBasicAuth
+import requests, os, uuid
 
 class CommentsPagination(PageNumberPagination):
     page_size=5
@@ -135,9 +133,6 @@ class MultipleCommentsView(APIView):
 
                     if response.status_code == 200:
                         remote_comments = response.json()
-                        # remote_comments = remote_comments_data.get("src", [])
-
-                        print(f"Fetched comments: {remote_comments} from endpoint: {post_fqid}/comments")
                         
                         # Return the paginated response directly
                         return Response(remote_comments, status=200)
