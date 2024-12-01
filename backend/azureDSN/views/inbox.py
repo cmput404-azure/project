@@ -847,6 +847,9 @@ class InboxView(APIView):
         try:
             post_id = url_parser.extract_uuid(payload["id"])
 
+            if post_id.isdigit(): # Handle groups that uses integer as ID
+                raise Post.DoesNotExist
+
             # Validate the post object sent with the payload
             post_obj = Post.objects.get(uuid=post_id)
 
