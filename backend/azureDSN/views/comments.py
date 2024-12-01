@@ -127,7 +127,7 @@ class MultipleCommentsView(APIView):
                 try:
                     # call remote endpoint
                     response = requests.get(
-                        f"{post_fqid}/comments",
+                        f"{post_fqid.rstrip('/')}/comments",
                         auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                     )
 
