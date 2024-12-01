@@ -781,11 +781,8 @@ class InboxView(APIView):
             # Handle remote author
             if payload["type"].lower() == "follow":
                 # Send to remote inbox, passing the payload and remote host information
-                logging.info("Sending follow request to remote author")
-                logging.info(payload)
                 return self.send_follow_request_to_remote(payload)
             elif payload["type"].lower() == "post":
-                print(f"SENDING REMOTE POST")
                 # New post created locally but the followers/friends are remote
                 return self.send_post_to_remote(payload)
             elif payload["type"].lower() == "like":
@@ -869,6 +866,33 @@ class InboxView(APIView):
                 status=status.HTTP_201_CREATED,
             )
 
+    def validate_inbox_payload(self, payload, is_like=False):
+        if is_like:
+            required_fields = ["authorId", "object"]
+        else:
+            required_fields = ["object"]
+
+        errors = []
+
+        # Check for missing or empty required fields
+        for field in required_fields:
+            if not payload.get(field):
+                errors.append(f"'{field}' field is required and cannot be empty.")
+
+        if is_like:
+            if payload.get("authorId"):
+                    if not url_parser.is_valid_url(payload["authorId"]):
+                        errors.append("Author ID is not a valid URL.")
+                    elif "api/authors" not in payload["authorId"]:
+                        errors.append("Author ID is malformed.")
+            
+        if payload.get("object"):
+            if not url_parser.is_valid_url(payload["object"]):
+                errors.append("Object is not a valid URL.")
+            elif "api/authors" not in payload["object"]:
+                errors.append("Object is malformed.")
+        return errors
+
     def send_post_to_remote(self, payload):
         try:
             remote_follower = payload["follower"]
@@ -908,9 +932,25 @@ class InboxView(APIView):
 
     def send_follow_request_to_remote(self, payload):
         try:
-            # Assume the remote host URL is found in the payload under the "object" key        
+            # Check for object and actor fields
+            check_author = payload.get("actor")
+            if check_author:
+                if not url_parser.is_valid_url(payload["actor"]["id"]):
+                    return Response(f"actor id field is invalid", status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response(f"author field is missing", status=status.HTTP_400_BAD_REQUEST)
+
+            check_object = payload.get("object")
+            if check_object:
+                if not url_parser.is_valid_url(payload["object"]["id"]):
+                    return Response(f"object id field is invalid", status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response(f"object field is missing", status=status.HTTP_400_BAD_REQUEST)
+
+            # Assume the remote host URL is found in the payload under the "object" key
             base_host = url_parser.get_base_host(payload.get('object').get('host'))
             author_serial = url_parser.extract_uuid(payload.get('object').get('id'))
+
             remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox"
 
             response = requests.post(
@@ -956,7 +996,12 @@ class InboxView(APIView):
             )
 
     def send_like_to_remote(self, payload, request, test=False):
-
+        # Checks for authorId and object fields
+        errors = self.validate_inbox_payload(payload, True)
+        if errors:
+            print("Payload validation errors:", errors)
+            return Response({"error": errors}, status=status.HTTP_400_BAD_REQUEST)
+    
         if request and request.user:
             user = User.objects.get(uuid=request.user.uuid)
             payload["author"] = UserSerializer(user).data
@@ -999,10 +1044,16 @@ class InboxView(APIView):
             del payload["authorId"]  # Don't need this anymore
 
         except Exception as e:
-            print(f"Error creating Like object: {e}")
-            return
+            return Response(f"Error creating Like object: {e}", status=status.HTTP_400_BAD_REQUEST)
 
         print(f"FINAL LIKE OBJECT TO BE SENT TO {remote_inbox_api}: {payload}")
+
+        if not url_parser.is_valid_url(payload["id"]):
+            return Response(f"id field is invalid: {payload['id']}", status=status.HTTP_400_BAD_REQUEST)
+
+        if not payload["published"]:
+            return Response(f"published field is invalid: {payload['published']}", status=status.HTTP_400_BAD_REQUEST)
+
         try:
             response = requests.post(
                 remote_inbox_api,
@@ -1035,19 +1086,38 @@ class InboxView(APIView):
             full_url = request.build_absolute_uri()
         parsed_url = urlparse(full_url)
 
+        check_author = payload.get("author")
+        if not check_author:
+            return Response(f"author field is missing in comments object", status=status.HTTP_400_BAD_REQUEST)
+
+        check_post = payload.get("post")
+        if not check_post:
+            return Response(f"post field is missing in comments object", status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if request is malformed
+        if "api/authors" not in payload["post"]:
+            return Response(
+                {"error": "Post is malformed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
         post_url = payload["post"]
         parsed_post_url = urlparse(post_url)
         author_host = parsed_post_url.netloc
 
+        
         comment_obj = Comment.objects.create(
             user=payload["author"], remote_post=post_url, comment=payload["comment"]
         )
         comment_id = comment_obj.uuid
+        
         comment_url = f"{payload['author']['id']}/commented/{comment_id}"
 
         payload["contentType"] = "text/plain"
+        payload["published"] = datetime.utcnow().isoformat()
         payload["post"] = post_url
         payload["id"] = comment_url
+
         payload_json = json.dumps(payload)
         headers = {
             "Content-Type": "application/json",
@@ -1057,7 +1127,16 @@ class InboxView(APIView):
         inbox_url = parsed_url._replace(netloc=author_host)
         formatted_url = urlunparse(inbox_url)
 
-        print(formatted_url)
+        # checking if payload has all the required fields
+        if not url_parser.is_valid_url(payload["id"]):
+            return Response(f"id field is invalid: {payload['id']}", status=status.HTTP_400_BAD_REQUEST)
+
+        if not url_parser.is_valid_url(payload["post"]):
+            return Response(f"post field is invalid: {payload['post']}", status=status.HTTP_400_BAD_REQUEST)
+
+        if not url_parser.is_valid_url(payload["author"]["id"]):
+            return Response(f"The author id in author object is invalid: {payload['author']['id']}", status=status.HTTP_400_BAD_REQUEST)
+    
         if test:
             return formatted_url
         # Use requests to send the POST request
@@ -1077,7 +1156,6 @@ class InboxView(APIView):
     payload is a follow request object
     we return the status only cause the they dont need to know what is stored in other person's inbox
     """
-
     def create_follow_request(self, user_object, payload, request):
         # Validate the follow request object sent with the payload
         follow_obj = FollowRequest.objects.create(
