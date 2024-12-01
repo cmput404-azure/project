@@ -234,11 +234,12 @@ class FollowerView(APIView):
                 if response.status_code == 200:
                     # Now, the idea is that the folowers returned by whitesmoke is paginated and we don't need that
                     response_data = response.json()
+                    print(f"RECEVIED FOLLOWERS ARE:{response_data}")
                     if 'next' in response_data:
                         # Return 'results' if present, else return a followers format response
                         results = response_data.get('results')
                         if results is not None:
-                            return Response(results, status=status.HTTP_200_OK)
+                            return Response(results[0], status=status.HTTP_200_OK)
                         else:
                             return Response({'type': 'followers', 'followers': []}, status=status.HTTP_200_OK)
                     else:
