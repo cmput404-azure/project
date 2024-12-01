@@ -238,7 +238,7 @@ export default function Post({
         const comments = Array.isArray(response.data?.src) ? response.data.src : [];
         setCommentList(comments);
         setCommentCount(response.data.count ? response.data.count : 0)
-
+        postGiven.comments = response.data;
       }
     };
 
