@@ -232,7 +232,18 @@ class FollowerView(APIView):
                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                 )
                 if response.status_code == 200:
-                    return Response(response.json(), status=status.HTTP_200_OK)
+                    # Now, the idea is that the folowers returned by whitesmoke is paginated and we don't need that
+                    response_data = response.json()
+                    if 'next' in response_data:
+                        # Return 'results' if present, else return a followers format response
+                        results = response_data.get('results')
+                        if results is not None:
+                            return Response(results, status=status.HTTP_200_OK)
+                        else:
+                            return Response({'type': 'followers', 'followers': []}, status=status.HTTP_200_OK)
+                    else:
+                        # If not paginated, return as usual
+                        return Response(response_data, status=status.HTTP_200_OK)
                 else:
                     return Response({
                         "message": f"Failed to fetch posts from remote host. Status code: {response.status_code}",
