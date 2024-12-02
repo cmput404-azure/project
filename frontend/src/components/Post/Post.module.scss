@@ -1,9 +1,10 @@
 .card {
-  background-color: rgb(123, 123, 123);
+  backdrop-filter: blur(10px);
+  background-color: rgb(156, 156, 156, 0.5);
   border-radius: 10px;
   box-sizing: border-box;
   color: white; // Default text color for the whole card
-  margin: 20px auto;
+  margin: 20px auto 0 auto;
   max-width: 800px;
   min-height: max-content;
   min-width: 300px;
@@ -14,6 +15,7 @@
   &:hover {
     box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
   }
+
 }
 
 .grid {
@@ -176,7 +178,6 @@
 }
 
 .comments {
-  background-color: rgb(123, 123, 123, 0.8); // slightly transparent
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
   display: flex;
@@ -207,8 +208,8 @@
 .commentContent {
   display: flex;
   flex-direction: column;
-  padding-top: 7px;
   margin-left: 0.5rem;
+  padding-top: 7px;
 }
 
 .authorTime {
@@ -235,5 +236,28 @@
 }
 
 .commentText {
-  color: #d0d0d0;
+  color: #fff;
+}
+
+.comment__list{
+  display: flex;
+  flex-flow: column;
+  max-height: 200px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  width: 100%;
+}
+
+.post__modal{
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .card{
+    max-width: 90vw !important;
+    padding: 1rem 0.75rem !important;
+  }
 }

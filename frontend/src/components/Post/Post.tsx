@@ -7,7 +7,7 @@ import {
   Snackbar,
   Tooltip,
 } from "@mui/material";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
 import Avatar from "@mui/material/Avatar";
@@ -23,6 +23,7 @@ import ShareDialogue from "../Post/ShareDialogue";
 import ShareService from "../../service/share";
 import { api } from "../../service/config";
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
+import { extractUUID } from "../../util/formatting/extractUUID";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
 import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
@@ -31,7 +32,6 @@ import profileService from "../../service/profile";
 import remarkGfm from "remark-gfm";
 import styles from "./Post.module.scss";
 import { useAuth } from "../../state";
-import { extractUUID } from "../../util/formatting/extractUUID";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -114,7 +114,7 @@ export default function Post({
               }
             }
 
-            if(postData.likes.count > 0) {
+            if (postData.likes.count > 0) {
               setHasLiked(
                 postData.likes.src.some((like) =>
                   like.id.includes(authProvider.user?.uuid)
@@ -343,7 +343,7 @@ export default function Post({
 
   if (!post)
     return (
-      <div>
+      <div className={"loading_component"}>
         <CircularProgress sx={{ color: "#70ffaf" }} />
       </div>
     );
@@ -435,16 +435,15 @@ export default function Post({
               onClick={
                 !disableLikeComment
                   ? (e) => {
-                      e.stopPropagation();
-                      handleLikePost();
-                    }
-                  : () => {}
+                    e.stopPropagation();
+                    handleLikePost();
+                  }
+                  : () => { }
               }
             >
               <i
-                className={`${"fas fa-heart icon"} ${
-                  !disableLikeComment ? "" : styles.disabled
-                }`}
+                className={`${"fas fa-heart icon"} ${!disableLikeComment ? "" : styles.disabled
+                  }`}
               ></i>
               <span>{formatCount(likeCount)}</span>
             </div>
@@ -455,13 +454,12 @@ export default function Post({
                   ? canToggleComments
                     ? handleToggleComment
                     : handleCommentButtonClick
-                  : () => {}
+                  : () => { }
               }
             >
               <i
-                className={`${"fas fa-comment"} ${
-                  !disableLikeComment ? "" : styles.disabled
-                }`}
+                className={`${"fas fa-comment"} ${!disableLikeComment ? "" : styles.disabled
+                  }`}
               ></i>
               <span>{formatCount(commentCount)}</span>
             </div>
@@ -484,13 +482,13 @@ export default function Post({
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
           {post.contentType !== ContentType.MARKDOWN &&
-          post.contentType !== ContentType.PLAIN ? (
+            post.contentType !== ContentType.PLAIN ? (
             <div className={styles.imgContainer}>
               <img
                 className={styles.postImage}
                 src={
                   post.content.includes("data:image/") ||
-                  post.content.includes("base64,")
+                    post.content.includes("base64,")
                     ? post.content
                     : "data:image/png;base64," + post.content
                 }
@@ -539,7 +537,7 @@ export default function Post({
 
       {(isCommentOpen && canToggleComments) || isModal ? (
         <div className={styles.comments}>
-          <div className={styles.commentsHeader}>Comments</div>
+          <div className={styles.commentsHeader}/>
           {currentAuthor && (
             <CommentInputField
               authorObj={currentAuthor}
@@ -547,33 +545,37 @@ export default function Post({
               onCommentAdded={handleNewComment}
             />
           )}
-          {commentList.map((comment) => (
-            <div key={comment.id} className={styles.comment}>
+          <div className={styles.comment__list}>
+            {commentList.map((comment) => (
               <div key={comment.id} className={styles.comment}>
-                <div className="avatar">
-                  <Avatar
-                    src={profileService.getProfilePicture(comment.author)}
-                    alt={comment.author?.displayName}
-                  />
-                </div>
-              </div>
-              <div className={styles.commentContent}>
-                <div className={styles.authorTime}>
-                  <div className={styles.commentAuthor}>
-                    {comment.author.displayName}
-                  </div>
-                  <div className={styles.timePosted}>
-                    {new Date(comment.published).toLocaleString()}
+                <div key={comment.id} className={styles.comment}>
+                  <div className="avatar">
+                    <Avatar
+                      src={profileService.getProfilePicture(comment.author)}
+                      alt={comment.author?.displayName}
+                    />
                   </div>
                 </div>
-                <div className={styles.commentText}>{comment.comment}</div>
+                <div className={styles.commentContent}>
+                  <div className={styles.authorTime}>
+                    <div className={styles.commentAuthor}>
+                      {comment.author.displayName}
+                    </div>
+                    <div className={styles.timePosted}>
+                      {new Date(comment.published).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className={styles.commentText}>{comment.comment}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       ) : null}
 
+
       <Modal
+        className={styles.post__modal}
         open={isModalOpen}
         onClose={handleCommentModalClose}
         sx={{ overflow: "auto" }}

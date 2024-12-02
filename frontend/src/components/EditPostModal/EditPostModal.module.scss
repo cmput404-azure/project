@@ -1,65 +1,66 @@
 .overlay {
   background-color: rgba(0, 0, 0, 0.5); // Semi-transparent black overlay
+  height: 100%;
+  left: 0;
   position: fixed;
   top: 0;
-  left: 0;
   width: 100%;
-  height: 100%;
   z-index: 1000;
 }
 
 .modal {
-  background-color: #424242;
+  backdrop-filter: blur(10px);
+  background-color: rgb(156, 156, 156, 0.5);;
   border-radius: 10px;
-  max-width: 600px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
   margin: 1rem auto;
+  max-height: 100%;
+  max-width: 600px;
+  outline: none;
+  overflow-y: auto;
   padding: 20px;
   position: relative;
   top: 50%;
   transform: translateY(-50%);
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  outline: none;
-  overflow-y: auto;
-  max-height: 100%;
 }
 
 .title {
+  color: white;
+  font-size: 24px;
   margin-bottom: 20px;
   text-align: center;
-  font-size: 24px;
-  color: white;
 }
 
 .formGroup {
+  align-items: flex-start;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   justify-content: center;
   margin-bottom: 15px;
 
   label {
+    color: #70ffaf;
     font-size: 16px;
     margin-bottom: 8px;
-    color: #70ffaf;
   }
 
   .cardImage {
+    align-items: center;
+    border-radius: 5px;
+    display: flex;
+    height: auto;
+    justify-content: center;
     margin: 0 auto;
     max-width: 100%;
     overflow: hidden;
-    border-radius: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: auto;
   }
 
   .postImage {
-    max-width: 100%;
-    height: auto;
-    display: block;
     border-radius: 5px;
+    display: block;
+    height: auto;
     margin: 0 auto;
+    max-width: 100%;
     object-fit: contain;
   }
 
@@ -67,8 +68,8 @@
   textarea {
     border: 1px solid #ccc;
     border-radius: 4px;
-    padding: 10px;
     font-size: 14px;
+    padding: 10px;
     width: 100%;
   }
 
@@ -78,21 +79,21 @@
   }
 
   .content_field {
-    color: white;
-    box-sizing: border-box;
-    overflow-y: auto;
-    max-height: 200px;
     
     /* Mimic border visibility while scrolling */
     box-shadow: inset 0 0 0 1px #fff;
+    box-sizing: border-box;
+    color: white;
+    max-height: 200px;
+    overflow-y: auto;
+
+    /* Hide scrollbar in Firefox */
+    scrollbar-width: none;
 
     /* Hide scrollbar for WebKit browsers (e.g., Chrome, Safari) */
     &::-webkit-scrollbar {
       display: none;
     }
-
-    /* Hide scrollbar in Firefox */
-    scrollbar-width: none;
 
     &::placeholder {
       color: #fafafa;
@@ -115,18 +116,18 @@
   margin-top: 20px;
 
   button {
-    padding: 10px 20px;
-    font-size: 14px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 14px;
+    padding: 10px 20px;
     transition: background-color 0.3s ease;
 
     &.cancelButton {
       background-color: #555;
       color: white;
-      transition: 0.3s ease-in-out;
       margin-right: 1rem;
+      transition: 0.3s ease-in-out;
 
       &:hover {
         background-color: #ff4d4d;
