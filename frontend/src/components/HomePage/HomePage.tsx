@@ -201,7 +201,8 @@ const HomePage = () => {
         ))}
         {displayedPosts.length === 0 && (
           <div className={styles.noPosts}>
-            <p>There are no posts on this node 🫨</p>
+            <p>It's a little quiet here...</p>
+            <p>Break the silence—start your first post!</p>
           </div>
         )}
         {activeFilterPost === "all" && publicPage < totalPublicPages && (
