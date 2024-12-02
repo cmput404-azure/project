@@ -132,6 +132,8 @@
     .container{
         height: 98vh !important;
         overflow: auto !important;
+        width: 95vw !important;
+        padding: 1rem 0.5rem 4rem 0.5rem !important;
         .header{
             flex-flow: row wrap !important;
             justify-content: center !important;
