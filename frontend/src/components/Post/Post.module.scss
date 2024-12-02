@@ -14,6 +14,7 @@
   &:hover {
     box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
   }
+
 }
 
 .grid {
@@ -235,5 +236,21 @@
 }
 
 .commentText {
-  color: #d0d0d0;
+  color: #fff;
+}
+
+.comment__list{
+  display: flex;
+  flex-flow: column;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  max-height: 200px;
+}
+
+.post__modal{
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
 }
