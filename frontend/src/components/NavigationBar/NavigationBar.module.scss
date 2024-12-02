@@ -68,6 +68,10 @@
         font-size: 1.2rem;
         transition: transform 0.3s ease;
     }
+
+    .modalContent{
+        max-width: 80vw !important;
+    }
 }
 
 .modalOverlay {
