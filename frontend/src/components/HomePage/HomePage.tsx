@@ -202,7 +202,7 @@ const HomePage = () => {
         {displayedPosts.length === 0 && (
           <div className={styles.noPosts}>
             <p>It's a little quiet here...</p>
-            <p>Break the silence—start your first post!</p>
+            <p>Break the silence — create the first post!</p>
           </div>
         )}
         {activeFilterPost === "all" && publicPage < totalPublicPages && (
