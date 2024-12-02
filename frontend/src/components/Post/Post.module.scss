@@ -1,4 +1,5 @@
 .card {
+  backdrop-filter: blur(10px);
   background-color: rgb(156, 156, 156, 0.5);
   border-radius: 10px;
   box-sizing: border-box;
@@ -10,7 +11,6 @@
   padding: 20px;
   transition: box-shadow 0.3s ease-in-out;
   width: 100%;
-  backdrop-filter: blur(10px);
 
   &:hover {
     box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
@@ -208,8 +208,8 @@
 .commentContent {
   display: flex;
   flex-direction: column;
-  padding-top: 7px;
   margin-left: 0.5rem;
+  padding-top: 7px;
 }
 
 .authorTime {
@@ -242,11 +242,11 @@
 .comment__list{
   display: flex;
   flex-flow: column;
-  width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
   max-height: 200px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  width: 100%;
 }
 
 .post__modal{
