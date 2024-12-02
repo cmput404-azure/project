@@ -1,4 +1,3 @@
-// @ts-nocheck
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 import {
@@ -69,7 +68,7 @@ export default function Post({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAuthor, setCurrentAuthor] = useState<any>();
   const [postAuthorID, setPostAuthorID] = useState("");
-  const prevIsModalOpenRef = useRef();
+  const prevIsModalOpenRef = useRef<boolean>();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -233,22 +232,20 @@ export default function Post({
   useEffect(() => {
     const fetchPostComment = async () => {
       if (postGiven) {
-        let encodedId = encodeURIComponent(postGiven.id);
-        const response = await api.get(`/api/posts/${encodedId}/comments/`); // Only need to fetch comments
-        const comments = Array.isArray(response.data?.src) ? response.data.src : [];
+        const commentsData = await postService.getPostComments(postGiven.id);
+        const comments = Array.isArray(commentsData.src) ? commentsData.src : [];
         setCommentList(comments);
-        setCommentCount(response.data.count ? response.data.count : 0)
-        postGiven.comments = response.data;
+        setCommentCount(commentsData.count || 0);
+        postGiven.comments = commentsData;
       }
     };
 
-    // Compare previous state and current state to detect when modal closes
     if (prevIsModalOpenRef.current && !isModalOpen) {
       // The modal was open before and is now closed, so fetch comments
       fetchPostComment();
     }
-    // Update the ref with the current modal state
     prevIsModalOpenRef.current = isModalOpen;
+
   }, [isModalOpen, isCommentOpen]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
