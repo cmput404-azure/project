@@ -42,15 +42,13 @@ class PublicStreamView(APIView):
                 remote_payload = item.remote_payload
                 if remote_payload.get("type") == "post": # And get the remote posts
                     post_id = remote_payload.get("id")
-                    visibility = remote_payload.get("visibility")
+                    visibility = remote_payload.get("visibility").upper()
 
-                    if (visibility.upper() == "DELETED"):
-                        # I am not an admin so I shouldn't be able to see deleted remote posts
-                        if not user.is_staff:
-                            if post_id in remote_posts:
-                                remote_posts.pop(post_id) # Remove deleted post
-                        continue # If admin, show the deleted post ONCE
-                    
+                    if (visibility == "DELETED"):
+                        # We don't want to see deleted remote posts
+                        if post_id in remote_posts:
+                            remote_posts.pop(post_id) # Remove deleted post
+
                     if visibility == "PUBLIC" and (item.post_status == None or item.post_status.upper() != "DELETE"): # This logic only works for local, local-remote posts
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip if the post has already been processed with the same status
