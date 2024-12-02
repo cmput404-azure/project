@@ -7,7 +7,7 @@ import {
   Snackbar,
   Tooltip,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 
 import Avatar from "@mui/material/Avatar";
@@ -31,6 +31,7 @@ import profileService from "../../service/profile";
 import remarkGfm from "remark-gfm";
 import styles from "./Post.module.scss";
 import { useAuth } from "../../state";
+import { extractUUID } from "../../util/formatting/extractUUID";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -67,12 +68,13 @@ export default function Post({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAuthor, setCurrentAuthor] = useState<any>();
   const [postAuthorID, setPostAuthorID] = useState("");
+  const prevIsModalOpenRef = useRef<boolean>();
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        if (postID) {
-          const postData = await postService.getPost(`api/posts/${postID}`);
+        if (postID) { // when opening the post via link
+          const postData = await postService.getPost(`api/posts/${postID}`); // whitesmoke friends only post fail here
           // put the post data into a list to be able to decode it
           let postDataList = [];
           postDataList.push(postData);
@@ -142,7 +144,7 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
-          const postAuthorID = postGiven.author.id.split("/").pop();
+          const postAuthorID = extractUUID(postGiven.author.id);
           setPostAuthorID(postAuthorID);
 
           if (authProvider.user && postGiven.likes?.count > 0) {
@@ -228,25 +230,23 @@ export default function Post({
 
   // To refresh comment count when comment modal is closed
   useEffect(() => {
-    const fetchPost = async () => {
-      console.log("Refreshing comment count");
+    const fetchPostComment = async () => {
       if (postGiven) {
-        let encodedId = encodeURIComponent(postGiven.id);
-        const postData = await postService.getPost(`api/posts/${encodedId}`);
-        const comments = Array.isArray(postData?.comments?.src)
-          ? postData.comments.src
-          : [];
+        const commentsData = await postService.getPostComments(postGiven.id);
+        const comments = Array.isArray(commentsData.src) ? commentsData.src : [];
         setCommentList(comments);
-        setCommentCount(
-          postData.comments ? postData.comments.count : 0
-        );
+        setCommentCount(commentsData.count || 0);
+        postGiven.comments = commentsData;
       }
     };
 
-    if(isCommentOpen || isModalOpen) {
-      fetchPost();
+    if (prevIsModalOpenRef.current && !isModalOpen) {
+      // The modal was open before and is now closed, so fetch comments
+      fetchPostComment();
     }
-  }, [isModalOpen, postGiven, isCommentOpen]);
+    prevIsModalOpenRef.current = isModalOpen;
+
+  }, [isModalOpen, isCommentOpen]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
@@ -260,15 +260,12 @@ export default function Post({
     if (isModal) return;
     console.log(`IN HANDLE COMMENT BUTTON: ${JSON.stringify(post, null, 2)}`)
     try {
-      const postData = await postService.getPost(
-        `api/posts/${encodeURIComponent(post.id)}` // this doesnt work as well because UUID?
-      );
-      setPost(postData);
+      setPost(post);
       setIsModalOpen(true);
     } catch (error) {
       console.error("Error fetching post data:", error);
-    }
-  };
+    };
+  }
 
   // handle when the comment modal is closed
   const handleCommentModalClose = () => {

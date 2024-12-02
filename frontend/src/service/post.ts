@@ -1,4 +1,4 @@
-import { PostData } from "../models/models";
+import { PostComment, PostData } from "../models/models";
 import { api } from "./config"
 
 class PostService {
@@ -14,6 +14,22 @@ class PostService {
       } catch (error) {
          console.error(`Error fetching post with ID ${fqid}:`, error);
          throw error;
+      }
+   }
+
+   /**
+     * Fetch comments for a specific post
+     * @param postId - The ID of the post
+     * @returns Promise<PostComment> - The comments for the post
+   */
+   public async getPostComments(postId: string): Promise<PostComment> {
+      try {
+            const encodedId = encodeURIComponent(postId);
+            const response = await api.get<PostComment>(`/api/posts/${encodedId}/comments/`);
+            return response.data;
+      } catch (error) {
+            console.error(`Error fetching comments for post with ID ${postId}:`, error);
+            throw error;
       }
    }
 }

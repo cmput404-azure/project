@@ -844,6 +844,9 @@ class InboxView(APIView):
         try:
             post_id = url_parser.extract_uuid(payload["id"])
 
+            if post_id.isdigit(): # Handle groups that uses integer as ID
+                raise Post.DoesNotExist
+
             # Validate the post object sent with the payload
             post_obj = Post.objects.get(uuid=post_id)
 
@@ -945,12 +948,9 @@ class InboxView(APIView):
                 return Response(f"object field is missing", status=status.HTTP_400_BAD_REQUEST)
 
             # Assume the remote host URL is found in the payload under the "object" key
-            remote_host = payload["object"].get("host")
-            author_serial = (
-                payload["object"].get("id").rstrip("/").split("/")[-1]
-            )  # Get last part of fqid
-            parsed_url = urlparse(remote_host)
-            base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            base_host = url_parser.get_base_host(payload.get('object').get('host'))
+            author_serial = url_parser.extract_uuid(payload.get('object').get('id'))
+
             remote_inbox_url = f"{base_host}/api/authors/{author_serial}/inbox"
 
             response = requests.post(
@@ -961,9 +961,9 @@ class InboxView(APIView):
                 ),
             )
 
-            if response.status_code == 200 or response.status_code == 201:
+            if response.status_code in [200, 201]:
                 # If successful, make a Follow object in local regardless of whether the remote request is going to be accepted
-                local_follower_uuid = payload["actor"].get("id").split("/")[-1]
+                local_follower_uuid = url_parser.extract_uuid(payload.get('actor').get('id'))
 
                 follow_data = {
                     "local_followee": None,

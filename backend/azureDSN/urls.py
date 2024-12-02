@@ -18,7 +18,8 @@ urlpatterns = [
 
     # Inbox API
     path("api/authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
-    path("api/authors/<uuid:author_serial>/inbox", InboxView.as_view(), name="inbox_no_slash"),
+    path("api/authors/<int:author_serial>/inbox/", InboxView.as_view(), name="inbox_integer"), # To connect with other groups with integer id
+    path("api/authors/<uuid:author_serial>/inbox", InboxView.as_view(), name="inbox_no_slash"), # Other groups might call this
     path("api/authors/<uuid:author_serial>/inbox/paginated/", PaginatedInboxView.as_view(), name="paginated_inbox"),
 
     # Remote API
