@@ -86,10 +86,11 @@
     position: relative;
     width: 90%;
     max-width: 500px;
-    background-color: #9c9c9c;
+    background-color: rgba(156, 156, 156, 0.5);
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     padding: 20px;
+    backdrop-filter: blur(5px);
 }
 
 .modalHeader {
@@ -113,7 +114,7 @@
     padding: 8px; 
     margin:0;
     position: absolute; // relative to the .modalHeader
-    right: 20px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
 }
