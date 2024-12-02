@@ -2,6 +2,7 @@ import { Avatar, TextField, Tooltip } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
 
+import AddIcon from '@mui/icons-material/Add';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import LinkIcon from '@mui/icons-material/Link';
 import PeopleIcon from '@mui/icons-material/People';
@@ -286,7 +287,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
           className={styles.add_button}
           onClick={() => document.getElementById("image-upload")?.click()}
         >
-          <span>+</span>
+                  <AddIcon  />
         </button>
         <input
           type="file"
