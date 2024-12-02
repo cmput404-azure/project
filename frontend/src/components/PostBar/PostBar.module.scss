@@ -48,25 +48,18 @@
       background-color: transparent;
       border: none;
       cursor: pointer;
-      font-size: 20px;
-      margin-left: 10px;
-      transition: background-color 0.3s ease, transform 0.3s ease;
-
-      span {
-        align-items: center;
-        background-color: #a0a0a0;
-        border-radius: 50%;
-        color: white;
-        display: flex;
-        font-size: 24px;
-        font-weight: bold;
-        height: 32px;
-        justify-content: center;
-        width: 32px;
-
-        &:hover {
-          background-color: #70ffaf;
-        }
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background-color: #a0a0a0;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      &:hover {
+        background-color: #70ffaf;
       }
     }
   }
