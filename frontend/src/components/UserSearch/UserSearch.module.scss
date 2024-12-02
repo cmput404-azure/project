@@ -19,6 +19,7 @@
     scrollbar-color: white rgb(110, 110, 110);
     box-sizing: border-box;
     padding: 10px;
+    height: 100%;
 }
 
 .search__container {
@@ -67,4 +68,8 @@
     color:black;
     padding-top:0px;
     margin-bottom:10px;
+}
+
+.no__results{
+    text-align: center;
 }
