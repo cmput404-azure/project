@@ -1,5 +1,5 @@
 .card {
-  background-color: rgb(123, 123, 123);
+  background-color: rgb(156, 156, 156, 0.5);
   border-radius: 10px;
   box-sizing: border-box;
   color: white; // Default text color for the whole card
@@ -10,6 +10,7 @@
   padding: 20px;
   transition: box-shadow 0.3s ease-in-out;
   width: 100%;
+  backdrop-filter: blur(10px);
 
   &:hover {
     box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
@@ -177,7 +178,6 @@
 }
 
 .comments {
-  background-color: rgb(123, 123, 123, 0.8); // slightly transparent
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
   display: flex;
