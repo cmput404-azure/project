@@ -343,7 +343,7 @@ export default function Post({
 
   if (!post)
     return (
-      <div>
+      <div className={"loading_component"}>
         <CircularProgress sx={{ color: "#70ffaf" }} />
       </div>
     );

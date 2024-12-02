@@ -35,7 +35,8 @@
 
 .recommended { 
   align-items: center;
-  background-color: #343434;
+  background-color: rgb(156, 156, 156, 0.5);
+  backdrop-filter: blur(10px);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -121,6 +122,22 @@
 
   .postSection{
     margin-bottom: 5rem !important;
+  }
+
+  .drawer{
+    top: 75%;
+    // right: -10px;
+    .recommended__button{
+      // background-color: #343434 !important;
+      background-color: rgba(97, 97, 97, 0.5) !important;
+      box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      border-bottom-left-radius: 50%;
+      border-top-left-radius: 50%;
+      color: #70ffaf;
+      padding: 1rem 0 !important;
+      max-width: 20px !important;
+    }
   }
 }
 

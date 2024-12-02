@@ -4,7 +4,7 @@
   border-radius: 10px;
   box-sizing: border-box;
   color: white; // Default text color for the whole card
-  margin: 20px auto;
+  margin: 20px auto 0 auto;
   max-width: 800px;
   min-height: max-content;
   min-width: 300px;
@@ -253,4 +253,11 @@
   display: flex;
   flex-flow: column;
   justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .card{
+    max-width: 90vw !important;
+    padding: 1rem 0.75rem !important;
+  }
 }
