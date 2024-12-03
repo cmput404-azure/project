@@ -14,9 +14,8 @@ const ImageView = () => {
       try {
         const host = normalizeURL(process.env.REACT_APP_API_BASE_URL);
         // Call local image backend, handle remote posts there
-        const response = await api.get<{"image": string, "content_type": string}>(`${host}/api/posts/` + encodeURIComponent(postID) + "/image");
-        const json = response.data;
-        setImageSrc(json.image);
+        const response = await api.get<string>(`${host}/api/posts/` + encodeURIComponent(postID) + "/image");
+        setImageSrc(response.data); // base64 string
       } catch (err) {
         setError("Failed to load image");
         console.error(err);
