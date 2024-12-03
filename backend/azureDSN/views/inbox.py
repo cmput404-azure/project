@@ -16,12 +16,11 @@ from drf_spectacular.utils import (
 from django.core.exceptions import ObjectDoesNotExist
 from requests.auth import HTTPBasicAuth
 from urllib.parse import urlparse, quote, urlunparse
-import requests, os, json
+import requests, os, json, logging
 from ..serializers import *
 from ..models import *
 from datetime import datetime
 from ..utils import url_parser
-import logging
 from rest_framework.pagination import PageNumberPagination
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -362,10 +361,7 @@ class InboxView(APIView):
                 ]  # we not sure if follower is sent with or not but local user won't need it anyway
 
             try:
-                parsed_url = urlparse(payload["id"])
-                post_id = parsed_url.path.split("/")[
-                    -1
-                ]  # extract id of the post (the uuid)
+                post_id = url_parser.extract_uuid(payload.get('id'))
                 post_obj = Post.objects.get(uuid=post_id)
 
                 # Find the old version of that posts in inbox including null, update, update-old or even delete and remove them
@@ -499,10 +495,7 @@ class InboxView(APIView):
                 ]  # we not sure if follower is sent with or not but local user won't need it anyway
 
             try:
-                parsed_url = urlparse(payload["id"])
-                post_id = parsed_url.path.split("/")[
-                    -1
-                ]  # extract id of the post (the uuid)
+                post_id = url_parser.extract_uuid(payload.get('id'))
                 post_obj = Post.objects.get(uuid=post_id)
                 # Local post: Update inbox and modify existing post status
                 # Find the old version of that posts in inbox
@@ -531,9 +524,7 @@ class InboxView(APIView):
                 # Find the old version of that posts in inbox
                 existing_item_obj = InboxItem.objects.filter(
                     inbox=inbox_obj,
-                    remote_payload__id=payload[
-                        "id"
-                    ],  # Check if remote_payload's id matches the incoming id
+                    remote_payload__id=payload["id"],  # Check if remote_payload's id matches the incoming id
                 ).exclude(post_status__in=["delete", "edited"])
 
                 # Modify the post_status to edited
@@ -900,10 +891,8 @@ class InboxView(APIView):
             # remove follower from payload to return to original post structure
             del payload["follower"]
 
-            follower_serial = remote_follower.get("id").rstrip("/").split("/")[-1]
-            remote_host = remote_follower.get("host")
-            parsed_url = urlparse(remote_host)
-            base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            follower_serial = url_parser.extract_uuid(remote_follower.get('id'))
+            base_host = url_parser.get_base_host(remote_follower.get("host"))
             remote_inbox_url = f"{base_host}/api/authors/{follower_serial}/inbox"
 
             response = requests.post(

@@ -205,9 +205,10 @@ class AuthStreamView(APIView):
                             # Skip already processed posts with the same status
                             continue
 
-                        base_author_host = url_parser.get_base_host(remote_payload.get("author").get("host"))
-                        encoded_post_fqid = url_parser.percent_encode(post_id)
-                        get_post_url = f"{base_author_host}/api/posts/{encoded_post_fqid}"
+                        base_host = url_parser.get_base_host(remote_payload.get("id"))
+                        author_serial = url_parser.extract_uuid(remote_payload.get("author").get("id"))
+                        post_serial = url_parser.extract_uuid(remote_payload.get("id"))
+                        get_post_url = f"{base_host}/api/authors/{author_serial}/posts/{post_serial}"
 
                         try:
                             response = requests.get(
@@ -215,7 +216,7 @@ class AuthStreamView(APIView):
                                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                             )
 
-                            print(f"Check status code from {base_author_host}: {response.status_code}")
+                            print(f"Check status code from {base_host}: {response.status_code}")
 
                             if response.status_code == 200:
                                 post_data = response.json()
@@ -234,7 +235,7 @@ class AuthStreamView(APIView):
                                     try:
                                         # Fetch friends-only likes
                                         response = requests.get(
-                                            f"{base_author_host}/api/authors/{author_serial}/posts/{post_serial}/likes",
+                                            f"{base_host}/api/authors/{author_serial}/posts/{post_serial}/likes",
                                             auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                                         )
 
@@ -243,7 +244,7 @@ class AuthStreamView(APIView):
 
                                             # Fetch friends-only comments
                                             response = requests.get(
-                                                f"{base_author_host}/api/authors/{author_serial}/posts/{post_serial}/comments",
+                                                f"{base_host}/api/authors/{author_serial}/posts/{post_serial}/comments",
                                                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                                             )
 
@@ -251,7 +252,7 @@ class AuthStreamView(APIView):
                                                 remote_payload['comments'] = response.json()
 
                                         else:
-                                            print(f"Unable to fetch remote post with ID: {post_id}")
+                                            print(f"Unable to fetch remote post with ID (Inside elif): {post_id}")
 
                                     except Exception as e:
                                         print(f"Error fetching likes and comments {post_id}: {e}")
@@ -264,7 +265,7 @@ class AuthStreamView(APIView):
                                         remote_posts[post_id] = remote_payload
 
                             else:
-                                print(f"Unable to fetch remote post with ID: {post_id}")
+                                print(f"Unable to fetch remote post with ID (Inside else): {post_id}")
                 
                             processed_posts[post_id] = item.post_status
 
