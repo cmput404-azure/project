@@ -287,7 +287,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
           className={styles.add_button}
           onClick={() => document.getElementById("image-upload")?.click()}
         >
-                  <AddIcon  />
+          <AddIcon  />
         </button>
         <input
           type="file"

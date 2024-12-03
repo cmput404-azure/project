@@ -74,7 +74,7 @@ export default function Post({
     const fetchPost = async () => {
       try {
         if (postID) { // when opening the post via link
-          const postData = await postService.getPost(`api/posts/${postID}`); // whitesmoke friends only post fail here
+          const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
           let postDataList = [];
           postDataList.push(postData);
@@ -205,15 +205,20 @@ export default function Post({
 
           // Check if the imageUrl is a data URL
           if (imageUrl.startsWith("data:")) {
-            // Directly set the src to the data URL
             setImageSrc(imageUrl);
           } else {
             // If it's not a data URL, fetch from the endpoint
             try {
-              const response = await api.get<PostData>(imageUrl);
-              const jsonResponse = response.data;
-              const imageData = `data:${jsonResponse.contentType},${jsonResponse.content}`;
-              setImageSrc(imageData);
+              if (imageUrl.endsWith('/image') && !post.id.toLowerCase().includes('whitesmoke')) {
+                const response = await api.get<string>(imageUrl);
+                const imageBase64 = response.data;
+                setImageSrc(imageBase64);
+              } else {
+                const response = await api.get<PostData>(imageUrl);
+                const jsonResponse = response.data;
+                const imageData = `data:${jsonResponse.contentType},${jsonResponse.content}`;
+                setImageSrc(imageData);
+              }
 
             } catch (error) {
               console.error("Error fetching image:", error);

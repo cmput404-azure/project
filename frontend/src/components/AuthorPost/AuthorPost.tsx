@@ -9,6 +9,7 @@ import { extractHost } from "../../util/formatting/extractHost";
 import profileService from "../../service/profile";
 import styles from './AuthorPost.module.scss';
 import { useAuth } from '../../state';
+import { useNavigate } from 'react-router';
 
 interface AuthorPostProps {
   author: Author;
@@ -16,7 +17,14 @@ interface AuthorPostProps {
 
 const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
   const authProvider = useAuth();
-  const [isRequested, setIsRequested] = useState(false); 
+  const navigate = useNavigate();
+  const [isRequested, setIsRequested] = useState(false);
+
+  const redirectToAuthorProfile = () => {
+    const encodedId = encodeURIComponent(author.id);
+    const authorURL = `/authors/${encodedId}`;
+    navigate(authorURL);
+  };
   
   const handleAddButton = async () => {
     const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
@@ -60,14 +68,13 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
       <div className={styles.post_header}>
         <div className={styles.author_info}>
           <Avatar
-            src={
-              profileService.getProfilePicture(author)
-            }
+            src={profileService.getProfilePicture(author)}
             alt="Author"
+            onClick={redirectToAuthorProfile}
             className={styles.author_avatar}
           />
           <div>
-            <h3>{author.displayName}</h3>
+            <h3 onClick={redirectToAuthorProfile}>{author.displayName}</h3>
             <p>@{author.username ?? extractHost(author.host)}</p>
           </div>
         </div>

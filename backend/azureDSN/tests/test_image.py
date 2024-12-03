@@ -38,8 +38,7 @@ class ImageAPITest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(response.data["image"], f"data:{self.post.content_type},{self.post.content}")
-        self.assertEqual(response.data['content_type'], self.post.content_type.split(';')[0])
+        self.assertEqual(response.data, f"data:{self.post.content_type},{self.post.content}")
 
     def test_invalid_serials(self):
         # Test invalid author serial and invalid post serial, should return 404
@@ -69,8 +68,7 @@ class ImageAPITest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(response.data["image"], f"data:{self.post.content_type},{self.post.content}")
-        self.assertEqual(response.data['content_type'], self.post.content_type.split(';')[0])
+        self.assertEqual(response.data, f"data:{self.post.content_type},{self.post.content}")
 
     def test_invalid_fqid(self):
         # Test error state using invalid post uuid that invalidates the fqid
