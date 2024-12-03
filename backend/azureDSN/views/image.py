@@ -100,10 +100,9 @@ class ImageView(APIView):
             post = get_object_or_404(Post, uuid=post_serial) # assume local posts
 
             if post.has_image: # This will only be in local DB
-                img_type = post.content_type.split(';')[0]
                 data = f"data:{post.content_type},{post.content}"
 
-                return Response({"image": data, "content_type": img_type}, status=200)
+                return Response(data, status=200)
             
             else:
                 return Response({"error": "post is not an image."}, status=404)
@@ -116,6 +115,7 @@ class ImageView(APIView):
             """
             try:
                 # Extract the POST FQID's path
+                post_fqid = url_parser.percent_decode(post_fqid)
                 post_fqid = post_fqid.rstrip('/')
                 if post_fqid.endswith('/image'):
                     post_fqid = post_fqid[:-len('/image')]
@@ -139,10 +139,9 @@ class ImageView(APIView):
                         content_type = post_data.get("contentType") # must be image/png;base64 or image/jpeg;base64 or application/base64
                         content = post_data.get("content")
 
-                        img_type = content_type.split(';')[0]
                         data = f"data:{content_type},{content}"
 
-                        return Response({"image": data, "content_type": img_type}, status=200)
+                        return Response(data, status=200)
                     elif response.status_code == 403:
                         # They don't give us access
                         print(f"Access forbidden to the remote node.")
@@ -159,10 +158,8 @@ class ImageView(APIView):
                 post = get_object_or_404(Post, uuid=post_serial)
 
                 if post.has_image: # This will only be in local DB
-                    img_type = post.content_type.split(';')[0]
                     data = f"data:{post.content_type},{post.content}"
 
-                    return Response({"image": data, "content_type": img_type}, status=200)
-                
+                    return Response(data, status=200)
                 else:
                     return Response({"error": "post is not an image."}, status=404)
