@@ -165,11 +165,7 @@ export default function PublicProfile() {
         }
       }
     }
-    { console.log(posts) }
-
-
-    // fetchCounts(userID, authorData);
-
+    
     if (authProvider.isAuthenticated === false) {
       setIsAuthenticated(false);
       // this makes sure that the button for following/managing profile is displayed correctly
