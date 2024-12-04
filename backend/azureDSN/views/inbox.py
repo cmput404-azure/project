@@ -1209,8 +1209,14 @@ class InboxView(APIView):
     """
 
     def create_comment(self, user_object, payload, request):
-        parsed_url = urlparse(payload["post"])
-        post_id = parsed_url.path.split("/")[-1]  # extract id of the post (the uuid)
+        post_fqid = payload.get('post')
+        post_host = url_parser.get_base_host(post_fqid)
+
+        if post_host != settings.BASE_URL.rstrip('/'):
+            return Response({"Message: comment received, not doing anything to it."}, 200) # For cornflowerblue because they are sending back comments to us
+
+        post_id = url_parser.extract_uuid(post_fqid)
+
         post_obj = Post.objects.get(uuid=post_id)
         comment_obj = Comment.objects.create(
             user=payload["author"], post=post_obj, comment=payload["comment"]
