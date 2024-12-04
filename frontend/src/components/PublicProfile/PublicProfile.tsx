@@ -16,7 +16,6 @@ import { GitHub } from "@mui/icons-material";
 import InboxService from "../../service/inbox";
 import LinkIcon from "@mui/icons-material/Link";
 import Post from "../Post/Post";
-import ProfileService from "../../service/profile";
 import { api } from "../../service/config";
 import { extractHost } from "../../util/formatting/extractHost";
 import { extractUUID } from "../../util/formatting/extractUUID";
@@ -69,7 +68,7 @@ export default function PublicProfile() {
   const fetchProfileData = async () => {
     if (userID) {
       setPosts([]); // clear previous posts, this ensures that when going from one public profile to another, hte previous posts are not shown
-      const author = await ProfileService.fetchAuthorData(userID);
+      const author = await profileService.fetchAuthorData(userID);
       setAuthorData(author);
       setPage(1);
       await fetchPosts(userID, author);
@@ -82,7 +81,7 @@ export default function PublicProfile() {
     setLoading(true);
     const id = extractUUID(userId)
     const host = author?.id.split("authors")[0]
-    const { count, src } = await ProfileService.fetchAuthorPosts(id, page, 10, host);
+    const { count, src } = await profileService.fetchAuthorPosts(id, page, 10, host);
     setPostCount(count); // if filter is done properly, count should represent the number of public posts
 
     setPosts((prevPosts) => {
@@ -123,7 +122,7 @@ export default function PublicProfile() {
     setIsAuthLoading(false);
 
     async function checkFollowingAndRequested() {
-      const authUser = await ProfileService.fetchAuthorData(
+      const authUser = await profileService.fetchAuthorData(
         userID
       );
       let following = false;
@@ -204,20 +203,32 @@ export default function PublicProfile() {
       window.location.reload();
     } else {
       // Displaying follow button, send follower request
-      const userResponse = await ProfileService.fetchAuthorData(
-        authProvider.user.uuid
-      );
+      const userResponse = await profileService.fetchAuthorData(authProvider.user.uuid);
       const followRequest = {
         type: "follow",
         summary: `${userResponse.displayName} wants to follow ${authorData.displayName}`,
-        actor: {
+        actor: { // person who sends the request
           type: "author",
           id: `${userResponse.id}`,
           host: `${userResponse.host}`,
           displayName: `${userResponse.displayName}`,
+          username: userResponse.username || "",
+          bio: userResponse.bio || "",
+          profileImage: `${userResponse.profileImage}`,
           github: `${userResponse.github}`,
           page: `${userResponse.page}`,
         },
+        object: { // person who the request is being sent to
+          type: "author",
+          id: `${authorData.id}`,
+          host: `${authorData.host}`,
+          displayName: `${authorData.displayName}`,
+          username: authorData.username || "",
+          bio: authorData.bio || "",
+          profileImage: `${authorData.profileImage}`,
+          github: `${authorData.github}`,
+          page: `${authorData.page}`,
+        }
       };
 
       await InboxService.sendPostToInbox(userID, followRequest);
