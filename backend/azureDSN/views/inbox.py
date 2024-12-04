@@ -1249,6 +1249,8 @@ class InboxView(APIView):
         
         post_fqid = payload["object"]
         post_host = url_parser.get_base_host(post_fqid)
+        print(f"POST HOST in create_like: {post_host}")
+        print(f"My host is: {settings.BASE_URL.rstrip('/')}")
 
         if post_host != settings.BASE_URL.rstrip('/'):
             return Response({"Message": "like received, ignoring..."}, 200) # For cornflowerblue reflective behaviour
