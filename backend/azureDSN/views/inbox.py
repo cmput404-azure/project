@@ -1247,24 +1247,24 @@ class InboxView(APIView):
 
             del payload["authorId"]
 
-            post_fqid = payload["object"]
-            post_host = url_parser.get_base_host(post_fqid)
+        post_fqid = payload["object"]
+        post_host = url_parser.get_base_host(post_fqid)
 
-            if post_host != settings.BASE_URL.rstrip('/'):
-                return Response({"Message": "like received, ignoring..."}, 200) # For cornflowerblue reflective behaviour
+        if post_host != settings.BASE_URL.rstrip('/'):
+            return Response({"Message": "like received, ignoring..."}, 200) # For cornflowerblue reflective behaviour
 
-            post_id = url_parser.extract_uuid(post_fqid)
-            author_id = payload["author"]["id"]
-            time = payload.get("published", None)
-            print(f"About to search for local post")
+        post_id = url_parser.extract_uuid(post_fqid)
+        author_id = payload["author"]["id"]
+        time = payload.get("published", None)
+        print(f"About to search for local post")
 
-            try:
-                post_obj = Post.objects.get(uuid=post_id)
+        try:
+            post_obj = Post.objects.get(uuid=post_id)
 
-            except Post.DoesNotExist:
-                return Response(
-                    {"message": "Local Post not found!"}, status=status.HTTP_404_NOT_FOUND
-                )
+        except Post.DoesNotExist:
+            return Response(
+                {"message": "Local Post not found!"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # Check if like already exists
         if Like.objects.filter(user__id=author_id, post=post_obj).exists():
