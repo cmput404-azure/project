@@ -17,13 +17,13 @@ import InboxService from "../../service/inbox";
 import LinkIcon from "@mui/icons-material/Link";
 import Post from "../Post/Post";
 import ProfileService from "../../service/profile";
+import { api } from "../../service/config";
 import { extractHost } from "../../util/formatting/extractHost";
+import { extractUUID } from "../../util/formatting/extractUUID";
+import { normalizeURL } from "../../util/formatting/normalizeURL";
 import profileService from "../../service/profile";
 import styles from "./PublicProfile.module.scss";
 import { useAuth } from "../../state";
-import { normalizeURL } from "../../util/formatting/normalizeURL";
-import { extractUUID } from "../../util/formatting/extractUUID";
-import { api } from "../../service/config";
 
 const FollowerModalTypes = {
   follower: "Follower",
@@ -77,7 +77,7 @@ export default function PublicProfile() {
     }
   };
 
-  const fetchPosts = async (userId: string, author: Author | null,  page: number = 1) => {
+  const fetchPosts = async (userId: string, author: Author | null, page: number = 1) => {
     if (loading) return;
     setLoading(true);
     const id = extractUUID(userId)
@@ -136,11 +136,11 @@ export default function PublicProfile() {
       } else {
         try {
           const response = await api.get(`/api/check/${authProvider.user.uuid}/follows/${userID}`);
-          following = response.status === 200; 
+          following = response.status === 200;
         } catch (err) {
-            if (err.response?.status !== 404) {
-                console.error('Fetch following error:', err);
-            }
+          if (err.response?.status !== 404) {
+            console.error('Fetch following error:', err);
+          }
         }
       }
 
@@ -165,6 +165,8 @@ export default function PublicProfile() {
         }
       }
     }
+    { console.log(posts) }
+
 
     // fetchCounts(userID, authorData);
 
@@ -269,8 +271,8 @@ export default function PublicProfile() {
                     isOwnProfile
                       ? handleManageProfileClick
                       : isAuthenticated
-                      ? handleButtonClick
-                      : handleLoginClick
+                        ? handleButtonClick
+                        : handleLoginClick
                   }
                   disabled={isRequested}
                   sx={{ backgroundColor: "#70ffaf", color: "black" }}
@@ -278,10 +280,10 @@ export default function PublicProfile() {
                   {isOwnProfile
                     ? "Manage Profile"
                     : isRequested
-                    ? "Requested"
-                    : isFollowing
-                    ? "Unfollow"
-                    : "Follow"}
+                      ? "Requested"
+                      : isFollowing
+                        ? "Unfollow"
+                        : "Follow"}
                 </Button>
 
                 {authorData.github && (
@@ -341,14 +343,14 @@ export default function PublicProfile() {
         </section>
 
         <section className={styles.posts}>
-          {posts.map((post) => (
+          {posts.length > 0 ? posts.map((post) => (
             <Post
               key={post.id}
               postGiven={post}
               canToggleComments={false}
               disableLikeComment={true}
             />
-          ))}
+          )) : (<div className={"loading_component"}>{authorData.displayName} has no posts yet 🤐</div>)}
           {page < totalPages && (
             <Button
               variant="contained"
