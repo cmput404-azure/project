@@ -814,8 +814,10 @@ class InboxView(APIView):
             logging.info("USING LOCAL")
             return self.create_follow_request(user_obj, payload, request)
         elif payload["type"].lower() == "comment":
+            print(f"CREATING LOCAL COMMENT")
             return self.create_comment(user_obj, payload, request)
         elif payload["type"].lower() == "like":
+            print(f"CREATING LOCAL LIKE")
             return self.create_like(user_obj, payload, request)
         elif payload["type"].lower() == "share":
             return self.create_share(user_obj, payload, author_serial)
@@ -1237,6 +1239,7 @@ class InboxView(APIView):
     """
 
     def create_like(self, user_object, payload, request):
+        print(f"Like Payload: {payload}")
 
         from_remote = "authorId" not in payload
         if not from_remote:
@@ -1247,25 +1250,31 @@ class InboxView(APIView):
             del payload["authorId"]
 
         
-        post_fqid = payload["object"]
-        post_host = url_parser.get_base_host(post_fqid)
-        print(f"POST HOST in create_like: {post_host}")
-        print(f"My host is: {settings.BASE_URL.rstrip('/')}")
-
-        if post_host != settings.BASE_URL.rstrip('/'):
-            return Response({"Message": "like received, ignoring..."}, 200) # For cornflowerblue reflective behaviour
-
-        post_id = url_parser.extract_uuid(post_fqid)
-        author_id = payload["author"]["id"]
-        time = payload.get("published", None)
-
         try:
-            post_obj = Post.objects.get(uuid=post_id)
+            post_fqid = payload["object"]
+            post_host = url_parser.get_base_host(post_fqid)
+            print(f"POST HOST in create_like: {post_host}") # https://rizztagram-tyler-c73896125268.herokuapp.com
+            print(f"My host is: {settings.BASE_URL.rstrip('/')}") # https://azuredsn-dev-ffe9709386a4.herokuapp.com
 
-        except Post.DoesNotExist:
-            return Response(
-                {"message": "Post not found."}, status=status.HTTP_404_NOT_FOUND
-            )
+            if post_host != settings.BASE_URL.rstrip('/'):
+                return Response({"Message": "like received, ignoring..."}, 200) # For cornflowerblue reflective behaviour
+
+            post_id = url_parser.extract_uuid(post_fqid)
+            author_id = payload["author"]["id"]
+            time = payload.get("published", None)
+            print(f"About to search for local post")
+
+            try:
+                post_obj = Post.objects.get(uuid=post_id)
+
+            except Post.DoesNotExist:
+                return Response(
+                    {"message": "Local Post not found!"}, status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            print(f"IT WENT HERE: {str(e)}")
+            return Response({"Error": f"Caught in except block because {str(e)}"}, 500)
+
 
         # Check if like already exists
         if Like.objects.filter(user__id=author_id, post=post_obj).exists():
