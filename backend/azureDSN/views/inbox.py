@@ -1211,7 +1211,7 @@ class InboxView(APIView):
         post_host = url_parser.get_base_host(post_fqid)
 
         if post_host != settings.BASE_URL.rstrip('/'):
-            return Response({"Message: comment received, not doing anything to it."}, 200) # For cornflowerblue because they are sending back comments to us
+            return Response({"Message": "comment received, not doing anything to it."}, 200) # For cornflowerblue because they are sending back comments to us
 
         post_id = url_parser.extract_uuid(post_fqid)
 
@@ -1251,7 +1251,7 @@ class InboxView(APIView):
         post_host = url_parser.get_base_host(post_fqid)
 
         if post_host != settings.BASE_URL.rstrip('/'):
-            return Response("Message: like received, ignoring...", 200) # For cornflowerblue reflective behaviour
+            return Response({"Message": "like received, ignoring..."}, 200) # For cornflowerblue reflective behaviour
 
         post_id = url_parser.extract_uuid(post_fqid)
         author_id = payload["author"]["id"]
