@@ -814,8 +814,10 @@ class InboxView(APIView):
             logging.info("USING LOCAL")
             return self.create_follow_request(user_obj, payload, request)
         elif payload["type"].lower() == "comment":
+            print(f"CREATING LOCAL COMMENT")
             return self.create_comment(user_obj, payload, request)
         elif payload["type"].lower() == "like":
+            print(f"CREATING LOCAL LIKE")
             return self.create_like(user_obj, payload, request)
         elif payload["type"].lower() == "share":
             return self.create_share(user_obj, payload, author_serial)
@@ -1069,6 +1071,7 @@ class InboxView(APIView):
             )
 
     def send_comment_to_remote(self, payload, request, test=False):
+        print(f"Initial Comment Payload: {payload}")
         if test:
             full_url = request
         else:
@@ -1099,11 +1102,14 @@ class InboxView(APIView):
             user=payload["author"], remote_post=post_url, comment=payload["comment"]
         )
         comment_id = comment_obj.uuid
+        created_at = comment_obj.created_at
+        if not is_aware(created_at):
+            created_at = make_aware(created_at)
         
         comment_url = f"{payload['author']['id']}/commented/{comment_id}"
 
         payload["contentType"] = "text/plain"
-        payload["published"] = datetime.utcnow().isoformat()
+        payload["published"] = created_at.replace(microsecond=0).isoformat()
         payload["post"] = post_url
         payload["id"] = comment_url
 
@@ -1128,18 +1134,47 @@ class InboxView(APIView):
     
         if test:
             return formatted_url
-        # Use requests to send the POST request
-        response = requests.post(
-            formatted_url,
-            auth=HTTPBasicAuth(os.getenv("NODE_USERNAME"), os.getenv("NODE_PASSWORD")),
-            data=payload_json,
-            headers=headers,
-        )
+        
+        print(f"FINAL COMMENT PAYLOAD: {payload} to be sent to {author_host}")
 
-        # Parse the response
-        data = response.json()
+        try:
+            # Send the POST request
+            response = requests.post(
+                formatted_url,
+                auth=HTTPBasicAuth(os.getenv("NODE_USERNAME"), os.getenv("NODE_PASSWORD")),
+                data=payload_json,
+                headers=headers,
+            )
+            
+            print(f"Response status code: {response.status_code}")
 
-        return Response(data, response.status_code)
+            if response.status_code in [200, 201]:
+                try:
+                    data = response.json()
+                except requests.JSONDecodeError:
+                    print("Response is not valid JSON.")
+                    data = {"message": "Successfully sent comment to remote node, but response is not JSON."}
+                
+                print(f"Returned comment data: {data}") # If remote groups don't send us comment response, gonna fail in frontend
+                return Response(payload, response.status_code)
+            else:
+                return Response(
+                    {"error": f"Failed to send comment. Status code: {response.status_code}, Response: {response.text}"},
+                    response.status_code,
+                )
+        except requests.RequestException as e:
+            # Handle network-related issues
+            print(f"Network error: {str(e)}")
+            return Response(
+                {"error": f"Network error occurred while sending comment: {str(e)}"},
+                500,
+            )
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
+            return Response(
+                {"error": f"An unexpected error occurred: {str(e)}"},
+                500,
+            )
 
     """
     payload is a follow request object
@@ -1175,8 +1210,14 @@ class InboxView(APIView):
     """
 
     def create_comment(self, user_object, payload, request):
-        parsed_url = urlparse(payload["post"])
-        post_id = parsed_url.path.split("/")[-1]  # extract id of the post (the uuid)
+        post_fqid = payload.get('post')
+        post_host = url_parser.get_base_host(post_fqid)
+
+        if post_host != settings.BASE_URL.rstrip('/'):
+            return Response({"Message": "comment received, not doing anything to it."}, 200) # For cornflowerblue because they are sending back comments to us
+
+        post_id = url_parser.extract_uuid(post_fqid)
+
         post_obj = Post.objects.get(uuid=post_id)
         comment_obj = Comment.objects.create(
             user=payload["author"], post=post_obj, comment=payload["comment"]
@@ -1199,7 +1240,6 @@ class InboxView(APIView):
     """
 
     def create_like(self, user_object, payload, request):
-
         from_remote = "authorId" not in payload
         if not from_remote:
             if request and request.user:
@@ -1208,17 +1248,22 @@ class InboxView(APIView):
 
             del payload["authorId"]
 
-        time = payload.get("published", None)
         post_fqid = payload["object"]
+        post_host = url_parser.get_base_host(post_fqid)
+
+        if post_host != settings.BASE_URL.rstrip('/'):
+            return Response({"Message": "like received, ignoring..."}, 200) # For cornflowerblue reflective behaviour
+
         post_id = url_parser.extract_uuid(post_fqid)
         author_id = payload["author"]["id"]
+        time = payload.get("published", None)
 
         try:
             post_obj = Post.objects.get(uuid=post_id)
 
         except Post.DoesNotExist:
             return Response(
-                {"message": "Post not found."}, status=status.HTTP_404_NOT_FOUND
+                {"message": "Local Post not found!"}, status=status.HTTP_404_NOT_FOUND
             )
 
         # Check if like already exists

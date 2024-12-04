@@ -222,7 +222,7 @@ class SingleCommentView(APIView):
             #     )
             try:
                 # Validate that comment_fqid is a valid UUID
-                comment_id = comment_fqid.split('/')[-1]
+                comment_id = url_parser.extract_uuid(comment_fqid)
                 uuid.UUID(comment_id)  # Raises ValueError if invalid
             except (IndexError, ValueError):
                 return Response({"detail": "Invalid comment FQID."}, status=status.HTTP_400_BAD_REQUEST)
@@ -243,7 +243,7 @@ class CreateCommentView(APIView):
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             post_fqid = serializer.validated_data.get('post')
-            post_id = post_fqid.split('/')[-1]  # Extract the post UUID from the FQID
+            post_id = url_parser.extract_uuid(post_fqid) # Extract the post UUID from the FQID
             
             # Fetch the post object using the extracted ID
             post = get_object_or_404(Post, uuid=post_id)
