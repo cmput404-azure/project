@@ -1155,7 +1155,8 @@ class InboxView(APIView):
                     print("Response is not valid JSON.")
                     data = {"message": "Successfully sent comment to remote node, but response is not JSON."}
                 
-                return Response(data, response.status_code)
+                print(f"Returned comment data: {data}") # I don't think cornflower is sending us comment json
+                return Response(payload_json, response.status_code)
             else:
                 return Response(
                     {"error": f"Failed to send comment. Status code: {response.status_code}, Response: {response.text}"},
@@ -1256,7 +1257,6 @@ class InboxView(APIView):
         post_id = url_parser.extract_uuid(post_fqid)
         author_id = payload["author"]["id"]
         time = payload.get("published", None)
-        print(f"About to search for local post")
 
         try:
             post_obj = Post.objects.get(uuid=post_id)
