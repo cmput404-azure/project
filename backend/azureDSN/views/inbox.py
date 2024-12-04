@@ -1134,18 +1134,46 @@ class InboxView(APIView):
             return formatted_url
         
         print(f"FINAL COMMENT PAYLOAD: {payload} to be sent to {author_host}")
-        # Use requests to send the POST request
-        response = requests.post(
-            formatted_url,
-            auth=HTTPBasicAuth(os.getenv("NODE_USERNAME"), os.getenv("NODE_PASSWORD")),
-            data=payload_json,
-            headers=headers,
-        )
 
-        # Parse the response
-        data = response.json()
+        try:
+            # Send the POST request
+            response = requests.post(
+                formatted_url,
+                auth=HTTPBasicAuth(os.getenv("NODE_USERNAME"), os.getenv("NODE_PASSWORD")),
+                data=payload_json,
+                headers=headers,
+            )
 
-        return Response(data, response.status_code)
+            print(f"Comment response: {response}")
+            print(f"Response status code: {response.status_code}")
+            print(f"Response content: {response.text}")
+
+            if response.status_code in [200, 201]:
+                try:
+                    data = response.json()
+                except requests.JSONDecodeError:
+                    print("Response is not valid JSON.")
+                    data = {"message": "Successfully sent comment to remote node, but response is not JSON."}
+                
+                return Response(data, response.status_code)
+            else:
+                return Response(
+                    {"error": f"Failed to send comment. Status code: {response.status_code}, Response: {response.text}"},
+                    response.status_code,
+                )
+        except requests.RequestException as e:
+            # Handle network-related issues
+            print(f"Network error: {str(e)}")
+            return Response(
+                {"error": f"Network error occurred while sending comment: {str(e)}"},
+                500,
+            )
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
+            return Response(
+                {"error": f"An unexpected error occurred: {str(e)}"},
+                500,
+            )
 
     """
     payload is a follow request object
