@@ -1,13 +1,14 @@
 import { Button, TextField } from "@mui/material";
-import { useEffect, useState } from "react";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
+import { useEffect, useState } from "react";
+
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Modal from "react-modal";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 import styled from "@mui/material/styles/styled";
 import styles from "./EditPostModal.module.scss";
-import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -201,7 +202,7 @@ const PostTextField = styled(TextField)({
 
   "& .MuiOutlinedInput-root": {
     "& fieldset": {
-      border: "none",
+      border: "none !important",
       boxShadow: "0 4px 7px rgba(0, 0, 0, 0.45)",
     },
     "&:hover fieldset": {

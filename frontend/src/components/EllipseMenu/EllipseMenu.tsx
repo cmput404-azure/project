@@ -12,7 +12,6 @@ import inbox from "../../service/inbox";
 import EditPostModal from "../EditPostModal/EditPostModal";
 import DeletePostModal from "../DeletePostModal/DeletePostModal";
 import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
-import { normalizeURL } from "../../util/formatting/normalizeURL";
 
 const StyledMenu = styled((props: MenuProps) => (
   <Menu

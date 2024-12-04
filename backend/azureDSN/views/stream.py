@@ -1,4 +1,3 @@
-from urllib.parse import quote, urlparse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -43,15 +42,13 @@ class PublicStreamView(APIView):
                 remote_payload = item.remote_payload
                 if remote_payload.get("type") == "post": # And get the remote posts
                     post_id = remote_payload.get("id")
-                    visibility = remote_payload.get("visibility")
+                    visibility = remote_payload.get("visibility").upper()
 
-                    if (visibility.upper() == "DELETED"):
-                        # I am not an admin so I shouldn't be able to see deleted remote posts
-                        if not user.is_staff:
-                            if post_id in remote_posts:
-                                remote_posts.pop(post_id) # Remove deleted post
-                        continue # If admin, show the deleted post ONCE
-                    
+                    if (visibility == "DELETED"):
+                        # We don't want to see deleted remote posts
+                        if post_id in remote_posts:
+                            remote_posts.pop(post_id) # Remove deleted post
+
                     if visibility == "PUBLIC" and (item.post_status == None or item.post_status.upper() != "DELETE"): # This logic only works for local, local-remote posts
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip if the post has already been processed with the same status
@@ -208,25 +205,18 @@ class AuthStreamView(APIView):
                             # Skip already processed posts with the same status
                             continue
 
-                        if visibility == "FRIENDS":
-                            # Cannot fetch whitesmoke's friends-only post with endpoint :)
-                            if post_id not in remote_posts:
-                                remote_posts[post_id] = remote_payload
-                            elif item.post_status and item.post_status.upper() == "UPDATE":
-                                # There's a newer version of this post
-                                remote_posts[post_id] = remote_payload
-                            processed_posts[post_id] = item.post_status
-                            continue
-
-                        base_author_host = url_parser.get_base_host(remote_payload.get("author").get("host"))
-                        encoded_post_fqid = url_parser.percent_encode(post_id)
-                        get_post_url = f"{base_author_host}/api/posts/{encoded_post_fqid}"
+                        base_host = url_parser.get_base_host(remote_payload.get("id"))
+                        author_serial = url_parser.extract_uuid(remote_payload.get("author").get("id"))
+                        post_serial = url_parser.extract_uuid(remote_payload.get("id"))
+                        get_post_url = f"{base_host}/api/authors/{author_serial}/posts/{post_serial}"
 
                         try:
                             response = requests.get(
                                 get_post_url,
                                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                             )
+
+                            print(f"Check status code from {base_host}: {response.status_code}")
 
                             if response.status_code == 200:
                                 post_data = response.json()
@@ -237,8 +227,45 @@ class AuthStreamView(APIView):
                                     # There's a newer version of this post
                                     remote_posts[post_id] = post_data
 
+                            elif response.status_code == 500: # Whitesmoke post endpoint
+                                if visibility == "FRIENDS":
+                                    author_serial = url_parser.extract_uuid(remote_payload.get("author").get("id"))
+                                    post_serial = url_parser.extract_uuid(remote_payload.get("id"))
+
+                                    try:
+                                        # Fetch friends-only likes
+                                        response = requests.get(
+                                            f"{base_host}/api/authors/{author_serial}/posts/{post_serial}/likes",
+                                            auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                                        )
+
+                                        if response.status_code == 200:
+                                            remote_payload['likes'] = response.json()
+
+                                            # Fetch friends-only comments
+                                            response = requests.get(
+                                                f"{base_host}/api/authors/{author_serial}/posts/{post_serial}/comments",
+                                                auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                                            )
+
+                                            if response.status_code == 200:
+                                                remote_payload['comments'] = response.json()
+
+                                        else:
+                                            print(f"Unable to fetch remote post with ID (Inside elif): {post_id}")
+
+                                    except Exception as e:
+                                        print(f"Error fetching likes and comments {post_id}: {e}")
+
+                                    print(f"This should contain latest likes and comments: {remote_payload}")
+                                    if post_id not in remote_posts: # Add if this post hasn't been added
+                                        remote_posts[post_id] = remote_payload
+                                    elif item.post_status and item.post_status.upper() == "UPDATE":
+                                        # There's a newer version of this post
+                                        remote_posts[post_id] = remote_payload
+
                             else:
-                                print(f"Unable to fetch remote post with ID: {post_id}")
+                                print(f"Unable to fetch remote post with ID (Inside else): {post_id}")
                 
                             processed_posts[post_id] = item.post_status
 

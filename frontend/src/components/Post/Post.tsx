@@ -7,7 +7,7 @@ import {
   Snackbar,
   Tooltip,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
 import Avatar from "@mui/material/Avatar";
@@ -26,7 +26,6 @@ import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import { formatCount } from "../../util/formatting/formatCount";
 import inbox from "../../service/inbox";
-import { normalizeURL } from "../../util/formatting/normalizeURL";
 import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 import postService from "../../service/post";
 import profileService from "../../service/profile";
@@ -69,11 +68,12 @@ export default function Post({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAuthor, setCurrentAuthor] = useState<any>();
   const [postAuthorID, setPostAuthorID] = useState("");
+  const prevIsModalOpenRef = useRef<boolean>();
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        if (postID) {
+        if (postID) { // when opening the post via link
           const postData = await postService.getPost(`api/posts/${postID}`);
           // put the post data into a list to be able to decode it
           let postDataList = [];
@@ -114,7 +114,7 @@ export default function Post({
               }
             }
 
-            if(postData.likes.count > 0) {
+            if (postData.likes.count > 0) {
               setHasLiked(
                 postData.likes.src.some((like) =>
                   like.id.includes(authProvider.user?.uuid)
@@ -144,7 +144,7 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
-          const postAuthorID = postGiven.author.id.split("/").pop();
+          const postAuthorID = extractUUID(postGiven.author.id);
           setPostAuthorID(postAuthorID);
 
           if (authProvider.user && postGiven.likes?.count > 0) {
@@ -205,15 +205,20 @@ export default function Post({
 
           // Check if the imageUrl is a data URL
           if (imageUrl.startsWith("data:")) {
-            // Directly set the src to the data URL
             setImageSrc(imageUrl);
           } else {
             // If it's not a data URL, fetch from the endpoint
             try {
-              const response = await api.get<PostData>(imageUrl);
-              const jsonResponse = response.data;
-              const imageData = `data:${jsonResponse.contentType},${jsonResponse.content}`;
-              setImageSrc(imageData);
+              if (imageUrl.endsWith('/image') && !post.id.toLowerCase().includes('whitesmoke')) {
+                const response = await api.get<string>(imageUrl);
+                const imageBase64 = response.data;
+                setImageSrc(imageBase64);
+              } else {
+                const response = await api.get<PostData>(imageUrl);
+                const jsonResponse = response.data;
+                const imageData = `data:${jsonResponse.contentType},${jsonResponse.content}`;
+                setImageSrc(imageData);
+              }
 
             } catch (error) {
               console.error("Error fetching image:", error);
@@ -230,25 +235,23 @@ export default function Post({
 
   // To refresh comment count when comment modal is closed
   useEffect(() => {
-    const fetchPost = async () => {
-      console.log("Refreshing comment count");
+    const fetchPostComment = async () => {
       if (postGiven) {
-        let encodedId = encodeURIComponent(postGiven.id);
-        const postData = await postService.getPost(`api/posts/${encodedId}`);
-        const comments = Array.isArray(postData?.comments?.src)
-          ? postData.comments.src
-          : [];
+        const commentsData = await postService.getPostComments(postGiven.id);
+        const comments = Array.isArray(commentsData.src) ? commentsData.src : [];
         setCommentList(comments);
-        setCommentCount(
-          postData.comments ? postData.comments.count : 0
-        );
+        setCommentCount(commentsData.count || 0);
+        postGiven.comments = commentsData;
       }
     };
 
-    if(isCommentOpen || isModalOpen) {
-      fetchPost();
+    if (prevIsModalOpenRef.current && !isModalOpen) {
+      // The modal was open before and is now closed, so fetch comments
+      fetchPostComment();
     }
-  }, [isModalOpen, postGiven, isCommentOpen]);
+    prevIsModalOpenRef.current = isModalOpen;
+
+  }, [isModalOpen, isCommentOpen]);
 
   const transformImageUri = (src: string, alt: string, title: string) => {
     return imageSrc || src; // Return the fetched Base64 string if available, otherwise the original src
@@ -262,15 +265,12 @@ export default function Post({
     if (isModal) return;
     console.log(`IN HANDLE COMMENT BUTTON: ${JSON.stringify(post, null, 2)}`)
     try {
-      const postData = await postService.getPost(
-        `api/posts/${encodeURIComponent(post.id)}` // this doesnt work as well because UUID?
-      );
-      setPost(postData);
+      setPost(post);
       setIsModalOpen(true);
     } catch (error) {
       console.error("Error fetching post data:", error);
-    }
-  };
+    };
+  }
 
   // handle when the comment modal is closed
   const handleCommentModalClose = () => {
@@ -334,15 +334,9 @@ export default function Post({
   };
 
   const redirectToAuthorProfile = () => {
-    const isExternalLink = !post.author.host.includes(window.location.hostname);
-
-    if (isExternalLink) {
-      // Later when able to connect to other nodes, fetch the remote author info using FQID
-      // Then display the remote user info in our layout
-    } else {
-      const authorURL = `/authors/${extractUUID(post.author.id)}`;
-      navigate(authorURL);
-    }
+    const encodedId = encodeURIComponent(post.author.id);
+    const authorURL = `/authors/${encodedId}`;
+    navigate(authorURL);
   };
 
   const handleCloseSnackbar = (
@@ -354,7 +348,7 @@ export default function Post({
 
   if (!post)
     return (
-      <div>
+      <div className={"loading_component"}>
         <CircularProgress sx={{ color: "#70ffaf" }} />
       </div>
     );
@@ -446,16 +440,15 @@ export default function Post({
               onClick={
                 !disableLikeComment
                   ? (e) => {
-                      e.stopPropagation();
-                      handleLikePost();
-                    }
-                  : () => {}
+                    e.stopPropagation();
+                    handleLikePost();
+                  }
+                  : () => { }
               }
             >
               <i
-                className={`${"fas fa-heart icon"} ${
-                  !disableLikeComment ? "" : styles.disabled
-                }`}
+                className={`${"fas fa-heart icon"} ${!disableLikeComment ? "" : styles.disabled
+                  }`}
               ></i>
               <span>{formatCount(likeCount)}</span>
             </div>
@@ -466,13 +459,12 @@ export default function Post({
                   ? canToggleComments
                     ? handleToggleComment
                     : handleCommentButtonClick
-                  : () => {}
+                  : () => { }
               }
             >
               <i
-                className={`${"fas fa-comment"} ${
-                  !disableLikeComment ? "" : styles.disabled
-                }`}
+                className={`${"fas fa-comment"} ${!disableLikeComment ? "" : styles.disabled
+                  }`}
               ></i>
               <span>{formatCount(commentCount)}</span>
             </div>
@@ -495,13 +487,13 @@ export default function Post({
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
           {post.contentType !== ContentType.MARKDOWN &&
-          post.contentType !== ContentType.PLAIN ? (
+            post.contentType !== ContentType.PLAIN ? (
             <div className={styles.imgContainer}>
               <img
                 className={styles.postImage}
                 src={
                   post.content.includes("data:image/") ||
-                  post.content.includes("base64,")
+                    post.content.includes("base64,")
                     ? post.content
                     : "data:image/png;base64," + post.content
                 }
@@ -550,7 +542,7 @@ export default function Post({
 
       {(isCommentOpen && canToggleComments) || isModal ? (
         <div className={styles.comments}>
-          <div className={styles.commentsHeader}>Comments</div>
+          <div className={styles.commentsHeader}/>
           {currentAuthor && (
             <CommentInputField
               authorObj={currentAuthor}
@@ -558,33 +550,37 @@ export default function Post({
               onCommentAdded={handleNewComment}
             />
           )}
-          {commentList.map((comment) => (
-            <div key={comment.id} className={styles.comment}>
+          <div className={styles.comment__list}>
+            {commentList.map((comment) => (
               <div key={comment.id} className={styles.comment}>
-                <div className="avatar">
-                  <Avatar
-                    src={profileService.getProfilePicture(comment.author)}
-                    alt={comment.author?.displayName}
-                  />
-                </div>
-              </div>
-              <div className={styles.commentContent}>
-                <div className={styles.authorTime}>
-                  <div className={styles.commentAuthor}>
-                    {comment.author.displayName}
-                  </div>
-                  <div className={styles.timePosted}>
-                    {new Date(comment.published).toLocaleString()}
+                <div key={comment.id} className={styles.comment}>
+                  <div className="avatar">
+                    <Avatar
+                      src={profileService.getProfilePicture(comment.author)}
+                      alt={comment.author?.displayName}
+                    />
                   </div>
                 </div>
-                <div className={styles.commentText}>{comment.comment}</div>
+                <div className={styles.commentContent}>
+                  <div className={styles.authorTime}>
+                    <div className={styles.commentAuthor}>
+                      {comment.author.displayName}
+                    </div>
+                    <div className={styles.timePosted}>
+                      {new Date(comment.published).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className={styles.commentText}>{comment.comment}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       ) : null}
 
+
       <Modal
+        className={styles.post__modal}
         open={isModalOpen}
         onClose={handleCommentModalClose}
         sx={{ overflow: "auto" }}

@@ -16,7 +16,6 @@ import { GitHub } from "@mui/icons-material";
 import InboxService from "../../service/inbox";
 import LinkIcon from "@mui/icons-material/Link";
 import Post from "../Post/Post";
-import PostCard from "../PostCard/PostCard";
 import ProfileService from "../../service/profile";
 import { extractHost } from "../../util/formatting/extractHost";
 import profileService from "../../service/profile";

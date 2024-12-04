@@ -37,6 +37,7 @@ const HomePage = () => {
   const [isInitial, setIsInitial] = useState(true);
 
   const [isUserLoading, setIsUserLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -95,6 +96,8 @@ const HomePage = () => {
   ) => {
     if (isUserLoading) return;
 
+    setPageLoading(true);
+    
     try {
       const publicResponse = await stream.getStream(false, publicPage);
       const privateResponse = await stream.getStream(true, privatePage);
@@ -121,6 +124,7 @@ const HomePage = () => {
       setTotalPrivatePages(Math.ceil(privateResponse.count / pageSize));
 
       setIsLoading(false);
+      setPageLoading(false);
 
     } catch (err) {
       setError("Failed to fetch posts. Please try again.");
@@ -201,17 +205,18 @@ const HomePage = () => {
         ))}
         {displayedPosts.length === 0 && (
           <div className={styles.noPosts}>
-            <p>There are no posts on this node 🫨</p>
+            <p>It's a little quiet here...</p>
+            <p>Break the silence — create the first post!</p>
           </div>
         )}
         {activeFilterPost === "all" && publicPage < totalPublicPages && (
           <Button
             variant="contained"
             onClick={nextPublicPage}
-            disabled={isLoading}
+            disabled={pageLoading || isLoading}
             sx={{ marginTop: "1rem", backgroundColor: "#70ffaf", color: "black" }}
           >
-            {isLoading ? <CircularProgress size={24} sx={{ color: "#70ffaf" }} /> : "Load More"}
+            {(pageLoading || isLoading) ? <CircularProgress size={24} sx={{ color: "#70ffaf" }} /> : "Load More"}
           </Button>
         )}
 
@@ -219,10 +224,10 @@ const HomePage = () => {
           <Button
             variant="contained"
             onClick={nextPrivatePage}
-            disabled={isLoading}
+            disabled={pageLoading || isLoading}
             sx={{ marginTop: "1rem", backgroundColor: "#70ffaf", color: "black" }}
           >
-            {isLoading ? <CircularProgress size={24} sx={{ color: "#70ffaf" }} /> : "Load More"}
+            {(pageLoading || isLoading) ? <CircularProgress size={24} sx={{ color: "#70ffaf" }} /> : "Load More"}
           </Button>
         )}
       </div>
@@ -238,7 +243,7 @@ const HomePage = () => {
             anchor="right"
             onClose={() => setRecommendedDrawer(false)}
             PaperProps={{
-              sx: { bgcolor: "#555", color: "#fff" },
+              sx: { bgcolor: "rgba(0,0,0,0)", color: "#fff" },
             }}
           >
             <RecommendedAuthors authors={recommended} />

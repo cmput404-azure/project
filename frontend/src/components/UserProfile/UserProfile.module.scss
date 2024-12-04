@@ -201,7 +201,9 @@
 @media (max-width: 1000px) {
     .container{
         height: 98vh !important;
+        width: 95vw !important;
         overflow: auto !important;
+        padding: 1rem 0.5rem 4rem 0.5rem !important;
         .header{
             flex-flow: row wrap !important;
             justify-content: center !important;
@@ -228,8 +230,11 @@
                         align-items: center !important;
                         justify-content: center !important;
                         margin-top: 1rem;
+
+                        .username{
+                            display: none !important;
+                        }
                     }
-                    
                 }
                 .footer{
                     margin: 1rem auto !important;

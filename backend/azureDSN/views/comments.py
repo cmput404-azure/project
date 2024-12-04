@@ -1,4 +1,3 @@
-import uuid
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,9 +6,11 @@ from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes
 from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
+from requests.auth import HTTPBasicAuth
 from ..serializers import *
 from ..models import *
-from ..utils import *
+from ..utils import url_parser
+import requests, os, uuid
 
 class CommentsPagination(PageNumberPagination):
     page_size=5
@@ -89,29 +90,59 @@ class MultipleCommentsView(APIView):
             '''
             post_id = post_serial
             post_obj = get_object_or_404(Post, uuid=post_serial, user__uuid=author_serial)
+            comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
+            pagination = self.pagination_provider()
+            page = pagination.paginate_queryset(comments, request)
+
+            serialized_comments = CommentSerializer(page, many=True).data
+            return pagination.get_paginated_response(serialized_comments)
+
         else:
             '''
             URL: ://service/api/posts/{POST_FQID}/comments
             vd:POST_FQID: http://nodebbbb/api/authors/222/posts/249
             GET [local, remote]: the comments on the post (that our server knows about)    
             '''
-            post_id = post_fqid.split('/')[-1]
+            post_fqid = url_parser.percent_decode(post_fqid)
+            post_id = url_parser.extract_uuid(post_fqid)
 
-            # Validate if `post_id` is a valid UUID
             try:
                 uuid.UUID(post_id)
             except ValueError:
-                return Response({"detail": "Invalid post FQID."}, status=status.HTTP_400_BAD_REQUEST)
+                # If not a UUID, check if it's an integer
+                if not post_id.isdigit():
+                    return Response({"detail": "Invalid post identifier"}, status=400)
 
-            post_obj = get_object_or_404(Post, uuid=post_id)
+            try:
+                post_obj = Post.objects.get(uuid=post_id)
+                comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
+                pagination = self.pagination_provider()
+                page = pagination.paginate_queryset(comments, request)
 
-        comments = Comment.objects.filter(post=post_obj).order_by('-created_at')
+                serialized_comments = CommentSerializer(page, many=True).data
+                return pagination.get_paginated_response(serialized_comments)
 
-        pagination = self.pagination_provider()
-        page = pagination.paginate_queryset(comments, request)
+            except Post.DoesNotExist:
+                remote_comments = []
+                try:
+                    # call remote endpoint
+                    response = requests.get(
+                        f"{post_fqid.rstrip('/')}/comments",
+                        auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
+                    )
 
-        serialized_comments = CommentSerializer(page, many=True).data
-        return pagination.get_paginated_response(serialized_comments)
+                    if response.status_code == 200:
+                        remote_comments = response.json()
+                        
+                        # Return the paginated response directly
+                        return Response(remote_comments, status=200)
+                    
+                    else:
+                        return Response({"detail": "Unable to fetch remote comments."}, status=response.status_code)
+                except Exception as e:
+                    print(f"Something went wrong: {str(e)}")
+                    return Response({"detail": "An internal server error occurred."}, status=500)
+ 
 
 '''
 URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
