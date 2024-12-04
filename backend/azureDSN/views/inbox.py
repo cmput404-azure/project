@@ -1156,7 +1156,7 @@ class InboxView(APIView):
                     data = {"message": "Successfully sent comment to remote node, but response is not JSON."}
                 
                 print(f"Returned comment data: {data}") # I don't think cornflower is sending us comment json
-                return Response(payload_json, response.status_code)
+                return Response(payload, response.status_code)
             else:
                 return Response(
                     {"error": f"Failed to send comment. Status code: {response.status_code}, Response: {response.text}"},
