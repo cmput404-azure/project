@@ -234,7 +234,7 @@ export default function UserProfile() {
             </section>
 
             <section className={styles.posts}>
-               {posts.map((post) => (
+               {!loading ? posts.length > 0 ? posts.map((post) => (
                   <Post
                      key={post.id}
                      postGiven={post}
@@ -242,7 +242,15 @@ export default function UserProfile() {
                      disableLikeComment={true}
                      onDeletePost={onDeletePost}
                   />
-               ))}
+               )) : (
+                  <div className={"loading_component"}>
+                     <p>You have no posts yet 😑</p>
+                  </div>
+               ) : (
+                  <div className={"loading_component"}>
+                     <CircularProgress size={24} sx={{ color: "#70ffaf" }} />
+                  </div>
+               )}
                {page < totalPages && (
                   <Button
                      variant="contained"
@@ -435,7 +443,7 @@ export function EditProfile({
                   >
                      <Avatar
                         alt="profile image"
-                        src={profileImage === null ? profileService.getProfilePicture(user, true): profileImage}
+                        src={profileImage === null ? profileService.getProfilePicture(user, true) : profileImage}
                         sx={{
                            width: 100,
                            height: 100,

@@ -97,11 +97,11 @@ const HomePage = () => {
     if (isUserLoading) return;
 
     setPageLoading(true);
-    
+
     try {
       const publicResponse = await stream.getStream(false, publicPage);
       const privateResponse = await stream.getStream(true, privatePage);
-      
+
       setPublicPosts(prevPosts => {
         const existingIds = new Set(prevPosts.map(post => post.id));
         const newPublicPosts = publicResponse.src.filter(post => !existingIds.has(post.id));
@@ -135,13 +135,13 @@ const HomePage = () => {
     fetchPosts(publicPage, privatePage);
     const interval = setInterval(() => {
       fetchPosts(publicPage, privatePage);
-    }, 60000);
+    }, 10000);
     return () => clearInterval(interval);
-  }, [isUserLoading, privatePage, publicPage]);
+  }, [isUserLoading, privatePage, publicPage, activeFilterPost]);
 
   useEffect(() => {
     if (isInitial) {
-      setIsInitial(false); 
+      setIsInitial(false);
       return;
     }
     fetchPosts(publicPage, privatePage);
