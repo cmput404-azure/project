@@ -122,8 +122,6 @@ export default function ListItem({
       navigate("/login");
     }
     
-    // const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
-    // const myInfo = userResponse.data;
     const userResponse = await profileService.fetchAuthorData(authProvider.user.uuid);
 
     const followRequest = {
