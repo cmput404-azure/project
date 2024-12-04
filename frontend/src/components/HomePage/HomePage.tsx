@@ -135,7 +135,7 @@ const HomePage = () => {
     fetchPosts(publicPage, privatePage);
     const interval = setInterval(() => {
       fetchPosts(publicPage, privatePage);
-    }, 10000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [isUserLoading, privatePage, publicPage, activeFilterPost]);
 
