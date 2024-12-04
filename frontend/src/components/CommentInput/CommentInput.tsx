@@ -58,7 +58,6 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
   };
 
   const handleCommentSubmit = async (authorObj: any) => {
-    console.log(`Commenting on Post with id: ${post.id}`)
     const comment_obj = {
       type: "comment",
       author: authorObj,

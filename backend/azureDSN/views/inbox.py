@@ -1155,7 +1155,7 @@ class InboxView(APIView):
                     print("Response is not valid JSON.")
                     data = {"message": "Successfully sent comment to remote node, but response is not JSON."}
                 
-                print(f"Returned comment data: {data}") # I don't think cornflower is sending us comment json
+                print(f"Returned comment data: {data}") # If remote groups don't send us comment response, gonna fail in frontend
                 return Response(payload, response.status_code)
             else:
                 return Response(

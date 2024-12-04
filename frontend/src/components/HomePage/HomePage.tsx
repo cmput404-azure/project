@@ -133,10 +133,10 @@ const HomePage = () => {
 
   useEffect(() => {
     fetchPosts(publicPage, privatePage);
-    // const interval = setInterval(() => {
-    //   fetchPosts(publicPage, privatePage);
-    // }, 10000);
-    // return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      fetchPosts(publicPage, privatePage);
+    }, 10000);
+    return () => clearInterval(interval);
   }, [isUserLoading, privatePage, publicPage, activeFilterPost]);
 
   useEffect(() => {
