@@ -1239,8 +1239,6 @@ class InboxView(APIView):
     """
 
     def create_like(self, user_object, payload, request):
-        print(f"Like Payload: {payload}")
-
         from_remote = "authorId" not in payload
         if not from_remote:
             if request and request.user:
@@ -1249,12 +1247,8 @@ class InboxView(APIView):
 
             del payload["authorId"]
 
-        
-        try:
             post_fqid = payload["object"]
             post_host = url_parser.get_base_host(post_fqid)
-            print(f"POST HOST in create_like: {post_host}") # https://rizztagram-tyler-c73896125268.herokuapp.com
-            print(f"My host is: {settings.BASE_URL.rstrip('/')}") # https://azuredsn-dev-ffe9709386a4.herokuapp.com
 
             if post_host != settings.BASE_URL.rstrip('/'):
                 return Response({"Message": "like received, ignoring..."}, 200) # For cornflowerblue reflective behaviour
@@ -1271,10 +1265,6 @@ class InboxView(APIView):
                 return Response(
                     {"message": "Local Post not found!"}, status=status.HTTP_404_NOT_FOUND
                 )
-        except Exception as e:
-            print(f"IT WENT HERE: {str(e)}")
-            return Response({"Error": f"Caught in except block because {str(e)}"}, 500)
-
 
         # Check if like already exists
         if Like.objects.filter(user__id=author_id, post=post_obj).exists():
