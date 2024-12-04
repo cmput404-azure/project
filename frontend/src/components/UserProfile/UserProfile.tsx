@@ -379,14 +379,36 @@ export function EditProfile({
 
    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
+      // if (file) {
+      //    const reader = new FileReader();
+      //    reader.onloadend = () => {
+      //       const dataURL = reader.result?.toString() || "";
+      //       setProfileImage(dataURL);
+      //       setHovered(false);
+      //    };
+      //    reader.readAsDataURL(file); // get the dataURL
+      // }
+
       if (file) {
-         const reader = new FileReader();
-         reader.onloadend = () => {
-            const dataURL = reader.result?.toString() || "";
-            setProfileImage(dataURL);
-            setHovered(false);
-         };
-         reader.readAsDataURL(file); // get the dataURL
+         const fileName = file.name;
+   
+         // Ask the user if this is a pasted URL
+         if (window.confirm(`Was this uploaded via an image URL (${fileName})?`)) {
+            // Assume the user pasted a URL into the file dialog
+            const url = prompt("Please paste the image URL:");
+            if (url) {
+               setProfileImage(url);
+            }
+         } else {
+            // Process normally as base64
+            const reader = new FileReader();
+            reader.onloadend = () => {
+               const dataURL = reader.result?.toString() || "";
+               setProfileImage(dataURL);
+               setHovered(false);
+            };
+            reader.readAsDataURL(file);
+         }
       }
    };
 
