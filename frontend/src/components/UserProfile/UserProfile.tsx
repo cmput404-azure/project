@@ -234,8 +234,7 @@ export default function UserProfile() {
             </section>
 
             <section className={styles.posts}>
-               {posts.length > 0 ? posts.map((post) => (
-
+               {!loading ? posts.length > 0 ? posts.map((post) => (
                   <Post
                      key={post.id}
                      postGiven={post}
@@ -246,6 +245,10 @@ export default function UserProfile() {
                )) : (
                   <div className={"loading_component"}>
                      <p>You have no posts yet 😑</p>
+                  </div>
+               ) : (
+                  <div className={"loading_component"}>
+                     <CircularProgress size={24} sx={{ color: "#70ffaf" }} />
                   </div>
                )}
                {page < totalPages && (

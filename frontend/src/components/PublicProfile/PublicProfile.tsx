@@ -343,14 +343,20 @@ export default function PublicProfile() {
         </section>
 
         <section className={styles.posts}>
-          {posts.length > 0 ? posts.map((post) => (
+          {!loading ? posts.length > 0 ? posts.map((post) => (
             <Post
               key={post.id}
               postGiven={post}
               canToggleComments={false}
               disableLikeComment={true}
             />
-          )) : (<div className={"loading_component"}>{authorData.displayName} has no posts yet 🤐</div>)}
+          ))
+            : (<div className={"loading_component"}>{authorData.displayName} has no posts yet 🤐</div>)
+            : (
+              <div className={"loading_component"}>
+                <CircularProgress sx={{ color: "#70ffaf" }} />
+              </div>
+            )}
           {page < totalPages && (
             <Button
               variant="contained"
