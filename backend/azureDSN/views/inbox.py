@@ -1143,10 +1143,8 @@ class InboxView(APIView):
                 data=payload_json,
                 headers=headers,
             )
-
-            print(f"Comment response: {response}")
+            
             print(f"Response status code: {response.status_code}")
-            print(f"Response content: {response.text}")
 
             if response.status_code in [200, 201]:
                 try:
@@ -1248,10 +1246,16 @@ class InboxView(APIView):
 
             del payload["authorId"]
 
-        time = payload.get("published", None)
+        
         post_fqid = payload["object"]
+        post_host = url_parser.get_base_host(post_fqid)
+
+        if post_host != settings.BASE_URL.rstrip('/'):
+            return Response("Message: like received, ignoring...", 200) # For cornflowerblue reflective behaviour
+
         post_id = url_parser.extract_uuid(post_fqid)
         author_id = payload["author"]["id"]
+        time = payload.get("published", None)
 
         try:
             post_obj = Post.objects.get(uuid=post_id)
