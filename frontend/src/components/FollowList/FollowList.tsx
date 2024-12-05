@@ -1,15 +1,15 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
-import axios, { get } from 'axios';
 import follow, { getFollowers, getFollowing, getFriends } from "../../service/follow";
-import CloseIcon from '@mui/icons-material/Close';
+
+import Author from "../../models/models"
 import { CircularProgress } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 import ListItem from '../ListItem/ListItem';
 import Modal from 'react-modal';
 import { api } from "../../service/config";
 import styles from './FollowList.module.scss';
 import { useAuth } from "../../state";
-import Author from "../../models/models"
 
 interface Follower {
   displayName: string;
