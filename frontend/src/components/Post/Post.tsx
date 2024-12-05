@@ -391,7 +391,7 @@ export default function Post({
               {post.author.displayName}
             </span>
             <span className={styles.postTime}>
-              {new Date(post.published).toLocaleString()}
+              {new Date(post.published).toLocaleString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit' })}
             </span>
           </div>
           <div>
@@ -406,7 +406,7 @@ export default function Post({
           </div>
         </div>
 
-        {authProvider.user?.uuid == postAuthorID && disableLikeComment ? (
+        {authProvider.user?.uuid === postAuthorID && disableLikeComment ? (
           <EllipseMenu
             post={postGiven}
             authorUUID={postGiven.author.id}
@@ -542,7 +542,7 @@ export default function Post({
 
       {(isCommentOpen && canToggleComments) || isModal ? (
         <div className={styles.comments}>
-          <div className={styles.commentsHeader}/>
+          <div className={styles.commentsHeader} />
           {currentAuthor && (
             <CommentInputField
               authorObj={currentAuthor}
