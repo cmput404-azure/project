@@ -25,7 +25,6 @@ import ProfileService from "../../service/profile";
 import Tooltip from "@mui/material/Tooltip";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import followService from "../../service/follow";
-import { profile } from "console";
 import profileService from "../../service/profile";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
