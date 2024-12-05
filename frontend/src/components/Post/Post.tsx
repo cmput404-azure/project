@@ -425,7 +425,7 @@ export default function Post({
           />
         ) : (
           <Tooltip title={canCopyLink ? "Copy link" : "Friends only post link only available to the author of the post and admins"}>
-            <LinkIcon className={canCopyLink ? "" : styles.disabled} onClick={canCopyLink ? handleCopyLink : null} />
+            <LinkIcon className={canCopyLink ? "" : styles.disabled} onClick={canCopyLink ? handleCopyLink : null} sx={{transform: "rotate(135deg)"}} />
           </Tooltip>
         )}
 
