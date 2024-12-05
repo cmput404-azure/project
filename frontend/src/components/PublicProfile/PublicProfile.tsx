@@ -86,8 +86,13 @@ export default function PublicProfile() {
 
     setPosts((prevPosts) => {
       const existingIds = new Set(prevPosts.map((post) => post.id));
-      const newPosts = src.filter((post) => !existingIds.has(post.id));
-      return [...prevPosts, ...newPosts];
+      const newPosts = src.filter(
+        (post) => !existingIds.has(post.id) && post.visibility !== "DELETED"
+      );
+      const filteredPrevPosts = prevPosts.filter(
+        (post) => post.visibility !== "DELETED"
+      );
+      return [...filteredPrevPosts, ...newPosts];
     });
 
     setTotalPages(Math.ceil(count / pageSize));
