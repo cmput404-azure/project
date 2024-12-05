@@ -182,7 +182,6 @@ export default function Post({
           );
           setCommentCount(
             Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
-            // comments.length
           );
         }
       } catch (error) {
