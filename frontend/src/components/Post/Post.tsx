@@ -414,7 +414,7 @@ export default function Post({
           />
         ) : (
           <Tooltip title="Copy link">
-            <i className="fas fa-link" onClick={handleCopyLink}></i>
+            <i className="fas fa-link" onClick={handleCopyLink} style={{cursor:'pointer'}}></i>
           </Tooltip>
         )}
 

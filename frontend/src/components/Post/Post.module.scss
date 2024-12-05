@@ -107,6 +107,8 @@
 .icon {
   align-items: center;
   color: white; // Ensures icons are white
+
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   font-size: 1.2rem;
