@@ -165,15 +165,25 @@
                 }
                 .footer{
                     margin: 1rem auto !important;
+                    position: absolute !important;
+                    right: 5vw !important;
+                    top: 2vh !important;
                 }
 
             }
             .bio{
                 align-items: center !important;
-                p{
-                    font-size: 0.5rem;
+                .bio__text{
+                    font-size: 0.75rem;
+                    padding: 0;
+                    margin: 1rem 0.5rem 0rem 1.5rem !important;
                 }
             }
         }
+    }
+
+    .posts{
+        padding: 1rem 0 0 0 !important;
+        margin: 1.5rem auto 0 auto !important;
     }
 }
