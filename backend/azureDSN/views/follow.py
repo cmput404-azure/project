@@ -362,13 +362,15 @@ class FollowView(APIView):
         Deletes the follow entry so that user is no longer following follower
         """
         decoded_url = unquote(follower_url)
+        parts = decoded_url.strip("/").split("/")
+        follower_id = parts[-1]
         # remote follower
-        follower = Follow.objects.filter(local_followee_id = user_id, remote_follower__contains=decoded_url)
+        print(user_id)
+        print(decoded_url)
+        follower = Follow.objects.filter(local_follower_id = follower_id, remote_followee__contains=user_id)
 
         # local follower
         if not follower:
-            parts = decoded_url.strip("/").split("/")
-            follower_id = parts[-1]
             follower = Follow.objects.filter(local_followee_id = user_id, local_follower_id=follower_id)
         else:
             follower.delete()
