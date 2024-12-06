@@ -50,7 +50,7 @@ export default function EditPostModal({
 }: EditPostModalProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [visibility, setVisibility] = useState<number>(normalizeVisibility(post.visibility) as number);
+  const [visibility, setVisibility] = useState(post.visibility);
   const [contentType, setContentType] = useState(`${post.contentType}`);
   const [disabled, setDisabled] = useState(true);
 
@@ -60,7 +60,7 @@ export default function EditPostModal({
       // Check if post is defined
       setTitle(post.title);
       setContent(post.content);
-      setVisibility(normalizeVisibility(post.visibility) as number);
+      setVisibility(post.visibility);
     }
   }, [isOpen, post]);
 
@@ -80,8 +80,7 @@ export default function EditPostModal({
   const handleSave = () => {
     if (post) {
       // Ensure post is defined before saving
-      const normalizedVisibility = normalizeVisibility(visibility, true);
-      onSubmit({ title, content, visibility: normalizedVisibility });
+      onSubmit({ title, content, visibility });
       onRequestClose(); // close modal after saving
     }
   };
@@ -154,9 +153,9 @@ export default function EditPostModal({
               label="Visibility"
               onChange={handleVisibilityChange}
             >
-              <MenuItem value={1}>Public</MenuItem>
-              <MenuItem value={2}>Friends-Only</MenuItem>
-              <MenuItem value={3}>Unlisted</MenuItem>
+              <MenuItem value={"PUBLIC"}>Public</MenuItem>
+              <MenuItem value={"FRIENDS"}>Friends-Only</MenuItem>
+              <MenuItem value={"UNLISTED"}>Unlisted</MenuItem>
             </Select>
           </StyledFormControl>
         </div>

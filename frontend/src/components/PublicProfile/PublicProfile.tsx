@@ -355,7 +355,6 @@ export default function PublicProfile() {
               key={post.id}
               postGiven={post}
               canToggleComments={false}
-              disableLikeComment={true}
             />
           ))
             : (<div className={"loading_component"}>{authorData.displayName} has no posts yet 🤐</div>)
