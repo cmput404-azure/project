@@ -1,6 +1,5 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-import { Author, Follower } from "../../models/models";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { useEffect, useState } from "react";
 
@@ -12,7 +11,6 @@ import ReactMarkdown from 'react-markdown';
 import Snackbar from '@mui/material/Snackbar';
 import Tooltip from '@mui/material/Tooltip';
 import { api } from "../../service/config";
-import auth from "../../service/auth";
 import { extractUUID } from "../../util/formatting/extractUUID";
 import follow from "../../service/follow";
 import { formatCount } from "../../util/formatting/formatCount";

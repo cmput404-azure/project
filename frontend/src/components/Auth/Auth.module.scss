@@ -10,7 +10,7 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  width: 350px;
+  width: 360px;
   padding: 2rem;
   background-color: #1a1a1a;
   border-radius: 12px;
@@ -24,6 +24,7 @@
   color: #f1f1f1;
   font-size: 1.5rem;
   font-weight: 600;
+  padding-bottom: 1.5rem;
 }
 
 .auth__container__form {
@@ -86,4 +87,14 @@ input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 30px #2b2b2b inset !important;
   -webkit-text-fill-color: white !important;
   -webkit-border-radius: 12px;
+}
+
+
+@media (max-width: 768px) {
+  .auth__container {
+    width: 270px;
+  }
+  .auth__container h1 {
+    font-size: 1.1rem;
+  }
 }

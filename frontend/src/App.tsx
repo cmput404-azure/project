@@ -1,20 +1,18 @@
 import Auth, { Logout } from "./components/Auth/Auth";
 import { Route, Routes, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 
 import { CircularProgress } from "@mui/material";
 import ErrorPage from "./error-page";
 import HomePage from "./components/HomePage/HomePage";
+import ImageView from "./components/ImageView/ImageView";
 import NavigationBar from "./components/NavigationBar/NavigationBar";
 import Post from "./components/Post/Post";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicProfile from "./components/PublicProfile/PublicProfile";
+import SettingsPage from "./components/SettingsPage/SettingsPage";
 import UserProfile from "./components/UserProfile/UserProfile";
-import UserProfileOld from "./components/UserProfile/UserProfileOld";
 import styles from "./App.module.scss";
 import { useAuth } from "./state";
-import SettingsPage from "./components/SettingsPage/SettingsPage";
-import ImageView from "./components/ImageView/ImageView";
 
 export default function App() {
   const nav = useNavigate();
@@ -40,7 +38,6 @@ export default function App() {
           <Route path="/login" element={<Auth />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/profile2" element={<UserProfileOld />} />
             <Route path="/logout" element={<Logout />} />
           </Route>
           <Route path="/post/:postID" element={<Post />} />

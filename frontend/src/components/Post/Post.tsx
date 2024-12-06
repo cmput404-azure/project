@@ -15,6 +15,7 @@ import CommentInputField from "../CommentInput/CommentInput";
 import { ContentType } from "../../models/modelTypes";
 import EllipseMenu from "../EllipseMenu/EllipseMenu";
 import FollowService from "../../service/follow";
+import LinkIcon from '@mui/icons-material/Link';
 import { PostData } from "../../models/models";
 import { PostData as PostModel } from "../../models/models";
 import ProfileService from "../../service/profile";
@@ -55,6 +56,7 @@ export default function Post({
 
   const [post, setPost] = useState<PostModel | null>(null);
   const [postData, setPostData] = useState<PostData>(postGiven);
+  const [canCopyLink, setCanCopyLink] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
@@ -135,6 +137,10 @@ export default function Post({
 
           setPost(postData);
 
+          if ( authProvider.user.is_staff || postData.visibility == "PUBLIC" || postData.author.id.includes(authProvider.user.uuid) ) {
+            setCanCopyLink(true);
+          }
+
           setCommentList(postData.comments.src);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes?.count || 0
@@ -144,6 +150,11 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
+
+          if ( authProvider.user.is_staff || postGiven.visibility == "PUBLIC" || postGiven.author.id.includes(authProvider.user.uuid) ) {
+            setCanCopyLink(true);
+          }
+
           const postAuthorID = extractUUID(postGiven.author.id);
           setPostAuthorID(postAuthorID);
 
@@ -171,7 +182,6 @@ export default function Post({
           );
           setCommentCount(
             Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
-            // comments.length
           );
         }
       } catch (error) {
@@ -391,7 +401,7 @@ export default function Post({
               {post.author.displayName}
             </span>
             <span className={styles.postTime}>
-              {new Date(post.published).toLocaleString()}
+              {new Date(post.published).toLocaleString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit' })}
             </span>
           </div>
           <div>
@@ -406,15 +416,15 @@ export default function Post({
           </div>
         </div>
 
-        {authProvider.user?.uuid == postAuthorID && disableLikeComment ? (
+        {authProvider.user?.uuid === postAuthorID && disableLikeComment ? (
           <EllipseMenu
             post={postGiven}
             authorUUID={postGiven.author.id}
             onDelete={onDeletePost}
           />
         ) : (
-          <Tooltip title="Copy link">
-            <i className="fas fa-link" onClick={handleCopyLink}></i>
+          <Tooltip title={canCopyLink ? "Copy link" : "Friends only post link only available to the author of the post and admins"}>
+            <LinkIcon className={canCopyLink ? "" : styles.disabled} onClick={canCopyLink ? handleCopyLink : null} sx={{transform: "rotate(135deg)"}} />
           </Tooltip>
         )}
 
@@ -542,7 +552,7 @@ export default function Post({
 
       {(isCommentOpen && canToggleComments) || isModal ? (
         <div className={styles.comments}>
-          <div className={styles.commentsHeader}/>
+          <div className={styles.commentsHeader} />
           {currentAuthor && (
             <CommentInputField
               authorObj={currentAuthor}

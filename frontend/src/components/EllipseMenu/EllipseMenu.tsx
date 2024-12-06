@@ -164,6 +164,7 @@ export default function EllipseMenu({
         visibility: normalizeVisibility(updatedPost.visibility, true) as string,
       });
 
+      window.location.reload();
       closeEditModal();
     } catch (error) {
       console.error("Error updating post", error);
