@@ -1,13 +1,11 @@
 // @ts-nocheck
 
 import { Author, PostData } from "../../models/models"
-import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 
 import { Avatar } from "@mui/material";
 import FollowService from "../../service/follow";
 import InboxService from "../../service/inbox";
-import ProfileService from "../../service/profile";
 import { api } from "../../service/config";
 import { extractHost } from "../../util/formatting/extractHost";
 import { extractUUID } from "../../util/formatting/extractUUID";
@@ -15,6 +13,7 @@ import { normalizeURL } from "../../util/formatting/normalizeURL";
 import profileService from "../../service/profile";
 import styles from "./ListItem.module.scss";
 import { useAuth } from "../../state";
+import { useNavigate } from "react-router-dom";
 
 interface ListItemProps {
   isRequest?: boolean;
@@ -50,7 +49,6 @@ export default function ListItem({
   const [isDeletedPost, setIsDeletedPost] = useState(false);
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
-  const [isRemote, setIsRemote] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {

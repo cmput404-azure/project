@@ -56,7 +56,6 @@
                         margin: 0 1rem 0 0;
                         text-align: start;
                     }
-                    
                 }
 
                 .user__secondary{
@@ -132,15 +131,15 @@
     .container{
         height: 98vh !important;
         overflow: auto !important;
-        width: 95vw !important;
         padding: 1rem 0.5rem 4rem 0.5rem !important;
+        width: 95vw !important;
         .header{
+            align-items: center !important;
             flex-flow: row wrap !important;
             justify-content: center !important;
-            align-items: center !important;
             .info{
-                flex-flow: row wrap !important;
                 align-items: center !important;
+                flex-flow: row wrap !important;
                 justify-content: center !important;
 
                 .icon{
@@ -165,15 +164,25 @@
                 }
                 .footer{
                     margin: 1rem auto !important;
+                    position: absolute !important;
+                    right: 5vw !important;
+                    top: 2vh !important;
                 }
 
             }
             .bio{
                 align-items: center !important;
-                p{
-                    font-size: 0.5rem;
+                .bio__text{
+                    font-size: 0.75rem;
+                    margin: 1rem 0.5rem 0rem 1.5rem !important;
+                    padding: 0;
                 }
             }
         }
+    }
+
+    .posts{
+        margin: 1.5rem auto 0 auto !important;
+        padding: 1rem 0 0 0 !important;
     }
 }
