@@ -11,11 +11,11 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
 import Avatar from "@mui/material/Avatar";
-import LinkIcon from '@mui/icons-material/Link';
 import CommentInputField from "../CommentInput/CommentInput";
 import { ContentType } from "../../models/modelTypes";
 import EllipseMenu from "../EllipseMenu/EllipseMenu";
 import FollowService from "../../service/follow";
+import LinkIcon from '@mui/icons-material/Link';
 import { PostData } from "../../models/models";
 import { PostData as PostModel } from "../../models/models";
 import ProfileService from "../../service/profile";
