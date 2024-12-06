@@ -238,8 +238,8 @@ export default function UserProfile() {
                      key={post.id}
                      postGiven={post}
                      canToggleComments={false}
-                     disableLikeComment={true}
                      onDeletePost={onDeletePost}
+                     isUserProfile={true}
                   />
                )) : (
                   <div className={"loading_component"}>
