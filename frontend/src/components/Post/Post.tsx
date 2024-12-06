@@ -405,7 +405,10 @@ export default function Post({
             </span>
           </div>
           <div>
-            {normalizeVisibility(post.visibility) === 4 && (<span className={styles.deletedLabel}>Deleted</span>) }
+          {normalizeVisibility(post.visibility) === 4 ? (<span className={styles.deletedLabel}>Deleted</span>) 
+            : normalizeVisibility(post.visibility) === 3 ? (<span className={styles.unlistedLabel}>Unlisted</span>) 
+            : normalizeVisibility(post.visibility) === 2 ? (<span className={styles.friendsOnlyLabel}>Friends-Only</span>) 
+            : (<span className={styles.publicLabel}>Public</span>)}
             {post.type === "shared" && (
               <span className={styles.sharedLabel}>
                 Shared by {post.shared_by}

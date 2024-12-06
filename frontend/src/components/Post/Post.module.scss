@@ -71,6 +71,36 @@
     color: #70ffae;
   }
 
+  // should be green
+  .publicLabel {
+    background-color: rgb(112, 255, 174, 0.15);
+    border: 1px solid #70ffae;
+    color: #70ffae;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: small;
+  }
+
+  // should be light blue
+  .friendsOnlyLabel {
+    background-color: rgba(0, 191, 255, 0.15);
+    border: 1px solid #00bfff;
+    color: #00bfff;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: small;
+  }
+
+  // should be yellow
+  .unlistedLabel {
+    background-color: rgba(255, 255, 0, 0.15);
+    border: 1px solid #ffff00;
+    color: #ffff00;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: small;
+  }
+
   .deletedLabel {
     background-color: rgba(255, 99, 71, 0.15);
     border: 1px solid #ff6347;
