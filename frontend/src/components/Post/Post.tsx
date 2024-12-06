@@ -137,7 +137,7 @@ export default function Post({
 
           setPost(postData);
 
-          if ( authProvider.user.is_staff || postData.visibility == "PUBLIC" || postData.author.id.includes(authProvider.user.uuid) ) {
+          if ( authProvider.user.is_staff || postData.visibility == "PUBLIC" || postData.visibility == "UNLISTED" || postData.author.id.includes(authProvider.user.uuid) ) {
             setCanCopyLink(true);
           }
 
