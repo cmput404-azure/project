@@ -309,7 +309,7 @@ export function Logout() {
     <div className={styles.auth}>
       <div className={styles.auth__container}>
         <div className={styles.auth__container__header}>
-          <h1>Logout</h1>
+          <h1>Are you sure you want to logout?</h1>
         </div>
         <div className={styles.auth__container__form}>
           <Button

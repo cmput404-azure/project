@@ -6,8 +6,8 @@
   flex-direction: column;
   max-width: 1100px;
   padding: 15px;
-  width: 100%;
   transition: ease-in-out 0.2s all;
+  width: 100%;
 
   .post_bar {
     align-items: center;
@@ -28,8 +28,8 @@
     .vertical_divider {
       background-color: #ccc;
       height: 100%;
-      width: 1px;
       margin: 0 10px;
+      width: 1px;
     }
 
     .post_input {
@@ -39,25 +39,26 @@
       cursor: pointer;
       flex: 1;
       font-size: 14px;
+      margin-left: 1rem;
       outline: none;
       padding: 8px;
-      margin-left: 1rem;
     }
 
     .add_button {
+      align-items: center;
       background-color: transparent;
+      background-color: #a0a0a0;
       border: none;
+      border-radius: 50%;
+      color: white;
       cursor: pointer;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 35px;
-      height: 35px;
-      border-radius: 50%;
-      background-color: #a0a0a0;
-      color: white;
       font-size: 18px;
       font-weight: bold;
+      height: 35px;
+      justify-content: center;
+      margin-left: 0.5rem;
+      width: 35px;
       &:hover {
         background-color: #70ffaf;
       }
@@ -88,14 +89,14 @@
     }
 
     .image_preview{
-      display: flex;
-      justify-content: center;
-      flex-flow: column;
       align-items: center;
+      display: flex;
+      flex-flow: column;
+      justify-content: center;
       img{
-        max-width: 30%;
-        height: 30%;
         border-radius: 5px;
+        height: 30%;
+        max-width: 30%;
       }
     }
   }
@@ -122,14 +123,18 @@
 
         .icon_section {
           align-items: center;
+          color: white;
           cursor: pointer;
           display: flex;
           flex: 1;
           justify-content: center;
           padding: 10px;
           transition: background-color 0.3s ease;
-          color: white;
           
+          &:hover {
+            background-color: #70ffaf;
+          }
+
           &.active {
             background-color: #70ffaf;
             color: black;
@@ -149,14 +154,14 @@
         border: none;
         border-radius: 10px;
         color: rgb(0, 0, 0);
+        color: white;
         cursor: pointer;
         font-size: medium;
         height: 100%;
-        color: white;
         transition: background-color 0.3s ease, transform 0.2s ease;
 
         &:hover {
-          background-color: rgb(98, 183, 123);
+          background-color: rgb(112, 209, 141);
         }
 
         &.active {
@@ -198,7 +203,6 @@
     margin-left: 0.5rem;
     svg{
       font-size: 1.25rem !important;
-
     }
   }
 }

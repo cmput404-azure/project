@@ -4,7 +4,6 @@ import AddIcon from '@mui/icons-material/Add';
 import { Author } from '../../models/models';
 import { Avatar } from "@mui/material";
 import InboxService from '../../service/inbox';
-import { api } from '../../service/config';
 import { extractHost } from "../../util/formatting/extractHost";
 import profileService from "../../service/profile";
 import styles from './AuthorPost.module.scss';
