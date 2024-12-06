@@ -38,7 +38,7 @@ interface PostProps {
   postGiven?: PostModel;
   canToggleComments?: boolean;
   isModal?: boolean;
-  disableLikeComment?: boolean;
+  isUserProfile?: boolean;
   onDeletePost?: (postId: string) => void;
 }
 
@@ -46,7 +46,7 @@ export default function Post({
   postGiven,
   canToggleComments = true,
   isModal = false,
-  disableLikeComment = false,
+  isUserProfile = false,
   onDeletePost,
 }: PostProps) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
@@ -405,9 +405,7 @@ export default function Post({
             </span>
           </div>
           <div>
-            {normalizeVisibility(post.visibility) === 4 && (
-              <span className={styles.deletedLabel}>Deleted</span>
-            )}
+            {normalizeVisibility(post.visibility) === 4 && (<span className={styles.deletedLabel}>Deleted</span>) }
             {post.type === "shared" && (
               <span className={styles.sharedLabel}>
                 Shared by {post.shared_by}
@@ -416,7 +414,7 @@ export default function Post({
           </div>
         </div>
 
-        {authProvider.user?.uuid === postAuthorID && disableLikeComment ? (
+        {authProvider.user?.uuid === postAuthorID && isUserProfile ? (
           <EllipseMenu
             post={postGiven}
             authorUUID={postGiven.author.id}
@@ -447,34 +445,26 @@ export default function Post({
           <div className={styles.essentials}>
             <div
               className={`${styles.icon} ${hasLiked ? styles.liked : ""}`}
-              onClick={
-                !disableLikeComment
-                  ? (e) => {
+              onClick={(e) => {
                     e.stopPropagation();
                     handleLikePost();
                   }
-                  : () => { }
               }
             >
               <i
-                className={`${"fas fa-heart icon"} ${!disableLikeComment ? "" : styles.disabled
-                  }`}
+                className={"fas fa-heart icon"}
               ></i>
               <span>{formatCount(likeCount)}</span>
             </div>
             <div
               className={`${styles.icon}`}
-              onClick={
-                !disableLikeComment
-                  ? canToggleComments
+              onClick={canToggleComments
                     ? handleToggleComment
                     : handleCommentButtonClick
-                  : () => { }
               }
             >
               <i
-                className={`${"fas fa-comment"} ${!disableLikeComment ? "" : styles.disabled
-                  }`}
+                className={"fas fa-comment"}
               ></i>
               <span>{formatCount(commentCount)}</span>
             </div>
