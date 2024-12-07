@@ -80,6 +80,8 @@ export default function PublicProfile() {
   const fetchPosts = async (userId: string, author: Author | null, page: number = 1) => {
     if (loading) return;
     setLoading(true);
+
+    console.log(`Trying to fetch user with FQID: ${userId}`);
     const id = extractUUID(userId)
     const host = author?.id.split("authors")[0]
     const { count, src } = await profileService.fetchAuthorPosts(id, page, 10, host);
