@@ -23,6 +23,7 @@ import { normalizeURL } from "../../util/formatting/normalizeURL";
 import profileService from "../../service/profile";
 import styles from "./PublicProfile.module.scss";
 import { useAuth } from "../../state";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 const FollowerModalTypes = {
   follower: "Follower",
@@ -87,10 +88,10 @@ export default function PublicProfile() {
     setPosts((prevPosts) => {
       const existingIds = new Set(prevPosts.map((post) => post.id));
       const newPosts = src.filter(
-        (post) => !existingIds.has(post.id) && post.visibility !== "DELETED"
+        (post) => !existingIds.has(post.id) && normalizeVisibility(post.visibility, true) !== "DELETED"
       );
       const filteredPrevPosts = prevPosts.filter(
-        (post) => post.visibility !== "DELETED"
+        (post) => normalizeVisibility(post.visibility, true) !== "DELETED"
       );
       return [...filteredPrevPosts, ...newPosts];
     });
