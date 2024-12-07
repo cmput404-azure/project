@@ -375,6 +375,7 @@ class AuthorPostsAllView(APIView):
             print(f"Went here")
             try:
                 remote_host = request.GET.get('host')
+                print(f"Received remote host: {remote_host}")
                 if not remote_host:
                     return Response({"message": "Host is required for remote users."}, status=status.HTTP_400_BAD_REQUEST)
                 
