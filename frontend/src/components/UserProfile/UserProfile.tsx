@@ -4,9 +4,15 @@ import {
    Box,
    Button,
    CircularProgress,
+   Dialog,
+   DialogActions,
+   DialogContent,
+   DialogTitle,
    Drawer,
    IconButton,
    Snackbar,
+   Tab,
+   Tabs,
    TextField,
    styled,
 } from "@mui/material";
@@ -28,6 +34,7 @@ import followService from "../../service/follow";
 import profileService from "../../service/profile";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
+import { api } from "../../service/config";
 
 interface FollowersModal {
    open: boolean;
@@ -321,10 +328,35 @@ export function EditProfile({
       extractUUID(github) === "login" ? "" : extractUUID(github);
    const fileInputRef = useRef<HTMLInputElement | null>(null);
    const [hovered, setHovered] = useState(false);
+   const [open, setOpen] = useState(false);
+   const [tabValue, setTabValue] = useState(0);
+   const [uploadedImage, setUploadedImage] = useState(null);
+   const [imageURL, setImageURL] = useState("");
+   const [isValidURL, setIsValidURL] = useState<boolean>(false);
 
    const auth = useAuth();
 
    user.id = extractUUID(user.id);
+
+   const handleOpenModal = () => setOpen(true);
+   const handleCloseModal = () => {
+      setOpen(false);
+      setIsValidURL(false);
+      setUploadedImage(false);
+      setImageURL("");
+      setTabValue(0);
+   };
+
+   const handleTabChange = (event, newValue) => {
+      setTabValue(newValue)
+
+      if (newValue === 0) {  // upload image tab
+         setImageURL("");
+         setIsValidURL(false);
+      } else if (newValue === 1) {  // image url tab
+         setUploadedImage(null);
+      }
+   };
 
    async function handleUpdate() {
       setError("");
@@ -386,38 +418,56 @@ export function EditProfile({
 
    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      // if (file) {
-      //    const reader = new FileReader();
-      //    reader.onloadend = () => {
-      //       const dataURL = reader.result?.toString() || "";
-      //       setProfileImage(dataURL);
-      //       setHovered(false);
-      //    };
-      //    reader.readAsDataURL(file); // get the dataURL
-      // }
-
       if (file) {
-         const fileName = file.name;
-   
-         // Ask the user if this is a pasted URL
-         if (window.confirm(`Was this uploaded via an image URL (${fileName})?`)) {
-            // Assume the user pasted a URL into the file dialog
-            const url = prompt("Please paste the image URL:");
-            if (url) {
-               setProfileImage(url);
-            }
-         } else {
-            // Process normally as base64
-            const reader = new FileReader();
-            reader.onloadend = () => {
-               const dataURL = reader.result?.toString() || "";
-               setProfileImage(dataURL);
-               setHovered(false);
-            };
-            reader.readAsDataURL(file);
-         }
+         setUploadedImage(file);
+         setImageURL("");
+         setIsValidURL(false);
       }
    };
+
+   const handleImageURL = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const url = event.target.value.trim();
+      setImageURL(url); // could be external link or custom image endpoint
+
+      // Regex to validate URL and also accepts our custom image endpoint
+      const urlPattern = /^(https?:\/\/.*\/(.*\.(png|jpg|jpeg|gif|bmp|webp))?|.*\/image\/?)$/i;
+      setIsValidURL(urlPattern.test(url));
+
+      if (url) setUploadedImage(null);
+   };
+
+   const handleSaveImage = async () => {
+      if (uploadedImage) {
+         // Convert uploaded image to Base64
+         const reader = new FileReader();
+         reader.onloadend = () => {
+            const dataURL = reader.result?.toString() || "";
+            setProfileImage(dataURL);
+         };
+         reader.readAsDataURL(uploadedImage);
+      } else if (isValidURL && imageURL) {
+         if (extractUUID(imageURL) === 'image') {
+            try {
+               const response = await api.get<string>(imageURL);
+               setProfileImage(response.data);
+               setProfileImage(response.data);
+            } catch (error) {
+               if (error.response && error.response.status === 404) {
+                  alert("Error: This endpoint does not point to an Image Post."); // If the image endpoint is pointing to a non Image post.
+               } else {
+                  console.error("Error fetching image:", error);
+                  alert("Failed to fetch the image.");
+               }
+               return;
+            } 
+         } else {
+            setProfileImage(imageURL);
+         }
+
+         setHovered(false);
+         handleCloseModal();
+      }
+   }
 
    const handleGithubChange = (value: string) => {
       if (value.trim() === "") {
@@ -425,10 +475,6 @@ export function EditProfile({
       } else {
          setGithub(`https://github.com/${value}`);
       }
-   };
-
-   const handleUploadButtonClick = () => {
-      fileInputRef?.current.click();
    };
 
    const handleDeleteImage = () => {
@@ -500,7 +546,6 @@ export function EditProfile({
                      id="upload-button"
                      type="file"
                      accept="image/*"
-                     onChange={handleFileUpload}
                      hidden
                      ref={fileInputRef}
                   />
@@ -510,7 +555,7 @@ export function EditProfile({
                         size="small"
                         color="secondary"
                         startIcon={<CloudUpload />}
-                        onClick={handleUploadButtonClick}
+                        onClick={handleOpenModal}
                         sx={{
                            color: "#70ffaf",
                            borderColor: "#70ffaf",
@@ -520,11 +565,54 @@ export function EditProfile({
                            },
                         }}
                      >
-                        Upload Image
+                        Set Profile Image
                      </Button>
                   </label>
                </div>
             </div>
+
+            <Dialog open={open} onClose={handleCloseModal}>
+               <DialogTitle>Set Profile Image</DialogTitle>
+               <DialogContent>
+                  <Tabs value={tabValue} onChange={handleTabChange}>
+                     <Tab label="Upload Image" />
+                     <Tab label="Image URL" />
+                  </Tabs>
+                  {tabValue === 0 && (
+                     <Box>
+                        <input
+                           type="file"
+                           accept="image/*"
+                           onChange={handleFileUpload}
+                        />
+                     </Box>
+                  )}
+                  {tabValue === 1 && (
+                     <TextField
+                        fullWidth
+                        placeholder="Enter Image URL"
+                        value={imageURL}
+                        onChange={handleImageURL}
+                        error={imageURL.length > 0 && !isValidURL}
+                        helperText={
+                           imageURL.length > 0 && !isValidURL
+                              ? "Please enter a valid image URL (png, jpg, jpeg, gif, bmp, webp) or /image endpoint."
+                              : ""
+                        }
+                     />
+                  )}
+               </DialogContent>
+               <DialogActions>
+                  <Button
+                     onClick={handleSaveImage}
+                     color="primary"
+                     disabled={!uploadedImage && (!isValidURL || imageURL === "")}
+                  >
+                     Continue
+                  </Button>
+                  <Button onClick={handleCloseModal}>Cancel</Button>
+               </DialogActions>
+            </Dialog>
 
             <div className={styles.edit__profile__body__form}>
                <EditField
