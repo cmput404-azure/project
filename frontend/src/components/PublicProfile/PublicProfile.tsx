@@ -83,7 +83,7 @@ export default function PublicProfile() {
 
     console.log(`Trying to fetch user with FQID: ${userId}`);
     const id = extractUUID(userId);
-    const host = extractHost(author.id);
+    const host = normalizeURL(author.id);
     console.log(`Extracted ID: ${id}`);
     console.log(`Extracted host: ${host}`);
     const { count, src } = await profileService.fetchAuthorPosts(id, page, 10, host);
