@@ -463,10 +463,10 @@ export function EditProfile({
          } else {
             setProfileImage(imageURL);
          }
-
-         setHovered(false);
-         handleCloseModal();
       }
+
+      setHovered(false);
+      handleCloseModal();
    }
 
    const handleGithubChange = (value: string) => {
