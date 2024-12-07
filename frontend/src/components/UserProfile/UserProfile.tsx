@@ -594,9 +594,28 @@ export function EditProfile({
             >
                <DialogTitle>Set Profile Image</DialogTitle>
                <DialogContent>
-                  <Tabs value={tabValue} onChange={handleTabChange}>
-                     <Tab label="Upload Image" />
-                     <Tab label="Image URL" />
+                  <Tabs
+                     value={tabValue}
+                     onChange={handleTabChange}
+                  >
+                     <Tab
+                        label="Upload Image"
+                        sx={{
+                           color: "white",
+                           "&.Mui-selected": {
+                             color: "#70ffaf",
+                           },
+                         }}
+                     />
+                     <Tab
+                        label="Image URL"
+                        sx={{
+                           color: "white",
+                           "&.Mui-selected": {
+                             color: "#70ffaf",
+                           },
+                         }}
+                     />
                   </Tabs>
                   {tabValue === 0 && (
                      <Box sx={{ marginTop: 2 }}>
