@@ -80,8 +80,9 @@ export default function PublicProfile() {
   const fetchPosts = async (userId: string, author: Author | null, page: number = 1) => {
     if (loading) return;
     setLoading(true);
-    const id = extractUUID(userId)
-    const host = author?.id.split("authors")[0]
+    
+    const id = extractUUID(userId);
+    const host = normalizeURL(author?.id);
     const { count, src } = await profileService.fetchAuthorPosts(id, page, 10, host);
     setPostCount(count); // if filter is done properly, count should represent the number of public posts
     // note: mistyrose counts deleted post as well
