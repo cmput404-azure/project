@@ -44,6 +44,7 @@ urlpatterns = [
     # Posts API
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
     path("api/authors/<uuid:author_serial>/posts/", AuthorPostsAllView.as_view(), name="create_post"),
+    path("api/authors/<int:author_serial>/posts/", AuthorPostsAllView.as_view(), name="create_post_integer"), # some groups uses int as id
     path("api/posts/<path:post_fqid>/", PostView.as_view(), name="post"),
 
     # Likes API (specific Likes)

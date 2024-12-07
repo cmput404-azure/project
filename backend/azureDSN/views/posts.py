@@ -378,6 +378,7 @@ class AuthorPostsAllView(APIView):
                 if not remote_host:
                     return Response({"message": "Host is required for remote users."}, status=status.HTTP_400_BAD_REQUEST)
                 
+                remote_host = url_parser.percent_decode(remote_host)
                 base_host = url_parser.get_base_host(remote_host)
                 # send request to fetch all posts
                 remote_user_url = f"{base_host}/api/authors/{author_serial}/posts/"
