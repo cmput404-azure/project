@@ -16,14 +16,13 @@ import { GitHub } from "@mui/icons-material";
 import InboxService from "../../service/inbox";
 import LinkIcon from "@mui/icons-material/Link";
 import Post from "../Post/Post";
-import ProfileService from "../../service/profile";
+import { api } from "../../service/config";
 import { extractHost } from "../../util/formatting/extractHost";
+import { extractUUID } from "../../util/formatting/extractUUID";
+import { normalizeURL } from "../../util/formatting/normalizeURL";
 import profileService from "../../service/profile";
 import styles from "./PublicProfile.module.scss";
 import { useAuth } from "../../state";
-import { normalizeURL } from "../../util/formatting/normalizeURL";
-import { extractUUID } from "../../util/formatting/extractUUID";
-import { api } from "../../service/config";
 
 const FollowerModalTypes = {
   follower: "Follower",
@@ -69,7 +68,7 @@ export default function PublicProfile() {
   const fetchProfileData = async () => {
     if (userID) {
       setPosts([]); // clear previous posts, this ensures that when going from one public profile to another, hte previous posts are not shown
-      const author = await ProfileService.fetchAuthorData(userID);
+      const author = await profileService.fetchAuthorData(userID);
       setAuthorData(author);
       setPage(1);
       await fetchPosts(userID, author);
@@ -77,12 +76,12 @@ export default function PublicProfile() {
     }
   };
 
-  const fetchPosts = async (userId: string, author: Author | null,  page: number = 1) => {
+  const fetchPosts = async (userId: string, author: Author | null, page: number = 1) => {
     if (loading) return;
     setLoading(true);
     const id = extractUUID(userId)
     const host = author?.id.split("authors")[0]
-    const { count, src } = await ProfileService.fetchAuthorPosts(id, page, 10, host);
+    const { count, src } = await profileService.fetchAuthorPosts(id, page, 10, host);
     setPostCount(count); // if filter is done properly, count should represent the number of public posts
 
     setPosts((prevPosts) => {
@@ -123,7 +122,7 @@ export default function PublicProfile() {
     setIsAuthLoading(false);
 
     async function checkFollowingAndRequested() {
-      const authUser = await ProfileService.fetchAuthorData(
+      const authUser = await profileService.fetchAuthorData(
         userID
       );
       let following = false;
@@ -136,11 +135,11 @@ export default function PublicProfile() {
       } else {
         try {
           const response = await api.get(`/api/check/${authProvider.user.uuid}/follows/${userID}`);
-          following = response.status === 200; 
+          following = response.status === 200;
         } catch (err) {
-            if (err.response?.status !== 404) {
-                console.error('Fetch following error:', err);
-            }
+          if (err.response?.status !== 404) {
+            console.error('Fetch following error:', err);
+          }
         }
       }
 
@@ -165,9 +164,7 @@ export default function PublicProfile() {
         }
       }
     }
-
-    // fetchCounts(userID, authorData);
-
+    
     if (authProvider.isAuthenticated === false) {
       setIsAuthenticated(false);
       // this makes sure that the button for following/managing profile is displayed correctly
@@ -206,20 +203,32 @@ export default function PublicProfile() {
       window.location.reload();
     } else {
       // Displaying follow button, send follower request
-      const userResponse = await ProfileService.fetchAuthorData(
-        authProvider.user.uuid
-      );
+      const userResponse = await profileService.fetchAuthorData(authProvider.user.uuid);
       const followRequest = {
         type: "follow",
         summary: `${userResponse.displayName} wants to follow ${authorData.displayName}`,
-        actor: {
+        actor: { // person who sends the request
           type: "author",
           id: `${userResponse.id}`,
           host: `${userResponse.host}`,
           displayName: `${userResponse.displayName}`,
+          username: userResponse.username || "",
+          bio: userResponse.bio || "",
+          profileImage: `${userResponse.profileImage}`,
           github: `${userResponse.github}`,
           page: `${userResponse.page}`,
         },
+        object: { // person who the request is being sent to
+          type: "author",
+          id: `${authorData.id}`,
+          host: `${authorData.host}`,
+          displayName: `${authorData.displayName}`,
+          username: authorData.username || "",
+          bio: authorData.bio || "",
+          profileImage: `${authorData.profileImage}`,
+          github: `${authorData.github}`,
+          page: `${authorData.page}`,
+        }
       };
 
       await InboxService.sendPostToInbox(userID, followRequest);
@@ -269,8 +278,8 @@ export default function PublicProfile() {
                     isOwnProfile
                       ? handleManageProfileClick
                       : isAuthenticated
-                      ? handleButtonClick
-                      : handleLoginClick
+                        ? handleButtonClick
+                        : handleLoginClick
                   }
                   disabled={isRequested}
                   sx={{ backgroundColor: "#70ffaf", color: "black" }}
@@ -278,10 +287,10 @@ export default function PublicProfile() {
                   {isOwnProfile
                     ? "Manage Profile"
                     : isRequested
-                    ? "Requested"
-                    : isFollowing
-                    ? "Unfollow"
-                    : "Follow"}
+                      ? "Requested"
+                      : isFollowing
+                        ? "Unfollow"
+                        : "Follow"}
                 </Button>
 
                 {authorData.github && (
@@ -341,14 +350,19 @@ export default function PublicProfile() {
         </section>
 
         <section className={styles.posts}>
-          {posts.map((post) => (
+          {!loading ? posts.length > 0 ? posts.map((post) => (
             <Post
               key={post.id}
               postGiven={post}
               canToggleComments={false}
-              disableLikeComment={true}
             />
-          ))}
+          ))
+            : (<div className={"loading_component"}>{authorData.displayName} has no posts yet 🤐</div>)
+            : (
+              <div className={"loading_component"}>
+                <CircularProgress sx={{ color: "#70ffaf" }} />
+              </div>
+            )}
           {page < totalPages && (
             <Button
               variant="contained"

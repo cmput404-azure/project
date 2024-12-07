@@ -15,6 +15,7 @@ import CommentInputField from "../CommentInput/CommentInput";
 import { ContentType } from "../../models/modelTypes";
 import EllipseMenu from "../EllipseMenu/EllipseMenu";
 import FollowService from "../../service/follow";
+import LinkIcon from '@mui/icons-material/Link';
 import { PostData } from "../../models/models";
 import { PostData as PostModel } from "../../models/models";
 import ProfileService from "../../service/profile";
@@ -37,7 +38,7 @@ interface PostProps {
   postGiven?: PostModel;
   canToggleComments?: boolean;
   isModal?: boolean;
-  disableLikeComment?: boolean;
+  isUserProfile?: boolean;
   onDeletePost?: (postId: string) => void;
 }
 
@@ -45,7 +46,7 @@ export default function Post({
   postGiven,
   canToggleComments = true,
   isModal = false,
-  disableLikeComment = false,
+  isUserProfile = false,
   onDeletePost,
 }: PostProps) {
   const { postID: postIDFromParams } = useParams<{ postID: string }>();
@@ -55,6 +56,7 @@ export default function Post({
 
   const [post, setPost] = useState<PostModel | null>(null);
   const [postData, setPostData] = useState<PostData>(postGiven);
+  const [canCopyLink, setCanCopyLink] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
@@ -135,6 +137,10 @@ export default function Post({
 
           setPost(postData);
 
+          if ( authProvider.user.is_staff || postData.visibility == "PUBLIC" || postData.visibility == "UNLISTED" || postData.author.id.includes(authProvider.user.uuid) ) {
+            setCanCopyLink(true);
+          }
+
           setCommentList(postData.comments.src);
           setLikeCount(
             Array.isArray(postData.likes) ? 0 : postData.likes?.count || 0
@@ -144,6 +150,11 @@ export default function Post({
           );
         } else {
           setPost(postGiven);
+
+          if ( authProvider.user.is_staff || postGiven.visibility == "PUBLIC" || postGiven.author.id.includes(authProvider.user.uuid) ) {
+            setCanCopyLink(true);
+          }
+
           const postAuthorID = extractUUID(postGiven.author.id);
           setPostAuthorID(postAuthorID);
 
@@ -171,7 +182,6 @@ export default function Post({
           );
           setCommentCount(
             Array.isArray(postData.comments) ? 0 : (postData.comments?.count || 0)
-            // comments.length
           );
         }
       } catch (error) {
@@ -391,13 +401,14 @@ export default function Post({
               {post.author.displayName}
             </span>
             <span className={styles.postTime}>
-              {new Date(post.published).toLocaleString()}
+              {new Date(post.published).toLocaleString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit' })}
             </span>
           </div>
           <div>
-            {normalizeVisibility(post.visibility) === 4 && (
-              <span className={styles.deletedLabel}>Deleted</span>
-            )}
+          {normalizeVisibility(post.visibility) === 4 ? (<span className={styles.deletedLabel}>Deleted</span>) 
+            : normalizeVisibility(post.visibility) === 3 ? (<span className={styles.unlistedLabel}>Unlisted</span>) 
+            : normalizeVisibility(post.visibility) === 2 ? (<span className={styles.friendsOnlyLabel}>Friends-Only</span>) 
+            : (<span className={styles.publicLabel}>Public</span>)}
             {post.type === "shared" && (
               <span className={styles.sharedLabel}>
                 Shared by {post.shared_by}
@@ -406,15 +417,15 @@ export default function Post({
           </div>
         </div>
 
-        {authProvider.user?.uuid == postAuthorID && disableLikeComment ? (
+        {authProvider.user?.uuid === postAuthorID && isUserProfile ? (
           <EllipseMenu
             post={postGiven}
             authorUUID={postGiven.author.id}
             onDelete={onDeletePost}
           />
         ) : (
-          <Tooltip title="Copy link">
-            <i className="fas fa-link" onClick={handleCopyLink}></i>
+          <Tooltip title={canCopyLink ? "Copy link" : "Friends only post link only available to the author of the post and admins"}>
+            <LinkIcon className={canCopyLink ? "" : styles.disabled} onClick={canCopyLink ? handleCopyLink : null} sx={{transform: "rotate(135deg)"}} />
           </Tooltip>
         )}
 
@@ -437,34 +448,26 @@ export default function Post({
           <div className={styles.essentials}>
             <div
               className={`${styles.icon} ${hasLiked ? styles.liked : ""}`}
-              onClick={
-                !disableLikeComment
-                  ? (e) => {
+              onClick={(e) => {
                     e.stopPropagation();
                     handleLikePost();
                   }
-                  : () => { }
               }
             >
               <i
-                className={`${"fas fa-heart icon"} ${!disableLikeComment ? "" : styles.disabled
-                  }`}
+                className={"fas fa-heart icon"}
               ></i>
               <span>{formatCount(likeCount)}</span>
             </div>
             <div
               className={`${styles.icon}`}
-              onClick={
-                !disableLikeComment
-                  ? canToggleComments
+              onClick={canToggleComments
                     ? handleToggleComment
                     : handleCommentButtonClick
-                  : () => { }
               }
             >
               <i
-                className={`${"fas fa-comment"} ${!disableLikeComment ? "" : styles.disabled
-                  }`}
+                className={"fas fa-comment"}
               ></i>
               <span>{formatCount(commentCount)}</span>
             </div>
@@ -542,7 +545,7 @@ export default function Post({
 
       {(isCommentOpen && canToggleComments) || isModal ? (
         <div className={styles.comments}>
-          <div className={styles.commentsHeader}/>
+          <div className={styles.commentsHeader} />
           {currentAuthor && (
             <CommentInputField
               authorObj={currentAuthor}

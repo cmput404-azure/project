@@ -4,7 +4,6 @@ import AddIcon from '@mui/icons-material/Add';
 import { Author } from '../../models/models';
 import { Avatar } from "@mui/material";
 import InboxService from '../../service/inbox';
-import { api } from '../../service/config';
 import { extractHost } from "../../util/formatting/extractHost";
 import profileService from "../../service/profile";
 import styles from './AuthorPost.module.scss';
@@ -27,22 +26,21 @@ const AuthorPost: React.FC<AuthorPostProps> = ({ author }) => {
   };
   
   const handleAddButton = async () => {
-    const userResponse = await api.get<Author>(`/api/authors/${authProvider.user.uuid}/`);
-    const myInfo = userResponse.data;
+    const userResponse = await profileService.fetchAuthorData(authProvider.user.uuid);
 
     const followRequest = {
       type: "follow",
-      summary: `${myInfo.username} wants to follow ${author.displayName}`,
+      summary: `${userResponse.username} wants to follow ${author.displayName}`,
       actor: { // person who sends the request
         type: "author",
-        id: `${myInfo.id}`,
-        host: `${myInfo.host}`,
-        displayName: `${myInfo.displayName}`,
-        username: myInfo.username || "",
-        bio: myInfo.bio || "",
-        profileImage: `${myInfo.profileImage}`,
-        github: `${myInfo.github}`,
-        page: `${myInfo.page}`,
+        id: `${userResponse.id}`,
+        host: `${userResponse.host}`,
+        displayName: `${userResponse.displayName}`,
+        username: userResponse.username || "",
+        bio: userResponse.bio || "",
+        profileImage: `${userResponse.profileImage}`,
+        github: `${userResponse.github}`,
+        page: `${userResponse.page}`,
       },
       object: { // person who the request is being sent to
         type: "author",
