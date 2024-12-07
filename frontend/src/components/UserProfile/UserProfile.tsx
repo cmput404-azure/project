@@ -571,7 +571,27 @@ export function EditProfile({
                </div>
             </div>
 
-            <Dialog open={open} onClose={handleCloseModal}>
+            <Dialog
+               open={open}
+               onClose={handleCloseModal}
+               sx={{
+                  "& .MuiDialog-paper": {
+                    backgroundColor: "rgb(123, 123, 123)",
+                    color: "white",
+                    width: 400,
+                    maxWidth: "none",
+                    minWidth: 400,
+                    height: 250,
+                    maxHeight: "none",
+                  },
+                  "& .MuiTab-root": {
+                     color: "#70ffaf",
+                  },
+                  "& .MuiTabs-indicator": {
+                     backgroundColor: "#70ffaf",
+                  },
+                }}
+            >
                <DialogTitle>Set Profile Image</DialogTitle>
                <DialogContent>
                   <Tabs value={tabValue} onChange={handleTabChange}>
@@ -579,7 +599,7 @@ export function EditProfile({
                      <Tab label="Image URL" />
                   </Tabs>
                   {tabValue === 0 && (
-                     <Box>
+                     <Box sx={{ marginTop: 2 }}>
                         <input
                            type="file"
                            accept="image/*"
@@ -599,18 +619,69 @@ export function EditProfile({
                               ? "Please enter a valid image URL (png, jpg, jpeg, gif, bmp, webp) or /image endpoint."
                               : ""
                         }
+                        sx={{
+                           "& .MuiInputBase-root": {
+                             color: "white",
+                           },
+                           "& .MuiInputLabel-root": {
+                             color: "white",
+                           },
+                           "& .MuiOutlinedInput-root": {
+                             "& fieldset": {
+                               border: "1px solid white",
+                             },
+                             "&:hover fieldset": {
+                               borderColor: "white",
+                             },
+                             "&.Mui-focused fieldset": {
+                               borderColor: "#70ffaf",
+                             },
+                           },
+                           "& .MuiFormHelperText-root": {
+                             color: "white",
+                             "&.Mui-error": {
+                               color: "#ff5b5b",
+                             },
+                           },
+                         }}
                      />
                   )}
                </DialogContent>
                <DialogActions>
-                  <Button
-                     onClick={handleSaveImage}
-                     color="primary"
-                     disabled={!uploadedImage && (!isValidURL || imageURL === "")}
-                  >
-                     Continue
-                  </Button>
-                  <Button onClick={handleCloseModal}>Cancel</Button>
+                     <Button
+                        onClick={handleCloseModal}
+                        sx={{
+                           backgroundColor: "lightcoral",
+                           color: "white",
+                           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                           "&:hover": {
+                           backgroundColor: "#e57373",
+                           },
+                        }}
+                     >
+                        Cancel
+                     </Button>
+                     <Button
+                        onClick={handleSaveImage}
+                        color="primary"
+                        disabled={!uploadedImage && (!isValidURL || imageURL === "")}
+                        sx={{
+                           backgroundColor: "#70ffaf",
+                           color: "black",
+                           transition: "0.3s ease-in-out",
+                           "&:hover": {
+                              backgroundColor: "#70ffaf",
+                              color: "white",
+                           },
+                           "&.Mui-disabled": {
+                              backgroundColor: "#9e9e9e",
+                              color: "#bdbdbd",
+                              borderColor: "#bdbdbd",
+                           },
+                        }}
+                     >
+                        Continue
+                     </Button>
                </DialogActions>
             </Dialog>
 
