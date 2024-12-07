@@ -59,7 +59,7 @@ class PublicStreamView(APIView):
                             # This should work for remote-remote edited posts? Because we are fetching post from their endpoint directly (it will show latest content)
                             continue
                         
-                        if visibility == "UNLISTED" or visibility == "FRIENDS-ONLY":
+                        if visibility == "UNLISTED" or visibility == "FRIENDS":
                             continue
 
                         author_host = remote_payload["author"]["host"]
