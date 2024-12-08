@@ -84,43 +84,52 @@ class UpdateNodeView(APIView):
         """
             Edit a single `NodeUser` entry in the database.
         """
-        host = request.data.get('host')
-        username = request.data.get('username')
-        password = request.data.get('password')
-        status = request.data.get('is_authenticated')
-
-        if not host:
-            return Response({'error': 'Host is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if status not in [True, False]:
-            return Response({"error": "Status must be boolean."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not username or not password:
-            return Response({"error": "Username and password are required."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        url_validator = URLValidator()
         try:
-            url_validator(host)
-        except DjangoValidationError:
-            return Response({"error": "Invalid URL for host."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        parsed_url = urlparse(host)
-        if not parsed_url.scheme:
-            host = f'http://{host}'
+            host = request.data.get('host')
+            username = request.data.get('username')
+            password = request.data.get('password')
+            is_auth = request.data.get('isAuth')
+            old_host = request.data.get('oldHost')
 
-        try:
-            url_validator(host)
-        except DjangoValidationError:
-            return Response({"error": "Invalid URL after adding scheme."}, status=status.HTTP_400_BAD_REQUEST)
+            if not old_host:
+                return Response({'error': 'Old host is required to locate the node.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        node_obj = get_object_or_404(NodeUser, host=host)
-        node_obj.host = host
-        node_obj.username = username
-        node_obj.password = password
-        node_obj.is_authenticated = status
-        node_obj.save()
+            if not host:
+                return Response({'error': 'Host is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if is_auth not in [True, False]:
+                return Response({"error": "Status must be boolean."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not username or not password:
+                return Response({"error": "Username and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            url_validator = URLValidator()
+            try:
+                url_validator(host)
+            except DjangoValidationError:
+                return Response({"error": "Invalid URL for host."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            parsed_url = urlparse(host)
+            if not parsed_url.scheme:
+                host = f'http://{host}'
 
-        return Response({"message": "Node updated successfully!"}, status=status.HTTP_200_OK)
+            try:
+                url_validator(host)
+            except DjangoValidationError:
+                return Response({"error": "Invalid URL after adding scheme."}, status=status.HTTP_400_BAD_REQUEST)
+
+            node_obj = get_object_or_404(NodeUser, host=old_host)
+            print(f"Node found: {node_obj}")
+            node_obj.host = host
+            node_obj.username = username
+            node_obj.password = password
+            node_obj.is_authenticated = is_auth
+            node_obj.save()
+
+            return Response({"message": "Node updated successfully!"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Unable to edit node: {str(e)}")
+            return Response({"error": "Failed to update node. Please try again later."}, status=500)
 
 class AddNodeView(APIView):
     @extend_schema(

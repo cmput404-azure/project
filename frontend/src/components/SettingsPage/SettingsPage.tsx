@@ -74,7 +74,7 @@ export default function CustomizedTables() {
    const [password, setPassword] = useState('');
    const [status, setStatus] = useState(true);
    const [errorMessage, setErrorMessage] = useState('');
-   const [refreshTable, setRefreshTable] = useState(false); 
+   const [oldHost, setOldHost] = useState('');
 
    function createData(host: string, username: string, password: string, status: boolean) {
       return { host, username, password, status };
@@ -89,6 +89,7 @@ export default function CustomizedTables() {
    const handleOpenModal = (node = null) => {
       setErrorMessage('');
       if (node) { // editing existing node
+         if (node.host) setOldHost(node.host); // Need old value to get entry in DB
          setEditingNode(node);
 
          const { protocol, hostname, port } = new URL(node.host);
@@ -110,6 +111,7 @@ export default function CustomizedTables() {
 
    const handleCloseModal = () => {
       setModalOpen(false);
+      setOldHost('');
    }
 
    const handleSave = async () => {
@@ -119,7 +121,7 @@ export default function CustomizedTables() {
       try {
          let response;
          if (editingNode) {
-            response = await setting.updateNode(username, password, fullUrl, status);
+            response = await setting.updateNode(username, password, fullUrl, status, oldHost);
          } else {
             response = await setting.addNode(username, password, fullUrl);
          }
@@ -128,8 +130,8 @@ export default function CustomizedTables() {
             setErrorMessage(response.error);
          } else {
             setErrorMessage('');
-            handleCloseModal();
             fetchNodeList();
+            handleCloseModal();
          }
       } catch (error) {
          console.error('Error processing node:', error);
@@ -154,17 +156,17 @@ export default function CustomizedTables() {
       });
 
       setRows(nodeRows);
-      setRefreshTable((prev) => !prev); // Toggle refresh state
    }
 
    useEffect(() => {
-      fetchNodeList(); // Fetch nodes initially
-   }, []);
+      const fetchConfig = async () => {
+         const val = await setting.getToggleValue();
+         setRequireApproval(val);
+      };
 
-   // UseEffect to refresh table whenever rows change
-   useEffect(() => {
-      // Any logic here will run when `rows` or `refreshTable` changes
-   }, [refreshTable]);
+      fetchConfig();
+      fetchNodeList();
+   }, []);
 
    return (
       <div className={styles.settings}>
