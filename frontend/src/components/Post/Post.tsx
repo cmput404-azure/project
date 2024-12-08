@@ -33,6 +33,7 @@ import profileService from "../../service/profile";
 import remarkGfm from "remark-gfm";
 import styles from "./Post.module.scss";
 import { useAuth } from "../../state";
+import likeService from "../../service/like";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -320,9 +321,11 @@ export default function Post({
       }; // build json in the backend
 
       console.log(`LIKE OBJ: ${JSON.stringify(like_obj, null, 2)}`);
-
-
       await inbox.sendPostToInbox(post.author.id, like_obj);
+
+      // update current post's likes so it's consistent
+      const likes = await likeService.getLikes(post.author.id, extractUUID(post.id));
+      post.likes = likes;
       setLikeCount(likeCount + 1);
       setHasLiked(true);
     } catch (error) {
@@ -424,7 +427,7 @@ export default function Post({
             onDelete={onDeletePost}
           />
         ) : (
-          <Tooltip title={canCopyLink ? "Copy link" : "Friends only post link only available to the author of the post and admins"}>
+          <Tooltip title={canCopyLink ? "Copy Link" : "Link Unavailable"}>
             <LinkIcon className={canCopyLink ? "" : styles.disabled} onClick={canCopyLink ? handleCopyLink : null} sx={{transform: "rotate(135deg)"}} />
           </Tooltip>
         )}
