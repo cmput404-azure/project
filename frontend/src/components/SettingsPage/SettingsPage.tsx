@@ -127,7 +127,8 @@ export default function CustomizedTables() {
          } else {
             setErrorMessage('');
             handleCloseModal();
-            fetchNodeList();
+            //fetchNodeList();
+            window.location.reload();
          }
       } catch (error) {
          console.error('Error processing node:', error);
