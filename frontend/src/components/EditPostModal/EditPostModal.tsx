@@ -1,6 +1,6 @@
 import { Box, Button, IconButton, TextField, Tooltip } from "@mui/material";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import EditIcon from '@mui/icons-material/Edit';
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -53,7 +53,6 @@ export default function EditPostModal({
   const [visibility, setVisibility] = useState(post.visibility);
   const [contentType, setContentType] = useState(`${post.contentType}`);
   const [disabled, setDisabled] = useState(true);
-  const fileInputRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
 
   // Ensure that modal fields reset when `post` data changes
@@ -141,9 +140,11 @@ export default function EditPostModal({
               <Box
                 sx={{
                   position: "relative",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
                   width: "100%",
-                  height: "auto",
-                  display: "inline-block",
+                  height: "auto"
                 }}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
@@ -152,8 +153,8 @@ export default function EditPostModal({
                   src={`data:${contentType};base64,${content}`}
                   alt="Uploaded"
                   style={{
-                    width: "100%",
-                    height: "auto",
+                    maxWidth: "40%",
+                    height: "40%",
                     opacity: isHovered ? 0.7 : 1,
                     transition: "opacity 0.3s ease",
                     borderRadius: "8px",
