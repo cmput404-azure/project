@@ -1,7 +1,7 @@
-import { Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
+import { Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, Switch, TextField, Tooltip } from "@mui/material";
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import { useEffect, useState } from 'react';
-
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -203,7 +203,21 @@ export default function CustomizedTables() {
             <Table sx={{ minWidth: 700 }} aria-label="customized table">
                <TableHead>
                   <TableRow>
-                     <StyledTableCell>Node URL</StyledTableCell>
+                     <StyledTableCell>
+                        <Box display="flex" alignItems="center">
+                           Node URL
+                           <Tooltip title="Double-click entry to edit" arrow>
+                              <HelpOutlineIcon
+                                 sx={{
+                                    fontSize: 16,
+                                    marginLeft: '5px',
+                                    color: 'grey',
+                                    cursor: 'pointer',
+                                 }}
+                              />
+                           </Tooltip>
+                        </Box>
+                     </StyledTableCell>
                      <StyledTableCell>Username</StyledTableCell>
                      <StyledTableCell>Password</StyledTableCell>
                      <StyledTableCell>Incoming Requests</StyledTableCell>
