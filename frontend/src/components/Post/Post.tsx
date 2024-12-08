@@ -244,9 +244,9 @@ export default function Post({
     }
   }, [post]);
 
-  // To refresh comment count when comment modal is closed
+  // To refresh comment and like count when comment modal is closed
   useEffect(() => {
-    const fetchPostComment = async () => {
+    const fetchPostComments = async () => {
       if (postGiven) {
         const commentsData = await postService.getPostComments(postGiven.id);
         const comments = Array.isArray(commentsData.src) ? commentsData.src : [];
@@ -256,9 +256,27 @@ export default function Post({
       }
     };
 
+    const fetchPostLikes = async () => {
+      if (postGiven) {
+        const likes = await likeService.getLikes(postGiven.author.id, extractUUID(postGiven.id))
+        post.likes = likes;
+        setLikeCount(likes.count);
+        
+        if (authProvider.user && postGiven.likes?.count > 0) {
+          setHasLiked(
+            postGiven.likes.src.some((like) =>
+              like.author.id.includes(authProvider.user.uuid) // whitesmoke changed the like.id so need to compare with author.id instead
+            )
+          );
+        }
+      }
+    }
+
     if (prevIsModalOpenRef.current && !isModalOpen) {
       // The modal was open before and is now closed, so fetch comments
-      fetchPostComment();
+      console.log(`hey`)
+      fetchPostComments();
+      fetchPostLikes();
     }
     prevIsModalOpenRef.current = isModalOpen;
 
