@@ -138,7 +138,7 @@ export default function Post({
 
           setPost(postData);
 
-          if ( authProvider.user.is_staff || postData.visibility == "PUBLIC" || postData.visibility == "UNLISTED" || postData.author.id.includes(authProvider.user.uuid) ) {
+          if ( authProvider.user.is_staff || postData.visibility === "PUBLIC" || postData.visibility === "UNLISTED" || postData.author.id.includes(authProvider.user.uuid) ) {
             setCanCopyLink(true);
           }
 
@@ -152,7 +152,7 @@ export default function Post({
         } else {
           setPost(postGiven);
 
-          if ( authProvider.user.is_staff || postGiven.visibility == "PUBLIC" || postGiven.author.id.includes(authProvider.user.uuid) ) {
+          if ( authProvider.user.is_staff || postGiven.visibility === "PUBLIC" || postData.visibility === "UNLISTED" || postGiven.author.id.includes(authProvider.user.uuid) ) {
             setCanCopyLink(true);
           }
 
