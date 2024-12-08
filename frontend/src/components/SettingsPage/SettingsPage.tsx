@@ -136,7 +136,6 @@ export default function CustomizedTables() {
          setErrorMessage('Something went wrong. Please try again later.');
       }
    }
-
    const handleDelete = async (username) => {
       try {
          const response = await setting.deleteNode(username);
