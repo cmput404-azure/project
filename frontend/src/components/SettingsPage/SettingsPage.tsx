@@ -74,6 +74,7 @@ export default function CustomizedTables() {
    const [password, setPassword] = useState('');
    const [status, setStatus] = useState(true);
    const [errorMessage, setErrorMessage] = useState('');
+   const [refreshTable, setRefreshTable] = useState(false); 
 
    function createData(host: string, username: string, password: string, status: boolean) {
       return { host, username, password, status };
@@ -129,7 +130,6 @@ export default function CustomizedTables() {
             setErrorMessage('');
             handleCloseModal();
             fetchNodeList();
-            window.location.reload();
          }
       } catch (error) {
          console.error('Error processing node:', error);
@@ -154,17 +154,17 @@ export default function CustomizedTables() {
       });
 
       setRows(nodeRows);
+      setRefreshTable((prev) => !prev); // Toggle refresh state
    }
 
    useEffect(() => {
-      const fetchConfig = async () => {
-         const val = await setting.getToggleValue();
-         setRequireApproval(val);
-      };
-
-      fetchConfig();
-      fetchNodeList();
+      fetchNodeList(); // Fetch nodes initially
    }, []);
+
+   // UseEffect to refresh table whenever rows change
+   useEffect(() => {
+      // Any logic here will run when `rows` or `refreshTable` changes
+   }, [refreshTable]);
 
    return (
       <div className={styles.settings}>
