@@ -71,8 +71,6 @@ class SettingService {
 
     public async updateNode(username: string, password: string, fullUrl: string, status: boolean, oldHost: string) {
         try {
-            console.log(`new host: ${fullUrl}`)
-            console.log(`old host: ${oldHost}`)
             const response = await api.put('/api/nodes/update/', {
                 username: username,
                 password: password,

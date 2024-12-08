@@ -119,7 +119,6 @@ class UpdateNodeView(APIView):
                 return Response({"error": "Invalid URL after adding scheme."}, status=status.HTTP_400_BAD_REQUEST)
 
             node_obj = get_object_or_404(NodeUser, host=old_host)
-            print(f"Node found: {node_obj}")
             node_obj.host = host
             node_obj.username = username
             node_obj.password = password
