@@ -13,7 +13,8 @@ urlpatterns = [
     
     # Follow API
     path('api/authors/<uuid:user_id>/followers/<path:follower_url>/', FollowView.as_view(), name='followers_handler'),  
-    path('api/authors/<uuid:user_id>/followers/', FollowerView.as_view(), name='get_followers'),  
+    path('api/authors/<uuid:user_id>/followers/', FollowerView.as_view(), name='get_followers'),
+    path('api/authors/<int:user_id>/followers/', FollowerView.as_view(), name='get_followers_integer'),
     path('api/authors/<uuid:user_id>/following/', FollowCustomView.as_view(), name='following'),  
 
     # Inbox API
@@ -28,6 +29,7 @@ urlpatterns = [
 
     # Likes on Posts or Comments
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", LikesView.as_view(), name="get_likes_by_serial"),
+    path("api/authors/<int:author_serial>/posts/<uuid:post_serial>/likes/", LikesView.as_view(), name="get_likes_by_serial_int"),
     path("api/posts/<path:post_fqid>/likes/", LikesView.as_view(), name="get_likes_by_fqid"),
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/<path:comment_fqid>/likes/", LikesView.as_view(), name="get_comment_likes"),
     
@@ -44,6 +46,7 @@ urlpatterns = [
     # Posts API
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/", AuthorPostView.as_view(), name="author_post"),
     path("api/authors/<uuid:author_serial>/posts/", AuthorPostsAllView.as_view(), name="create_post"),
+    path("api/authors/<int:author_serial>/posts/", AuthorPostsAllView.as_view(), name="create_post_integer"), # some groups uses int as id
     path("api/posts/<path:post_fqid>/", PostView.as_view(), name="post"),
 
     # Likes API (specific Likes)

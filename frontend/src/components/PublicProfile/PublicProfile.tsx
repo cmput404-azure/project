@@ -23,6 +23,7 @@ import { normalizeURL } from "../../util/formatting/normalizeURL";
 import profileService from "../../service/profile";
 import styles from "./PublicProfile.module.scss";
 import { useAuth } from "../../state";
+import { normalizeVisibility } from "../../util/formatting/normalizeVisibility";
 
 const FollowerModalTypes = {
   follower: "Follower",
@@ -79,15 +80,22 @@ export default function PublicProfile() {
   const fetchPosts = async (userId: string, author: Author | null, page: number = 1) => {
     if (loading) return;
     setLoading(true);
-    const id = extractUUID(userId)
-    const host = author?.id.split("authors")[0]
+    
+    const id = extractUUID(userId);
+    const host = normalizeURL(author?.id);
     const { count, src } = await profileService.fetchAuthorPosts(id, page, 10, host);
     setPostCount(count); // if filter is done properly, count should represent the number of public posts
+    // note: mistyrose counts deleted post as well
 
     setPosts((prevPosts) => {
       const existingIds = new Set(prevPosts.map((post) => post.id));
-      const newPosts = src.filter((post) => !existingIds.has(post.id));
-      return [...prevPosts, ...newPosts];
+      const newPosts = src.filter(
+        (post) => !existingIds.has(post.id) && normalizeVisibility(post.visibility, true) !== "DELETED"
+      );
+      const filteredPrevPosts = prevPosts.filter(
+        (post) => normalizeVisibility(post.visibility, true) !== "DELETED"
+      );
+      return [...filteredPrevPosts, ...newPosts];
     });
 
     setTotalPages(Math.ceil(count / pageSize));

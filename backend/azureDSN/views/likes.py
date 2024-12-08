@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from ..models import Post, Like, User, Comment
@@ -8,9 +9,11 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from ..utils import url_parser
+import requests, os
+from requests.auth import HTTPBasicAuth
 
 class LikesPagination(PageNumberPagination):
-    page_size=5
+    page_size=10
     page_size_query_param='size'
     max_page_size=100
 
@@ -290,10 +293,48 @@ class LikesView(APIView):
             Return: likes object
             """
             type = "posts"
-            author = get_object_or_404(User, uuid=author_serial)
-            post = get_object_or_404(Post, uuid=post_serial, user=author)
-            
-            likes = Like.objects.filter(post=post).order_by('-created_at')
+
+            try:
+                author = User.objects.get(uuid=author_serial)
+                post = get_object_or_404(Post, uuid=post_serial, user=author)
+                likes = Like.objects.filter(post=post).order_by('-created_at')
+
+            except User.DoesNotExist:
+                # Remote scenario
+                author_fqid = request.GET.get('authorId')
+
+                if not author_fqid:
+                    return Response(
+                        {"error": "Missing 'authorId' query parameter."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                author_fqid = url_parser.percent_decode(author_fqid)
+                author_host = url_parser.get_base_host(author_fqid)
+
+                if settings.BASE_URL in author_host:
+                    # Local scenario but the serial is invalid
+                    return Response({"error": "Invalid serial."}, status=status.HTTP_404_NOT_FOUND)
+
+                author_serial = url_parser.extract_uuid(author_fqid)
+
+                endpoint = f"{author_host}/api/authors/{author_serial}/posts/{post_serial}/likes"
+
+                response = requests.get(
+                    endpoint,
+                    auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD')),
+                    timeout=5
+                )
+
+                if response.status_code == 200:
+                    return Response(response.json(), status=status.HTTP_200_OK)
+                
+                else:
+                    return Response(
+                        {"error": f"Failed to fetch remote likes: {response.status_code}"},
+                        status=response.status_code
+                    )
+
 
         elif (post_fqid):
             """

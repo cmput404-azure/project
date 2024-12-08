@@ -69,13 +69,14 @@ class SettingService {
         }
     }
 
-    public async updateNode(username: string, password: string, fullUrl: string, status: boolean) {
+    public async updateNode(username: string, password: string, fullUrl: string, status: boolean, oldHost: string) {
         try {
             const response = await api.put('/api/nodes/update/', {
                 username: username,
                 password: password,
                 host: fullUrl,
-                is_authenticated: status
+                isAuth: status,
+                oldHost: oldHost
             });
             return response.data;
 

@@ -142,10 +142,7 @@ export default function EllipseMenu({
           ...(postData.type ? {} : { type: "post" }),
           title: updatedPost.title,
           content: updatedPost.content,
-          visibility: normalizeVisibility(
-            updatedPost.visibility,
-            true
-          ) as string,
+          visibility: updatedPost.visibility,
           follower: {
             type: "author",
             id: recipient.id,

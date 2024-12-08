@@ -1,7 +1,7 @@
-import { Button, TextField } from "@mui/material";
+import { Box, Button, IconButton, TextField, Tooltip } from "@mui/material";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import { useEffect, useState } from "react";
-
+import EditIcon from '@mui/icons-material/Edit';
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -53,6 +53,7 @@ export default function EditPostModal({
   const [visibility, setVisibility] = useState(post.visibility);
   const [contentType, setContentType] = useState(`${post.contentType}`);
   const [disabled, setDisabled] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Ensure that modal fields reset when `post` data changes
   useEffect(() => {
@@ -89,6 +90,28 @@ export default function EditPostModal({
     setVisibility(event.target.value as number); // Cast the value to number
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === "string") {
+          setContent(reader.result.split(",")[1]); // base64 string
+          file.type === "image/png" ? setContentType("image/png;base64") :
+          file.type === "image/jpeg" ? setContentType("image/jpeg;base64") :
+            setContentType("application/base64");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerFileSelect = () => {
+    const fileInput = document.getElementById("image-upload-input");
+    fileInput?.click();
+  };
+  
+
   if (!post) {
     return null; // Return null if post data is unavailable to prevent rendering errors
   }
@@ -114,11 +137,57 @@ export default function EditPostModal({
           <label>Content</label>
           {/^image\/(png|jpeg);base64$/.test(contentType) ? (
             <div className={styles.cardImage}>
-              <img
-                className={styles.postImage}
-                src={`data:${contentType},${post.content}`}
-                alt={post.description}
-              />
+              <Box
+                sx={{
+                  position: "relative",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                  height: "auto"
+                }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
+                <img
+                  src={`data:${contentType};base64,${content}`}
+                  alt="Uploaded"
+                  style={{
+                    maxWidth: "40%",
+                    height: "40%",
+                    opacity: isHovered ? 0.7 : 1,
+                    transition: "opacity 0.3s ease",
+                    borderRadius: "8px",
+                  }}
+                />
+                {isHovered && (
+                  <Tooltip title="Edit Image">
+                    <IconButton
+                      sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        color: "#3f51b5",
+                        backgroundColor: "rgba(255, 255, 255, 0.8)",
+                        "&:hover": {
+                          backgroundColor: "rgba(255, 255, 255, 1)",
+                        },
+                      }}
+                      onClick={triggerFileSelect}
+                    >
+                      <EditIcon sx={{ fontSize: 30 }} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                <input
+                  id="image-upload-input"
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  onChange={handleImageChange}
+                  style={{ display: "none" }}
+                />
+              </Box>
             </div>
           ) : (
             <PostTextField

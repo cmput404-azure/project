@@ -222,8 +222,8 @@ class FollowerView(APIView):
                 if not remote_host:
                     return Response({"message": "Host is required for remote users."}, status=status.HTTP_400_BAD_REQUEST)
                 
-                parsed_url = urlparse(remote_host)
-                base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                remote_host = url_parser.percent_decode(remote_host)
+                base_host = url_parser.get_base_host(remote_host)
                 
                 # send request to fetch all posts
                 remote_user_url = f"{base_host}/api/authors/{user_id}/followers"

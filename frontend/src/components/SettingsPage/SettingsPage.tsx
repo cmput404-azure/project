@@ -1,7 +1,7 @@
-import { Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
+import { Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, Switch, TextField, Tooltip } from "@mui/material";
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import { useEffect, useState } from 'react';
-
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -74,6 +74,7 @@ export default function CustomizedTables() {
    const [password, setPassword] = useState('');
    const [status, setStatus] = useState(true);
    const [errorMessage, setErrorMessage] = useState('');
+   const [oldHost, setOldHost] = useState('');
 
    function createData(host: string, username: string, password: string, status: boolean) {
       return { host, username, password, status };
@@ -88,11 +89,13 @@ export default function CustomizedTables() {
    const handleOpenModal = (node = null) => {
       setErrorMessage('');
       if (node) { // editing existing node
+         if (node.host) setOldHost(node.host); // Need old value to get entry in DB
          setEditingNode(node);
 
          const { protocol, hostname, port } = new URL(node.host);
+         const normalizedProtocol = protocol.includes('https') ? 'https://' : 'http://';
          setNodeUrl(`${hostname}${port ? `:${port}` : ''}`);
-         setProtocol(protocol.replace(':', '://'));
+         setProtocol(normalizedProtocol);
          setUsername(node.username);
          setPassword(node.password);
          setStatus(node.status);
@@ -108,6 +111,7 @@ export default function CustomizedTables() {
 
    const handleCloseModal = () => {
       setModalOpen(false);
+      setOldHost('');
    }
 
    const handleSave = async () => {
@@ -117,7 +121,7 @@ export default function CustomizedTables() {
       try {
          let response;
          if (editingNode) {
-            response = await setting.updateNode(username, password, fullUrl, status);
+            response = await setting.updateNode(username, password, fullUrl, status, oldHost);
          } else {
             response = await setting.addNode(username, password, fullUrl);
          }
@@ -126,15 +130,14 @@ export default function CustomizedTables() {
             setErrorMessage(response.error);
          } else {
             setErrorMessage('');
-            handleCloseModal();
             fetchNodeList();
+            handleCloseModal();
          }
       } catch (error) {
          console.error('Error processing node:', error);
          setErrorMessage('Something went wrong. Please try again later.');
       }
    }
-
    const handleDelete = async (username) => {
       try {
          const response = await setting.deleteNode(username);
@@ -200,7 +203,21 @@ export default function CustomizedTables() {
             <Table sx={{ minWidth: 700 }} aria-label="customized table">
                <TableHead>
                   <TableRow>
-                     <StyledTableCell>Node URL</StyledTableCell>
+                     <StyledTableCell>
+                        <Box display="flex" alignItems="center">
+                           Node URL
+                           <Tooltip title="Double-click entry to edit" arrow>
+                              <HelpOutlineIcon
+                                 sx={{
+                                    fontSize: 16,
+                                    marginLeft: '5px',
+                                    color: 'grey',
+                                    cursor: 'pointer',
+                                 }}
+                              />
+                           </Tooltip>
+                        </Box>
+                     </StyledTableCell>
                      <StyledTableCell>Username</StyledTableCell>
                      <StyledTableCell>Password</StyledTableCell>
                      <StyledTableCell>Incoming Requests</StyledTableCell>

@@ -48,11 +48,18 @@ class PublicStreamView(APIView):
                         # We don't want to see deleted remote posts
                         if post_id in remote_posts:
                             remote_posts.pop(post_id) # Remove deleted post
+                    
+                    if item.post_status != None and item.post_status in ["edited", "update-old"]:
+                            # don't handle old post
+                            continue
 
                     if visibility == "PUBLIC" and (item.post_status == None or item.post_status.upper() != "DELETE"): # This logic only works for local, local-remote posts
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip if the post has already been processed with the same status
                             # This should work for remote-remote edited posts? Because we are fetching post from their endpoint directly (it will show latest content)
+                            continue
+                        
+                        if visibility == "UNLISTED" or visibility == "FRIENDS":
                             continue
 
                         author_host = remote_payload["author"]["host"]
@@ -199,11 +206,16 @@ class AuthStreamView(APIView):
                         visibility = remote_payload.get("visibility", "").upper()
                         if visibility not in ["FRIENDS", "UNLISTED"]:
                             continue
+                        
+                        if item.post_status != None and item.post_status in ["edited", "update-old"]:
+                            # don't handle old post
+                            continue
 
                         post_id = remote_payload.get("id")
                         if post_id in processed_posts and processed_posts[post_id] == item.post_status:
                             # Skip already processed posts with the same status
                             continue
+                        
 
                         base_host = url_parser.get_base_host(remote_payload.get("id"))
                         author_serial = url_parser.extract_uuid(remote_payload.get("author").get("id"))
@@ -215,8 +227,6 @@ class AuthStreamView(APIView):
                                 get_post_url,
                                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                             )
-
-                            print(f"Check status code from {base_host}: {response.status_code}")
 
                             if response.status_code == 200:
                                 post_data = response.json()
