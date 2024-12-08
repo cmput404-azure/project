@@ -228,8 +228,6 @@ class AuthStreamView(APIView):
                                 auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                             )
 
-                            print(f"Check status code from {base_host}: {response.status_code}")
-
                             if response.status_code == 200:
                                 post_data = response.json()
 

@@ -1,15 +1,6 @@
-import { Like } from "../models/models";
+import { Like, PaginatedLikesResponse } from "../models/models";
+import { extractUUID } from "../util/formatting/extractUUID";
 import { api } from "./config";
-
-interface PaginatedLikesResponse {
-    type: string;
-    id: string;
-    page: string;
-    page_number: number;
-    size: number;
-    count: number;
-    src: Like[];
-}
 
 class LikeService {
     /**
@@ -80,6 +71,12 @@ class LikeService {
     public async getLikes(authorSerial?: string, postSerial?: string, postFQID?: string, commentSerial?: string): Promise<PaginatedLikesResponse> {
         try {
             let url = "/api/";
+            let authorFQID = null;
+
+            if (authorSerial && authorSerial.startsWith("http")) {
+                authorFQID = authorSerial;
+                authorSerial = extractUUID(authorSerial);
+            }
 
             if (authorSerial && postSerial && commentSerial) {
                 url += `authors/${authorSerial}/posts/${postSerial}/comments/${commentSerial}/likes`;
@@ -91,6 +88,10 @@ class LikeService {
                 throw new Error("Invalid parameters: please provide authorSerial and postSerial, or postFQID, or all parameters.");
             }
 
+            if (authorFQID) {
+                url += `?authorId=${encodeURIComponent(authorFQID)}`;
+            }
+            
             const response = await api.get<PaginatedLikesResponse>(url);
             return response.data;
         } catch (error: any) {
