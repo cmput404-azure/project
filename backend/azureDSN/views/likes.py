@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from ..models import Post, Like, User, Comment
@@ -12,7 +13,7 @@ import requests, os
 from requests.auth import HTTPBasicAuth
 
 class LikesPagination(PageNumberPagination):
-    page_size=5
+    page_size=10
     page_size_query_param='size'
     max_page_size=100
 
@@ -310,6 +311,11 @@ class LikesView(APIView):
 
                 author_fqid = url_parser.percent_decode(author_fqid)
                 author_host = url_parser.get_base_host(author_fqid)
+
+                if settings.BASE_URL in author_host:
+                    # Local scenario but the serial is invalid
+                    return Response({"error": "Invalid serial."}, status=status.HTTP_404_NOT_FOUND)
+
                 author_serial = url_parser.extract_uuid(author_fqid)
 
                 endpoint = f"{author_host}/api/authors/{author_serial}/posts/{post_serial}/likes"
