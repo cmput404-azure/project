@@ -1,6 +1,5 @@
 import { Like, PaginatedLikesResponse } from "../models/models";
 import { extractUUID } from "../util/formatting/extractUUID";
-import { normalizeURL } from "../util/formatting/normalizeURL";
 import { api } from "./config";
 
 class LikeService {
@@ -93,7 +92,6 @@ class LikeService {
                 url += `?authorId=${encodeURIComponent(authorFQID)}`;
             }
             
-            console.log(`Calling this like endpoint: ${url}`)
             const response = await api.get<PaginatedLikesResponse>(url);
             return response.data;
         } catch (error: any) {

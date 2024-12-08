@@ -274,7 +274,6 @@ export default function Post({
 
     if (prevIsModalOpenRef.current && !isModalOpen) {
       // The modal was open before and is now closed, so fetch comments
-      console.log(`hey`)
       fetchPostComments();
       fetchPostLikes();
     }
