@@ -4,9 +4,15 @@ import {
    Box,
    Button,
    CircularProgress,
+   Dialog,
+   DialogActions,
+   DialogContent,
+   DialogTitle,
    Drawer,
    IconButton,
    Snackbar,
+   Tab,
+   Tabs,
    TextField,
    styled,
 } from "@mui/material";
@@ -28,6 +34,7 @@ import followService from "../../service/follow";
 import profileService from "../../service/profile";
 import styles from "./UserProfile.module.scss";
 import { useAuth } from "../../state";
+import { api } from "../../service/config";
 
 interface FollowersModal {
    open: boolean;
@@ -321,10 +328,35 @@ export function EditProfile({
       extractUUID(github) === "login" ? "" : extractUUID(github);
    const fileInputRef = useRef<HTMLInputElement | null>(null);
    const [hovered, setHovered] = useState(false);
+   const [open, setOpen] = useState(false);
+   const [tabValue, setTabValue] = useState(0);
+   const [uploadedImage, setUploadedImage] = useState(null);
+   const [imageURL, setImageURL] = useState("");
+   const [isValidURL, setIsValidURL] = useState<boolean>(false);
 
    const auth = useAuth();
 
    user.id = extractUUID(user.id);
+
+   const handleOpenModal = () => setOpen(true);
+   const handleCloseModal = () => {
+      setOpen(false);
+      setIsValidURL(false);
+      setUploadedImage(false);
+      setImageURL("");
+      setTabValue(0);
+   };
+
+   const handleTabChange = (event, newValue) => {
+      setTabValue(newValue)
+
+      if (newValue === 0) {  // upload image tab
+         setImageURL("");
+         setIsValidURL(false);
+      } else if (newValue === 1) {  // image url tab
+         setUploadedImage(null);
+      }
+   };
 
    async function handleUpdate() {
       setError("");
@@ -387,15 +419,55 @@ export function EditProfile({
    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (file) {
+         setUploadedImage(file);
+         setImageURL("");
+         setIsValidURL(false);
+      }
+   };
+
+   const handleImageURL = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const url = event.target.value.trim();
+      setImageURL(url); // could be external link or custom image endpoint
+
+      // Regex to validate URL and also accepts our custom image endpoint
+      const urlPattern = /^(https?:\/\/.*\/(.*\.(png|jpg|jpeg|gif|bmp|webp))?|.*\/image\/?)$/i;
+      setIsValidURL(urlPattern.test(url));
+
+      if (url) setUploadedImage(null);
+   };
+
+   const handleSaveImage = async () => {
+      if (uploadedImage) {
+         // Convert uploaded image to Base64
          const reader = new FileReader();
          reader.onloadend = () => {
             const dataURL = reader.result?.toString() || "";
             setProfileImage(dataURL);
-            setHovered(false);
          };
-         reader.readAsDataURL(file); // get the dataURL
+         reader.readAsDataURL(uploadedImage);
+      } else if (isValidURL && imageURL) {
+         if (extractUUID(imageURL) === 'image') {
+            try {
+               const response = await api.get<string>(imageURL);
+               setProfileImage(response.data);
+               setProfileImage(response.data);
+            } catch (error) {
+               if (error.response && error.response.status === 404) {
+                  alert("Error: This endpoint does not point to an Image Post."); // If the image endpoint is pointing to a non Image post.
+               } else {
+                  console.error("Error fetching image:", error);
+                  alert("Failed to fetch the image.");
+               }
+               return;
+            } 
+         } else {
+            setProfileImage(imageURL);
+         }
       }
-   };
+
+      setHovered(false);
+      handleCloseModal();
+   }
 
    const handleGithubChange = (value: string) => {
       if (value.trim() === "") {
@@ -403,10 +475,6 @@ export function EditProfile({
       } else {
          setGithub(`https://github.com/${value}`);
       }
-   };
-
-   const handleUploadButtonClick = () => {
-      fileInputRef?.current.click();
    };
 
    const handleDeleteImage = () => {
@@ -478,7 +546,6 @@ export function EditProfile({
                      id="upload-button"
                      type="file"
                      accept="image/*"
-                     onChange={handleFileUpload}
                      hidden
                      ref={fileInputRef}
                   />
@@ -488,7 +555,7 @@ export function EditProfile({
                         size="small"
                         color="secondary"
                         startIcon={<CloudUpload />}
-                        onClick={handleUploadButtonClick}
+                        onClick={handleOpenModal}
                         sx={{
                            color: "#70ffaf",
                            borderColor: "#70ffaf",
@@ -498,11 +565,144 @@ export function EditProfile({
                            },
                         }}
                      >
-                        Upload Image
+                        Set Profile Image
                      </Button>
                   </label>
                </div>
             </div>
+
+            <Dialog
+               open={open}
+               onClose={handleCloseModal}
+               sx={{
+                  "& .MuiDialog-paper": {
+                    backgroundColor: "rgb(123, 123, 123)",
+                    color: "white",
+                    width: 400,
+                    maxWidth: "none",
+                    minWidth: 400,
+                    height: 250,
+                    maxHeight: "none",
+                  },
+                  "& .MuiTab-root": {
+                     color: "#70ffaf",
+                  },
+                  "& .MuiTabs-indicator": {
+                     backgroundColor: "#70ffaf",
+                  },
+                }}
+            >
+               <DialogTitle>Set Profile Image</DialogTitle>
+               <DialogContent>
+                  <Tabs
+                     value={tabValue}
+                     onChange={handleTabChange}
+                  >
+                     <Tab
+                        label="Upload Image"
+                        sx={{
+                           color: "white",
+                           "&.Mui-selected": {
+                             color: "#70ffaf",
+                           },
+                         }}
+                     />
+                     <Tab
+                        label="Image URL"
+                        sx={{
+                           color: "white",
+                           "&.Mui-selected": {
+                             color: "#70ffaf",
+                           },
+                         }}
+                     />
+                  </Tabs>
+                  {tabValue === 0 && (
+                     <Box sx={{ marginTop: 2 }}>
+                        <input
+                           type="file"
+                           accept="image/*"
+                           onChange={handleFileUpload}
+                        />
+                     </Box>
+                  )}
+                  {tabValue === 1 && (
+                     <TextField
+                        fullWidth
+                        placeholder="Enter Image URL"
+                        value={imageURL}
+                        onChange={handleImageURL}
+                        error={imageURL.length > 0 && !isValidURL}
+                        helperText={
+                           imageURL.length > 0 && !isValidURL
+                              ? "Please enter a valid image URL (png, jpg, jpeg, gif, bmp, webp) or /image endpoint."
+                              : ""
+                        }
+                        sx={{
+                           "& .MuiInputBase-root": {
+                             color: "white",
+                           },
+                           "& .MuiInputLabel-root": {
+                             color: "white",
+                           },
+                           "& .MuiOutlinedInput-root": {
+                             "& fieldset": {
+                               border: "1px solid white",
+                             },
+                             "&:hover fieldset": {
+                               borderColor: "white",
+                             },
+                             "&.Mui-focused fieldset": {
+                               borderColor: "#70ffaf",
+                             },
+                           },
+                           "& .MuiFormHelperText-root": {
+                             color: "white",
+                             "&.Mui-error": {
+                               color: "#ff5b5b",
+                             },
+                           },
+                         }}
+                     />
+                  )}
+               </DialogContent>
+               <DialogActions>
+                     <Button
+                        onClick={handleCloseModal}
+                        sx={{
+                           backgroundColor: "lightcoral",
+                           color: "white",
+                           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                           "&:hover": {
+                           backgroundColor: "#e57373",
+                           },
+                        }}
+                     >
+                        Cancel
+                     </Button>
+                     <Button
+                        onClick={handleSaveImage}
+                        color="primary"
+                        disabled={!uploadedImage && (!isValidURL || imageURL === "")}
+                        sx={{
+                           backgroundColor: "#70ffaf",
+                           color: "black",
+                           transition: "0.3s ease-in-out",
+                           "&:hover": {
+                              backgroundColor: "#70ffaf",
+                              color: "white",
+                           },
+                           "&.Mui-disabled": {
+                              backgroundColor: "#9e9e9e",
+                              color: "#bdbdbd",
+                              borderColor: "#bdbdbd",
+                           },
+                        }}
+                     >
+                        Continue
+                     </Button>
+               </DialogActions>
+            </Dialog>
 
             <div className={styles.edit__profile__body__form}>
                <EditField

@@ -33,6 +33,7 @@ import profileService from "../../service/profile";
 import remarkGfm from "remark-gfm";
 import styles from "./Post.module.scss";
 import { useAuth } from "../../state";
+import likeService from "../../service/like";
 
 interface PostProps {
   postGiven?: PostModel;
@@ -137,7 +138,7 @@ export default function Post({
 
           setPost(postData);
 
-          if ( authProvider.user.is_staff || postData.visibility == "PUBLIC" || postData.visibility == "UNLISTED" || postData.author.id.includes(authProvider.user.uuid) ) {
+          if ( authProvider.user.is_staff || postData.visibility === "PUBLIC" || postData.visibility === "UNLISTED" || postData.author.id.includes(authProvider.user.uuid) ) {
             setCanCopyLink(true);
           }
 
@@ -151,7 +152,7 @@ export default function Post({
         } else {
           setPost(postGiven);
 
-          if ( authProvider.user.is_staff || postGiven.visibility == "PUBLIC" || postGiven.author.id.includes(authProvider.user.uuid) ) {
+          if ( authProvider.user.is_staff || postGiven.visibility === "PUBLIC" || postData.visibility === "UNLISTED" || postGiven.author.id.includes(authProvider.user.uuid) ) {
             setCanCopyLink(true);
           }
 
@@ -243,9 +244,9 @@ export default function Post({
     }
   }, [post]);
 
-  // To refresh comment count when comment modal is closed
+  // To refresh comment and like count when comment modal is closed
   useEffect(() => {
-    const fetchPostComment = async () => {
+    const fetchPostComments = async () => {
       if (postGiven) {
         const commentsData = await postService.getPostComments(postGiven.id);
         const comments = Array.isArray(commentsData.src) ? commentsData.src : [];
@@ -255,9 +256,26 @@ export default function Post({
       }
     };
 
+    const fetchPostLikes = async () => {
+      if (postGiven) {
+        const likes = await likeService.getLikes(postGiven.author.id, extractUUID(postGiven.id))
+        post.likes = likes;
+        setLikeCount(likes.count);
+        
+        if (authProvider.user && postGiven.likes?.count > 0) {
+          setHasLiked(
+            postGiven.likes.src.some((like) =>
+              like.author.id.includes(authProvider.user.uuid) // whitesmoke changed the like.id so need to compare with author.id instead
+            )
+          );
+        }
+      }
+    }
+
     if (prevIsModalOpenRef.current && !isModalOpen) {
       // The modal was open before and is now closed, so fetch comments
-      fetchPostComment();
+      fetchPostComments();
+      fetchPostLikes();
     }
     prevIsModalOpenRef.current = isModalOpen;
 
@@ -320,9 +338,11 @@ export default function Post({
       }; // build json in the backend
 
       console.log(`LIKE OBJ: ${JSON.stringify(like_obj, null, 2)}`);
-
-
       await inbox.sendPostToInbox(post.author.id, like_obj);
+
+      // update current post's likes so it's consistent
+      const likes = await likeService.getLikes(post.author.id, extractUUID(post.id));
+      post.likes = likes;
       setLikeCount(likeCount + 1);
       setHasLiked(true);
     } catch (error) {
@@ -424,7 +444,7 @@ export default function Post({
             onDelete={onDeletePost}
           />
         ) : (
-          <Tooltip title={canCopyLink ? "Copy link" : "Friends only post link only available to the author of the post and admins"}>
+          <Tooltip title={canCopyLink ? "Copy Link" : "Link Unavailable"}>
             <LinkIcon className={canCopyLink ? "" : styles.disabled} onClick={canCopyLink ? handleCopyLink : null} sx={{transform: "rotate(135deg)"}} />
           </Tooltip>
         )}

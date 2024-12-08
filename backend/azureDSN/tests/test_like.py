@@ -186,11 +186,13 @@ class LikesAPITest(APITestCase):
 
     def test_get_post_likes_invalid_serial(self):
         # Test calling the endpoint using an invalid author or post serial, should return 404
+        invalid_author_serial = uuid.uuid4()
         url = reverse('get_likes_by_serial', kwargs={
-            'author_serial': uuid.uuid4(),
-            'post_serial': self.post.uuid
+            'author_serial': invalid_author_serial,
+            'post_serial': self.post.uuid,
         })
 
+        url += f"?authorId={self.user.host}authors/{invalid_author_serial}" # new addition in frontend
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 

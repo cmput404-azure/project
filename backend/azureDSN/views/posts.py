@@ -377,8 +377,8 @@ class AuthorPostsAllView(APIView):
                 if not remote_host:
                     return Response({"message": "Host is required for remote users."}, status=status.HTTP_400_BAD_REQUEST)
                 
-                parsed_url = urlparse(remote_host)
-                base_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                remote_host = url_parser.percent_decode(remote_host)
+                base_host = url_parser.get_base_host(remote_host)
                 # send request to fetch all posts
                 remote_user_url = f"{base_host}/api/authors/{author_serial}/posts/"
                 response = requests.get(
@@ -386,6 +386,7 @@ class AuthorPostsAllView(APIView):
                     params={"page": 1, "size": 10},  
                     auth=HTTPBasicAuth(os.getenv('NODE_USERNAME'), os.getenv('NODE_PASSWORD'))
                 )
+
                 if response.status_code == 200:
                     return Response(response.json(), status=status.HTTP_200_OK)
                 else:
@@ -396,10 +397,6 @@ class AuthorPostsAllView(APIView):
             
             except Exception as e:
                 return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-            
-        
-        
     
     @extend_schema(
         summary="Create a new post",

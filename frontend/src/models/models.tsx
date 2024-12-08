@@ -71,14 +71,14 @@ export interface PostData {
     description: string;
     author: Author;
     comments: PostComment;
-    likes: PostLike;
+    likes: PaginatedLikesResponse;
     published: string;
     modified_at:string;
     visibility: string;
     shared_by?: string; // only for share functionality
 }
 
-export interface PostLike {
+export interface PaginatedLikesResponse {
     type: string;
     id: string;
     page: string;
