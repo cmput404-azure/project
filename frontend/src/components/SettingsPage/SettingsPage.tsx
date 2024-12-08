@@ -91,8 +91,9 @@ export default function CustomizedTables() {
          setEditingNode(node);
 
          const { protocol, hostname, port } = new URL(node.host);
+         const normalizedProtocol = protocol.includes('https') ? 'https://' : 'http://';
          setNodeUrl(`${hostname}${port ? `:${port}` : ''}`);
-         setProtocol(protocol.replace(':', '://'));
+         setProtocol(normalizedProtocol);
          setUsername(node.username);
          setPassword(node.password);
          setStatus(node.status);
