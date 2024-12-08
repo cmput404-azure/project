@@ -127,7 +127,7 @@ export default function CustomizedTables() {
          } else {
             setErrorMessage('');
             handleCloseModal();
-            //fetchNodeList();
+            fetchNodeList();
             window.location.reload();
          }
       } catch (error) {
