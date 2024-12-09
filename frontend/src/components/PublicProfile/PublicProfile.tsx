@@ -80,7 +80,7 @@ export default function PublicProfile() {
   const fetchPosts = async (userId: string, author: Author | null, page: number = 1) => {
     if (loading) return;
     setLoading(true);
-    
+
     const id = extractUUID(userId);
     const host = normalizeURL(author?.id);
     const { count, src } = await profileService.fetchAuthorPosts(id, page, 10, host);
@@ -131,8 +131,6 @@ export default function PublicProfile() {
 
     async function checkFollowingAndRequested() {
       // userID is fqid while authProvider only have uuid
-      console.log(`Test: ${userID}`)
-      console.log(`the other id: ${authProvider.user.uuid}`)
       const authUser = await profileService.fetchAuthorData(
         userID
       );
