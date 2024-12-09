@@ -12,6 +12,19 @@ Link: https://azuredsn-889a4fb9b2bb.herokuapp.com/
 
 Docs: https://azuredsn-889a4fb9b2bb.herokuapp.com/api/docs
 
+### Images
+![image](https://github.com/user-attachments/assets/ff4d75a5-ad67-4f48-9706-faf732635f32)
+![image](https://github.com/user-attachments/assets/e68719ab-738c-4732-a688-e3b3ffd03bc4)
+![image](https://github.com/user-attachments/assets/2023e601-e89b-47d1-921d-b8b6ebc9e302)
+![image](https://github.com/user-attachments/assets/b9843ed8-a324-461d-b950-e83ba20e17e9)
+![image](https://github.com/user-attachments/assets/aa6ccabc-d7f5-4bb9-96b9-843ab4b640e6)
+
+### Fully connected groups
+- Whitesmoke
+- Mistyrose
+- Cornflowerblue
+- Darkgoldenrod
+
 ## License
 
 MIT License
@@ -115,3 +128,11 @@ Note: The lock files in the root directory should be up to date before deploying
 ### Finalize
 1. Merge into prod
 2. Merge prod into deployment (it should auto deploy)
+
+### Deploy (heroku)
+1. Use buildpacks nodejs and python
+2. After first deploy, run migrations and create superuser
+3. Config vars:
+- ![image](https://github.com/user-attachments/assets/5aa90d0a-825c-4255-8839-8e86951546ca)
+4. Run `python manage.py collectstatic` in backend folder if frontend does not display.
+
