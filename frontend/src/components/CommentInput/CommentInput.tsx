@@ -5,6 +5,7 @@ import profileService from "../../service/profile";
 import styled from "@mui/material/styles/styled";
 import styles from "./CommentInput.module.scss";
 import { useState } from "react";
+import { CircularProgress } from "@mui/material";
 
 // Styling inspired from https://medium.com/@irwantoalvin/how-to-style-your-material-ui-textfield-integrate-it-with-react-hook-form-and-make-it-reusable-0f3050a90e9a, Downloaded 2024-10-24
 // need to style field like this otherwise stylings may reset and not appear properly
@@ -43,6 +44,7 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
   const [textErrorMsg, setTextErrorMsg] = useState("");
   const [textInField, setTextInField] = useState("");
   const [disableCommentButton, setDisableCommentButton] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const MAX_CHARACTERS = 500; // Max comment toggle
 
@@ -58,6 +60,7 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
   };
 
   const handleCommentSubmit = async (authorObj: any) => {
+    setIsLoading(true);
     const comment_obj = {
       type: "comment",
       author: authorObj,
@@ -73,6 +76,7 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
     if (response) {
       // In here  you will append the comment to the list. You can create a useState hook and then call something set comments
       onCommentAdded(response);
+      setIsLoading(false);
     }
 
     // Reset to initial states
@@ -94,7 +98,7 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
     } else if (e.target.value.length === 0) {
       setIsTextError(true);
       setDisableCommentButton(true);
-      setTextErrorMsg("Comment cannot be empty");
+      setTextErrorMsg(""); // back to initial state, no message
     } else {
       setIsTextError(false);
       setDisableCommentButton(false);
@@ -137,14 +141,14 @@ const CommentInputField = ({ authorObj, post, onCommentAdded }) => {
             className={styles.cancelButton}
             onClick={handleCommentFieldCancel}
           >
-            cancel
+            Cancel
           </button>
           <button
             className={styles.commentButton}
             disabled={disableCommentButton}
             onClick={() => handleCommentSubmit(authorObj)}
           >
-            Comment
+            {(isLoading) ? <CircularProgress size={24} sx={{ color: "#b0b0b0" }} /> : "Comment"}
           </button>
         </div>
       )}
