@@ -1,4 +1,4 @@
-import { Avatar, TextField, Tooltip } from "@mui/material";
+import { Avatar, CircularProgress, TextField, Tooltip } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { VisibilityChoices, getVisibilityNumber } from "../../models/modelTypes";
 
@@ -100,6 +100,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [contentType, setContentType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const isPostDisabled = title.length === 0 || (!content && !imageBase64);
   const authProvider = useAuth();
 
@@ -169,6 +170,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
       if (!authProvider.isAuthenticated) {
         return;
       }
+      setIsLoading(true);
 
       // First request: Create a new post
       const visibilityNumber = getVisibilityNumber(
@@ -236,15 +238,15 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
           }
         }
       }
-
       // re-fetch stream
       fetchPosts();
       
       // Close the input modal and reset input fields
-      setShowDetail(false)
-      setTitle("")
-      setDescription("")
-      setContent("")
+      setIsLoading(false);
+      setShowDetail(false);
+      setTitle("");
+      setDescription("");
+      setContent("");
       setImageBase64(null); // Clear image base64 on post submission
       setActiveCommonMark(false);
       setActiveIcon("public");
@@ -373,7 +375,7 @@ const PostBar: React.FC<PostBarProps> = ({ fetchPosts, author }) => {
             onClick={handleCombinedClick}
             disabled={isPostDisabled}
           >
-            Post
+            {(isLoading) ? <CircularProgress size={24} sx={{ color: "#b0b0b0" }} /> : "Post"}
           </button>
         </section>
       )}

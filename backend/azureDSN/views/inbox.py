@@ -122,11 +122,10 @@ class InboxView(APIView):
         )
         filtered_data = []
         for json in serializer.data:
-            if json:
-                if json.get("type") in ["like", "post", "comment"]:
-                    base_host = url_parser.get_base_host(json.get("id"))
-                elif json.get("type") == "follow":
-                    base_host = url_parser.get_base_host(json.get("actor").get("id"))
+            if json.get("type") in ["like", "post", "comment"]:
+                base_host = url_parser.get_base_host(json.get("id"))
+            elif json.get("type") == "follow":
+                base_host = url_parser.get_base_host(json.get("actor").get("id"))
 
             if (
                 base_host.strip().lower() != (settings.BASE_URL).strip().lower()
