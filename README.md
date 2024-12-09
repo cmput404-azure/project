@@ -14,16 +14,24 @@ Docs: https://azuredsn-889a4fb9b2bb.herokuapp.com/api/docs
 
 ### Images
 ![image](https://github.com/user-attachments/assets/ff4d75a5-ad67-4f48-9706-faf732635f32)
-![image](https://github.com/user-attachments/assets/e68719ab-738c-4732-a688-e3b3ffd03bc4)
-![image](https://github.com/user-attachments/assets/2023e601-e89b-47d1-921d-b8b6ebc9e302)
+![image](https://github.com/user-attachments/assets/6b7d40d6-5646-4501-8763-b7574485489d)
+![image](https://github.com/user-attachments/assets/9010b476-a3d7-4d6f-9dcd-c3fb237f8193)
 ![image](https://github.com/user-attachments/assets/b9843ed8-a324-461d-b950-e83ba20e17e9)
 ![image](https://github.com/user-attachments/assets/aa6ccabc-d7f5-4bb9-96b9-843ab4b640e6)
+![image](https://github.com/user-attachments/assets/fc04571e-5fe0-4359-85d4-c74987d4a48d)
+![image](https://github.com/user-attachments/assets/7cf151f1-c17b-4d4f-a8c6-95fb3afa8a81)
+![image](https://github.com/user-attachments/assets/4d15ab89-75a1-4d02-8318-abf754856eff)
+
+### Video
+https://www.youtube.com/watch?v=ZJmXECT2B4o
 
 ### Fully connected groups
 - Whitesmoke
 - Mistyrose
 - Cornflowerblue
 - Darkgoldenrod
+
+> Note: Connection with Darkgoldenrod's node is sometimes interrupted by a HTTP 429 error ("Request was throttled")
 
 ## License
 
