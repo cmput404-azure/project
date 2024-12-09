@@ -20,8 +20,6 @@ import { PostData } from "../../models/models";
 import { PostData as PostModel } from "../../models/models";
 import ProfileService from "../../service/profile";
 import ReactMarkdown from "react-markdown";
-import ShareDialogue from "../Post/ShareDialogue";
-import ShareService from "../../service/share";
 import { api } from "../../service/config";
 import { decodeBase64ToUrl } from "../../util/rendering/decodeBase64ToUrl";
 import { extractUUID } from "../../util/formatting/extractUUID";
@@ -61,9 +59,7 @@ export default function Post({
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
-  const [hasShared, setHasShared] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [commentList, setCommentList] = useState<any[]>([]);
   const [showAlert, setShowAlert] = useState(false);
@@ -124,16 +120,6 @@ export default function Post({
                 )
               );
             }
-            const checkIfShared = async () => {
-              const isShared = await ShareService.checkShare(
-                postData.id,
-                authProvider.user.uuid
-              );
-              setHasShared(isShared);
-            };
-
-            // Call the function to check the share status
-            checkIfShared();
           }
 
           setPost(postData);
@@ -165,12 +151,6 @@ export default function Post({
                 like.author.id.includes(authProvider.user.uuid) // whitesmoke changed the like.id so need to compare with author.id instead
               )
             );
-
-            const isShared = await ShareService.checkShare(
-              postGiven.id,
-              authProvider.user.uuid
-            );
-            setHasShared(isShared);
           }
 
           const comments = Array.isArray(postGiven.comments?.src)
@@ -311,15 +291,6 @@ export default function Post({
     setCommentList(newCommentList);
   };
 
-  const handleSharePost = async () => {
-    if (!post || hasShared) return;
-    setIsShareDialogOpen(true);
-  };
-
-  const handleCloseShareDialog = () => {
-    setIsShareDialogOpen(false);
-  };
-
   const handleLikePost = async () => {
     if (!authProvider.user) {
       navigate("/login");
@@ -429,11 +400,6 @@ export default function Post({
             : normalizeVisibility(post.visibility) === 3 ? (<span className={styles.unlistedLabel}>Unlisted</span>) 
             : normalizeVisibility(post.visibility) === 2 ? (<span className={styles.friendsOnlyLabel}>Friends-Only</span>) 
             : (<span className={styles.publicLabel}>Public</span>)}
-            {post.type === "shared" && (
-              <span className={styles.sharedLabel}>
-                Shared by {post.shared_by}
-              </span>
-            )}
           </div>
         </div>
 
@@ -492,20 +458,6 @@ export default function Post({
               <span>{formatCount(commentCount)}</span>
             </div>
           </div>
-          {normalizeVisibility(post.visibility) === 1 ? (
-            <div
-              className={`${styles.icon} ${hasShared ? styles.shared : ""}`}
-              onClick={handleSharePost}
-            >
-              <i className="fas fa-share"></i>
-            </div>
-          ) : null}
-          <ShareDialogue
-            post={post}
-            isDialogOpen={isShareDialogOpen}
-            setHasShared={setHasShared}
-            onClose={handleCloseShareDialog}
-          />
         </div>
         <div className={styles.cardContent}>
           <div className={styles.postTitle}>{post.title}</div>
