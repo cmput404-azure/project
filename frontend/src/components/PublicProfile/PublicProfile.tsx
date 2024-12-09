@@ -130,6 +130,9 @@ export default function PublicProfile() {
     setIsAuthLoading(false);
 
     async function checkFollowingAndRequested() {
+      // userID is fqid while authProvider only have uuid
+      console.log(`Test: ${userID}`)
+      console.log(`the other id: ${authProvider.user.uuid}`)
       const authUser = await profileService.fetchAuthorData(
         userID
       );
@@ -179,7 +182,7 @@ export default function PublicProfile() {
       setIsOwnProfile(false);
       fetchPosts(userID, authorData);
     } else {
-      if (userID === authProvider.user.uuid) {
+      if (normalizeURL(authProvider.user.host) === process.env.REACT_APP_API_BASE_URL && extractUUID(userID) === authProvider.user.uuid) {
         setIsOwnProfile(true);
       } else {
         // this makes sure that the button for following/managing profile is displayed correctly
