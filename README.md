@@ -31,6 +31,8 @@ https://www.youtube.com/watch?v=ZJmXECT2B4o
 - Cornflowerblue
 - Darkgoldenrod
 
+> Note: Connection with Darkgoldenrod's node is sometimes interrupted by a HTTP 429 error ("Request was throttled")
+
 ## License
 
 MIT License
